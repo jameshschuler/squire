@@ -24,6 +24,13 @@ export function ItemDetail({ item, book }: ItemDetailProps) {
         <GameIcon path={item.icon} size={48} />
         {item.name}
       </h1>
+      <RecipeSection title="Used in">
+        {using.length > 0 ? (
+          <RecipeList recipes={using} />
+        ) : (
+          <p className="text-muted-foreground">No recipe uses this.</p>
+        )}
+      </RecipeSection>
       {isCrafted && (
         <RecipeSection title="Made by">
           <RecipeList recipes={making} />
@@ -34,13 +41,6 @@ export function ItemDetail({ item, book }: ItemDetailProps) {
           <ItemSources sources={sources} />
         </RecipeSection>
       )}
-      <RecipeSection title="Used in">
-        {using.length > 0 ? (
-          <RecipeList recipes={using} />
-        ) : (
-          <p className="text-muted-foreground">No recipe uses this.</p>
-        )}
-      </RecipeSection>
     </article>
   );
 }
