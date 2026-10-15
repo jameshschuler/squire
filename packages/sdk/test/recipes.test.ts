@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildRecipeBook,
   recipeBookIcons,
+  findItem,
   recipesMaking,
   recipesUsing,
   searchRecipes,
@@ -177,5 +178,19 @@ describe("recipeBookIcons", () => {
   it("skips items without an icon", () => {
     const [recipe] = recipes;
     expect(recipeBookIcons([{ ...recipe!, icon: "", outputs: [], materials: [] }])).toEqual([]);
+  });
+});
+
+describe("findItem", () => {
+  it.each([
+    ["an output", "gold_bar", "Gold bar"],
+    ["a material", "salt_crystal", "Salt crystal"],
+    ["a material alternative", "gold_ore", "Gold ore"],
+  ])("finds %s", (_, id, name) => {
+    expect(findItem(recipes, id)).toEqual({ id, name, icon: expect.any(String) });
+  });
+
+  it("returns undefined for an item no recipe mentions", () => {
+    expect(findItem(recipes, "unknown")).toBeUndefined();
   });
 });
