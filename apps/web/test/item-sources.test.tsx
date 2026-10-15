@@ -23,6 +23,15 @@ describe("ItemSources", () => {
     expect(screen.getByText("Nomad Woods").textContent).toBe("Nomad Woods (Jarvonia)");
   });
 
+  it("shortens long region names", () => {
+    render(
+      <ItemSources
+        sources={[source({ locations: [{ id: "wraithwater", name: "Wraithwater", region: "Empire of Wallisia" }] })]}
+      />,
+    );
+    expect(screen.getByText("Wraithwater").textContent).toBe("Wraithwater (Wallisia)");
+  });
+
   it("labels drops that aren't the main loot", () => {
     render(<ItemSources sources={[source({}), source({ activityId: "mine", name: "Mining", lootType: "gem" })]} />);
     expect(screen.getAllByText("Gem find")).toHaveLength(1);

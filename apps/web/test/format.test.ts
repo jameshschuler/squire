@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatPercent, formatSkillLevel, formatSteps, lootTypeLabel } from "@/lib/format";
+import { formatPercent, formatRegion, formatSkillLevel, formatSteps, lootTypeLabel } from "@/lib/format";
 
 describe("formatPercent", () => {
   it.each([
@@ -43,5 +43,16 @@ describe("lootTypeLabel", () => {
     ["petEgg", "Pet egg"],
   ] as const)("labels %s as %s", (lootType, expected) => {
     expect(lootTypeLabel(lootType)).toBe(expected);
+  });
+});
+
+describe("formatRegion", () => {
+  it.each([
+    ["Grand Duchy of Trellin-Erdwise", "GDTE"],
+    ["Empire of Wallisia", "Wallisia"],
+    ["Jarvonia", "Jarvonia"],
+    ["Syrenthia", "Syrenthia"],
+  ])("shows %s as %s", (region, expected) => {
+    expect(formatRegion(region)).toBe(expected);
   });
 });

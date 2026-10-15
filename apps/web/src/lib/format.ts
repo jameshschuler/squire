@@ -29,3 +29,12 @@ const LOOT_TYPE_LABELS: Record<LootType, string | null> = {
 export function lootTypeLabel(lootType: LootType): string | null {
   return LOOT_TYPE_LABELS[lootType] ?? null;
 }
+
+const REGION_SHORT_NAMES: Record<string, string> = {
+  "Grand Duchy of Trellin-Erdwise": "GDTE",
+  "Empire of Wallisia": "Wallisia",
+};
+
+export function formatRegion(region: string): string {
+  return REGION_SHORT_NAMES[region] ?? region;
+}

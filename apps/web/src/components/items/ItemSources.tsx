@@ -2,7 +2,7 @@ import { MapPin } from "lucide-react";
 import type { ItemSource } from "@jameshschuler/walkscape-sdk";
 import { Badge } from "@/components/ui/badge";
 import { GameIcon } from "@/components/shared/GameIcon";
-import { formatSkillLevel, lootTypeLabel } from "@/lib/format";
+import { formatRegion, formatSkillLevel, lootTypeLabel } from "@/lib/format";
 
 export function ItemSources({ sources }: { sources: ItemSource[] }) {
   if (sources.length === 0) {
@@ -32,7 +32,7 @@ export function ItemSources({ sources }: { sources: ItemSource[] }) {
                   <li key={location.id} className="flex items-center gap-2">
                     <MapPin className="size-3.5 shrink-0 text-muted-foreground" />
                     <span>
-                      {location.name} <span className="text-muted-foreground">({location.region})</span>
+                      {location.name} <span className="text-muted-foreground">({formatRegion(location.region)})</span>
                     </span>
                   </li>
                 ))}
