@@ -1,18 +1,21 @@
 import { useMemo } from "react";
-import { recipesMaking, recipesUsing, type Item, type RecipeView } from "@jameshschuler/walkscape-sdk";
+import { recipesMaking, recipesUsing, type Item, type RecipeBook } from "@jameshschuler/walkscape-sdk";
 import { BackButton } from "@/components/layout/BackButton";
 import { RecipeList } from "@/components/recipes/RecipeList";
 import { RecipeSection } from "@/components/recipes/RecipeSection";
 import { GameIcon } from "@/components/shared/GameIcon";
+import { ItemSources } from "./ItemSources";
 
 interface ItemDetailProps {
   item: Item;
-  recipes: RecipeView[];
+  book: RecipeBook;
 }
 
-export function ItemDetail({ item, recipes }: ItemDetailProps) {
-  const making = useMemo(() => recipesMaking(recipes, item.id), [recipes, item.id]);
-  const using = useMemo(() => recipesUsing(recipes, item.id), [recipes, item.id]);
+export function ItemDetail({ item, book }: ItemDetailProps) {
+  const making = useMemo(() => recipesMaking(book.recipes, item.id), [book, item.id]);
+  const using = useMemo(() => recipesUsing(book.recipes, item.id), [book, item.id]);
+  const sources = book.sources[item.id] ?? [];
+  const isCrafted = making.length > 0;
 
   return (
     <article className="space-y-6 pt-2">
@@ -21,13 +24,16 @@ export function ItemDetail({ item, recipes }: ItemDetailProps) {
         <GameIcon path={item.icon} size={48} />
         {item.name}
       </h1>
-      <RecipeSection title="Made by">
-        {making.length > 0 ? (
+      {isCrafted && (
+        <RecipeSection title="Made by">
           <RecipeList recipes={making} />
-        ) : (
-          <p className="text-muted-foreground">No recipe makes this. It's gathered or found.</p>
-        )}
-      </RecipeSection>
+        </RecipeSection>
+      )}
+      {(!isCrafted || sources.length > 0) && (
+        <RecipeSection title="Where to get it">
+          <ItemSources sources={sources} />
+        </RecipeSection>
+      )}
       <RecipeSection title="Used in">
         {using.length > 0 ? (
           <RecipeList recipes={using} />

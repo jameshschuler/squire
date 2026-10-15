@@ -5,29 +5,42 @@ import { ItemDetail } from "@/components/items/ItemDetail";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 import { renderWithRouter } from "./render-with-router";
 
-const { recipes } = buildRecipeBook(sample as unknown as GameData);
+const book = buildRecipeBook(sample as unknown as GameData);
 
 afterEach(cleanup);
 
 async function renderItem(itemId: string) {
-  await renderWithRouter(<ItemDetail item={findItem(recipes, itemId)!} recipes={recipes} />);
+  await renderWithRouter(<ItemDetail item={findItem(book.recipes, itemId)!} book={book} />);
 }
+
+const sectionTitles = () => screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
 
 function section(title: string) {
   return within(screen.getByRole("heading", { name: title }).parentElement!);
 }
 
 describe("ItemDetail", () => {
-  it("lists the recipe that makes an item and says nothing uses it", async () => {
+  it("shows a crafted item's recipe first and no sources section when nothing drops it", async () => {
     await renderItem("gold_bar");
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Gold bar");
+    expect(sectionTitles()).toEqual(["Made by", "Used in"]);
     expect(section("Made by").getByRole("link", { name: /Smelt a gold bar/ })).toBeDefined();
     expect(section("Used in").getByText("No recipe uses this.")).toBeDefined();
   });
 
-  it("lists recipes that use a gathered material and says nothing makes it", async () => {
+  it("shows where to get a raw material first, with its activity and location", async () => {
+    await renderItem("gold_ore");
+    expect(sectionTitles()).toEqual(["Where to get it", "Used in"]);
+    const sources = section("Where to get it");
+    expect(sources.getByText("Mine gold ore")).toBeDefined();
+    expect(sources.getByText("Mining lvl. 40")).toBeDefined();
+    expect(sources.getByText("Crown of Cinders").textContent).toBe("Crown of Cinders (Wrentmark)");
+    expect(section("Used in").getByRole("link", { name: /Smelt a gold bar/ })).toBeDefined();
+  });
+
+  it("says when a raw material has no known source", async () => {
     await renderItem("salt_crystal");
-    expect(section("Made by").getByText(/No recipe makes this/)).toBeDefined();
-    expect(section("Used in").getByRole("link", { name: /Assemble dynamite/ })).toBeDefined();
+    expect(sectionTitles()).toEqual(["Where to get it", "Used in"]);
+    expect(section("Where to get it").getByText("No known source yet.")).toBeDefined();
   });
 });
