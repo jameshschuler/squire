@@ -10,7 +10,7 @@ export function fakeClient(version = "v1") {
     recipes: data.recipes,
     locations: data.locations,
   };
-  const calls = { version: 0, list: 0, icon: 0 };
+  const calls = { version: 0, list: 0, icon: 0, iconBatches: [] as number[] };
   const state = { version };
 
   const client: WalkScapeClient = {
@@ -39,6 +39,10 @@ export function fakeClient(version = "v1") {
         throw new WalkScapeApiError(404, `/icons/${path}`, "Not found");
       }
       return new Response(new Uint8Array([1, 2, 3]), { headers: { "Content-Type": "image/png" } });
+    },
+    icons: async (paths) => {
+      calls.iconBatches.push(paths.length);
+      return Object.fromEntries(paths.map((p) => [p, p.includes("missing") ? null : "data:image/webp;base64,AQID"]));
     },
   };
   return { client, calls, state };

@@ -98,6 +98,11 @@ export function recipesMaking(recipes: RecipeView[], itemId: string): RecipeView
   return recipes.filter((r) => r.outputs.some((o) => o.id === itemId));
 }
 
+export function recipeBookIcons(recipes: RecipeView[]): string[] {
+  const items = recipes.flatMap((r) => [r, ...r.outputs, ...r.materials.flat()]);
+  return [...new Set(items.map((i) => i.icon).filter(Boolean))];
+}
+
 export function recipesUsing(recipes: RecipeView[], itemId: string): RecipeView[] {
   return recipes.filter((r) => r.materials.some((slot) => slot.some((m) => m.id === itemId)));
 }

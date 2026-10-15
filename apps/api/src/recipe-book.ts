@@ -7,7 +7,16 @@ export type RecipeBookSource = () => Promise<RecipeBook>;
 
 type Logger = Pick<FastifyBaseLogger, "info">;
 
-export function createRecipeBookSource(client: WalkScapeClient, log: Logger, now = Date.now): RecipeBookSource {
+interface RecipeBookSourceOptions {
+  onLoad?: (book: RecipeBook) => void;
+  now?: () => number;
+}
+
+export function createRecipeBookSource(
+  client: WalkScapeClient,
+  log: Logger,
+  { onLoad, now = Date.now }: RecipeBookSourceOptions = {},
+): RecipeBookSource {
   let book: RecipeBook | undefined;
   let checkedAt = 0;
   let pending: Promise<RecipeBook> | undefined;
@@ -16,6 +25,7 @@ export function createRecipeBookSource(client: WalkScapeClient, log: Logger, now
     const startedAt = now();
     const loaded = buildRecipeBook(await loadGameData(client));
     log.info({ version: loaded.version, recipes: loaded.recipes.length, ms: now() - startedAt }, "Loaded recipe book");
+    onLoad?.(loaded);
     return loaded;
   }
 
