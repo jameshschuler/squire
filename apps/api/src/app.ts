@@ -32,7 +32,7 @@ export function buildApp({ client, logLevel, corsOrigins }: AppOptions): Fastify
   const recipeBook = createRecipeBookSource(client, app.log, {
     onLoad: (book) => {
       icons
-        .warm(recipeBookIcons(book.recipes))
+        .warm(recipeBookIcons(book))
         .then((loaded) => app.log.info({ icons: loaded }, "Warmed icon cache"))
         .catch((err: unknown) => app.log.warn({ err }, "Failed to warm icon cache"));
     },

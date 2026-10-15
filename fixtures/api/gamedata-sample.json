@@ -360,6 +360,19 @@
     "wardrobe",
     "erdwiss_trinketry_factory_advanced"
    ]
+  },
+  {
+   "id": "crown_of_cinders",
+   "name": "Crown of Cinders",
+   "icon": "assets/icons/locations/crown_of_cinders.png",
+   "faction": "wrentmark",
+   "keywords": [
+    "desert"
+   ],
+   "serviceList": [],
+   "activityList": [
+    "mine_gold_ore"
+   ]
   }
  ],
  "factions": [
@@ -372,6 +385,121 @@
    "id": "jarvonia",
    "name": "Jarvonia",
    "icon": "assets/icons/coatofarms/jarvonia.png"
+  },
+  {
+   "id": "wrentmark",
+   "name": "Wrentmark",
+   "icon": "assets/icons/coatofarms/wrentmark.png"
+  }
+ ],
+ "activities": [
+  {
+   "id": "mine_gold_ore",
+   "name": "Mine gold ore",
+   "icon": "assets/icons/items/materials/ores/gold_ore.png",
+   "relatedSkillsList": [
+    "mining"
+   ],
+   "requirements": [
+    {
+     "type": "skillLevel",
+     "name": "",
+     "opposite": false,
+     "requirement": {
+      "level": 40,
+      "skill": "mining"
+     }
+    },
+    {
+     "type": "keywordEquipped",
+     "name": "",
+     "opposite": false,
+     "requirement": {
+      "keyword": "pickaxe"
+     }
+    }
+   ],
+   "workRequired": 68,
+   "maxWorkEfficiency": 1.7,
+   "xpRewardsMap": {
+    "mining": 48
+   },
+   "tables": [
+    {
+     "isPrimary": true,
+     "type": [],
+     "rollAmount": 1,
+     "tables": [
+      "mine_gold_ore"
+     ]
+    },
+    {
+     "isPrimary": false,
+     "type": [
+      "gem"
+     ],
+     "rollAmount": 1,
+     "tables": [
+      "wrentmark_gem_table"
+     ]
+    }
+   ]
+  }
+ ],
+ "lootTables": [
+  {
+   "id": "mine_gold_ore",
+   "name": "mine gold ore",
+   "category": "normal",
+   "noDropChance": 0,
+   "tableRows": [
+    {
+     "rowItemID": "gold_ore",
+     "name": "Gold ore",
+     "icon": "assets/icons/items/materials/ores/gold_ore.png",
+     "isMoney": false,
+     "linearWeightScaling": true,
+     "rowWeight": 10,
+     "rowMinimumAmount": 1,
+     "rowMaximumAmount": 1,
+     "minWeightScale": 0.05,
+     "requirementsBonuses": []
+    }
+   ],
+   "subTables": []
+  },
+  {
+   "id": "wrentmark_gem_table",
+   "name": "wrentmark gem table",
+   "category": "normal",
+   "noDropChance": 0.99,
+   "tableRows": [
+    {
+     "rowItemID": "rough_wrentmarine",
+     "name": "Rough wrentmarine",
+     "icon": "assets/icons/items/materials/ores/rough_wrentmarine.png",
+     "isMoney": false,
+     "linearWeightScaling": true,
+     "rowWeight": 20,
+     "rowMinimumAmount": 1,
+     "rowMaximumAmount": 1,
+     "minWeightScale": 0.05,
+     "requirementsBonuses": []
+    },
+    {
+     "rowItemID": "rough_sun_stone",
+     "name": "Rough sun stone",
+     "icon": "assets/icons/items/materials/ores/rough_sunstone.png",
+     "isMoney": false,
+     "linearWeightScaling": true,
+     "rowWeight": 3,
+     "rowMinimumAmount": 1,
+     "rowMaximumAmount": 1,
+     "minWeightScale": 0.05,
+     "requirementsBonuses": []
+    }
+   ],
+   "subTables": []
   }
  ]
 }

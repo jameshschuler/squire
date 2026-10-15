@@ -50,15 +50,22 @@ Errors from the API throw `WalkScapeApiError`, which has `status` and `path`.
 
 | Function                                          | What it does                                                                                                                              |
 | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `loadGameData(client)`                            | Loads every recipe, item, skill, crafting service, location and faction: about 75 requests, a few seconds.                                |
+| `loadGameData(client)`                            | Loads every recipe, item, skill, crafting service, location, faction, activity and loot table: about 50 requests, a few seconds.          |
 | `buildRecipeBook(data)`                           | Display-ready recipes: names and icons resolved, material alternatives grouped, the service needed and where to find it. Sorted by level. |
 | `searchRecipes(recipes, query, { skill, limit })` | Matches recipe names, outputs and materials. Best matches first.                                                                          |
 | `recipesMaking(recipes, itemId)`                  | Recipes that produce an item.                                                                                                             |
 | `recipesUsing(recipes, itemId)`                   | Recipes that take an item as a material.                                                                                                  |
 | `findItem(recipes, itemId)`                       | An item's name and icon.                                                                                                                  |
-| `recipeBookIcons(recipes)`                        | Every icon path the recipes show, each once.                                                                                              |
+| `recipeBookIcons(book)`                           | Every icon path the book shows (recipes, materials, outputs and sources), each once.                                                      |
 
 A recipe's service counts higher tiers too: an advanced kitchen can cook basic kitchen recipes. Each location carries its region and the lowest tier it has that qualifies, so you can group places by region and mark the ones that only have a better service.
+
+`book.sources` says where to get each recipe material: the activities that drop it, keyed by item id. Each source has the activity's skill and level, its loot type (`main` loot, a `secondary` roll, or a special table such as `gem`), and the locations offering it, with regions. Materials no activity drops, such as tools sold in shops, have no entry.
+
+```ts
+book.sources.bones?.map((s) => `${s.name} at ${s.locations.map((l) => l.name).join(", ")}`);
+// ["Wolf hunting at Sanguine Hills", "Lizard hunting at Old Arena Ruins", ...]
+```
 
 ## Rate limits and caching
 

@@ -20,6 +20,7 @@ const book: RecipeBook = {
       maxWorkEfficiency: 1,
     },
   ],
+  sources: {},
 };
 
 describe("prefetchIcons", () => {
