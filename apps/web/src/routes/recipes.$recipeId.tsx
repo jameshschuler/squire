@@ -15,7 +15,7 @@ function RecipePage() {
   }
   const recipe = state.book.recipes.find((r) => r.id === recipeId);
   if (!recipe) {
-    return <p className="py-8 text-center text-muted-foreground">Recipe not found.</p>;
+    return <p className="text-muted-foreground py-8 text-center">Recipe not found.</p>;
   }
   return <RecipeDetail recipe={recipe} />;
 }

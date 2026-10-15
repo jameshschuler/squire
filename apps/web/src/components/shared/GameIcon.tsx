@@ -9,7 +9,12 @@ interface GameIconProps {
 
 export function GameIcon({ path, size = 32, className }: GameIconProps) {
   if (!path) {
-    return <span className={cn("inline-block shrink-0 rounded-md bg-muted", className)} style={{ width: size, height: size }} />;
+    return (
+      <span
+        className={cn("bg-muted inline-block shrink-0 rounded-md", className)}
+        style={{ width: size, height: size }}
+      />
+    );
   }
   return (
     <img
@@ -18,6 +23,7 @@ export function GameIcon({ path, size = 32, className }: GameIconProps) {
       height={size}
       alt=""
       loading="lazy"
+      crossOrigin="anonymous"
       className={cn("shrink-0 [image-rendering:pixelated]", className)}
     />
   );

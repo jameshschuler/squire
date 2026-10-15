@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch --env-file=../../.env src/index.ts | pino-pretty",
-    "build": "tsup src/index.ts --format esm --clean --no-external @squire/walkscape-sdk",
-    "start": "node --env-file=../../.env dist/index.js",
+    "build": "tsup",
+    "start": "node dist/index.js",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

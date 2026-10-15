@@ -22,6 +22,9 @@ export function readEnv(source: NodeJS.ProcessEnv = process.env): Env {
     baseUrl: ENVIRONMENTS[environment],
     port: Number(source.PORT ?? 3000),
     logLevel: source.LOG_LEVEL ?? "info",
-    corsOrigins: (source.CORS_ORIGINS ?? "").split(",").map((o) => o.trim()).filter(Boolean),
+    corsOrigins: (source.CORS_ORIGINS ?? "")
+      .split(",")
+      .map((o) => o.trim())
+      .filter(Boolean),
   };
 }

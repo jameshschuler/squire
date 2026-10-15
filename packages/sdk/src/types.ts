@@ -1,7 +1,24 @@
 export type ResourceName =
-  | "abilities" | "achievements" | "activities" | "buildings" | "cooldowns" | "factions"
-  | "global_variables" | "items" | "job_boards" | "keywords" | "locations" | "loot_tables"
-  | "pets" | "recipes" | "rewards" | "routes" | "services" | "shops" | "skills" | "stats"
+  | "abilities"
+  | "achievements"
+  | "activities"
+  | "buildings"
+  | "cooldowns"
+  | "factions"
+  | "global_variables"
+  | "items"
+  | "job_boards"
+  | "keywords"
+  | "locations"
+  | "loot_tables"
+  | "pets"
+  | "recipes"
+  | "rewards"
+  | "routes"
+  | "services"
+  | "shops"
+  | "skills"
+  | "stats"
   | "terrain_modifiers";
 
 export interface VersionInfo {
@@ -32,8 +49,13 @@ export interface CompactEntity {
   icon: string;
 }
 
-export interface MaterialOption { item: string; amount: number }
-export interface MaterialSlot { options: MaterialOption[] }
+export interface MaterialOption {
+  item: string;
+  amount: number;
+}
+export interface MaterialSlot {
+  options: MaterialOption[];
+}
 
 export interface LootTableRef {
   isPrimary: boolean;
