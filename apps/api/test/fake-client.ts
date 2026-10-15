@@ -15,6 +15,8 @@ export function fakeClient(version = "v1") {
     recipes: data.recipes,
     locations: data.locations,
     factions: data.factions,
+    activities: data.activities,
+    loot_tables: data.lootTables,
   };
   const calls = { version: 0, list: 0, icon: 0, iconBatches: [] as number[] };
   const state = { version };
@@ -36,9 +38,12 @@ export function fakeClient(version = "v1") {
       return found as T;
     },
     search: async <T>(resource: ResourceName, params: Record<string, unknown>) =>
-      (resource === "recipes"
-        ? data.recipes.filter((r) => r.relatedSkills.includes(String(params.relatedSkills)))
-        : (resources[resource] ?? [])) as T[],
+      (resources[resource] ?? []).filter((entry) =>
+        Object.entries(params).every(([field, value]) => {
+          const actual = (entry as Record<string, unknown>)[field];
+          return Array.isArray(actual) ? actual.includes(value) : actual === value;
+        }),
+      ) as T[],
     icon: async (path) => {
       calls.icon++;
       if (path.includes("missing")) {

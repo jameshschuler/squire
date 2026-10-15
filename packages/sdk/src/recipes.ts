@@ -2,6 +2,7 @@ import type { GameData } from "./gamedata.js";
 import {
   SERVICE_TIERS,
   type Item,
+  type LootTable,
   type Requirement,
   type ServiceRequirement,
   type ServiceTier,
@@ -16,11 +17,14 @@ export interface RecipeItem {
   amount: number;
 }
 
-export interface RecipeLocation {
+export interface LocationSummary {
   id: string;
   name: string;
   /** The region (faction) the location is in, e.g. "Jarvonia". */
   region: string;
+}
+
+export interface RecipeLocation extends LocationSummary {
   /** The lowest service tier here that qualifies. Higher than the recipe's tier means only a better service is available. */
   tier: ServiceTier;
 }
@@ -39,7 +43,7 @@ export interface RecipeView {
   name: string;
   icon: string;
   /** Skills the recipe trains, with the level it needs (`null` when it needs none). */
-  skills: { id: string; name: string; level: number | null }[];
+  skills: SkillLevel[];
   /** `null` when the recipe needs no crafting service. */
   service: RecipeService | null;
   /** One entry per material slot. Each slot takes any one of its options, e.g. 7 gold nuggets or 2 gold ore. */
@@ -53,9 +57,35 @@ export interface RecipeView {
 }
 
 /** Every recipe, sorted by level, tagged with the game data version it came from. */
+export interface SkillLevel {
+  id: string;
+  name: string;
+  /** Level needed, or `null` when there's no level requirement. */
+  level: number | null;
+}
+
+/**
+ * Which roll of an activity drops the item: its `main` loot, a `secondary` roll, or a special table
+ * such as `gem` finds or `birdNest` drops.
+ */
+export type LootType = "main" | "secondary" | "gem" | "birdNest" | "chestTable" | "collectible" | "petEgg";
+
+/** An activity that drops an item, and where you can do it. */
+export interface ItemSource {
+  activityId: string;
+  name: string;
+  icon: string;
+  skills: SkillLevel[];
+  lootType: LootType;
+  /** Locations offering the activity, sorted by name. */
+  locations: LocationSummary[];
+}
+
 export interface RecipeBook {
   version: string;
   recipes: RecipeView[];
+  /** Activities that drop each recipe material, keyed by item id. Materials with no known source are missing. */
+  sources: Record<string, ItemSource[]>;
 }
 
 export interface SearchOptions {
@@ -79,15 +109,12 @@ export function buildRecipeBook(data: GameData): RecipeBook {
   };
 
   const recipes = data.recipes.map((recipe): RecipeView => {
-    const levels = new Map(
-      recipe.requirements.filter(isSkillLevel).map((r) => [r.requirement.skill, r.requirement.level]),
-    );
     const service = recipe.requirements.find(isService);
     return {
       id: recipe.id,
       name: recipe.name,
       icon: recipe.icon,
-      skills: recipe.relatedSkills.map((id) => ({ id, name: skillName(id), level: levels.get(id) ?? null })),
+      skills: skillLevels(recipe.relatedSkills, recipe.requirements, skillName),
       service: service ? serviceView(service, data) : null,
       materials: recipe.materials.map((m) => m.options.map((o) => item(o.item, o.amount))),
       outputs: Object.entries(recipe.itemRewards).map(([id, amount]) => item(id, amount)),
@@ -97,7 +124,12 @@ export function buildRecipeBook(data: GameData): RecipeBook {
     };
   });
 
-  return { version: data.version, recipes: recipes.sort(byLevel) };
+  const materialIds = new Set(recipes.flatMap((r) => r.materials.flat().map((m) => m.id)));
+  return {
+    version: data.version,
+    recipes: recipes.sort(byLevel),
+    sources: itemSources(data, materialIds, skillName),
+  };
 }
 
 /**
@@ -124,10 +156,11 @@ export function recipesMaking(recipes: RecipeView[], itemId: string): RecipeView
   return recipes.filter((r) => r.outputs.some((o) => o.id === itemId));
 }
 
-/** Every icon path a set of recipes shows (recipes, materials and outputs), each once. Handy for prefetching. */
-export function recipeBookIcons(recipes: RecipeView[]): string[] {
-  const items = recipes.flatMap((r) => [r, ...r.outputs, ...r.materials.flat()]);
-  return [...new Set(items.map((i) => i.icon).filter(Boolean))];
+/** Every icon path a recipe book shows (recipes, materials, outputs and item sources), each once. Handy for prefetching. */
+export function recipeBookIcons(book: RecipeBook): string[] {
+  const recipeIcons = book.recipes.flatMap((r) => [r, ...r.outputs, ...r.materials.flat()]);
+  const sourceIcons = Object.values(book.sources).flat();
+  return [...new Set([...recipeIcons, ...sourceIcons].map((i) => i.icon).filter(Boolean))];
 }
 
 /** An item's name and icon, found from any recipe that makes or uses it. */
@@ -146,12 +179,68 @@ export function recipesUsing(recipes: RecipeView[], itemId: string): RecipeView[
   return recipes.filter((r) => r.materials.some((slot) => slot.some((m) => m.id === itemId)));
 }
 
+function itemSources(
+  data: GameData,
+  itemIds: Set<string>,
+  skillName: (id: string) => string,
+): Record<string, ItemSource[]> {
+  const tables = new Map(data.lootTables.map((t) => [t.id, t]));
+  const regions = new Map(data.factions.map((f) => [f.id, f.name]));
+  const sources: Record<string, ItemSource[]> = {};
+
+  for (const activity of data.activities) {
+    const locations = data.locations
+      .filter((l) => l.activityList?.includes(activity.id))
+      .map((l) => ({ id: l.id, name: l.name, region: regions.get(l.faction) ?? humanize(l.faction) }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    const skills = skillLevels(activity.relatedSkillsList, activity.requirements ?? [], skillName);
+
+    for (const ref of activity.tables ?? []) {
+      const lootType = (ref.isPrimary ? "main" : (ref.type[0] ?? "secondary")) as LootType;
+      const dropped = ref.tables.flatMap((id) => droppedItems(tables.get(id))).filter((id) => itemIds.has(id));
+      for (const itemId of new Set(dropped)) {
+        const list = (sources[itemId] ??= []);
+        if (!list.some((s) => s.activityId === activity.id && s.lootType === lootType)) {
+          list.push({ activityId: activity.id, name: activity.name, icon: activity.icon, skills, lootType, locations });
+        }
+      }
+    }
+  }
+
+  for (const list of Object.values(sources)) {
+    list.sort(bySource);
+  }
+  return sources;
+}
+
+function droppedItems(table: LootTable | undefined): string[] {
+  if (!table) {
+    return [];
+  }
+  const rows = [...table.tableRows, ...(table.subTables ?? []).flatMap((sub) => sub.tableRows)];
+  return rows.flatMap((row) => (row.rowItemID ? [row.rowItemID] : []));
+}
+
+function bySource(a: ItemSource, b: ItemSource): number {
+  const main = Number(b.lootType === "main") - Number(a.lootType === "main");
+  return main || minLevel(a.skills) - minLevel(b.skills) || a.name.localeCompare(b.name);
+}
+
+function skillLevels(skillIds: string[], requirements: Requirement[], skillName: (id: string) => string): SkillLevel[] {
+  const levels = new Map(requirements.filter(isSkillLevel).map((r) => [r.requirement.skill, r.requirement.level]));
+  return skillIds.map((id) => ({ id, name: skillName(id), level: levels.get(id) ?? null }));
+}
+
+function minLevel(skills: SkillLevel[]): number {
+  return Math.min(...skills.map((s) => s.level ?? 0));
+}
+
 function byLevel(a: RecipeView, b: RecipeView): number {
   return recipeLevel(a) - recipeLevel(b) || sortName(a).localeCompare(sortName(b)) || a.name.localeCompare(b.name);
 }
 
 function recipeLevel(recipe: RecipeView): number {
-  return Math.min(...recipe.skills.map((s) => s.level ?? 0));
+  return minLevel(recipe.skills);
 }
 
 function sortName(recipe: RecipeView): string {

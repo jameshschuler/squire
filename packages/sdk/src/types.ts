@@ -84,6 +84,42 @@ export interface Recipe extends CompactEntity {
 
 export type Item = CompactEntity;
 
+/** A gathering or other non-crafting activity, e.g. "Mine gold ore". */
+export interface Activity extends CompactEntity {
+  relatedSkillsList: string[];
+  /** `null` for a few special activities, such as travelling. */
+  requirements: Requirement[] | null;
+  workRequired: number;
+  maxWorkEfficiency: number;
+  tables: LootTableRef[] | null;
+  xpRewardsMap: Record<string, number>;
+}
+
+/** One possible drop. `rowItemID` is null for money. */
+export interface LootTableRow {
+  rowItemID: string | null;
+  name: string;
+  icon: string;
+  isMoney: boolean;
+  rowWeight: number;
+  rowMinimumAmount: number;
+  rowMaximumAmount: number;
+}
+
+export interface LootSubTable {
+  type: string;
+  weight: number;
+  tableRows: LootTableRow[];
+}
+
+export interface LootTable {
+  id: string;
+  name: string;
+  category: string;
+  tableRows: LootTableRow[];
+  subTables: LootSubTable[] | null;
+}
+
 /** A faction. Each location belongs to one, which works as its region on the map. */
 export type Faction = CompactEntity;
 

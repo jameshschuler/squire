@@ -11,7 +11,8 @@ import {
 } from "../src/index.js";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
-const { recipes } = buildRecipeBook(sample as unknown as GameData);
+const book = buildRecipeBook(sample as unknown as GameData);
+const { recipes } = book;
 const byId = (id: string) => recipes.find((r) => r.id === id);
 const ids = (list: { id: string }[]) => list.map((r) => r.id);
 
@@ -176,20 +177,93 @@ describe("recipesMaking / recipesUsing", () => {
 });
 
 describe("recipeBookIcons", () => {
-  it("lists every recipe, material and output icon once", () => {
-    const icons = recipeBookIcons(recipes);
-    const expected = recipes.flatMap((r) => [
-      r.icon,
-      ...r.outputs.map((o) => o.icon),
-      ...r.materials.flat().map((m) => m.icon),
-    ]);
+  it("lists every recipe, material, output and source icon once", () => {
+    const icons = recipeBookIcons(book);
+    const expected = [
+      ...recipes.flatMap((r) => [r.icon, ...r.outputs.map((o) => o.icon), ...r.materials.flat().map((m) => m.icon)]),
+      ...Object.values(book.sources)
+        .flat()
+        .map((s) => s.icon),
+    ];
     expect(new Set(icons)).toEqual(new Set(expected.filter(Boolean)));
     expect(icons).toHaveLength(new Set(icons).size);
+    expect(icons).toContain(book.sources.gold_ore![0]!.icon);
   });
 
   it("skips items without an icon", () => {
     const [recipe] = recipes;
-    expect(recipeBookIcons([{ ...recipe!, icon: "", outputs: [], materials: [] }])).toEqual([]);
+    expect(
+      recipeBookIcons({ version: "v", recipes: [{ ...recipe!, icon: "", outputs: [], materials: [] }], sources: {} }),
+    ).toEqual([]);
+  });
+});
+
+describe("sources", () => {
+  function withActivity(edit: (data: GameData) => void) {
+    const data = structuredClone(sample) as unknown as GameData;
+    edit(data);
+    return buildRecipeBook(data).sources;
+  }
+
+  it("lists the activity that drops a material, with its level and locations", () => {
+    expect(book.sources.gold_ore).toEqual([
+      {
+        activityId: "mine_gold_ore",
+        name: "Mine gold ore",
+        icon: expect.any(String),
+        skills: [{ id: "mining", name: "Mining", level: 40 }],
+        lootType: "main",
+        locations: [{ id: "crown_of_cinders", name: "Crown of Cinders", region: "Wrentmark" }],
+      },
+    ]);
+  });
+
+  it("has no entry for a material nothing drops", () => {
+    expect(book.sources.salt_crystal).toBeUndefined();
+  });
+
+  it("only covers items used as recipe materials", () => {
+    expect(book.sources.rough_sun_stone).toBeUndefined();
+  });
+
+  it("labels drops from special tables and secondary rolls, main loot first", () => {
+    const sources = withActivity((data) => {
+      const [main, gem] = data.lootTables;
+      gem!.tableRows[0]!.rowItemID = "gold_ore";
+      data.activities[0]!.tables!.push({ isPrimary: false, type: [], rollAmount: 1, tables: [main!.id] });
+    });
+    expect(sources.gold_ore?.map((s) => s.lootType)).toEqual(["main", "gem", "secondary"]);
+  });
+
+  it("finds items in sub-tables", () => {
+    const sources = withActivity((data) => {
+      const main = data.lootTables[0]!;
+      main.subTables = [{ type: "uncommon", weight: 1, tableRows: main.tableRows }];
+      main.tableRows = [];
+    });
+    expect(sources.gold_ore).toHaveLength(1);
+  });
+
+  it("lists an activity once per loot type, even if several tables drop the item", () => {
+    const sources = withActivity((data) => {
+      data.activities[0]!.tables![0]!.tables.push(data.lootTables[0]!.id);
+    });
+    expect(sources.gold_ore).toHaveLength(1);
+  });
+
+  it("handles an activity without requirements or loot tables", () => {
+    const sources = withActivity((data) => {
+      data.activities.push({ ...data.activities[0]!, id: "travelling", requirements: null, tables: null });
+      data.activities[0]!.requirements = null;
+    });
+    expect(sources.gold_ore?.[0]?.skills).toEqual([{ id: "mining", name: "Mining", level: null }]);
+  });
+
+  it("gives an activity with no location an empty location list", () => {
+    const sources = withActivity((data) => {
+      data.locations = data.locations.filter((l) => !l.activityList?.length);
+    });
+    expect(sources.gold_ore?.[0]?.locations).toEqual([]);
   });
 });
 

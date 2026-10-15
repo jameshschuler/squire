@@ -28,7 +28,7 @@ export async function prefetchRecipeBookIcons(book: RecipeBook): Promise<void> {
   if (!navigator.serviceWorker?.controller || localStorage.getItem(ICONS_PREFETCHED_KEY) === book.version) {
     return;
   }
-  const failed = await prefetchIcons(recipeBookIcons(book.recipes).map(iconUrl), (url) => fetch(url));
+  const failed = await prefetchIcons(recipeBookIcons(book).map(iconUrl), (url) => fetch(url));
   if (failed === 0) {
     localStorage.setItem(ICONS_PREFETCHED_KEY, book.version);
   }
