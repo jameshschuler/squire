@@ -109,6 +109,18 @@ describe("searchMaterials", () => {
     expect(ore?.skills.map((s) => s.id)).toEqual(["mining"]);
   });
 
+  it("matches in-game keywords as well as names", () => {
+    expect(ids(searchMaterials(materials, "ingredient"))).toContain("salt_crystal");
+    expect(ids(searchMaterials(materials, "nugg"))).toContain("gold_nugget");
+  });
+
+  it("ignores accents", () => {
+    const accented = materials.map((m) =>
+      m.item.id === "salt_crystal" ? { ...m, item: { ...m.item, name: "Jalapeño salt" } } : m,
+    );
+    expect(ids(searchMaterials(accented, "jalapeno"))).toEqual(["salt_crystal"]);
+  });
+
   it("filters by skill", () => {
     expect(ids(searchMaterials(materials, "", { filter: "mining" }))).toEqual(["gold_ore"]);
   });

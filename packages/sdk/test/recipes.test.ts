@@ -3,6 +3,8 @@ import {
   buildRecipeBook,
   recipeBookIcons,
   findItem,
+  RECIPE_BOOK_SCHEMA,
+  sourceKey,
   lowestSkillLevels,
   recipesMaking,
   recipesUsing,
@@ -18,6 +20,10 @@ const byId = (id: string) => recipes.find((r) => r.id === id);
 const ids = (list: { id: string }[]) => list.map((r) => r.id);
 
 describe("buildRecipeBook", () => {
+  it("stamps the book with its schema version", () => {
+    expect(book.schema).toBe(RECIPE_BOOK_SCHEMA);
+  });
+
   it("sorts recipes by level, lowest first", () => {
     expect(ids(recipes)).toEqual(["smelt_a_gold_bar", "bake_a_bagel", "assemble_dynamite"]);
   });
@@ -167,10 +173,6 @@ describe("searchRecipes", () => {
   it("orders equally good matches by level", () => {
     expect(ids(searchRecipes(recipes, "a"))).toEqual(["assemble_dynamite", "smelt_a_gold_bar", "bake_a_bagel"]);
   });
-
-  it("respects the limit", () => {
-    expect(searchRecipes(recipes, "", { limit: 1 })).toHaveLength(1);
-  });
 });
 
 describe("recipesMaking / recipesUsing", () => {
@@ -198,7 +200,12 @@ describe("recipeBookIcons", () => {
   it("skips items without an icon", () => {
     const [recipe] = recipes;
     expect(
-      recipeBookIcons({ version: "v", recipes: [{ ...recipe!, icon: "", outputs: [], materials: [] }], sources: {} }),
+      recipeBookIcons({
+        schema: RECIPE_BOOK_SCHEMA,
+        version: "v",
+        recipes: [{ ...recipe!, icon: "", outputs: [], materials: [] }],
+        sources: {},
+      }),
     ).toEqual([]);
   });
 });
@@ -308,6 +315,18 @@ describe("sources", () => {
     expect(sources.gold_ore?.map((s) => s.kind)).toEqual(["activity", "shop", "chest"]);
   });
 
+  it("sorts chests no activity drops after the others, by name", () => {
+    const sources = withActivity((data) => {
+      const chest = data.items.find((i) => i.id === "mining_chest")!;
+      data.items.push(
+        { ...chest, id: "chest_of_zeta", name: "Chest of Zeta" },
+        { ...chest, id: "chest_of_alpha", name: "Chest of Alpha" },
+      );
+      data.lootTables.find((t) => t.id === "mining_chest_table")!.tableRows[0]!.rowItemID = "salt_crystal";
+    });
+    expect(sources.salt_crystal?.map((s) => s.name)).toEqual(["Mining chest", "Chest of Alpha", "Chest of Zeta"]);
+  });
+
   it("gives an activity with no location an empty location list", () => {
     const sources = withActivity((data) => {
       data.locations = data.locations.filter((l) => !l.activityList?.length);
@@ -327,6 +346,15 @@ describe("findItem", () => {
 
   it("returns undefined for an item no recipe mentions", () => {
     expect(findItem(recipes, "unknown")).toBeUndefined();
+  });
+});
+
+describe("sourceKey", () => {
+  it("tells apart an activity's loot types, and other kinds by id", () => {
+    const activity = book.sources.gold_ore![0]!;
+    expect(sourceKey(activity)).toBe("activity:mine_gold_ore:main");
+    expect(sourceKey({ ...activity, lootType: "gem" } as typeof activity)).toBe("activity:mine_gold_ore:gem");
+    expect(sourceKey({ kind: "shop", id: "stall", name: "stall", icon: "", locations: [] })).toBe("shop:stall");
   });
 });
 

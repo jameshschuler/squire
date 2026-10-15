@@ -55,7 +55,7 @@ export function searchMaterials(
   return materials.filter(
     (m) =>
       (!filter || matchesFilter(m, filter)) &&
-      terms.every((term) => words(m.item.name).some((word) => word.startsWith(term))),
+      terms.every((term) => searchableWords(m).some((word) => word.startsWith(term))),
   );
 }
 
@@ -73,8 +73,14 @@ function sourceSkills(source: ItemSource): SkillLevel[] {
   return source.kind === "activity" ? source.skills : [];
 }
 
+function searchableWords(material: Material): string[] {
+  return [material.item.name, ...material.item.keywords].flatMap(words);
+}
+
 function words(text: string): string[] {
   return text
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .split(/[^a-z0-9]+/)
     .filter(Boolean);

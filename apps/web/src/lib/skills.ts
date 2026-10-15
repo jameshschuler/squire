@@ -10,6 +10,10 @@ export function uniqueSkills(skills: SkillOption[]): SkillOption[] {
   return [...byId].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
 }
 
+export function knownOption(options: SkillOption[], selected: string | undefined): string | undefined {
+  return options.some((o) => o.id === selected) ? selected : undefined;
+}
+
 export function recipeSkills(recipes: RecipeView[]): SkillOption[] {
   return uniqueSkills(recipes.flatMap((r) => r.skills));
 }

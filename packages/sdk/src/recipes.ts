@@ -115,8 +115,13 @@ export interface ShopSource {
 /** One way to get an item. */
 export type ItemSource = ActivitySource | ChestSource | ShopSource;
 
+/** Bumped whenever the shape of `RecipeBook` changes, so caches keyed on it refresh. */
+export const RECIPE_BOOK_SCHEMA = 2;
+
 /** Every recipe, sorted by level, tagged with the game data version it came from. */
 export interface RecipeBook {
+  /** `RECIPE_BOOK_SCHEMA` at build time. */
+  schema: number;
   version: string;
   recipes: RecipeView[];
   /**
@@ -126,11 +131,9 @@ export interface RecipeBook {
   sources: Record<string, ItemSource[]>;
 }
 
-export interface SearchOptions {
+export interface RecipeSearchOptions {
   /** Only recipes that train this skill id, e.g. `"cooking"`. */
   skill?: string;
-  /** Return at most this many recipes. */
-  limit?: number;
 }
 
 /**
@@ -169,6 +172,7 @@ export function buildRecipeBook(data: GameData): RecipeBook {
 
   const materialIds = new Set(recipes.flatMap((r) => r.materials.flat().map((m) => m.id)));
   return {
+    schema: RECIPE_BOOK_SCHEMA,
     version: data.version,
     recipes: recipes.sort(byLevel),
     sources: itemSources(data, materialIds, { locationsByActivity, locationsByBuilding }, skillName),
@@ -181,18 +185,18 @@ export function buildRecipeBook(data: GameData): RecipeBook {
  * returns every recipe in level order. Words are cached per recipe object, so treat recipes as
  * read-only.
  */
-export function searchRecipes(recipes: RecipeView[], query: string, options: SearchOptions = {}): RecipeView[] {
+export function searchRecipes(recipes: RecipeView[], query: string, options: RecipeSearchOptions = {}): RecipeView[] {
   const pool = options.skill ? recipes.filter((r) => r.skills.some((s) => s.id === options.skill)) : recipes;
   const terms = words(query);
   if (terms.length === 0) {
-    return pool.slice(0, options.limit);
+    return pool;
   }
 
   const scored = pool
     .map((recipe) => ({ recipe, score: searchScore(recipe, terms) }))
     .filter((s) => s.score > 0)
     .sort((a, b) => b.score - a.score || byLevel(a.recipe, b.recipe));
-  return scored.map((s) => s.recipe).slice(0, options.limit);
+  return scored.map((s) => s.recipe);
 }
 
 /** Recipes that produce an item. */
@@ -216,6 +220,14 @@ export function findItem(recipes: RecipeView[], itemId: string): ItemSummary | u
     }
   }
   return undefined;
+}
+
+/**
+ * Identifies one source of an item. An activity can drop the same item from several loot types, so
+ * those each get their own key.
+ */
+export function sourceKey(source: ItemSource): string {
+  return source.kind === "activity" ? `activity:${source.id}:${source.lootType}` : `${source.kind}:${source.id}`;
 }
 
 /** The lowest level needed per skill across a set of skill levels, lowest first. */
@@ -269,7 +281,7 @@ function groupDrops(drops: Drop[]): Map<string, ItemSource[]> {
   const byItem = new Map<string, ItemSource[]>();
   const seen = new Set<string>();
   for (const { itemId, source } of drops) {
-    const key = `${itemId}|${source.kind}|${source.id}|${source.kind === "activity" ? source.lootType : ""}`;
+    const key = `${itemId}|${sourceKey(source)}`;
     if (seen.has(key)) {
       continue;
     }
@@ -348,7 +360,7 @@ function droppedItems(table: LootTable | undefined): string[] {
 }
 
 function bySource(a: ItemSource, b: ItemSource): number {
-  return sourceRank(a) - sourceRank(b) || sourceLevel(a) - sourceLevel(b) || a.name.localeCompare(b.name);
+  return sourceRank(a) - sourceRank(b) || compareLevels(sourceLevel(a), sourceLevel(b)) || a.name.localeCompare(b.name);
 }
 
 function sourceRank(source: ItemSource): number {
@@ -362,13 +374,17 @@ function sourceLevel(source: ItemSource): number {
   return source.kind === "shop" ? 0 : minLevel(source.skills);
 }
 
+function compareLevels(a: number, b: number): number {
+  return a === b ? 0 : a - b;
+}
+
 function skillLevels(skillIds: string[], requirements: Requirement[], skillName: (id: string) => string): SkillLevel[] {
   const levels = new Map(requirements.filter(isSkillLevel).map((r) => [r.requirement.skill, r.requirement.level]));
   return skillIds.map((id) => ({ id, name: skillName(id), level: levels.get(id) ?? null }));
 }
 
 function minLevel(skills: SkillLevel[]): number {
-  return Math.min(...skills.map((s) => s.level ?? 0));
+  return skills.length > 0 ? Math.min(...skills.map((s) => s.level ?? 0)) : Number.POSITIVE_INFINITY;
 }
 
 function byLevel(a: RecipeView, b: RecipeView): number {

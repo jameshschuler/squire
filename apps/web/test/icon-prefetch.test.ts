@@ -5,6 +5,7 @@ import { ICONS_PREFETCHED_KEY, prefetchIcons, prefetchRecipeBookIcons } from "@/
 const ok = () => Promise.resolve(new Response(null, { status: 200 }));
 
 const book: RecipeBook = {
+  schema: 2,
   version: "v1",
   recipes: [
     {
@@ -73,14 +74,21 @@ describe("prefetchRecipeBookIcons", () => {
     controlledByServiceWorker(true);
     await prefetchRecipeBookIcons(book);
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(["/api/icons/recipe.png", "/api/icons/material.png"]);
-    expect(localStorage.getItem(ICONS_PREFETCHED_KEY)).toBe("v1");
+    expect(localStorage.getItem(ICONS_PREFETCHED_KEY)).toBe("2-v1");
   });
 
   it("skips when this version was already prefetched", async () => {
     controlledByServiceWorker(true);
-    localStorage.setItem(ICONS_PREFETCHED_KEY, "v1");
+    localStorage.setItem(ICONS_PREFETCHED_KEY, "2-v1");
     await prefetchRecipeBookIcons(book);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("prefetches again when the book's schema changes, even for the same data version", async () => {
+    controlledByServiceWorker(true);
+    localStorage.setItem(ICONS_PREFETCHED_KEY, "1-v1");
+    await prefetchRecipeBookIcons(book);
+    expect(fetchMock).toHaveBeenCalled();
   });
 
   it("skips when no service worker controls the page, since nothing would cache the icons", async () => {

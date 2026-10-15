@@ -1,6 +1,6 @@
 import { brotliDecompressSync, gunzipSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
-import type { RecipeBook } from "@jameshschuler/walkscape-sdk";
+import { RECIPE_BOOK_SCHEMA, type RecipeBook } from "@jameshschuler/walkscape-sdk";
 import { buildApp } from "../src/app.js";
 import { fakeClient } from "./fake-client.js";
 
@@ -11,7 +11,7 @@ describe("GET /api/recipes", () => {
   it("returns the recipe book with the data version as ETag", async () => {
     const res = await app().inject("/api/recipes");
     expect(res.statusCode).toBe(200);
-    expect(res.headers.etag).toBe('"v1"');
+    expect(res.headers.etag).toBe(`"${RECIPE_BOOK_SCHEMA}-v1"`);
     expect(res.json<RecipeBook>().recipes.map((r) => r.id)).toEqual([
       "smelt_a_gold_bar",
       "bake_a_bagel",
@@ -20,7 +20,7 @@ describe("GET /api/recipes", () => {
   });
 
   it("answers 304 when the client already has this version", async () => {
-    const res = await app().inject({ url: "/api/recipes", headers: { "if-none-match": '"v1"' } });
+    const res = await app().inject({ url: "/api/recipes", headers: { "if-none-match": `"${RECIPE_BOOK_SCHEMA}-v1"` } });
     expect(res.statusCode).toBe(304);
     expect(res.body).toBe("");
   });

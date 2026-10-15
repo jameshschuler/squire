@@ -82,8 +82,6 @@ export interface Recipe extends CompactEntity {
   xpRewards: Record<string, number>;
 }
 
-export type Item = CompactEntity;
-
 /** An item in full. Containers such as skill chests also list the `tables` they roll when opened. */
 export interface ItemDetail extends CompactEntity {
   type: string;
