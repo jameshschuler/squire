@@ -74,7 +74,7 @@ interface CacheEntry {
  *
  * @example
  * const client = createClient({ apiKey: process.env.WALKSCAPE_API_KEY!, baseUrl: ENVIRONMENTS.dev });
- * const items = await client.list<Item>("items");
+ * const items = await client.list<CompactEntity>("items");
  */
 export function createClient(options: ClientOptions): WalkScapeClient {
   const baseUrl = (options.baseUrl ?? ENVIRONMENTS.prod).replace(/\/+$/, "");

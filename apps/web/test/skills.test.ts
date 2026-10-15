@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RecipeView } from "@jameshschuler/walkscape-sdk";
-import { recipeSkills } from "@/lib/skills";
+import { knownOption, recipeSkills } from "@/lib/skills";
 
 const recipe = (skills: { id: string; name: string }[]) =>
   ({ skills: skills.map((s) => ({ ...s, level: 1 })) }) as RecipeView;
@@ -22,5 +22,17 @@ describe("recipeSkills", () => {
 
   it("returns nothing for no recipes", () => {
     expect(recipeSkills([])).toEqual([]);
+  });
+});
+
+describe("knownOption", () => {
+  const options = [{ id: "mining", name: "Mining" }];
+
+  it.each([
+    ["mining", "mining"],
+    ["cooking", undefined],
+    [undefined, undefined],
+  ])("keeps %s only if it's an option → %s", (selected, expected) => {
+    expect(knownOption(options, selected)).toBe(expected);
   });
 });

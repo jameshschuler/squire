@@ -82,7 +82,22 @@ export interface Recipe extends CompactEntity {
   xpRewards: Record<string, number>;
 }
 
-export type Item = CompactEntity;
+/** An item in full. Containers such as skill chests also list the `tables` they roll when opened. */
+export interface ItemDetail extends CompactEntity {
+  type: string;
+  /** In-game keywords, e.g. "ore" or "hunting_product". Players can search the game with these. */
+  keywords: string[];
+  quality: string;
+  tables?: LootTableRef[] | null;
+}
+
+/** A shop and the items it sells. */
+export interface Shop {
+  id: string;
+  name: string;
+  soldItems: string[];
+  onlyPurchaseSellingListItems: boolean;
+}
 
 /** A gathering or other non-crafting activity, e.g. "Mine gold ore". */
 export interface Activity extends CompactEntity {
@@ -139,4 +154,5 @@ export interface Location extends CompactEntity {
   keywords: string[];
   serviceList?: string[];
   activityList?: string[];
+  buildingList?: string[];
 }

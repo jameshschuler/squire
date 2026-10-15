@@ -3,12 +3,13 @@ import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-interface RecipeSearchInputProps {
+interface SearchInputProps {
   value: string;
+  placeholder: string;
   onChange: (value: string) => void;
 }
 
-export function RecipeSearchInput({ value, onChange }: RecipeSearchInputProps) {
+export function SearchInput({ value, placeholder, onChange }: SearchInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (
@@ -19,7 +20,7 @@ export function RecipeSearchInput({ value, onChange }: RecipeSearchInputProps) {
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Search recipes, outputs, materials…"
+        placeholder={placeholder}
         className="h-11 pr-11 pl-9 text-base [&::-webkit-search-cancel-button]:appearance-none"
       />
       {value && (

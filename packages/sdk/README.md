@@ -48,24 +48,38 @@ Errors from the API throw `WalkScapeApiError`, which has `status` and `path`.
 
 ## Recipe helpers
 
-| Function                                          | What it does                                                                                                                              |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `loadGameData(client)`                            | Loads every recipe, item, skill, crafting service, location, faction, activity and loot table: about 50 requests, a few seconds.          |
-| `buildRecipeBook(data)`                           | Display-ready recipes: names and icons resolved, material alternatives grouped, the service needed and where to find it. Sorted by level. |
-| `searchRecipes(recipes, query, { skill, limit })` | Matches recipe names, outputs and materials. Best matches first.                                                                          |
-| `recipesMaking(recipes, itemId)`                  | Recipes that produce an item.                                                                                                             |
-| `recipesUsing(recipes, itemId)`                   | Recipes that take an item as a material.                                                                                                  |
-| `findItem(recipes, itemId)`                       | An item's name and icon.                                                                                                                  |
-| `recipeBookIcons(book)`                           | Every icon path the book shows (recipes, materials, outputs and sources), each once.                                                      |
+| Function                                   | What it does                                                                                                                                                                            |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `loadGameData(client)`                     | Loads every recipe, item (in full), skill, crafting service, location, faction, activity, loot table and shop: about 60 requests, a couple of seconds.                                  |
+| `buildRecipeBook(data)`                    | Display-ready recipes (names, icons and keywords resolved, material alternatives grouped, the service needed and where to find it), sorted by level, plus `sources` for every material. |
+| `searchRecipes(recipes, query, { skill })` | Matches recipe names, outputs and materials. Best matches first.                                                                                                                        |
+| `recipesMaking(recipes, itemId)`           | Recipes that produce an item.                                                                                                                                                           |
+| `recipesUsing(recipes, itemId)`            | Recipes that take an item as a material.                                                                                                                                                |
+| `findItem(recipes, itemId)`                | An item's name, icon and in-game keywords.                                                                                                                                              |
+| `recipeBookIcons(book)`                    | Every icon path the book shows (recipes, materials, outputs and sources), each once.                                                                                                    |
+| `lowestSkillLevels(skills)`                | The lowest level needed per skill, lowest first.                                                                                                                                        |
+| `sourceKey(source)`                        | A stable key for one source of an item, e.g. for list keys or de-duplication.                                                                                                           |
 
-A recipe's service counts higher tiers too: an advanced kitchen can cook basic kitchen recipes. Each location carries its region and the lowest tier it has that qualifies, so you can group places by region and mark the ones that only have a better service.
+A recipe's service counts higher tiers too: an advanced kitchen can cook basic kitchen recipes. Each location carries its region and the lowest tier it has that qualifies, so you can mark the ones that only have a better service.
 
-`book.sources` says where to get each recipe material: the activities that drop it, keyed by item id. Each source has the activity's skill and level, its loot type (`main` loot, a `secondary` roll, or a special table such as `gem`), and the locations offering it, with regions. Materials no activity drops, such as tools sold in shops, have no entry.
+### Where to get items
+
+`book.sources` lists every way to get each recipe material, keyed by item id. Each source has a `kind`:
+
+| Kind       | Fields                                                                                                             | Example                                     |
+| ---------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------- |
+| `activity` | `skills`, `lootType` (`main` loot, a `secondary` roll, or a special table such as `gem`), `locations` with regions | Bones from _Wolf hunting_ at Sanguine Hills |
+| `chest`    | `skills`: the lowest levels of the activities that drop the chest                                                  | Log splitter from the _Woodcutting chest_   |
+| `shop`     | `locations` when the game data links the shop to one (often it doesn't)                                            | Simple pan from _granfiddich tool stall_    |
+
+Sources are ordered activities (main loot first, then by level), then shops, then chests. Shop names come through as the API gives them, in lowercase.
 
 ```ts
-book.sources.bones?.map((s) => `${s.name} at ${s.locations.map((l) => l.name).join(", ")}`);
-// ["Wolf hunting at Sanguine Hills", "Lizard hunting at Old Arena Ruins", ...]
+book.sources.bones?.map((s) => s.name);
+// ["Wolf hunting", "Lizard hunting", "Deer hunting", ...]
 ```
+
+`book.schema` is `RECIPE_BOOK_SCHEMA`. It changes whenever the book's shape does, so it's safe to include in cache keys.
 
 ## Rate limits and caching
 

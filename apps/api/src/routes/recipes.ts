@@ -16,7 +16,7 @@ export function recipeRoutes(recipeBook: RecipeBookSource) {
   return async (app: FastifyInstance): Promise<void> => {
     app.get("/api/recipes", async (request, reply) => {
       const book = await recipeBook();
-      const etag = `"${book.version}"`;
+      const etag = `"${book.schema}-${book.version}"`;
       reply.header("ETag", etag).header("Cache-Control", "no-cache").header("Vary", "Accept-Encoding");
       if (request.headers["if-none-match"] === etag) {
         return reply.code(304).send();

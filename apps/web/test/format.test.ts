@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatPercent, formatRegion, formatSkillLevel, formatSteps, lootTypeLabel } from "@/lib/format";
+import { formatPercent, formatRegion, formatSkillLevel, formatSteps, formatTitle, lootTypeLabel } from "@/lib/format";
 
 describe("formatPercent", () => {
   it.each([
@@ -54,5 +54,17 @@ describe("formatRegion", () => {
     ["Syrenthia", "Syrenthia"],
   ])("shows %s as %s", (region, expected) => {
     expect(formatRegion(region)).toBe(expected);
+  });
+});
+
+describe("formatTitle", () => {
+  it.each([
+    ["frosthook emporium", "Frosthook Emporium"],
+    ["kallaheim general store", "Kallaheim General Store"],
+    ["temple of the sun", "Temple of the Sun"],
+    ["the old mill", "The Old Mill"],
+    ["Tutorial cabin", "Tutorial Cabin"],
+  ])("formats %j as %j", (text, expected) => {
+    expect(formatTitle(text)).toBe(expected);
   });
 });

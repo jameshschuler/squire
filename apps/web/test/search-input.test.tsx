@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { RecipeSearchInput } from "@/components/recipes/RecipeSearchInput";
+import { SearchInput } from "@/components/shared/SearchInput";
 
 afterEach(cleanup);
 
 function ControlledSearch({ initial }: { initial: string }) {
   const [value, setValue] = useState(initial);
-  return <RecipeSearchInput value={value} onChange={setValue} />;
+  return <SearchInput value={value} placeholder="Search" onChange={setValue} />;
 }
 
-describe("RecipeSearchInput", () => {
+describe("SearchInput", () => {
   it("doesn't grab focus on its own, so the keyboard stays down", () => {
     render(<ControlledSearch initial="" />);
     expect(document.activeElement).not.toBe(screen.getByRole("searchbox"));

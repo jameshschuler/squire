@@ -25,11 +25,12 @@ export async function prefetchIcons(urls: string[], fetchIcon: (url: string) => 
 }
 
 export async function prefetchRecipeBookIcons(book: RecipeBook): Promise<void> {
-  if (!navigator.serviceWorker?.controller || localStorage.getItem(ICONS_PREFETCHED_KEY) === book.version) {
+  const prefetchedKey = `${book.schema}-${book.version}`;
+  if (!navigator.serviceWorker?.controller || localStorage.getItem(ICONS_PREFETCHED_KEY) === prefetchedKey) {
     return;
   }
   const failed = await prefetchIcons(recipeBookIcons(book).map(iconUrl), (url) => fetch(url));
   if (failed === 0) {
-    localStorage.setItem(ICONS_PREFETCHED_KEY, book.version);
+    localStorage.setItem(ICONS_PREFETCHED_KEY, prefetchedKey);
   }
 }

@@ -19,7 +19,9 @@ describe.skipIf(!apiKey)("live dev API", () => {
     expect(data.locations).toHaveLength((await client.list("locations")).length);
     expect(book.recipes.filter((r) => r.service && r.service.locations.length === 0)).toEqual([]);
     expect(book.sources.bones?.map((s) => s.name)).toContain("Bear hunting");
-    expect(book.sources.bones?.every((s) => s.locations.length > 0)).toBe(true);
-    expect(loadRequests).toBeLessThan(60);
+    expect(book.sources.bones?.every((s) => s.kind === "activity" && s.locations.length > 0)).toBe(true);
+    expect(book.sources.log_splitter?.map((s) => s.name)).toContain("Woodcutting chest");
+    expect(book.sources.simple_pan?.some((s) => s.kind === "shop")).toBe(true);
+    expect(loadRequests).toBeLessThan(70);
   });
 });
