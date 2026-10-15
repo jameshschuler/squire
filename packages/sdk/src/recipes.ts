@@ -1,6 +1,7 @@
 import type { GameData } from "./gamedata.js";
 import {
   SERVICE_TIERS,
+  type Item,
   type Requirement,
   type ServiceRequirement,
   type ServiceTier,
@@ -101,6 +102,16 @@ export function recipesMaking(recipes: RecipeView[], itemId: string): RecipeView
 export function recipeBookIcons(recipes: RecipeView[]): string[] {
   const items = recipes.flatMap((r) => [r, ...r.outputs, ...r.materials.flat()]);
   return [...new Set(items.map((i) => i.icon).filter(Boolean))];
+}
+
+export function findItem(recipes: RecipeView[], itemId: string): Item | undefined {
+  for (const recipe of recipes) {
+    const found = [...recipe.outputs, ...recipe.materials.flat()].find((i) => i.id === itemId);
+    if (found) {
+      return { id: found.id, name: found.name, icon: found.icon };
+    }
+  }
+  return undefined;
 }
 
 export function recipesUsing(recipes: RecipeView[], itemId: string): RecipeView[] {
