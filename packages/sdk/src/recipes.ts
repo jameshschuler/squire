@@ -1,7 +1,11 @@
 import type { GameData } from "./gamedata.js";
-import type { Requirement, ServiceRequirement, SkillLevelRequirement } from "./types.js";
-
-const SERVICE_TIERS = ["basic", "advanced"];
+import {
+  SERVICE_TIERS,
+  type Requirement,
+  type ServiceRequirement,
+  type ServiceTier,
+  type SkillLevelRequirement,
+} from "./types.js";
 
 export interface RecipeItem {
   id: string;
@@ -10,10 +14,16 @@ export interface RecipeItem {
   amount: number;
 }
 
+export interface RecipeLocation {
+  id: string;
+  name: string;
+  tier: ServiceTier;
+}
+
 export interface RecipeService {
   label: string;
-  tier: string;
-  locations: { id: string; name: string }[];
+  tier: ServiceTier;
+  locations: RecipeLocation[];
 }
 
 export interface RecipeView {
@@ -110,26 +120,27 @@ function searchScore(recipe: RecipeView, terms: string[]): number {
 function serviceView(req: ServiceRequirement, data: GameData): RecipeService {
   const { serviceKeyword, keywords: listed, tier } = req.requirement;
   const keywords = listed?.length ? listed : serviceKeyword ? [serviceKeyword] : [];
-  const serviceIds = new Set(
+  const serviceTiers = new Map(
     data.services
       .filter((s) => meetsTier(s.tier, tier) && keywords.every((k) => s.keywords.includes(k)))
-      .map((s) => s.id),
+      .map((s) => [s.id, s.tier]),
   );
   const locations = data.locations
-    .filter((l) => l.serviceList?.some((id) => serviceIds.has(id)))
-    .map((l) => ({ id: l.id, name: l.name }))
+    .flatMap((l): RecipeLocation[] => {
+      const tiers = (l.serviceList ?? []).flatMap((id) => serviceTiers.get(id) ?? []);
+      return tiers.length > 0 ? [{ id: l.id, name: l.name, tier: lowestTier(tiers) }] : [];
+    })
     .sort((a, b) => a.name.localeCompare(b.name));
   const [primary = "service", ...modifiers] = keywords;
   return { label: `${humanize([...modifiers, primary].join(" "))} (${tier})`, tier, locations };
 }
 
-function meetsTier(serviceTier: string, requiredTier: string): boolean {
-  const have = SERVICE_TIERS.indexOf(serviceTier);
-  const need = SERVICE_TIERS.indexOf(requiredTier);
-  if (have === -1 || need === -1) {
-    return serviceTier === requiredTier;
-  }
-  return have >= need;
+function meetsTier(serviceTier: ServiceTier, requiredTier: ServiceTier): boolean {
+  return SERVICE_TIERS.indexOf(serviceTier) >= SERVICE_TIERS.indexOf(requiredTier);
+}
+
+function lowestTier(tiers: ServiceTier[]): ServiceTier {
+  return tiers.reduce((low, t) => (SERVICE_TIERS.indexOf(t) < SERVICE_TIERS.indexOf(low) ? t : low));
 }
 
 function isSkillLevel(req: Requirement): req is SkillLevelRequirement {

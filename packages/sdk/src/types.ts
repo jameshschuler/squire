@@ -21,6 +21,10 @@ export type ResourceName =
   | "stats"
   | "terrain_modifiers";
 
+export const SERVICE_TIERS = ["basic", "advanced"] as const;
+
+export type ServiceTier = (typeof SERVICE_TIERS)[number];
+
 export interface VersionInfo {
   version: string;
   details: { api: string; assets: string; locales: string };
@@ -40,7 +44,7 @@ export interface SkillLevelRequirement extends Requirement {
 
 export interface ServiceRequirement extends Requirement {
   type: "service";
-  requirement: { serviceKeyword?: string | null; keywords?: string[]; tier: string };
+  requirement: { serviceKeyword?: string | null; keywords?: string[]; tier: ServiceTier };
 }
 
 export interface CompactEntity {
@@ -83,7 +87,7 @@ export interface Skill extends CompactEntity {
 }
 
 export interface Service extends CompactEntity {
-  tier: string;
+  tier: ServiceTier;
   serviceType: string;
   keywords: string[];
   relatedSkills: string[];
