@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { recipesMaking, recipesUsing, type Item, type RecipeView } from "@squire/walkscape-sdk";
+import { BackButton } from "@/components/layout/BackButton";
 import { RecipeList } from "@/components/recipes/RecipeList";
 import { RecipeSection } from "@/components/recipes/RecipeSection";
 import { GameIcon } from "@/components/shared/GameIcon";
@@ -14,7 +15,8 @@ export function ItemDetail({ item, recipes }: ItemDetailProps) {
   const using = useMemo(() => recipesUsing(recipes, item.id), [recipes, item.id]);
 
   return (
-    <article className="space-y-6 pt-4">
+    <article className="space-y-6 pt-2">
+      <BackButton />
       <h1 className="flex items-center gap-3 text-2xl font-semibold">
         <GameIcon path={item.icon} size={48} />
         {item.name}

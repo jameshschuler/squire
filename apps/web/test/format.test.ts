@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { formatPercent, formatSkillLevel } from "@/lib/format";
+import { formatSkillLevel, formatSteps } from "@/lib/format";
 
-describe("formatPercent", () => {
+describe("formatSteps", () => {
   it.each([
-    [1.9, "190%"],
-    [1, "100%"],
-    [0.125, "13%"],
-  ])("formats %s as %s", (ratio, expected) => {
-    expect(formatPercent(ratio)).toBe(expected);
+    [110, 1.5, "110 steps · 74 at best"],
+    [150, 1.7, "150 steps · 89 at best"],
+    [200, 2, "200 steps · 100 at best"],
+    [80, 1, "80 steps"],
+  ])("formats %s work with a %s cap as %s", (work, cap, expected) => {
+    expect(formatSteps(work, cap)).toBe(expected);
   });
 });
 
