@@ -79,4 +79,4 @@ The Data API is free for community tools. Its terms ask you to:
 
 ## License
 
-MIT
+[MIT](LICENSE). The license covers this package's code, not WalkScape's game data or icons.
