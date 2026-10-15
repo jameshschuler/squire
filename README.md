@@ -55,4 +55,6 @@ You only know the URLs after the first deploy, so set `CORS_ORIGINS` and `VITE_A
 
 The API is on the free plan, which sleeps after 15 minutes idle. The first request after that takes a while: Render wakes the service, then the API loads game data (about 4 seconds).
 
+Want to help? See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 Game data and icons © WalkScape.
