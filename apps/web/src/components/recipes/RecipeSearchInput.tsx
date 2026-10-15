@@ -21,7 +21,6 @@ export function RecipeSearchInput({ value, onChange }: RecipeSearchInputProps) {
         onChange={(e) => onChange(e.target.value)}
         placeholder="Search recipes, outputs, materials…"
         className="h-11 pr-11 pl-9 text-base [&::-webkit-search-cancel-button]:appearance-none"
-        autoFocus
       />
       {value && (
         <Button
