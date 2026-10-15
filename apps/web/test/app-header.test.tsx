@@ -10,7 +10,7 @@ afterEach(() => {
 });
 
 describe("AppHeader", () => {
-  it("links home with the shield logo, which screen readers skip", async () => {
+  it("shows the app name as a link home", async () => {
     vi.stubGlobal("matchMedia", () => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
     await renderWithRouter(
       <ThemeProvider>
@@ -19,6 +19,6 @@ describe("AppHeader", () => {
     );
     const home = screen.getByRole("link", { name: "Squire" });
     expect(home.getAttribute("href")).toBe("/");
-    expect(home.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
+    expect(home.textContent).toBe("Squire");
   });
 });
