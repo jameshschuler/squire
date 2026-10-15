@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatPercent, formatSkillLevel, formatSteps } from "@/lib/format";
+import { formatPercent, formatRegion, formatSkillLevel, formatSteps, lootTypeLabel } from "@/lib/format";
 
 describe("formatPercent", () => {
   it.each([
@@ -29,5 +29,30 @@ describe("formatSkillLevel", () => {
 
   it("shows just the name without a level", () => {
     expect(formatSkillLevel({ name: "Cooking", level: null })).toBe("Cooking");
+  });
+});
+
+describe("lootTypeLabel", () => {
+  it.each([
+    ["main", null],
+    ["secondary", "Extra roll"],
+    ["gem", "Gem find"],
+    ["birdNest", "Bird nest"],
+    ["chestTable", "Chest"],
+    ["collectible", "Collectible"],
+    ["petEgg", "Pet egg"],
+  ] as const)("labels %s as %s", (lootType, expected) => {
+    expect(lootTypeLabel(lootType)).toBe(expected);
+  });
+});
+
+describe("formatRegion", () => {
+  it.each([
+    ["Grand Duchy of Trellin-Erdwise", "GDTE"],
+    ["Empire of Wallisia", "Wallisia"],
+    ["Jarvonia", "Jarvonia"],
+    ["Syrenthia", "Syrenthia"],
+  ])("shows %s as %s", (region, expected) => {
+    expect(formatRegion(region)).toBe(expected);
   });
 });

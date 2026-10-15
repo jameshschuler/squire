@@ -37,7 +37,7 @@ describe("ServiceLocations", () => {
     );
     expect(screen.getAllByRole("listitem").map((li) => li.textContent)).toEqual([
       "Frusenholm (Jarvonia)",
-      "Salsfirth (Grand Duchy of Trellin-Erdwise)",
+      "Salsfirth (GDTE)",
     ]);
   });
 

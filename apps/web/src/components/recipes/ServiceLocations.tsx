@@ -1,6 +1,7 @@
 import { MapPin } from "lucide-react";
 import type { RecipeService } from "@jameshschuler/walkscape-sdk";
 import { Badge } from "@/components/ui/badge";
+import { formatRegion } from "@/lib/format";
 
 export function ServiceLocations({ service }: { service: RecipeService }) {
   if (service.locations.length === 0) {
@@ -12,7 +13,7 @@ export function ServiceLocations({ service }: { service: RecipeService }) {
         <li key={location.id} className="flex items-center gap-3 py-2.5">
           <MapPin className="size-4 shrink-0 text-muted-foreground" />
           <span className="flex-1">
-            {location.name} <span className="text-muted-foreground">({location.region})</span>
+            {location.name} <span className="text-muted-foreground">({formatRegion(location.region)})</span>
           </span>
           {location.tier !== service.tier && (
             <Badge variant="outline" className="font-normal text-muted-foreground capitalize">

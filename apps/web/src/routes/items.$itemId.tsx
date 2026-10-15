@@ -18,5 +18,5 @@ function ItemPage() {
   if (!item) {
     return <p className="py-8 text-center text-muted-foreground">Item not found.</p>;
   }
-  return <ItemDetail item={item} recipes={state.book.recipes} />;
+  return <ItemDetail item={item} book={state.book} />;
 }
