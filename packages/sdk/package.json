@@ -1,7 +1,20 @@
 {
   "name": "@jameshschuler/walkscape-sdk",
   "version": "0.0.1",
-  "description": "TypeScript client for the WalkScape Data API",
+  "description": "Unofficial TypeScript client for the WalkScape Data API, with recipe helpers",
+  "keywords": [
+    "walkscape",
+    "api",
+    "sdk",
+    "recipes"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jameshschuler/squire.git",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://github.com/jameshschuler/squire/tree/main/packages/sdk#readme",
+  "bugs": "https://github.com/jameshschuler/squire/issues",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -24,7 +37,8 @@
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
     "tsup": "^8.3.5",

@@ -1,3 +1,4 @@
+/** Resources the Data API serves. Each supports `list`, `get` and `search`. */
 export type ResourceName =
   | "abilities"
   | "achievements"
@@ -21,6 +22,7 @@ export type ResourceName =
   | "stats"
   | "terrain_modifiers";
 
+/** Service tiers from lowest to highest. A higher tier can craft lower-tier recipes. */
 export const SERVICE_TIERS = ["basic", "advanced"] as const;
 
 export type ServiceTier = (typeof SERVICE_TIERS)[number];

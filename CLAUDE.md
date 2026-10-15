@@ -4,6 +4,7 @@
 
 - Write concise, production-ready TypeScript/JavaScript, React, Golang, SQL, and backend code.
 - **Zero comments** unless logic is genuinely non-obvious or complex. Avoid self-documenting comments entirely.
+- **Exception: the public SDK API.** Exported functions, types and options in `packages/sdk` get TSDoc comments, because they are the package's documentation in editors and on npm. Internal SDK code still follows the zero-comments rule.
 - Keep components and functions modular and minimal.
 - Always use braces for `if` statements, even single-line bodies. Write `if (existing) { return existing; }` (on separate lines), never `if (existing) return existing;`.
 

@@ -1,6 +1,7 @@
 import type { WalkScapeClient } from "./client.js";
 import type { CompactEntity, Item, Location, Recipe, Service, Skill } from "./types.js";
 
+/** A snapshot of the game data needed to work with recipes, tagged with the data version it came from. */
 export interface GameData {
   version: string;
   recipes: Recipe[];
@@ -12,6 +13,11 @@ export interface GameData {
 
 const CONCURRENCY = 4;
 
+/**
+ * Loads every recipe, item, skill, crafting service and location in about 75 requests (a few
+ * seconds). The API allows 120 requests a minute per IP, so load this once and reload only when
+ * `client.version()` changes.
+ */
 export async function loadGameData(client: WalkScapeClient): Promise<GameData> {
   const [{ version }, skills, items, services, compactRecipes, compactLocations] = await Promise.all([
     client.version(),
