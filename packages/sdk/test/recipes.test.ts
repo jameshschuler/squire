@@ -293,7 +293,7 @@ describe("sources", () => {
       {
         kind: "shop",
         id: "granfiddich_tool_stall",
-        name: "Granfiddich tool stall",
+        name: "granfiddich tool stall",
         icon: "",
         locations: [{ id: "azurazera", name: "Azurazera", region: "Jarvonia" }],
       },

@@ -324,7 +324,7 @@ function dropsFromShop(shop: Shop, locationsByBuilding: Map<string, LocationSumm
   const source: ShopSource = {
     kind: "shop",
     id: shop.id,
-    name: humanize(shop.name),
+    name: shop.name,
     icon: "",
     locations: locationsByBuilding.get(shop.id) ?? [],
   };

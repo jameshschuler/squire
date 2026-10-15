@@ -30,6 +30,17 @@ export function lootTypeLabel(lootType: LootType): string | null {
   return LOOT_TYPE_LABELS[lootType] ?? null;
 }
 
+const MINOR_WORDS = new Set(["a", "an", "and", "at", "for", "in", "of", "on", "the", "to"]);
+
+export function formatTitle(text: string): string {
+  return text
+    .split(" ")
+    .map((word, i) =>
+      i > 0 && MINOR_WORDS.has(word.toLowerCase()) ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1),
+    )
+    .join(" ");
+}
+
 const REGION_SHORT_NAMES: Record<string, string> = {
   "Grand Duchy of Trellin-Erdwise": "GDTE",
   "Empire of Wallisia": "Wallisia",

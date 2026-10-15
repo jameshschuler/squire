@@ -60,12 +60,12 @@ describe("ItemSources", () => {
     const shop: ShopSource = {
       kind: "shop",
       id: "granfiddich_tool_stall",
-      name: "Granfiddich tool stall",
+      name: "granfiddich tool stall",
       icon: "",
       locations: [{ id: "granfiddich", name: "Granfiddich", region: "Grand Duchy of Trellin-Erdwise" }],
     };
     render(<ItemSources sources={[shop]} />);
-    expect(screen.getByText("Granfiddich tool stall")).toBeDefined();
+    expect(screen.getByText("Granfiddich Tool Stall")).toBeDefined();
     expect(screen.getByText("Shop")).toBeDefined();
     expect(screen.getByText("Granfiddich").textContent).toBe("Granfiddich (GDTE)");
   });

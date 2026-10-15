@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildRecipeBook, type GameData, type ItemSource } from "@jameshschuler/walkscape-sdk";
-import { materialSkills, rawMaterials, searchMaterials } from "@/lib/materials";
+import { CHESTS_FILTER, SHOPS_FILTER, materialFilters, rawMaterials, searchMaterials } from "@/lib/materials";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
 const book = buildRecipeBook(sample as unknown as GameData);
@@ -44,8 +44,8 @@ describe("rawMaterials", () => {
   });
 });
 
-describe("materialSkills", () => {
-  it("lists each skill once, A–Z", () => {
+describe("materialFilters", () => {
+  it("lists each skill once, A–Z, with no chest or shop filters when nothing comes from them", () => {
     const materials = rawMaterials({
       ...book,
       sources: {
@@ -53,7 +53,27 @@ describe("materialSkills", () => {
         salt_crystal: [source("b", "mining", 2), source("c", "foraging", 3)],
       },
     });
-    expect(materialSkills(materials).map((s) => s.id)).toEqual(["foraging", "mining"]);
+    expect(materialFilters(materials).map((s) => s.id)).toEqual(["foraging", "mining"]);
+  });
+});
+
+describe("materialFilters with chests and shops", () => {
+  it("adds Chests and Shops after the skills when materials come from them", () => {
+    const materials = rawMaterials({
+      ...book,
+      sources: {
+        gold_ore: [source("mine", "mining", 1)],
+        salt_crystal: [
+          { kind: "chest", id: "mining_chest", name: "Mining chest", icon: "", skills: [] },
+          { kind: "shop", id: "stall", name: "stall", icon: "", locations: [] },
+        ],
+      },
+    });
+    expect(materialFilters(materials).map((f) => [f.id, f.name])).toEqual([
+      ["mining", "mining"],
+      [CHESTS_FILTER, "Chests"],
+      [SHOPS_FILTER, "Shops"],
+    ]);
   });
 });
 
@@ -90,6 +110,23 @@ describe("searchMaterials", () => {
   });
 
   it("filters by skill", () => {
-    expect(ids(searchMaterials(materials, "", { skill: "mining" }))).toEqual(["gold_ore"]);
+    expect(ids(searchMaterials(materials, "", { filter: "mining" }))).toEqual(["gold_ore"]);
+  });
+
+  it.each([
+    [CHESTS_FILTER, "chest"],
+    [SHOPS_FILTER, "shop"],
+  ])("filters by %s", (filter, kind) => {
+    const sourced = rawMaterials({
+      ...book,
+      sources: {
+        salt_crystal: [
+          kind === "chest"
+            ? { kind: "chest", id: "c", name: "Chest", icon: "", skills: [] }
+            : { kind: "shop", id: "s", name: "shop", icon: "", locations: [] },
+        ],
+      },
+    });
+    expect(ids(searchMaterials(sourced, "", { filter }))).toEqual(["salt_crystal"]);
   });
 });

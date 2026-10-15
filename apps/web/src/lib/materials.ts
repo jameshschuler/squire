@@ -13,8 +13,12 @@ export interface Material {
   skills: SkillLevel[];
 }
 
+export const CHESTS_FILTER = "chests";
+export const SHOPS_FILTER = "shops";
+
 export interface MaterialSearchOptions {
-  skill?: string;
+  /** A skill id, or `CHESTS_FILTER` / `SHOPS_FILTER`. */
+  filter?: string;
 }
 
 export function rawMaterials(book: RecipeBook): Material[] {
@@ -33,21 +37,36 @@ export function rawMaterials(book: RecipeBook): Material[] {
     .sort((a, b) => a.item.name.localeCompare(b.item.name));
 }
 
-export function materialSkills(materials: Material[]): SkillOption[] {
-  return uniqueSkills(materials.flatMap((m) => m.skills));
+export function materialFilters(materials: Material[]): SkillOption[] {
+  const hasSource = (kind: ItemSource["kind"]) => materials.some((m) => m.sources.some((s) => s.kind === kind));
+  return [
+    ...uniqueSkills(materials.flatMap((m) => m.skills)),
+    ...(hasSource("chest") ? [{ id: CHESTS_FILTER, name: "Chests" }] : []),
+    ...(hasSource("shop") ? [{ id: SHOPS_FILTER, name: "Shops" }] : []),
+  ];
 }
 
 export function searchMaterials(
   materials: Material[],
   query: string,
-  { skill }: MaterialSearchOptions = {},
+  { filter }: MaterialSearchOptions = {},
 ): Material[] {
   const terms = words(query);
   return materials.filter(
     (m) =>
-      (!skill || m.skills.some((s) => s.id === skill)) &&
+      (!filter || matchesFilter(m, filter)) &&
       terms.every((term) => words(m.item.name).some((word) => word.startsWith(term))),
   );
+}
+
+function matchesFilter(material: Material, filter: string): boolean {
+  if (filter === CHESTS_FILTER) {
+    return material.sources.some((s) => s.kind === "chest");
+  }
+  if (filter === SHOPS_FILTER) {
+    return material.sources.some((s) => s.kind === "shop");
+  }
+  return material.skills.some((s) => s.id === filter);
 }
 
 function sourceSkills(source: ItemSource): SkillLevel[] {

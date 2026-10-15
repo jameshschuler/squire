@@ -1,5 +1,6 @@
 import { Store } from "lucide-react";
 import type { ShopSource } from "@jameshschuler/walkscape-sdk";
+import { formatTitle } from "@/lib/format";
 import { SourceLocations } from "./SourceLocations";
 
 export function ShopSourceRow({ source }: { source: ShopSource }) {
@@ -10,7 +11,7 @@ export function ShopSourceRow({ source }: { source: ShopSource }) {
           <Store className="size-4 text-muted-foreground" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="font-medium">{source.name}</p>
+          <p className="font-medium">{formatTitle(source.name)}</p>
           <p className="text-sm text-muted-foreground">Shop</p>
         </div>
       </div>
