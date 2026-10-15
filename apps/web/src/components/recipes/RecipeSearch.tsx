@@ -5,10 +5,9 @@ import { Input } from "@/components/ui/input";
 import { GameDataStatus } from "@/components/shared/GameDataStatus";
 import { useGameDataContext } from "@/contexts/game-data-context";
 import { recipeSkills } from "@/lib/skills";
-import { RecipeList } from "./RecipeList";
+import { RecipeResults } from "./RecipeResults";
 import { SkillFilter } from "./SkillFilter";
 
-const RESULT_LIMIT = 100;
 const NO_RECIPES: RecipeView[] = [];
 
 interface RecipeSearchProps {
@@ -22,7 +21,8 @@ export function RecipeSearch({ query, skill, onQueryChange, onSkillChange }: Rec
   const state = useGameDataContext();
   const recipes = state.status === "ready" ? state.book.recipes : NO_RECIPES;
   const skills = useMemo(() => recipeSkills(recipes), [recipes]);
-  const results = useMemo(() => searchRecipes(recipes, query, { skill, limit: RESULT_LIMIT }), [recipes, query, skill]);
+  const listKey = `${skill ?? "all"}|${query}`;
+  const results = useMemo(() => searchRecipes(recipes, query, { skill }), [recipes, query, skill]);
 
   return (
     <div className="space-y-3 pt-3">
@@ -43,7 +43,7 @@ export function RecipeSearch({ query, skill, onQueryChange, onSkillChange }: Rec
       ) : results.length === 0 ? (
         <p className="py-8 text-center text-muted-foreground">No recipes match.</p>
       ) : (
-        <RecipeList recipes={results} />
+        <RecipeResults key={listKey} listKey={listKey} recipes={results} />
       )}
     </div>
   );
