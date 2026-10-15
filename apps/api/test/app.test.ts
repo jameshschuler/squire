@@ -34,6 +34,29 @@ describe("GET /api/recipes", () => {
   });
 });
 
+describe("compression", () => {
+  it.each([
+    ["gzip", "gzip"],
+    ["br, gzip", "br"],
+  ])("compresses the recipe book when the client accepts %s", async (acceptEncoding, expected) => {
+    const res = await app().inject({ url: "/api/recipes", headers: { "accept-encoding": acceptEncoding } });
+    expect(res.headers["content-encoding"]).toBe(expected);
+  });
+
+  it("sends the recipe book uncompressed when the client accepts no encoding", async () => {
+    const res = await app().inject("/api/recipes");
+    expect(res.headers["content-encoding"]).toBeUndefined();
+  });
+
+  it("doesn't compress icons, which are already compressed images", async () => {
+    const res = await app().inject({
+      url: "/api/icons/assets/icons/items/bagel.png",
+      headers: { "accept-encoding": "gzip" },
+    });
+    expect(res.headers["content-encoding"]).toBeUndefined();
+  });
+});
+
 describe("GET /api/icons/*", () => {
   it("proxies the icon and caches it in memory", async () => {
     const { client, calls } = fakeClient();

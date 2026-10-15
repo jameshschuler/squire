@@ -1,4 +1,5 @@
 import Fastify, { type FastifyInstance } from "fastify";
+import compress from "@fastify/compress";
 import cors from "@fastify/cors";
 import { WalkScapeApiError, type WalkScapeClient } from "@squire/walkscape-sdk";
 import { createRecipeBookSource } from "./recipe-book.js";
@@ -26,6 +27,7 @@ export function buildApp({ client, logLevel, corsOrigins }: AppOptions): Fastify
     return reply.code(502).send({ error: "WalkScape API unavailable" });
   });
 
+  app.register(compress, { encodings: ["br", "gzip"] });
   app.register(cors, { origin: corsOrigins.length > 0 ? corsOrigins : false, methods: ["GET"] });
   app.register(healthRoutes);
   app.register(recipeRoutes(createRecipeBookSource(client, app.log)));
