@@ -12,8 +12,6 @@ declare module "@tanstack/react-router" {
   }
 }
 
-document.documentElement.classList.toggle("dark", matchMedia("(prefers-color-scheme: dark)").matches);
-
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <RouterProvider router={router} />
