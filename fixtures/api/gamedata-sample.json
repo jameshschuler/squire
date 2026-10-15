@@ -1,0 +1,365 @@
+{
+ "version": "1d076b56",
+ "fetchedAt": "2026-10-14T00:00:00.000Z",
+ "recipes": [
+  {
+   "id": "smelt_a_gold_bar",
+   "name": "Smelt a gold bar",
+   "relatedSkills": [
+    "smithing"
+   ],
+   "icon": "assets/icons/items/materials/bars/gold_bar.png",
+   "requirements": [
+    {
+     "type": "skillLevel",
+     "name": null,
+     "opposite": false,
+     "requirement": {
+      "level": 15,
+      "skill": "smithing"
+     }
+    },
+    {
+     "type": "service",
+     "name": null,
+     "opposite": false,
+     "requirement": {
+      "serviceKeyword": "forge",
+      "tier": "basic"
+     }
+    }
+   ],
+   "keywords": [
+    "smelting"
+   ],
+   "workRequired": 150,
+   "maxWorkEfficiency": 1.7,
+   "materials": [
+    {
+     "options": [
+      {
+       "item": "gold_nugget",
+       "amount": 7
+      },
+      {
+       "item": "gold_ore",
+       "amount": 2
+      }
+     ]
+    }
+   ],
+   "itemRewards": {
+    "gold_bar": 1
+   },
+   "tables": [
+    {
+     "isPrimary": false,
+     "type": [
+      "chestTable"
+     ],
+     "rollAmount": 1,
+     "tables": [
+      "smithing_activity_chest"
+     ]
+    }
+   ],
+   "xpRewards": {
+    "smithing": 160
+   }
+  },
+  {
+   "id": "assemble_dynamite",
+   "name": "Assemble dynamite",
+   "relatedSkills": [
+    "cooking"
+   ],
+   "icon": "assets/icons/items/gear/skill_gear/mining/dynamite.png",
+   "requirements": [
+    {
+     "type": "skillLevel",
+     "name": null,
+     "opposite": false,
+     "requirement": {
+      "level": 38,
+      "skill": "cooking"
+     }
+    },
+    {
+     "type": "service",
+     "name": null,
+     "opposite": false,
+     "requirement": {
+      "serviceKeyword": "kitchen",
+      "tier": "basic"
+     }
+    }
+   ],
+   "keywords": [
+    "cooking_recipe"
+   ],
+   "workRequired": 200,
+   "maxWorkEfficiency": 1.9,
+   "materials": [
+    {
+     "options": [
+      {
+       "item": "salt_crystal",
+       "amount": 2
+      }
+     ]
+    },
+    {
+     "options": [
+      {
+       "item": "volcanic_ash",
+       "amount": 1
+      }
+     ]
+    }
+   ],
+   "itemRewards": {
+    "dynamite": 1
+   },
+   "tables": [
+    {
+     "isPrimary": false,
+     "type": [
+      "chestTable"
+     ],
+     "rollAmount": 1,
+     "tables": [
+      "cooking_activity_chest"
+     ]
+    }
+   ],
+   "xpRewards": {
+    "cooking": 172
+   }
+  },
+  {
+   "id": "bake_a_bagel",
+   "name": "Bake a bagel",
+   "relatedSkills": [
+    "cooking"
+   ],
+   "icon": "assets/icons/items/materials/food/bagel.png",
+   "requirements": [
+    {
+     "type": "skillLevel",
+     "name": null,
+     "opposite": false,
+     "requirement": {
+      "level": 25,
+      "skill": "cooking"
+     }
+    },
+    {
+     "type": "service",
+     "name": null,
+     "opposite": false,
+     "requirement": {
+      "serviceKeyword": "kitchen",
+      "tier": "basic"
+     }
+    }
+   ],
+   "keywords": [
+    "cooking_recipe",
+    "sandwich_recipe"
+   ],
+   "workRequired": 100,
+   "maxWorkEfficiency": 1.8,
+   "materials": [
+    {
+     "options": [
+      {
+       "item": "wheat",
+       "amount": 2
+      }
+     ]
+    }
+   ],
+   "itemRewards": {
+    "bagel": 1
+   },
+   "tables": [
+    {
+     "isPrimary": false,
+     "type": [
+      "chestTable"
+     ],
+     "rollAmount": 1,
+     "tables": [
+      "cooking_activity_chest"
+     ]
+    }
+   ],
+   "xpRewards": {
+    "cooking": 66
+   }
+  }
+ ],
+ "items": [
+  {
+   "id": "bagel",
+   "name": "Bagel",
+   "icon": "assets/icons/items/materials/food/bagel.png"
+  },
+  {
+   "id": "dynamite",
+   "name": "Dynamite",
+   "icon": "assets/icons/items/gear/skill_gear/mining/dynamite.png"
+  },
+  {
+   "id": "gold_bar",
+   "name": "Gold bar",
+   "icon": "assets/icons/items/materials/bars/gold_bar.png"
+  },
+  {
+   "id": "gold_nugget",
+   "name": "Gold nugget",
+   "icon": "assets/icons/items/materials/ores/gold_nugget.png"
+  },
+  {
+   "id": "gold_ore",
+   "name": "Gold ore",
+   "icon": "assets/icons/items/materials/ores/gold_ore.png"
+  },
+  {
+   "id": "salt_crystal",
+   "name": "Salt crystal",
+   "icon": "assets/icons/items/materials/ores/salt_crystal.png"
+  },
+  {
+   "id": "volcanic_ash",
+   "name": "Volcanic ash",
+   "icon": "assets/icons/items/syrenthia/volcanic_ash.png"
+  },
+  {
+   "id": "wheat",
+   "name": "Wheat",
+   "icon": "assets/icons/items/materials/plants/wheat.png"
+  }
+ ],
+ "skills": [
+  {
+   "id": "cooking",
+   "name": "Cooking",
+   "icon": "assets/icons/text/skill_icons/cooking.png",
+   "type": "artisan"
+  },
+  {
+   "id": "smithing",
+   "name": "Smithing",
+   "icon": "assets/icons/text/skill_icons/smithing.png",
+   "type": "artisan"
+  }
+ ],
+ "services": [
+  {
+   "id": "alight_kitchen_basic",
+   "name": "Alight Kitchen (Basic)",
+   "icon": "assets/icons/services/kitchen.png",
+   "tier": "basic",
+   "serviceType": "crafting",
+   "keywords": [
+    "kitchen"
+   ],
+   "relatedSkills": [
+    "cooking"
+   ]
+  },
+  {
+   "id": "basic_forge",
+   "name": "Basic Forge",
+   "icon": "assets/icons/services/forge.png",
+   "tier": "basic",
+   "serviceType": "crafting",
+   "keywords": [
+    "forge"
+   ],
+   "relatedSkills": [
+    "smithing"
+   ]
+  },
+  {
+   "id": "basic_kitchen",
+   "name": "Basic Kitchen",
+   "icon": "assets/icons/services/kitchen.png",
+   "tier": "basic",
+   "serviceType": "crafting",
+   "keywords": [
+    "kitchen"
+   ],
+   "relatedSkills": [
+    "cooking"
+   ]
+  },
+  {
+   "id": "underwater_forge_basic",
+   "name": "Underwater Forge (Basic)",
+   "icon": "assets/icons/services/forge_underwater.png",
+   "tier": "basic",
+   "serviceType": "crafting",
+   "keywords": [
+    "forge"
+   ],
+   "relatedSkills": [
+    "smithing"
+   ]
+  },
+  {
+   "id": "underwater_kitchen_basic",
+   "name": "Underwater Kitchen (Basic)",
+   "icon": "assets/icons/services/kitchen_underwater.png",
+   "tier": "basic",
+   "serviceType": "crafting",
+   "keywords": [
+    "kitchen"
+   ],
+   "relatedSkills": [
+    "cooking"
+   ]
+  }
+ ],
+ "locations": [
+  {
+   "id": "azurazera",
+   "name": "Azurazera",
+   "icon": "assets/icons/locations/castle_white.png",
+   "faction": "jarvonia",
+   "keywords": [
+    "snowy"
+   ],
+   "serviceList": [
+    "alight_kitchen_basic",
+    "wardrobe",
+    "basic_loom"
+   ]
+  },
+  {
+   "id": "bilgemont_port",
+   "name": "Bilgemont Port",
+   "icon": "assets/icons/locations/port_green.png",
+   "faction": "grand_duchy_of_trellin_erdwise",
+   "keywords": [],
+   "serviceList": [
+    "basic_forge",
+    "wardrobe",
+    "basic_trinketry_bench"
+   ]
+  },
+  {
+   "id": "blackspell_harbour",
+   "name": "Blackspell Harbour",
+   "icon": "assets/icons/locations/blackspell_harbor.png",
+   "faction": "grand_duchy_of_trellin_erdwise",
+   "keywords": [],
+   "serviceList": [
+    "basic_kitchen",
+    "wardrobe",
+    "erdwiss_trinketry_factory_advanced"
+   ]
+  }
+ ]
+}
