@@ -2,7 +2,7 @@ import type { RecipeView } from "@squire/walkscape-sdk";
 import { BackButton } from "@/components/layout/BackButton";
 import { Badge } from "@/components/ui/badge";
 import { GameIcon } from "@/components/shared/GameIcon";
-import { formatSkillLevel, formatSteps } from "@/lib/format";
+import { formatPercent, formatSkillLevel, formatSteps } from "@/lib/format";
 import { FavoriteButton } from "./FavoriteButton";
 import { RecipeItemRow } from "./RecipeItemRow";
 import { RecipeSection } from "./RecipeSection";
@@ -28,6 +28,7 @@ export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
           ))}
           {recipe.service && <Badge variant="outline">{recipe.service.label}</Badge>}
           <Badge variant="outline">{formatSteps(recipe.workRequired, recipe.maxWorkEfficiency)}</Badge>
+          <Badge variant="outline">Max efficiency {formatPercent(recipe.maxWorkEfficiency)}</Badge>
         </div>
       </header>
 
