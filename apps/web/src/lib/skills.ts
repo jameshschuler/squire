@@ -5,7 +5,11 @@ export interface SkillOption {
   name: string;
 }
 
+export function uniqueSkills(skills: SkillOption[]): SkillOption[] {
+  const byId = new Map(skills.map((s) => [s.id, s.name]));
+  return [...byId].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export function recipeSkills(recipes: RecipeView[]): SkillOption[] {
-  const skills = new Map(recipes.flatMap((r) => r.skills).map((s) => [s.id, s.name]));
-  return [...skills].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+  return uniqueSkills(recipes.flatMap((r) => r.skills));
 }

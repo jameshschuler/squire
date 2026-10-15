@@ -1,16 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { RecipeSearch } from "@/components/recipes/RecipeSearch";
-
-interface SearchParams {
-  q?: string;
-  skill?: string;
-}
+import { validateListSearch } from "@/lib/list-search";
 
 export const Route = createFileRoute("/")({
-  validateSearch: (search: Record<string, unknown>): SearchParams => ({
-    q: typeof search.q === "string" ? search.q : undefined,
-    skill: typeof search.skill === "string" ? search.skill : undefined,
-  }),
+  validateSearch: validateListSearch,
   component: SearchPage,
 });
 

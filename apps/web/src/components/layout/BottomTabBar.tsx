@@ -1,15 +1,17 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { BookOpen, Star } from "lucide-react";
+import { BookOpen, Pickaxe, Star } from "lucide-react";
+import { activeTab as tabFor } from "@/lib/layout";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { to: "/", label: "Recipes", Icon: BookOpen },
+  { to: "/materials", label: "Materials", Icon: Pickaxe },
   { to: "/favorites", label: "Favorites", Icon: Star },
 ] as const;
 
 export function BottomTabBar() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const activeTab = pathname.startsWith("/favorites") ? "/favorites" : "/";
+  const activeTab = tabFor(pathname);
 
   return (
     <nav

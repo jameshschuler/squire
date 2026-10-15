@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 import { searchRecipes, type RecipeView } from "@jameshschuler/walkscape-sdk";
 import { GameDataStatus } from "@/components/shared/GameDataStatus";
+import { SearchInput } from "@/components/shared/SearchInput";
+import { SkillFilter } from "@/components/shared/SkillFilter";
 import { useGameDataContext } from "@/contexts/game-data-context";
 import { recipeSkills } from "@/lib/skills";
 import { RecipeResults } from "./RecipeResults";
-import { RecipeSearchInput } from "./RecipeSearchInput";
-import { SkillFilter } from "./SkillFilter";
 
 const NO_RECIPES: RecipeView[] = [];
 
@@ -25,7 +25,7 @@ export function RecipeSearch({ query, skill, onQueryChange, onSkillChange }: Rec
 
   return (
     <div className="space-y-3 pt-3">
-      <RecipeSearchInput value={query} onChange={onQueryChange} />
+      <SearchInput value={query} placeholder="Search recipes, outputs, materials…" onChange={onQueryChange} />
       <SkillFilter skills={skills} selected={skill} onSelect={onSkillChange} />
       {state.status !== "ready" ? (
         <GameDataStatus state={state} />
