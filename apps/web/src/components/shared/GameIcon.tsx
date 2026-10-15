@@ -23,6 +23,7 @@ export function GameIcon({ path, size = 32, className }: GameIconProps) {
       height={size}
       alt=""
       loading="lazy"
+      crossOrigin="anonymous"
       className={cn("shrink-0 [image-rendering:pixelated]", className)}
     />
   );

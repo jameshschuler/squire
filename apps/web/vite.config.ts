@@ -47,7 +47,7 @@ export default defineConfig({
             options: {
               cacheName: "game-icons",
               expiration: { maxEntries: 2000, maxAgeSeconds: 30 * DAY_SECONDS },
-              cacheableResponse: { statuses: [0, 200] },
+              cacheableResponse: { statuses: [200] },
             },
           },
         ],
