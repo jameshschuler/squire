@@ -35,29 +35,32 @@ export async function loadGameData(client: WalkScapeClient): Promise<GameData> {
       client.list<CompactEntity>("activities"),
     ]);
 
-  const recipes = await loadComplete(
-    compactRecipes.map((r) => r.id),
-    mapPool(skills, (skill) => client.search<Recipe>("recipes", { relatedSkills: skill.id }, { detailed: true })),
-    (id) => client.get<Recipe>("recipes", id),
-  );
-  const activities = await loadComplete(
-    compactActivities.map((a) => a.id),
-    mapPool(skills, (skill) =>
-      client.search<Activity>("activities", { relatedSkillsList: skill.id }, { detailed: true }),
+  const [recipes, activities, locations, lootTableBatches] = await Promise.all([
+    loadComplete(
+      compactRecipes.map((r) => r.id),
+      mapPool(skills, (skill) => client.search<Recipe>("recipes", { relatedSkills: skill.id }, { detailed: true })),
+      (id) => client.get<Recipe>("recipes", id),
     ),
-    (id) => client.get<Activity>("activities", id),
-  );
-  const lootTables = await loadComplete(
-    activities.flatMap((a) => (a.tables ?? []).flatMap((ref) => ref.tables)),
+    loadComplete(
+      compactActivities.map((a) => a.id),
+      mapPool(skills, (skill) =>
+        client.search<Activity>("activities", { relatedSkillsList: skill.id }, { detailed: true }),
+      ),
+      (id) => client.get<Activity>("activities", id),
+    ),
+    loadComplete(
+      compactLocations.map((l) => l.id),
+      mapPool(factions, (faction) => client.search<Location>("locations", { faction: faction.id }, { detailed: true })),
+      (id) => client.get<Location>("locations", id),
+    ),
     mapPool(LOOT_TABLE_CATEGORIES, (category) =>
       client.search<LootTable>("loot_tables", { category }, { detailed: true }),
     ),
+  ]);
+  const lootTables = await loadComplete(
+    activities.flatMap((a) => (a.tables ?? []).flatMap((ref) => ref.tables)),
+    Promise.resolve(lootTableBatches),
     (id) => client.get<LootTable>("loot_tables", id),
-  );
-  const locations = await loadComplete(
-    compactLocations.map((l) => l.id),
-    mapPool(factions, (faction) => client.search<Location>("locations", { faction: faction.id }, { detailed: true })),
-    (id) => client.get<Location>("locations", id),
   );
 
   return { version, recipes, items, skills, services, locations, factions, activities, lootTables };

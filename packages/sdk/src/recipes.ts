@@ -142,7 +142,8 @@ export function buildRecipeBook(data: GameData): RecipeBook {
 /**
  * Recipes where every word of `query` starts a word in the recipe name, an output or a material.
  * Name matches rank first, then outputs, then materials; ties keep level order. An empty query
- * returns every recipe in level order.
+ * returns every recipe in level order. Words are cached per recipe object, so treat recipes as
+ * read-only.
  */
 export function searchRecipes(recipes: RecipeView[], query: string, options: SearchOptions = {}): RecipeView[] {
   const pool = options.skill ? recipes.filter((r) => r.skills.some((s) => s.id === options.skill)) : recipes;
@@ -277,10 +278,29 @@ function sortName(recipe: RecipeView): string {
   return recipe.outputs[0]?.name ?? recipe.name;
 }
 
+interface SearchWords {
+  name: string[];
+  outputs: string[];
+  materials: string[];
+}
+
+const searchWordsCache = new WeakMap<RecipeView, SearchWords>();
+
+function searchWords(recipe: RecipeView): SearchWords {
+  let cached = searchWordsCache.get(recipe);
+  if (!cached) {
+    cached = {
+      name: words(recipe.name),
+      outputs: recipe.outputs.flatMap((o) => words(o.name)),
+      materials: recipe.materials.flat().flatMap((m) => words(m.name)),
+    };
+    searchWordsCache.set(recipe, cached);
+  }
+  return cached;
+}
+
 function searchScore(recipe: RecipeView, terms: string[]): number {
-  const name = words(recipe.name);
-  const outputs = recipe.outputs.flatMap((o) => words(o.name));
-  const materials = recipe.materials.flat().flatMap((m) => words(m.name));
+  const { name, outputs, materials } = searchWords(recipe);
   let score = 0;
   for (const term of terms) {
     const termScore = hits(name, term) ? 3 : hits(outputs, term) ? 2 : hits(materials, term) ? 1 : 0;
