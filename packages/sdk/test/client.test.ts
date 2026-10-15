@@ -77,6 +77,18 @@ describe("createClient", () => {
     expect(requests[0]?.url).toBe(`${ENVIRONMENTS.prod}/recipes/search?relatedSkills=cooking&detailed=true`);
   });
 
+  it("posts icon paths to the batch endpoint", async () => {
+    const { fetch, requests } = fakeFetch([json({ "a.png": "data:image/png;base64,AA==", "b.png": null })]);
+    const icons = await createClient({ apiKey: "k", fetch }).icons(["a.png", "b.png"]);
+    expect(icons).toEqual({ "a.png": "data:image/png;base64,AA==", "b.png": null });
+    expect(requests[0]?.url).toBe(`${ENVIRONMENTS.prod}/icons/batch`);
+    expect(requests[0]?.headers["Content-Type"]).toBe("application/json");
+    expect(fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ method: "POST", body: JSON.stringify({ iconPaths: ["a.png", "b.png"] }) }),
+    );
+  });
+
   it("rejects a search with no parameters", () => {
     const { fetch } = fakeFetch([]);
     expect(() => createClient({ apiKey: "k", fetch }).search("recipes", {})).toThrow("needs at least one parameter");

@@ -23,6 +23,7 @@ export interface WalkScapeClient {
   get<T>(resource: ResourceName, id: string): Promise<T>;
   search<T>(resource: ResourceName, params: SearchParams, options?: { detailed?: boolean }): Promise<T[]>;
   icon(path: string): Promise<Response>;
+  icons(paths: string[]): Promise<Record<string, string | null>>;
 }
 
 export class WalkScapeApiError extends Error {
@@ -34,6 +35,12 @@ export class WalkScapeApiError extends Error {
     super(`${status} ${path}: ${message}`);
     this.name = "WalkScapeApiError";
   }
+}
+
+interface SendOptions {
+  method?: string;
+  body?: string;
+  headers?: Record<string, string>;
 }
 
 interface CacheEntry {
@@ -53,9 +60,9 @@ export function createClient(options: ClientOptions): WalkScapeClient {
     ...extra,
   });
 
-  async function send(path: string, extraHeaders?: Record<string, string>): Promise<Response> {
+  async function send(path: string, request: SendOptions = {}): Promise<Response> {
     for (let attempt = 0; ; attempt++) {
-      const res = await fetchFn(`${baseUrl}${path}`, { headers: headers(extraHeaders) });
+      const res = await fetchFn(`${baseUrl}${path}`, { ...request, headers: headers(request.headers) });
       if ((res.status === 429 || res.status >= 500) && attempt < maxRetries) {
         await sleep(retryDelayMs(res, attempt));
         continue;
@@ -69,7 +76,7 @@ export function createClient(options: ClientOptions): WalkScapeClient {
 
   async function getJson<T>(path: string): Promise<T> {
     const cached = cache.get(path);
-    const res = await send(path, cached ? { "If-None-Match": cached.etag } : undefined);
+    const res = await send(path, cached ? { headers: { "If-None-Match": cached.etag } } : {});
     if (res.status === 304 && cached) {
       return cached.body as T;
     }
@@ -96,6 +103,14 @@ export function createClient(options: ClientOptions): WalkScapeClient {
       return getJson(`/${resource}/search?${query}`);
     },
     icon: (path) => send(`/icons/${path.split("/").map(encodeURIComponent).join("/")}`),
+    icons: async (paths) => {
+      const res = await send("/icons/batch", {
+        method: "POST",
+        body: JSON.stringify({ iconPaths: paths }),
+        headers: { "Content-Type": "application/json" },
+      });
+      return (await res.json()) as Record<string, string | null>;
+    },
   };
 }
 

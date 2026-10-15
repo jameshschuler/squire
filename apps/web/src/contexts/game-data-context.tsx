@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { RecipeBook } from "@squire/walkscape-sdk";
 import { fetchRecipeBook } from "@/lib/api";
+import { prefetchRecipeBookIcons } from "@/lib/icon-prefetch";
 
 export type GameDataState =
   { status: "loading" } | { status: "ready"; book: RecipeBook } | { status: "error"; message: string };
@@ -12,7 +13,10 @@ export function GameDataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetchRecipeBook()
-      .then((book) => setState({ status: "ready", book }))
+      .then((book) => {
+        setState({ status: "ready", book });
+        void prefetchRecipeBookIcons(book);
+      })
       .catch((error: Error) => setState({ status: "error", message: error.message }));
   }, []);
 

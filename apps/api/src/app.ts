@@ -1,7 +1,8 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import compress from "@fastify/compress";
 import cors from "@fastify/cors";
-import { WalkScapeApiError, type WalkScapeClient } from "@squire/walkscape-sdk";
+import { WalkScapeApiError, recipeBookIcons, type WalkScapeClient } from "@squire/walkscape-sdk";
+import { createIconStore } from "./icons.js";
 import { createRecipeBookSource } from "./recipe-book.js";
 import { healthRoutes } from "./routes/health.js";
 import { iconRoutes } from "./routes/icons.js";
@@ -27,10 +28,20 @@ export function buildApp({ client, logLevel, corsOrigins }: AppOptions): Fastify
     return reply.code(502).send({ error: "WalkScape API unavailable" });
   });
 
+  const icons = createIconStore(client);
+  const recipeBook = createRecipeBookSource(client, app.log, {
+    onLoad: (book) => {
+      icons
+        .warm(recipeBookIcons(book.recipes))
+        .then((loaded) => app.log.info({ icons: loaded }, "Warmed icon cache"))
+        .catch((err: unknown) => app.log.warn({ err }, "Failed to warm icon cache"));
+    },
+  });
+
   app.register(compress, { encodings: ["br", "gzip"] });
   app.register(cors, { origin: corsOrigins.length > 0 ? corsOrigins : false, methods: ["GET"] });
   app.register(healthRoutes);
-  app.register(recipeRoutes(createRecipeBookSource(client, app.log)));
-  app.register(iconRoutes(client));
+  app.register(recipeRoutes(recipeBook));
+  app.register(iconRoutes(icons));
   return app;
 }

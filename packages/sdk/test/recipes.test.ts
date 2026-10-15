@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildRecipeBook,
+  recipeBookIcons,
   recipesMaking,
   recipesUsing,
   searchRecipes,
@@ -138,5 +139,23 @@ describe("recipesMaking / recipesUsing", () => {
     expect(ids(recipesMaking(recipes, "gold_bar"))).toEqual(["smelt_a_gold_bar"]);
     expect(ids(recipesUsing(recipes, "salt_crystal"))).toEqual(["assemble_dynamite"]);
     expect(recipesUsing(recipes, "unknown")).toEqual([]);
+  });
+});
+
+describe("recipeBookIcons", () => {
+  it("lists every recipe, material and output icon once", () => {
+    const icons = recipeBookIcons(recipes);
+    const expected = recipes.flatMap((r) => [
+      r.icon,
+      ...r.outputs.map((o) => o.icon),
+      ...r.materials.flat().map((m) => m.icon),
+    ]);
+    expect(new Set(icons)).toEqual(new Set(expected.filter(Boolean)));
+    expect(icons).toHaveLength(new Set(icons).size);
+  });
+
+  it("skips items without an icon", () => {
+    const [recipe] = recipes;
+    expect(recipeBookIcons([{ ...recipe!, icon: "", outputs: [], materials: [] }])).toEqual([]);
   });
 });

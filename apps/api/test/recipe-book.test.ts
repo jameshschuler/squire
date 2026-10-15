@@ -8,8 +8,9 @@ function setup() {
   const fake = fakeClient();
   const clock = { now: 0 };
   const log = { info: vi.fn() };
-  const recipeBook = createRecipeBookSource(fake.client, log, () => clock.now);
-  return { ...fake, clock, log, recipeBook };
+  const onLoad = vi.fn();
+  const recipeBook = createRecipeBookSource(fake.client, log, { onLoad, now: () => clock.now });
+  return { ...fake, clock, log, onLoad, recipeBook };
 }
 
 describe("createRecipeBookSource", () => {
@@ -38,6 +39,16 @@ describe("createRecipeBookSource", () => {
     clock.now = 6 * MINUTE;
     expect((await recipeBook()).version).toBe("v2");
     expect(log.info).toHaveBeenCalledWith({ from: "v1", to: "v2" }, "Game data changed");
+  });
+
+  it("calls onLoad with each newly loaded book, not on cache hits", async () => {
+    const { recipeBook, onLoad, state, clock } = setup();
+    const first = await recipeBook();
+    await recipeBook();
+    state.version = "v2";
+    clock.now = 6 * MINUTE;
+    const second = await recipeBook();
+    expect(onLoad.mock.calls).toEqual([[first], [second]]);
   });
 
   it("logs each load with its version and recipe count", async () => {
