@@ -1,11 +1,10 @@
 import { useMemo } from "react";
-import { Search } from "lucide-react";
 import { searchRecipes, type RecipeView } from "@jameshschuler/walkscape-sdk";
-import { Input } from "@/components/ui/input";
 import { GameDataStatus } from "@/components/shared/GameDataStatus";
 import { useGameDataContext } from "@/contexts/game-data-context";
 import { recipeSkills } from "@/lib/skills";
 import { RecipeResults } from "./RecipeResults";
+import { RecipeSearchInput } from "./RecipeSearchInput";
 import { SkillFilter } from "./SkillFilter";
 
 const NO_RECIPES: RecipeView[] = [];
@@ -26,17 +25,7 @@ export function RecipeSearch({ query, skill, onQueryChange, onSkillChange }: Rec
 
   return (
     <div className="space-y-3 pt-3">
-      <div className="relative">
-        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="search"
-          value={query}
-          onChange={(e) => onQueryChange(e.target.value)}
-          placeholder="Search recipes, outputs, materials…"
-          className="h-11 pl-9 text-base"
-          autoFocus
-        />
-      </div>
+      <RecipeSearchInput value={query} onChange={onQueryChange} />
       <SkillFilter skills={skills} selected={skill} onSelect={onSkillChange} />
       {state.status !== "ready" ? (
         <GameDataStatus state={state} />
