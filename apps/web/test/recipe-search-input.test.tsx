@@ -11,6 +11,11 @@ function ControlledSearch({ initial }: { initial: string }) {
 }
 
 describe("RecipeSearchInput", () => {
+  it("doesn't grab focus on its own, so the keyboard stays down", () => {
+    render(<ControlledSearch initial="" />);
+    expect(document.activeElement).not.toBe(screen.getByRole("searchbox"));
+  });
+
   it("hides the clear button when the search is empty", () => {
     render(<ControlledSearch initial="" />);
     expect(screen.queryByRole("button", { name: "Clear search" })).toBeNull();
