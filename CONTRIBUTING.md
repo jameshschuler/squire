@@ -45,6 +45,10 @@ The repo has three parts:
 
 `main` is protected. Every change lands through a PR, and the **CI passed** check has to be green before merging. Open PRs against `main` rather than stacking them on other branches. Stacked PRs merge into their base branch, not into `main`.
 
+## Dependencies
+
+Dependabot opens weekly update PRs. Patch and minor updates merge on their own once **CI passed** is green. Major updates wait for a human to review them.
+
 ## Code style
 
 ESLint and Prettier cover formatting and most rules. Beyond that:
