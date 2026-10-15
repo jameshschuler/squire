@@ -21,8 +21,9 @@ describe("ServiceLocations", () => {
         ])}
       />,
     );
-    expect(screen.getByText("City").textContent).toBe("Cityadvanced");
-    expect(screen.getByText("Town").textContent).toBe("Town");
+    const row = (name: string) => screen.getByText(name).closest("li")!;
+    expect(row("City").textContent).toBe("Cityadvanced");
+    expect(row("Town").textContent).toBe("Town");
   });
 
   it("says when no location has the service", () => {

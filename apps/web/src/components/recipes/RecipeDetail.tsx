@@ -1,7 +1,8 @@
 import type { RecipeView } from "@squire/walkscape-sdk";
+import { BackButton } from "@/components/layout/BackButton";
 import { Badge } from "@/components/ui/badge";
 import { GameIcon } from "@/components/shared/GameIcon";
-import { formatPercent, formatSkillLevel } from "@/lib/format";
+import { formatPercent, formatSkillLevel, formatSteps } from "@/lib/format";
 import { FavoriteButton } from "./FavoriteButton";
 import { RecipeItemRow } from "./RecipeItemRow";
 import { RecipeSection } from "./RecipeSection";
@@ -9,7 +10,8 @@ import { ServiceLocations } from "./ServiceLocations";
 
 export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
   return (
-    <article className="space-y-6 pt-4">
+    <article className="space-y-6 pt-2">
+      <BackButton />
       <header className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <h1 className="flex items-center gap-3 text-2xl font-semibold">
@@ -25,9 +27,8 @@ export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
             </Badge>
           ))}
           {recipe.service && <Badge variant="outline">{recipe.service.label}</Badge>}
-          <Badge variant="outline">
-            Work {recipe.workRequired} · max {formatPercent(recipe.maxWorkEfficiency)}
-          </Badge>
+          <Badge variant="outline">{formatSteps(recipe.workRequired, recipe.maxWorkEfficiency)}</Badge>
+          <Badge variant="outline">Max efficiency {formatPercent(recipe.maxWorkEfficiency)}</Badge>
         </div>
       </header>
 
@@ -48,11 +49,6 @@ export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
         {recipe.outputs.map((item) => (
           <RecipeItemRow key={item.id} item={item} />
         ))}
-        {recipe.xp.length > 0 && (
-          <p className="text-sm text-muted-foreground">
-            XP: {recipe.xp.map((x) => `${x.amount} ${x.skill}`).join(", ")}
-          </p>
-        )}
       </RecipeSection>
 
       {recipe.service && (

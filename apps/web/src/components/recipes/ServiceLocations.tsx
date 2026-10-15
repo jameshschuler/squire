@@ -1,3 +1,4 @@
+import { MapPin } from "lucide-react";
 import type { RecipeService } from "@squire/walkscape-sdk";
 import { Badge } from "@/components/ui/badge";
 
@@ -6,12 +7,13 @@ export function ServiceLocations({ service }: { service: RecipeService }) {
     return <p className="text-muted-foreground">No known location</p>;
   }
   return (
-    <ul className="flex flex-wrap gap-x-4 gap-y-1 leading-7">
+    <ul className="divide-y">
       {service.locations.map((location) => (
-        <li key={location.id} className="inline-flex items-center gap-1.5">
-          {location.name}
+        <li key={location.id} className="flex items-center gap-3 py-2.5">
+          <MapPin className="size-4 shrink-0 text-muted-foreground" />
+          <span className="flex-1">{location.name}</span>
           {location.tier !== service.tier && (
-            <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-normal text-muted-foreground">
+            <Badge variant="outline" className="font-normal text-muted-foreground">
               {location.tier}
             </Badge>
           )}
