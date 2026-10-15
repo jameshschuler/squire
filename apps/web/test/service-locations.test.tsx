@@ -16,14 +16,27 @@ describe("ServiceLocations", () => {
     render(
       <ServiceLocations
         service={service([
-          { id: "town", name: "Town", tier: "basic" },
-          { id: "city", name: "City", tier: "advanced" },
+          { id: "town", name: "Town", region: "Jarvonia", tier: "basic" },
+          { id: "city", name: "City", region: "Syrenthia", tier: "advanced" },
         ])}
       />,
     );
     const row = (name: string) => screen.getByText(name).closest("li")!;
     expect(row("City").textContent).toBe("Cityadvanced");
     expect(row("Town").textContent).toBe("Town");
+  });
+
+  it("shows each region as a heading above its locations", () => {
+    render(
+      <ServiceLocations
+        service={service([
+          { id: "town", name: "Town", region: "Jarvonia", tier: "basic" },
+          { id: "city", name: "City", region: "Syrenthia", tier: "basic" },
+        ])}
+      />,
+    );
+    expect(screen.getAllByRole("heading").map((h) => h.textContent)).toEqual(["Jarvonia", "Syrenthia"]);
+    expect(screen.getByText("Town").closest("section")?.textContent).toContain("Jarvonia");
   });
 
   it("says when no location has the service", () => {

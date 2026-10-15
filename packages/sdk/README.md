@@ -50,7 +50,7 @@ Errors from the API throw `WalkScapeApiError`, which has `status` and `path`.
 
 | Function                                          | What it does                                                                                                                              |
 | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `loadGameData(client)`                            | Loads every recipe, item, skill, crafting service and location: about 75 requests, a few seconds.                                         |
+| `loadGameData(client)`                            | Loads every recipe, item, skill, crafting service, location and faction: about 75 requests, a few seconds.                                |
 | `buildRecipeBook(data)`                           | Display-ready recipes: names and icons resolved, material alternatives grouped, the service needed and where to find it. Sorted by level. |
 | `searchRecipes(recipes, query, { skill, limit })` | Matches recipe names, outputs and materials. Best matches first.                                                                          |
 | `recipesMaking(recipes, itemId)`                  | Recipes that produce an item.                                                                                                             |
@@ -58,7 +58,7 @@ Errors from the API throw `WalkScapeApiError`, which has `status` and `path`.
 | `findItem(recipes, itemId)`                       | An item's name and icon.                                                                                                                  |
 | `recipeBookIcons(recipes)`                        | Every icon path the recipes show, each once.                                                                                              |
 
-A recipe's service counts higher tiers too: an advanced kitchen can cook basic kitchen recipes. Each location carries the lowest tier it has that qualifies, so you can mark places that only have a better service.
+A recipe's service counts higher tiers too: an advanced kitchen can cook basic kitchen recipes. Each location carries its region and the lowest tier it has that qualifies, so you can group places by region and mark the ones that only have a better service.
 
 ## Rate limits and caching
 

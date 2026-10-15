@@ -51,6 +51,18 @@ describe("buildRecipeBook", () => {
     expect(byId("assemble_dynamite")?.service?.locations.length).toBeGreaterThan(0);
   });
 
+  it("names each location's region from its faction", () => {
+    const regions = byId("smelt_a_gold_bar")?.service?.locations.map((l) => [l.name, l.region]);
+    expect(regions).toContainEqual(["Bilgemont Port", "Grand Duchy of Trellin-Erdwise"]);
+  });
+
+  it("falls back to a readable region name for an unknown faction", () => {
+    const data = structuredClone(sample) as unknown as GameData;
+    data.factions = [];
+    const location = buildRecipeBook(data).recipes.find((r) => r.id === "smelt_a_gold_bar")?.service?.locations[0];
+    expect(location?.region).toBe("Grand duchy of trellin erdwise");
+  });
+
   it("labels keyword-list services with their modifiers", () => {
     const data = structuredClone(sample) as unknown as GameData;
     data.recipes[0]!.requirements = [
@@ -86,7 +98,7 @@ describe("buildRecipeBook", () => {
         id,
         name: id,
         icon: "",
-        faction: "",
+        faction: "jarvonia",
         keywords: [],
         serviceList: tiers.map((tier) => `${tier}_forge`),
       }));
@@ -109,8 +121,8 @@ describe("buildRecipeBook", () => {
     it("marks each location with the lowest qualifying tier it has", () => {
       const service = forgeRecipe("basic", { both: ["basic", "advanced"], city: ["advanced"] });
       expect(service.locations).toEqual([
-        { id: "both", name: "both", tier: "basic" },
-        { id: "city", name: "city", tier: "advanced" },
+        { id: "both", name: "both", region: "Jarvonia", tier: "basic" },
+        { id: "city", name: "city", region: "Jarvonia", tier: "advanced" },
       ]);
     });
 
