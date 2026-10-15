@@ -21,22 +21,24 @@ describe("ServiceLocations", () => {
         ])}
       />,
     );
-    const row = (name: string) => screen.getByText(name).closest("li")!;
-    expect(row("City").textContent).toBe("Cityadvanced");
-    expect(row("Town").textContent).toBe("Town");
+    const row = (name: string) => screen.getByText(name, { exact: false }).closest("li")!;
+    expect(row("City").textContent).toBe("City (Syrenthia)advanced");
+    expect(row("Town").textContent).toBe("Town (Jarvonia)");
   });
 
-  it("shows each region as a heading above its locations", () => {
+  it("shows each location with its region in brackets", () => {
     render(
       <ServiceLocations
         service={service([
-          { id: "town", name: "Town", region: "Jarvonia", tier: "basic" },
-          { id: "city", name: "City", region: "Syrenthia", tier: "basic" },
+          { id: "frusenholm", name: "Frusenholm", region: "Jarvonia", tier: "basic" },
+          { id: "salsfirth", name: "Salsfirth", region: "Grand Duchy of Trellin-Erdwise", tier: "basic" },
         ])}
       />,
     );
-    expect(screen.getAllByRole("heading").map((h) => h.textContent)).toEqual(["Jarvonia", "Syrenthia"]);
-    expect(screen.getByText("Town").closest("section")?.textContent).toContain("Jarvonia");
+    expect(screen.getAllByRole("listitem").map((li) => li.textContent)).toEqual([
+      "Frusenholm (Jarvonia)",
+      "Salsfirth (Grand Duchy of Trellin-Erdwise)",
+    ]);
   });
 
   it("says when no location has the service", () => {
