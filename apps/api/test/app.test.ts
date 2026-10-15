@@ -11,7 +11,11 @@ describe("GET /api/recipes", () => {
     const res = await app().inject("/api/recipes");
     expect(res.statusCode).toBe(200);
     expect(res.headers.etag).toBe('"v1"');
-    expect(res.json<RecipeBook>().recipes.map((r) => r.id)).toEqual(["assemble_dynamite", "bake_a_bagel", "smelt_a_gold_bar"]);
+    expect(res.json<RecipeBook>().recipes.map((r) => r.id)).toEqual([
+      "assemble_dynamite",
+      "bake_a_bagel",
+      "smelt_a_gold_bar",
+    ]);
   });
 
   it("answers 304 when the client already has this version", async () => {

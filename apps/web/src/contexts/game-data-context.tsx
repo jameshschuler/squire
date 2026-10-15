@@ -3,9 +3,7 @@ import type { RecipeBook } from "@squire/walkscape-sdk";
 import { fetchRecipeBook } from "@/lib/api";
 
 export type GameDataState =
-  | { status: "loading" }
-  | { status: "ready"; book: RecipeBook }
-  | { status: "error"; message: string };
+  { status: "loading" } | { status: "ready"; book: RecipeBook } | { status: "error"; message: string };
 
 const GameDataContext = createContext<GameDataState | undefined>(undefined);
 

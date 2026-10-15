@@ -4,11 +4,22 @@ import { GameDataProvider, useGameDataContext } from "@/contexts/game-data-conte
 
 function Probe() {
   const state = useGameDataContext();
-  return <p>{state.status === "ready" ? `${state.book.recipes.length} recipes` : state.status === "error" ? state.message : "loading"}</p>;
+  return (
+    <p>
+      {state.status === "ready"
+        ? `${state.book.recipes.length} recipes`
+        : state.status === "error"
+          ? state.message
+          : "loading"}
+    </p>
+  );
 }
 
 function mockFetch(response: Response) {
-  vi.stubGlobal("fetch", vi.fn(async () => response));
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => response),
+  );
 }
 
 afterEach(() => {
@@ -19,14 +30,22 @@ afterEach(() => {
 describe("GameDataProvider", () => {
   it("loads the recipe book from the API", async () => {
     mockFetch(new Response(JSON.stringify({ version: "v1", recipes: [{ id: "a" }, { id: "b" }] })));
-    render(<GameDataProvider><Probe /></GameDataProvider>);
+    render(
+      <GameDataProvider>
+        <Probe />
+      </GameDataProvider>,
+    );
     expect(screen.getByText("loading")).toBeDefined();
     expect(await screen.findByText("2 recipes")).toBeDefined();
   });
 
   it("reports a failed load", async () => {
     mockFetch(new Response(null, { status: 502 }));
-    render(<GameDataProvider><Probe /></GameDataProvider>);
+    render(
+      <GameDataProvider>
+        <Probe />
+      </GameDataProvider>,
+    );
     expect(await screen.findByText("Failed to load recipes (502)")).toBeDefined();
   });
 

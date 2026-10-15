@@ -15,7 +15,9 @@ export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
         </h1>
         <div className="flex flex-wrap gap-2">
           {recipe.skills.map((skill) => (
-            <Badge key={skill.id} variant="secondary">{formatSkillLevel(skill)}</Badge>
+            <Badge key={skill.id} variant="secondary">
+              {formatSkillLevel(skill)}
+            </Badge>
           ))}
           {recipe.service && <Badge variant="outline">{recipe.service.label}</Badge>}
           <Badge variant="outline">
@@ -29,7 +31,7 @@ export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
           <div key={i} className="border-b last:border-b-0">
             {options.map((item, j) => (
               <div key={item.id}>
-                {j > 0 && <p className="pl-11 text-xs tracking-wide text-muted-foreground uppercase">or</p>}
+                {j > 0 && <p className="text-muted-foreground pl-11 text-xs uppercase tracking-wide">or</p>}
                 <RecipeItemRow item={item} />
               </div>
             ))}
@@ -42,7 +44,9 @@ export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
           <RecipeItemRow key={item.id} item={item} />
         ))}
         {recipe.xp.length > 0 && (
-          <p className="text-sm text-muted-foreground">XP: {recipe.xp.map((x) => `${x.amount} ${x.skill}`).join(", ")}</p>
+          <p className="text-muted-foreground text-sm">
+            XP: {recipe.xp.map((x) => `${x.amount} ${x.skill}`).join(", ")}
+          </p>
         )}
       </RecipeSection>
 

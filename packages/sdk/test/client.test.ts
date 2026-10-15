@@ -36,7 +36,10 @@ describe("createClient", () => {
   });
 
   it("returns the cached body when the server answers 304", async () => {
-    const { fetch, requests } = fakeFetch([json([{ id: "a" }], 200, { ETag: '"v1"' }), () => new Response(null, { status: 304 })]);
+    const { fetch, requests } = fakeFetch([
+      json([{ id: "a" }], 200, { ETag: '"v1"' }),
+      () => new Response(null, { status: 304 }),
+    ]);
     const client = createClient({ apiKey: "k", fetch });
     await client.list("items");
     expect(await client.list("items")).toEqual([{ id: "a" }]);
@@ -45,7 +48,10 @@ describe("createClient", () => {
 
   it("waits for the rate limit reset and retries on 429", async () => {
     vi.useFakeTimers();
-    const { fetch } = fakeFetch([json({ error: "Too many requests" }, 429, { RateLimit: '"120-in-1min"; r=0; t=2' }), json({ version: "x" })]);
+    const { fetch } = fakeFetch([
+      json({ error: "Too many requests" }, 429, { RateLimit: '"120-in-1min"; r=0; t=2' }),
+      json({ version: "x" }),
+    ]);
     const pending = createClient({ apiKey: "k", fetch }).version();
     await vi.advanceTimersByTimeAsync(2000);
     await expect(pending).resolves.toEqual({ version: "x" });
@@ -58,7 +64,9 @@ describe("createClient", () => {
 
   it("throws WalkScapeApiError with the API's message on 401", async () => {
     const { fetch } = fakeFetch([json({ error: "Unauthorized" }, 401)]);
-    const error = await createClient({ apiKey: "bad", fetch }).list("items").catch((e: unknown) => e);
+    const error = await createClient({ apiKey: "bad", fetch })
+      .list("items")
+      .catch((e: unknown) => e);
     expect(error).toBeInstanceOf(WalkScapeApiError);
     expect((error as WalkScapeApiError).message).toBe("401 /items: Unauthorized");
   });

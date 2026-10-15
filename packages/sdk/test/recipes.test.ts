@@ -29,7 +29,12 @@ describe("buildRecipeBook", () => {
   it("labels keyword-list services with their modifiers", () => {
     const data = structuredClone(sample) as unknown as GameData;
     data.recipes[0]!.requirements = [
-      { type: "service", name: "", opposite: false, requirement: { keywords: ["kitchen", "cursed"], tier: "advanced" } },
+      {
+        type: "service",
+        name: "",
+        opposite: false,
+        requirement: { keywords: ["kitchen", "cursed"], tier: "advanced" },
+      },
     ];
     expect(buildRecipeBook(data).recipes.find((r) => r.id === data.recipes[0]!.id)?.service).toEqual({
       label: "Cursed kitchen (advanced)",

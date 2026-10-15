@@ -21,7 +21,9 @@ describe("readEnv", () => {
   });
 
   it("reads the log level and a comma-separated list of CORS origins", () => {
-    expect(readEnv({ WALKSCAPE_API_KEY: "k", LOG_LEVEL: "debug", CORS_ORIGINS: "https://a.example, https://b.example," })).toMatchObject({
+    expect(
+      readEnv({ WALKSCAPE_API_KEY: "k", LOG_LEVEL: "debug", CORS_ORIGINS: "https://a.example, https://b.example," }),
+    ).toMatchObject({
       logLevel: "debug",
       corsOrigins: ["https://a.example", "https://b.example"],
     });

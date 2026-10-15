@@ -10,7 +10,12 @@ interface SkillFilterProps {
 export function SkillFilter({ skills, selected, onSelect }: SkillFilterProps) {
   return (
     <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
-      <Button size="sm" variant={selected ? "outline" : "secondary"} className="rounded-full" onClick={() => onSelect(undefined)}>
+      <Button
+        size="sm"
+        variant={selected ? "outline" : "secondary"}
+        className="rounded-full"
+        onClick={() => onSelect(undefined)}
+      >
         All
       </Button>
       {skills.map((skill) => (

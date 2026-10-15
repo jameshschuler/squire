@@ -1,5 +1,5 @@
 import type { GameData } from "./gamedata.js";
-import type { Recipe, Requirement, ServiceRequirement, SkillLevelRequirement } from "./types.js";
+import type { Requirement, ServiceRequirement, SkillLevelRequirement } from "./types.js";
 
 export interface RecipeItem {
   id: string;
@@ -47,7 +47,9 @@ export function buildRecipeBook(data: GameData): RecipeBook {
   };
 
   const recipes = data.recipes.map((recipe): RecipeView => {
-    const levels = new Map(recipe.requirements.filter(isSkillLevel).map((r) => [r.requirement.skill, r.requirement.level]));
+    const levels = new Map(
+      recipe.requirements.filter(isSkillLevel).map((r) => [r.requirement.skill, r.requirement.level]),
+    );
     const service = recipe.requirements.find(isService);
     return {
       id: recipe.id,
@@ -107,9 +109,7 @@ function serviceView(req: ServiceRequirement, data: GameData): RecipeService {
   const { serviceKeyword, keywords: listed, tier } = req.requirement;
   const keywords = listed?.length ? listed : serviceKeyword ? [serviceKeyword] : [];
   const serviceIds = new Set(
-    data.services
-      .filter((s) => s.tier === tier && keywords.every((k) => s.keywords.includes(k)))
-      .map((s) => s.id),
+    data.services.filter((s) => s.tier === tier && keywords.every((k) => s.keywords.includes(k))).map((s) => s.id),
   );
   const locations = data.locations
     .filter((l) => l.serviceList?.some((id) => serviceIds.has(id)))
