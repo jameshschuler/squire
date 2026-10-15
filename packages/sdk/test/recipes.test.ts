@@ -43,6 +43,42 @@ describe("buildRecipeBook", () => {
     });
   });
 
+  describe("service tiers", () => {
+    function withForge(serviceTier: string, requiredTier: string) {
+      const data = structuredClone(sample) as unknown as GameData;
+      data.services = [
+        {
+          id: "test_forge",
+          name: "Test forge",
+          icon: "",
+          tier: serviceTier,
+          serviceType: "crafting",
+          keywords: ["forge"],
+          relatedSkills: [],
+        },
+      ];
+      data.locations = [
+        { id: "testville", name: "Testville", icon: "", faction: "", keywords: [], serviceList: ["test_forge"] },
+      ];
+      data.recipes = data.recipes.filter((r) => r.id === "smelt_a_gold_bar");
+      data.recipes[0]!.requirements = [
+        { type: "service", name: null, opposite: false, requirement: { serviceKeyword: "forge", tier: requiredTier } },
+      ];
+      return buildRecipeBook(data).recipes[0]!.service!.locations.map((l) => l.id);
+    }
+
+    it.each([
+      ["basic", "basic", ["testville"]],
+      ["advanced", "basic", ["testville"]],
+      ["advanced", "advanced", ["testville"]],
+      ["basic", "advanced", []],
+      ["legendary", "legendary", ["testville"]],
+      ["legendary", "basic", []],
+    ])("a %s service for a %s recipe lists %j", (serviceTier, requiredTier, expected) => {
+      expect(withForge(serviceTier, requiredTier)).toEqual(expected);
+    });
+  });
+
   it("falls back to a readable name for unknown items", () => {
     const data = structuredClone(sample) as unknown as GameData;
     data.items = [];

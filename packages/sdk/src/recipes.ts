@@ -1,6 +1,8 @@
 import type { GameData } from "./gamedata.js";
 import type { Requirement, ServiceRequirement, SkillLevelRequirement } from "./types.js";
 
+const SERVICE_TIERS = ["basic", "advanced"];
+
 export interface RecipeItem {
   id: string;
   name: string;
@@ -109,7 +111,9 @@ function serviceView(req: ServiceRequirement, data: GameData): RecipeService {
   const { serviceKeyword, keywords: listed, tier } = req.requirement;
   const keywords = listed?.length ? listed : serviceKeyword ? [serviceKeyword] : [];
   const serviceIds = new Set(
-    data.services.filter((s) => s.tier === tier && keywords.every((k) => s.keywords.includes(k))).map((s) => s.id),
+    data.services
+      .filter((s) => meetsTier(s.tier, tier) && keywords.every((k) => s.keywords.includes(k)))
+      .map((s) => s.id),
   );
   const locations = data.locations
     .filter((l) => l.serviceList?.some((id) => serviceIds.has(id)))
@@ -117,6 +121,15 @@ function serviceView(req: ServiceRequirement, data: GameData): RecipeService {
     .sort((a, b) => a.name.localeCompare(b.name));
   const [primary = "service", ...modifiers] = keywords;
   return { label: `${humanize([...modifiers, primary].join(" "))} (${tier})`, tier, locations };
+}
+
+function meetsTier(serviceTier: string, requiredTier: string): boolean {
+  const have = SERVICE_TIERS.indexOf(serviceTier);
+  const need = SERVICE_TIERS.indexOf(requiredTier);
+  if (have === -1 || need === -1) {
+    return serviceTier === requiredTier;
+  }
+  return have >= need;
 }
 
 function isSkillLevel(req: Requirement): req is SkillLevelRequirement {
