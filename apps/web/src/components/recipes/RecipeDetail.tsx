@@ -2,6 +2,7 @@ import type { RecipeView } from "@squire/walkscape-sdk";
 import { Badge } from "@/components/ui/badge";
 import { GameIcon } from "@/components/shared/GameIcon";
 import { formatPercent, formatSkillLevel } from "@/lib/format";
+import { FavoriteButton } from "./FavoriteButton";
 import { RecipeItemRow } from "./RecipeItemRow";
 import { RecipeSection } from "./RecipeSection";
 import { ServiceLocations } from "./ServiceLocations";
@@ -10,10 +11,13 @@ export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
   return (
     <article className="space-y-6 pt-4">
       <header className="space-y-3">
-        <h1 className="flex items-center gap-3 text-2xl font-semibold">
-          <GameIcon path={recipe.icon} size={48} />
-          {recipe.name}
-        </h1>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="flex items-center gap-3 text-2xl font-semibold">
+            <GameIcon path={recipe.icon} size={48} />
+            {recipe.name}
+          </h1>
+          <FavoriteButton recipeId={recipe.id} />
+        </div>
         <div className="flex flex-wrap gap-2">
           {recipe.skills.map((skill) => (
             <Badge key={skill.id} variant="secondary">
