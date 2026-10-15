@@ -23,14 +23,14 @@ describe("ItemDetail", () => {
   it("shows a crafted item's recipe, then what uses it, and no sources section when nothing drops it", async () => {
     await renderItem("gold_bar");
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Gold bar");
-    expect(sectionTitles()).toEqual(["Made by", "Used in"]);
+    expect(sectionTitles()).toEqual(["Keywords", "Made by", "Used in"]);
     expect(section("Made by").getByRole("link", { name: /Smelt a gold bar/ })).toBeDefined();
     expect(section("Used in").getByText("No recipe uses this.")).toBeDefined();
   });
 
   it("shows what uses a raw material, then where to get it, with its activity and location", async () => {
     await renderItem("gold_ore");
-    expect(sectionTitles()).toEqual(["Used in", "Where to get it"]);
+    expect(sectionTitles()).toEqual(["Keywords", "Used in", "Where to get it"]);
     const sources = section("Where to get it");
     expect(sources.getByText("Mine gold ore")).toBeDefined();
     expect(sources.getByText("Mining lvl. 40")).toBeDefined();
@@ -40,7 +40,16 @@ describe("ItemDetail", () => {
 
   it("says when a raw material has no known source", async () => {
     await renderItem("salt_crystal");
-    expect(sectionTitles()).toEqual(["Used in", "Where to get it"]);
+    expect(sectionTitles()).toEqual(["Keywords", "Used in", "Where to get it"]);
     expect(section("Where to get it").getByText("No known source yet.")).toBeDefined();
+  });
+
+  it("lists the item's in-game keywords", async () => {
+    await renderItem("gold_nugget");
+    expect(
+      section("Keywords")
+        .getAllByRole("listitem")
+        .map((li) => li.textContent),
+    ).toEqual(["nugget", "light"]);
   });
 });

@@ -6,9 +6,10 @@ import sample from "../../../fixtures/api/gamedata-sample.json";
 const book = buildRecipeBook(sample as unknown as GameData);
 const ids = (list: { item: { id: string } }[]) => list.map((m) => m.item.id);
 
-const source = (activityId: string, skill: string, level: number): ItemSource => ({
-  activityId,
-  name: activityId,
+const source = (id: string, skill: string, level: number): ItemSource => ({
+  kind: "activity",
+  id,
+  name: id,
   icon: "",
   skills: [{ id: skill, name: skill, level }],
   lootType: "main",
@@ -24,23 +25,18 @@ describe("rawMaterials", () => {
     expect(materials).toHaveLength(new Set(materials).size);
   });
 
-  it("puts materials with a source first, lowest level first, and the rest last A–Z", () => {
-    const materials = rawMaterials({
-      ...book,
-      sources: { salt_crystal: [source("dig", "mining", 30)], gold_ore: [source("mine", "mining", 10)] },
-    });
-    expect(ids(materials).slice(0, 2)).toEqual(["gold_ore", "salt_crystal"]);
-    const unsourced = materials.slice(2).map((m) => m.item.name);
-    expect(unsourced).toEqual([...unsourced].sort((a, b) => a.localeCompare(b)));
+  it("sorts materials A–Z by name", () => {
+    const names = rawMaterials(book).map((m) => m.item.name);
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
   });
 
   it("keeps each skill's lowest level across sources, lowest first", () => {
-    const [ore] = rawMaterials({
+    const ore = rawMaterials({
       ...book,
       sources: {
         gold_ore: [source("a", "mining", 40), source("b", "mining", 20), source("c", "foraging", 5)],
       },
-    });
+    }).find((m) => m.item.id === "gold_ore");
     expect(ore?.skills.map((s) => [s.id, s.level])).toEqual([
       ["foraging", 5],
       ["mining", 20],
@@ -71,6 +67,26 @@ describe("searchMaterials", () => {
     ["nonsense", []],
   ])("finds %j", (query, expected) => {
     expect(ids(searchMaterials(materials, query)).sort()).toEqual([...expected].sort());
+  });
+
+  it("only counts skills from activities that drop the material, not chests or shops", () => {
+    const ore = rawMaterials({
+      ...book,
+      sources: {
+        gold_ore: [
+          source("mine", "mining", 40),
+          {
+            kind: "chest",
+            id: "agility_chest",
+            name: "Agility chest",
+            icon: "",
+            skills: [{ id: "carpentry", name: "Carpentry", level: 40 }],
+          },
+          { kind: "shop", id: "stall", name: "Stall", icon: "", locations: [] },
+        ],
+      },
+    }).find((m) => m.item.id === "gold_ore");
+    expect(ore?.skills.map((s) => s.id)).toEqual(["mining"]);
   });
 
   it("filters by skill", () => {

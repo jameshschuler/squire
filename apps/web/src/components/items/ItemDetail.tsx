@@ -1,13 +1,14 @@
 import { useMemo } from "react";
-import { recipesMaking, recipesUsing, type Item, type RecipeBook } from "@jameshschuler/walkscape-sdk";
+import { recipesMaking, recipesUsing, type ItemSummary, type RecipeBook } from "@jameshschuler/walkscape-sdk";
 import { BackButton } from "@/components/layout/BackButton";
 import { RecipeList } from "@/components/recipes/RecipeList";
 import { RecipeSection } from "@/components/recipes/RecipeSection";
 import { GameIcon } from "@/components/shared/GameIcon";
+import { ItemKeywords } from "./ItemKeywords";
 import { ItemSources } from "./ItemSources";
 
 interface ItemDetailProps {
-  item: Item;
+  item: ItemSummary;
   book: RecipeBook;
 }
 
@@ -24,6 +25,11 @@ export function ItemDetail({ item, book }: ItemDetailProps) {
         <GameIcon path={item.icon} size={48} />
         {item.name}
       </h1>
+      {item.keywords.length > 0 && (
+        <RecipeSection title="Keywords">
+          <ItemKeywords keywords={item.keywords} />
+        </RecipeSection>
+      )}
       {isCrafted && (
         <RecipeSection title="Made by">
           <RecipeList recipes={making} />

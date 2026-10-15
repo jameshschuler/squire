@@ -1,0 +1,18 @@
+import { MapPin } from "lucide-react";
+import type { LocationSummary } from "@jameshschuler/walkscape-sdk";
+import { formatRegion } from "@/lib/format";
+
+export function SourceLocations({ locations }: { locations: LocationSummary[] }) {
+  return (
+    <ul className="space-y-1 pl-11 text-sm">
+      {locations.map((location) => (
+        <li key={location.id} className="flex items-center gap-2">
+          <MapPin className="size-3.5 shrink-0 text-muted-foreground" />
+          <span>
+            {location.name} <span className="text-muted-foreground">({formatRegion(location.region)})</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}

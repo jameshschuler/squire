@@ -203,42 +203,108 @@
   {
    "id": "bagel",
    "name": "Bagel",
-   "icon": "assets/icons/items/materials/food/bagel.png"
+   "icon": "assets/icons/items/materials/food/bagel.png",
+   "type": "consumable",
+   "keywords": [
+    "food",
+    "sandwich",
+    "food",
+    "agility"
+   ],
+   "quality": "common"
   },
   {
    "id": "dynamite",
    "name": "Dynamite",
-   "icon": "assets/icons/items/gear/skill_gear/mining/dynamite.png"
+   "icon": "assets/icons/items/gear/skill_gear/mining/dynamite.png",
+   "type": "consumable",
+   "keywords": [
+    "mining"
+   ],
+   "quality": "common"
   },
   {
    "id": "gold_bar",
    "name": "Gold bar",
-   "icon": "assets/icons/items/materials/bars/gold_bar.png"
+   "icon": "assets/icons/items/materials/bars/gold_bar.png",
+   "type": "material",
+   "keywords": [
+    "bar"
+   ],
+   "quality": "common"
   },
   {
    "id": "gold_nugget",
    "name": "Gold nugget",
-   "icon": "assets/icons/items/materials/ores/gold_nugget.png"
+   "icon": "assets/icons/items/materials/ores/gold_nugget.png",
+   "type": "material",
+   "keywords": [
+    "nugget",
+    "light"
+   ],
+   "quality": "common"
   },
   {
    "id": "gold_ore",
    "name": "Gold ore",
-   "icon": "assets/icons/items/materials/ores/gold_ore.png"
+   "icon": "assets/icons/items/materials/ores/gold_ore.png",
+   "type": "material",
+   "keywords": [
+    "ore"
+   ],
+   "quality": "common"
   },
   {
    "id": "salt_crystal",
    "name": "Salt crystal",
-   "icon": "assets/icons/items/materials/ores/salt_crystal.png"
+   "icon": "assets/icons/items/materials/ores/salt_crystal.png",
+   "type": "material",
+   "keywords": [
+    "ingredient"
+   ],
+   "quality": "common"
   },
   {
    "id": "volcanic_ash",
    "name": "Volcanic ash",
-   "icon": "assets/icons/items/syrenthia/volcanic_ash.png"
+   "icon": "assets/icons/items/syrenthia/volcanic_ash.png",
+   "type": "material",
+   "keywords": [
+    "misc."
+   ],
+   "quality": "common"
   },
   {
    "id": "wheat",
    "name": "Wheat",
-   "icon": "assets/icons/items/materials/plants/wheat.png"
+   "icon": "assets/icons/items/materials/plants/wheat.png",
+   "type": "material",
+   "keywords": [
+    "plant",
+    "ingredient"
+   ],
+   "quality": "common"
+  },
+  {
+   "id": "mining_chest",
+   "name": "Mining chest",
+   "icon": "assets/icons/items/openables/chests/mining_chest.png",
+   "type": "container",
+   "keywords": [
+    "chest",
+    "skilling_chest"
+   ],
+   "quality": "common",
+   "tables": [
+    {
+     "isPrimary": false,
+     "type": [],
+     "rollAmount": 4,
+     "tables": [
+      "mining_chest_table"
+     ]
+    }
+   ]
   }
  ],
  "skills": [
@@ -442,6 +508,16 @@
      "tables": [
       "wrentmark_gem_table"
      ]
+    },
+    {
+     "isPrimary": false,
+     "type": [
+      "chestTable"
+     ],
+     "rollAmount": 1,
+     "tables": [
+      "mining_activity_chest"
+     ]
     }
    ]
   }
@@ -500,6 +576,356 @@
     }
    ],
    "subTables": []
+  },
+  {
+   "id": "mining_activity_chest",
+   "name": "mining activity chest",
+   "category": "normal",
+   "noDropChance": 0.996,
+   "tableRows": [
+    {
+     "rowItemID": "mining_chest",
+     "name": "Mining chest",
+     "icon": "assets/icons/items/openables/chests/mining_chest.png",
+     "isMoney": false,
+     "linearWeightScaling": true,
+     "rowWeight": 10,
+     "rowMinimumAmount": 1,
+     "rowMaximumAmount": 1,
+     "minWeightScale": 0.05,
+     "requirementsBonuses": []
+    }
+   ],
+   "subTables": []
+  },
+  {
+   "id": "mining_chest_table",
+   "name": "mining chest table",
+   "category": "chest",
+   "noDropChance": 0,
+   "tableRows": [
+    {
+     "rowItemID": "tarsilium_ore",
+     "name": "Tarsilium ore",
+     "icon": "assets/icons/items/materials/ores/tarsilium_ore.png",
+     "isMoney": false,
+     "linearWeightScaling": true,
+     "rowWeight": 8,
+     "rowMinimumAmount": 4,
+     "rowMaximumAmount": 9,
+     "minWeightScale": 0.05,
+     "requirementsBonuses": []
+    },
+    {
+     "rowItemID": "copper_ore",
+     "name": "Copper ore",
+     "icon": "assets/icons/items/materials/ores/copper_ore.png",
+     "isMoney": false,
+     "linearWeightScaling": true,
+     "rowWeight": 9,
+     "rowMinimumAmount": 5,
+     "rowMaximumAmount": 14,
+     "minWeightScale": 0.05,
+     "requirementsBonuses": []
+    },
+    {
+     "rowItemID": "tin_ore",
+     "name": "Tin ore",
+     "icon": "assets/icons/items/materials/ores/tin_ore.png",
+     "isMoney": false,
+     "linearWeightScaling": true,
+     "rowWeight": 9,
+     "rowMinimumAmount": 5,
+     "rowMaximumAmount": 14,
+     "minWeightScale": 0.05,
+     "requirementsBonuses": []
+    },
+    {
+     "rowItemID": "farganite_ore",
+     "name": "Farganite ore",
+     "icon": "assets/icons/items/materials/ores/farganite_ore.png",
+     "isMoney": false,
+     "linearWeightScaling": true,
+     "rowWeight": 7,
+     "rowMinimumAmount": 4,
+     "rowMaximumAmount": 8,
+     "minWeightScale": 0.05,
+     "requirementsBonuses": []
+    },
+    {
+     "rowItemID": "coal",
+     "name": "Coal",
+     "icon": "assets/icons/items/materials/ores/coal_ore.png",
+     "isMoney": false,
+     "linearWeightScaling": true,
+     "rowWeight": 8,
+     "rowMinimumAmount": 15,
+     "rowMaximumAmount": 30,
+     "minWeightScale": 0.05,
+     "requirementsBonuses": []
+    },
+    {
+     "rowItemID": "iron_ore",
+     "name": "Iron ore",
+     "icon": "assets/icons/items/materials/ores/iron_ore.png",
+     "isMoney": false,
+     "linearWeightScaling": true,
+     "rowWeight": 9,
+     "rowMinimumAmount": 1,
+     "rowMaximumAmount": 13,
+     "minWeightScale": 0.05,
+     "requirementsBonuses": []
+    },
+    {
+     "rowItemID": "jarvonian_pastry",
+     "name": "Jarvonian pastry",
+     "icon": "assets/icons/items/materials/food/jarvonian_pastry.png",
+     "isMoney": false,
+     "linearWeightScaling": true,
+     "rowWeight": 2,
+     "rowMinimumAmount": 1,
+     "rowMaximumAmount": 1,
+     "minWeightScale": 0.05,
+     "requirementsBonuses": []
+    },
+    {
+     "rowItemID": "mining_memosphere",
+     "name": "Mining memosphere",
+     "icon": "assets/icons/items/consumables/memospheres/memosphere_mining.png",
+     "isMoney": false,
+     "linearWeightScaling": true,
+     "rowWeight": 4,
+     "rowMinimumAmount": 1,
+     "rowMaximumAmount": 2,
+     "minWeightScale": 0.05,
+     "requirementsBonuses": []
+    },
+    {
+     "rowItemID": "large_stone",
+     "name": "Large stone",
+     "icon": "assets/icons/items/materials/ores/large_stone.png",
+     "isMoney": false,
+     "linearWeightScaling": true,
+     "rowWeight": 5,
+     "rowMinimumAmount": 1,
+     "rowMaximumAmount": 1,
+     "minWeightScale": 0.05,
+     "requirementsBonuses": []
+    }
+   ],
+   "subTables": [
+    {
+     "weight": 0.2164,
+     "type": "money",
+     "tableRows": [
+      {
+       "rowItemID": null,
+       "name": null,
+       "icon": "assets/icons/items/money.png",
+       "isMoney": true,
+       "linearWeightScaling": true,
+       "rowWeight": 10,
+       "rowMinimumAmount": 10,
+       "rowMaximumAmount": 100,
+       "minWeightScale": 0,
+       "requirementsBonuses": []
+      },
+      {
+       "rowItemID": "bat_trinket",
+       "name": "Bat trinket",
+       "icon": "assets/icons/items/materials/misc/bat_trinket.png",
+       "isMoney": false,
+       "linearWeightScaling": true,
+       "rowWeight": 0.512,
+       "rowMinimumAmount": 1,
+       "rowMaximumAmount": 1,
+       "minWeightScale": 0,
+       "requirementsBonuses": null
+      }
+     ]
+    },
+    {
+     "weight": 0.2,
+     "type": "common",
+     "tableRows": [
+      {
+       "rowItemID": "light_mining_shovel",
+       "name": "Light mining shovel",
+       "icon": "assets/icons/items/gear/skill_gear/mining/shovel.png",
+       "isMoney": false,
+       "linearWeightScaling": true,
+       "rowWeight": 10,
+       "rowMinimumAmount": 1,
+       "rowMaximumAmount": 1,
+       "minWeightScale": 0,
+       "requirementsBonuses": []
+      },
+      {
+       "rowItemID": "fingerpick",
+       "name": "Fingerpick",
+       "icon": "assets/icons/items/gear/fingerpick.png",
+       "isMoney": false,
+       "linearWeightScaling": true,
+       "rowWeight": 10,
+       "rowMinimumAmount": 1,
+       "rowMaximumAmount": 1,
+       "minWeightScale": 0,
+       "requirementsBonuses": []
+      }
+     ]
+    },
+    {
+     "weight": 0.05,
+     "type": "uncommon",
+     "tableRows": [
+      {
+       "rowItemID": "hand_lantern",
+       "name": "Hand lantern",
+       "icon": "assets/icons/items/gear/skill_gear/mining/hand_lantern.png",
+       "isMoney": false,
+       "linearWeightScaling": true,
+       "rowWeight": 10,
+       "rowMinimumAmount": 1,
+       "rowMaximumAmount": 1,
+       "minWeightScale": 0,
+       "requirementsBonuses": []
+      },
+      {
+       "rowItemID": "mining_cartpack",
+       "name": "Mining cartpack",
+       "icon": "assets/icons/items/gear/mining_cartpack.png",
+       "isMoney": false,
+       "linearWeightScaling": true,
+       "rowWeight": 10,
+       "rowMinimumAmount": 1,
+       "rowMaximumAmount": 1,
+       "minWeightScale": 0,
+       "requirementsBonuses": []
+      }
+     ]
+    },
+    {
+     "weight": 0.025,
+     "type": "rare",
+     "tableRows": [
+      {
+       "rowItemID": "mining_helmet",
+       "name": "Mining helmet",
+       "icon": "assets/icons/items/gear/skill_gear/mining_helm.png",
+       "isMoney": false,
+       "linearWeightScaling": true,
+       "rowWeight": 10,
+       "rowMinimumAmount": 1,
+       "rowMaximumAmount": 1,
+       "minWeightScale": 0,
+       "requirementsBonuses": []
+      },
+      {
+       "rowItemID": "miners_beard",
+       "name": "Miner's beard",
+       "icon": "assets/icons/items/gear/skill_gear/mining/miners_beard.png",
+       "isMoney": false,
+       "linearWeightScaling": true,
+       "rowWeight": 10,
+       "rowMinimumAmount": 1,
+       "rowMaximumAmount": 1,
+       "minWeightScale": 0,
+       "requirementsBonuses": []
+      },
+      {
+       "rowItemID": "miners_magnet",
+       "name": "Miner's magnet",
+       "icon": "assets/icons/items/gear/skill_gear/mining/magnet.png",
+       "isMoney": false,
+       "linearWeightScaling": true,
+       "rowWeight": 10,
+       "rowMinimumAmount": 1,
+       "rowMaximumAmount": 1,
+       "minWeightScale": 0,
+       "requirementsBonuses": []
+      }
+     ]
+    },
+    {
+     "weight": 0.0075,
+     "type": "epic",
+     "tableRows": [
+      {
+       "rowItemID": "miners_pants",
+       "name": "Miner's pants",
+       "icon": "assets/icons/items/gear/skill_gear/mining/miners_pants.png",
+       "isMoney": false,
+       "linearWeightScaling": true,
+       "rowWeight": 10,
+       "rowMinimumAmount": 1,
+       "rowMaximumAmount": 1,
+       "minWeightScale": 0,
+       "requirementsBonuses": []
+      },
+      {
+       "rowItemID": "miners_shirt",
+       "name": "Miner's shirt",
+       "icon": "assets/icons/items/gear/skill_gear/mining/miners_shirt.png",
+       "isMoney": false,
+       "linearWeightScaling": true,
+       "rowWeight": 10,
+       "rowMinimumAmount": 1,
+       "rowMaximumAmount": 1,
+       "minWeightScale": 0,
+       "requirementsBonuses": []
+      },
+      {
+       "rowItemID": "heavy_pick_handle",
+       "name": "Heavy pick handle",
+       "icon": "assets/icons/items/gear/heavy_pick_handle.png",
+       "isMoney": false,
+       "linearWeightScaling": true,
+       "rowWeight": 10,
+       "rowMinimumAmount": 1,
+       "rowMaximumAmount": 1,
+       "minWeightScale": 0,
+       "requirementsBonuses": []
+      }
+     ]
+    },
+    {
+     "weight": 0.001,
+     "type": "legendary",
+     "tableRows": [
+      {
+       "rowItemID": "shovel_axe",
+       "name": "Shovel axe",
+       "icon": "assets/icons/items/gear/skill_gear/shovelaxe.png",
+       "isMoney": false,
+       "linearWeightScaling": true,
+       "rowWeight": 10,
+       "rowMinimumAmount": 1,
+       "rowMaximumAmount": 1,
+       "minWeightScale": 0,
+       "requirementsBonuses": []
+      }
+     ]
+    },
+    {
+     "weight": 0.0001,
+     "type": "ethereal",
+     "tableRows": []
+    }
+   ]
+  }
+ ],
+ "shops": [
+  {
+   "id": "granfiddich_tool_stall",
+   "name": "granfiddich tool stall",
+   "onlyPurchaseSellingListItems": false,
+   "soldItems": [
+    "bronze_pickaxe",
+    "bronze_hatchet",
+    "birch_hunting_bow",
+    "iron_pickaxe"
+   ],
+   "shoppingLists": []
   }
  ]
 }

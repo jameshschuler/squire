@@ -2,22 +2,29 @@ import type { GameData } from "./gamedata.js";
 import {
   SERVICE_TIERS,
   type Activity,
-  type Item,
+  type ItemDetail,
   type Location,
   type LootTable,
   type LootTableRef,
   type Service,
+  type Shop,
   type Requirement,
   type ServiceRequirement,
   type ServiceTier,
   type SkillLevelRequirement,
 } from "./types.js";
 
-/** An item and how many of it a recipe takes or makes. */
-export interface RecipeItem {
+/** An item's name, icon and in-game keywords. */
+export interface ItemSummary {
   id: string;
   name: string;
   icon: string;
+  /** In-game keywords, e.g. "ore" or "hunting_product". Players can search the game with these. */
+  keywords: string[];
+}
+
+/** An item and how many of it a recipe takes or makes. */
+export interface RecipeItem extends ItemSummary {
   amount: number;
 }
 
@@ -60,7 +67,6 @@ export interface RecipeView {
   maxWorkEfficiency: number;
 }
 
-/** Every recipe, sorted by level, tagged with the game data version it came from. */
 export interface SkillLevel {
   id: string;
   name: string;
@@ -74,9 +80,10 @@ export interface SkillLevel {
  */
 export type LootType = "main" | "secondary" | "gem" | "birdNest" | "chestTable" | "collectible" | "petEgg";
 
-/** An activity that drops an item, and where you can do it. */
-export interface ItemSource {
-  activityId: string;
+/** An activity that drops the item, and where you can do it. */
+export interface ActivitySource {
+  kind: "activity";
+  id: string;
   name: string;
   icon: string;
   skills: SkillLevel[];
@@ -85,10 +92,37 @@ export interface ItemSource {
   locations: LocationSummary[];
 }
 
+/** A chest, such as a skill chest, that can contain the item when opened. */
+export interface ChestSource {
+  kind: "chest";
+  id: string;
+  name: string;
+  icon: string;
+  /** Lowest level per skill among the activities that drop the chest. */
+  skills: SkillLevel[];
+}
+
+/** A shop that sells the item. */
+export interface ShopSource {
+  kind: "shop";
+  id: string;
+  name: string;
+  icon: string;
+  /** Locations with the shop, when the game data links one. Often empty. */
+  locations: LocationSummary[];
+}
+
+/** One way to get an item. */
+export type ItemSource = ActivitySource | ChestSource | ShopSource;
+
+/** Every recipe, sorted by level, tagged with the game data version it came from. */
 export interface RecipeBook {
   version: string;
   recipes: RecipeView[];
-  /** Activities that drop each recipe material, keyed by item id. Materials with no known source are missing. */
+  /**
+   * Every way to get each recipe material, keyed by item id: activities first (main loot first, then
+   * by level), then shops, then chests. Materials with no known source are missing.
+   */
   sources: Record<string, ItemSource[]>;
 }
 
@@ -109,11 +143,13 @@ export function buildRecipeBook(data: GameData): RecipeBook {
   const skillName = (id: string) => skillNames.get(id) ?? humanize(id);
   const item = (id: string, amount: number): RecipeItem => {
     const found = items.get(id);
-    return { id, name: found?.name ?? humanize(id), icon: found?.icon ?? "", amount };
+    const keywords = [...new Set(found?.keywords ?? [])];
+    return { id, name: found?.name ?? humanize(id), icon: found?.icon ?? "", keywords, amount };
   };
   const regions = new Map(data.factions.map((f) => [f.id, f.name]));
   const locationsByService = indexLocations(data.locations, regions, (l) => l.serviceList);
   const locationsByActivity = indexLocations(data.locations, regions, (l) => l.activityList);
+  const locationsByBuilding = indexLocations(data.locations, regions, (l) => l.buildingList);
 
   const recipes = data.recipes.map((recipe): RecipeView => {
     const service = recipe.requirements.find(isService);
@@ -135,7 +171,7 @@ export function buildRecipeBook(data: GameData): RecipeBook {
   return {
     version: data.version,
     recipes: recipes.sort(byLevel),
-    sources: itemSources(data, materialIds, locationsByActivity, skillName),
+    sources: itemSources(data, materialIds, { locationsByActivity, locationsByBuilding }, skillName),
   };
 }
 
@@ -171,15 +207,27 @@ export function recipeBookIcons(book: RecipeBook): string[] {
   return [...new Set([...recipeIcons, ...sourceIcons].map((i) => i.icon).filter(Boolean))];
 }
 
-/** An item's name and icon, found from any recipe that makes or uses it. */
-export function findItem(recipes: RecipeView[], itemId: string): Item | undefined {
+/** An item's name, icon and keywords, found from any recipe that makes or uses it. */
+export function findItem(recipes: RecipeView[], itemId: string): ItemSummary | undefined {
   for (const recipe of recipes) {
     const found = [...recipe.outputs, ...recipe.materials.flat()].find((i) => i.id === itemId);
     if (found) {
-      return { id: found.id, name: found.name, icon: found.icon };
+      return { id: found.id, name: found.name, icon: found.icon, keywords: found.keywords };
     }
   }
   return undefined;
+}
+
+/** The lowest level needed per skill across a set of skill levels, lowest first. */
+export function lowestSkillLevels(skills: SkillLevel[]): SkillLevel[] {
+  const lowest = new Map<string, SkillLevel>();
+  for (const skill of skills) {
+    const current = lowest.get(skill.id);
+    if (!current || (skill.level ?? 0) < (current.level ?? 0)) {
+      lowest.set(skill.id, skill);
+    }
+  }
+  return [...lowest.values()].sort((a, b) => (a.level ?? 0) - (b.level ?? 0));
 }
 
 /** Recipes that take an item as a material, in any slot or option. */
@@ -187,57 +235,104 @@ export function recipesUsing(recipes: RecipeView[], itemId: string): RecipeView[
   return recipes.filter((r) => r.materials.some((slot) => slot.some((m) => m.id === itemId)));
 }
 
+interface Drop {
+  itemId: string;
+  source: ItemSource;
+}
+
+interface LocationIndexes {
+  locationsByActivity: Map<string, LocationSummary[]>;
+  locationsByBuilding: Map<string, LocationSummary[]>;
+}
+
 function itemSources(
   data: GameData,
   itemIds: Set<string>,
-  locationsByActivity: Map<string, LocationSummary[]>,
+  { locationsByActivity, locationsByBuilding }: LocationIndexes,
   skillName: (id: string) => string,
 ): Record<string, ItemSource[]> {
   const tables = new Map(data.lootTables.map((t) => [t.id, t]));
-  const drops = data.activities.flatMap((activity) =>
-    activityDrops(activity, activitySource(activity, locationsByActivity, skillName), tables),
+  const activityDrops = data.activities.flatMap((activity) =>
+    dropsFromActivity(activity, locationsByActivity, skillName, tables),
   );
+  const activitySourcesByItem = groupDrops(activityDrops);
+  const chestDrops = data.items
+    .filter((item) => item.tables?.length)
+    .flatMap((chest) => dropsFromChest(chest, activitySourcesByItem.get(chest.id) ?? [], tables));
+  const shopDrops = data.shops.flatMap((shop) => dropsFromShop(shop, locationsByBuilding));
 
-  const sources: Record<string, ItemSource[]> = {};
-  const seen = new Set<string>();
-  for (const { itemId, source } of drops) {
-    const key = `${itemId}|${source.activityId}|${source.lootType}`;
-    if (itemIds.has(itemId) && !seen.has(key)) {
-      seen.add(key);
-      (sources[itemId] ??= []).push(source);
-    }
-  }
-  for (const list of Object.values(sources)) {
-    list.sort(bySource);
-  }
-  return sources;
+  const drops = [...activityDrops, ...chestDrops, ...shopDrops].filter((drop) => itemIds.has(drop.itemId));
+  return Object.fromEntries(groupDrops(drops));
 }
 
-type ActivitySource = Omit<ItemSource, "lootType">;
+function groupDrops(drops: Drop[]): Map<string, ItemSource[]> {
+  const byItem = new Map<string, ItemSource[]>();
+  const seen = new Set<string>();
+  for (const { itemId, source } of drops) {
+    const key = `${itemId}|${source.kind}|${source.id}|${source.kind === "activity" ? source.lootType : ""}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    const list = byItem.get(itemId);
+    if (list) {
+      list.push(source);
+    } else {
+      byItem.set(itemId, [source]);
+    }
+  }
+  for (const list of byItem.values()) {
+    list.sort(bySource);
+  }
+  return byItem;
+}
 
-function activitySource(
+function dropsFromActivity(
   activity: Activity,
   locationsByActivity: Map<string, LocationSummary[]>,
   skillName: (id: string) => string,
-): ActivitySource {
-  return {
-    activityId: activity.id,
-    name: activity.name,
-    icon: activity.icon,
-    skills: skillLevels(activity.relatedSkillsList, activity.requirements ?? [], skillName),
-    locations: locationsByActivity.get(activity.id) ?? [],
-  };
+  tables: Map<string, LootTable>,
+): Drop[] {
+  const skills = skillLevels(activity.relatedSkillsList, activity.requirements ?? [], skillName);
+  const locations = locationsByActivity.get(activity.id) ?? [];
+  return (activity.tables ?? []).flatMap((ref) => {
+    const source: ActivitySource = {
+      kind: "activity",
+      id: activity.id,
+      name: activity.name,
+      icon: activity.icon,
+      skills,
+      lootType: lootTypeOf(ref),
+      locations,
+    };
+    return itemsIn(ref, tables).map((itemId) => ({ itemId, source }));
+  });
 }
 
-function activityDrops(
-  activity: Activity,
-  base: ActivitySource,
-  tables: Map<string, LootTable>,
-): { itemId: string; source: ItemSource }[] {
-  return (activity.tables ?? []).flatMap((ref) => {
-    const source = { ...base, lootType: lootTypeOf(ref) };
-    return ref.tables.flatMap((id) => droppedItems(tables.get(id))).map((itemId) => ({ itemId, source }));
-  });
+function dropsFromChest(chest: ItemDetail, foundBy: ItemSource[], tables: Map<string, LootTable>): Drop[] {
+  const source: ChestSource = {
+    kind: "chest",
+    id: chest.id,
+    name: chest.name,
+    icon: chest.icon,
+    skills: lowestSkillLevels(foundBy.flatMap((s) => (s.kind === "shop" ? [] : s.skills))),
+  };
+  return (chest.tables ?? []).flatMap((ref) => itemsIn(ref, tables).map((itemId) => ({ itemId, source })));
+}
+
+function dropsFromShop(shop: Shop, locationsByBuilding: Map<string, LocationSummary[]>): Drop[] {
+  const source: ShopSource = {
+    kind: "shop",
+    id: shop.id,
+    name: humanize(shop.name),
+    icon: "",
+    locations: locationsByBuilding.get(shop.id) ?? [],
+  };
+  return shop.soldItems.map((itemId) => ({ itemId, source }));
+}
+
+function itemsIn(ref: LootTableRef, tables: Map<string, LootTable>): string[] {
+  return ref.tables.flatMap((id) => droppedItems(tables.get(id)));
 }
 
 function lootTypeOf(ref: LootTableRef): LootType {
@@ -253,8 +348,18 @@ function droppedItems(table: LootTable | undefined): string[] {
 }
 
 function bySource(a: ItemSource, b: ItemSource): number {
-  const main = Number(b.lootType === "main") - Number(a.lootType === "main");
-  return main || minLevel(a.skills) - minLevel(b.skills) || a.name.localeCompare(b.name);
+  return sourceRank(a) - sourceRank(b) || sourceLevel(a) - sourceLevel(b) || a.name.localeCompare(b.name);
+}
+
+function sourceRank(source: ItemSource): number {
+  if (source.kind === "activity") {
+    return source.lootType === "main" ? 0 : 1;
+  }
+  return source.kind === "shop" ? 2 : 3;
+}
+
+function sourceLevel(source: ItemSource): number {
+  return source.kind === "shop" ? 0 : minLevel(source.skills);
 }
 
 function skillLevels(skillIds: string[], requirements: Requirement[], skillName: (id: string) => string): SkillLevel[] {
