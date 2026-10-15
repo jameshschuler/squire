@@ -1,8 +1,12 @@
 import type { GameData } from "./gamedata.js";
 import {
   SERVICE_TIERS,
+  type Activity,
   type Item,
+  type Location,
   type LootTable,
+  type LootTableRef,
+  type Service,
   type Requirement,
   type ServiceRequirement,
   type ServiceTier,
@@ -107,6 +111,9 @@ export function buildRecipeBook(data: GameData): RecipeBook {
     const found = items.get(id);
     return { id, name: found?.name ?? humanize(id), icon: found?.icon ?? "", amount };
   };
+  const regions = new Map(data.factions.map((f) => [f.id, f.name]));
+  const locationsByService = indexLocations(data.locations, regions, (l) => l.serviceList);
+  const locationsByActivity = indexLocations(data.locations, regions, (l) => l.activityList);
 
   const recipes = data.recipes.map((recipe): RecipeView => {
     const service = recipe.requirements.find(isService);
@@ -115,7 +122,7 @@ export function buildRecipeBook(data: GameData): RecipeBook {
       name: recipe.name,
       icon: recipe.icon,
       skills: skillLevels(recipe.relatedSkills, recipe.requirements, skillName),
-      service: service ? serviceView(service, data) : null,
+      service: service ? serviceView(service, data.services, locationsByService) : null,
       materials: recipe.materials.map((m) => m.options.map((o) => item(o.item, o.amount))),
       outputs: Object.entries(recipe.itemRewards).map(([id, amount]) => item(id, amount)),
       xp: Object.entries(recipe.xpRewards).map(([skill, amount]) => ({ skill: skillName(skill), amount })),
@@ -128,7 +135,7 @@ export function buildRecipeBook(data: GameData): RecipeBook {
   return {
     version: data.version,
     recipes: recipes.sort(byLevel),
-    sources: itemSources(data, materialIds, skillName),
+    sources: itemSources(data, materialIds, locationsByActivity, skillName),
   };
 }
 
@@ -182,35 +189,58 @@ export function recipesUsing(recipes: RecipeView[], itemId: string): RecipeView[
 function itemSources(
   data: GameData,
   itemIds: Set<string>,
+  locationsByActivity: Map<string, LocationSummary[]>,
   skillName: (id: string) => string,
 ): Record<string, ItemSource[]> {
   const tables = new Map(data.lootTables.map((t) => [t.id, t]));
-  const regions = new Map(data.factions.map((f) => [f.id, f.name]));
+  const drops = data.activities.flatMap((activity) =>
+    activityDrops(activity, activitySource(activity, locationsByActivity, skillName), tables),
+  );
+
   const sources: Record<string, ItemSource[]> = {};
-
-  for (const activity of data.activities) {
-    const locations = data.locations
-      .filter((l) => l.activityList?.includes(activity.id))
-      .map((l) => ({ id: l.id, name: l.name, region: regions.get(l.faction) ?? humanize(l.faction) }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-    const skills = skillLevels(activity.relatedSkillsList, activity.requirements ?? [], skillName);
-
-    for (const ref of activity.tables ?? []) {
-      const lootType = (ref.isPrimary ? "main" : (ref.type[0] ?? "secondary")) as LootType;
-      const dropped = ref.tables.flatMap((id) => droppedItems(tables.get(id))).filter((id) => itemIds.has(id));
-      for (const itemId of new Set(dropped)) {
-        const list = (sources[itemId] ??= []);
-        if (!list.some((s) => s.activityId === activity.id && s.lootType === lootType)) {
-          list.push({ activityId: activity.id, name: activity.name, icon: activity.icon, skills, lootType, locations });
-        }
-      }
+  const seen = new Set<string>();
+  for (const { itemId, source } of drops) {
+    const key = `${itemId}|${source.activityId}|${source.lootType}`;
+    if (itemIds.has(itemId) && !seen.has(key)) {
+      seen.add(key);
+      (sources[itemId] ??= []).push(source);
     }
   }
-
   for (const list of Object.values(sources)) {
     list.sort(bySource);
   }
   return sources;
+}
+
+type ActivitySource = Omit<ItemSource, "lootType">;
+
+function activitySource(
+  activity: Activity,
+  locationsByActivity: Map<string, LocationSummary[]>,
+  skillName: (id: string) => string,
+): ActivitySource {
+  return {
+    activityId: activity.id,
+    name: activity.name,
+    icon: activity.icon,
+    skills: skillLevels(activity.relatedSkillsList, activity.requirements ?? [], skillName),
+    locations: locationsByActivity.get(activity.id) ?? [],
+  };
+}
+
+function activityDrops(
+  activity: Activity,
+  base: ActivitySource,
+  tables: Map<string, LootTable>,
+): { itemId: string; source: ItemSource }[] {
+  return (activity.tables ?? []).flatMap((ref) => {
+    const source = { ...base, lootType: lootTypeOf(ref) };
+    return ref.tables.flatMap((id) => droppedItems(tables.get(id))).map((itemId) => ({ itemId, source }));
+  });
+}
+
+function lootTypeOf(ref: LootTableRef): LootType {
+  return (ref.isPrimary ? "main" : (ref.type[0] ?? "secondary")) as LootType;
 }
 
 function droppedItems(table: LootTable | undefined): string[] {
@@ -262,32 +292,59 @@ function searchScore(recipe: RecipeView, terms: string[]): number {
   return name.join(" ").startsWith(terms.join(" ")) ? score + 1 : score;
 }
 
-function serviceView(req: ServiceRequirement, data: GameData): RecipeService {
+function serviceView(
+  req: ServiceRequirement,
+  services: Service[],
+  locationsByService: Map<string, LocationSummary[]>,
+): RecipeService {
   const { serviceKeyword, keywords: listed, tier } = req.requirement;
   const keywords = listed?.length ? listed : serviceKeyword ? [serviceKeyword] : [];
-  const serviceTiers = new Map(
-    data.services
-      .filter((s) => meetsTier(s.tier, tier) && keywords.every((k) => s.keywords.includes(k)))
-      .map((s) => [s.id, s.tier]),
-  );
-  const regions = new Map(data.factions.map((f) => [f.id, f.name]));
-  const locations = data.locations
-    .flatMap((l): RecipeLocation[] => {
-      const tiers = (l.serviceList ?? []).flatMap((id) => serviceTiers.get(id) ?? []);
-      const region = regions.get(l.faction) ?? humanize(l.faction);
-      return tiers.length > 0 ? [{ id: l.id, name: l.name, region, tier: lowestTier(tiers) }] : [];
-    })
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const offers = services
+    .filter((s) => meetsTier(s.tier, tier) && keywords.every((k) => s.keywords.includes(k)))
+    .flatMap((s) => (locationsByService.get(s.id) ?? []).map((location) => ({ ...location, tier: s.tier })));
+
+  const lowestByLocation = new Map<string, RecipeLocation>();
+  for (const offer of offers) {
+    const current = lowestByLocation.get(offer.id);
+    if (!current || tierRank(offer.tier) < tierRank(current.tier)) {
+      lowestByLocation.set(offer.id, offer);
+    }
+  }
+  const locations = [...lowestByLocation.values()].sort((a, b) => a.name.localeCompare(b.name));
   const [primary = "service", ...modifiers] = keywords;
   return { label: `${humanize([...modifiers, primary].join(" "))} (${tier})`, tier, locations };
 }
 
-function meetsTier(serviceTier: ServiceTier, requiredTier: ServiceTier): boolean {
-  return SERVICE_TIERS.indexOf(serviceTier) >= SERVICE_TIERS.indexOf(requiredTier);
+function indexLocations(
+  locations: Location[],
+  regions: Map<string, string>,
+  keysOf: (location: Location) => string[] | undefined,
+): Map<string, LocationSummary[]> {
+  const index = new Map<string, LocationSummary[]>();
+  for (const location of [...locations].sort((a, b) => a.name.localeCompare(b.name))) {
+    const summary = {
+      id: location.id,
+      name: location.name,
+      region: regions.get(location.faction) ?? humanize(location.faction),
+    };
+    for (const key of keysOf(location) ?? []) {
+      const list = index.get(key);
+      if (list) {
+        list.push(summary);
+      } else {
+        index.set(key, [summary]);
+      }
+    }
+  }
+  return index;
 }
 
-function lowestTier(tiers: ServiceTier[]): ServiceTier {
-  return tiers.reduce((low, t) => (SERVICE_TIERS.indexOf(t) < SERVICE_TIERS.indexOf(low) ? t : low));
+function meetsTier(serviceTier: ServiceTier, requiredTier: ServiceTier): boolean {
+  return tierRank(serviceTier) >= tierRank(requiredTier);
+}
+
+function tierRank(tier: ServiceTier): number {
+  return SERVICE_TIERS.indexOf(tier);
 }
 
 function isSkillLevel(req: Requirement): req is SkillLevelRequirement {
