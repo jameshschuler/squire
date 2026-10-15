@@ -20,10 +20,10 @@ function section(title: string) {
 }
 
 describe("ItemDetail", () => {
-  it("shows what uses a crafted item, then its recipe, and no sources section when nothing drops it", async () => {
+  it("shows a crafted item's recipe, then what uses it, and no sources section when nothing drops it", async () => {
     await renderItem("gold_bar");
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Gold bar");
-    expect(sectionTitles()).toEqual(["Used in", "Made by"]);
+    expect(sectionTitles()).toEqual(["Made by", "Used in"]);
     expect(section("Made by").getByRole("link", { name: /Smelt a gold bar/ })).toBeDefined();
     expect(section("Used in").getByText("No recipe uses this.")).toBeDefined();
   });

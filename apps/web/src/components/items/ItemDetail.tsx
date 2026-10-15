@@ -24,6 +24,11 @@ export function ItemDetail({ item, book }: ItemDetailProps) {
         <GameIcon path={item.icon} size={48} />
         {item.name}
       </h1>
+      {isCrafted && (
+        <RecipeSection title="Made by">
+          <RecipeList recipes={making} />
+        </RecipeSection>
+      )}
       <RecipeSection title="Used in">
         {using.length > 0 ? (
           <RecipeList recipes={using} />
@@ -31,11 +36,6 @@ export function ItemDetail({ item, book }: ItemDetailProps) {
           <p className="text-muted-foreground">No recipe uses this.</p>
         )}
       </RecipeSection>
-      {isCrafted && (
-        <RecipeSection title="Made by">
-          <RecipeList recipes={making} />
-        </RecipeSection>
-      )}
       {(!isCrafted || sources.length > 0) && (
         <RecipeSection title="Where to get it">
           <ItemSources sources={sources} />
