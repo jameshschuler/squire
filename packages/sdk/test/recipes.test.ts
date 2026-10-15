@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { buildRecipeBook, recipesMaking, recipesUsing, searchRecipes, type GameData } from "../src/index.js";
+import {
+  buildRecipeBook,
+  recipesMaking,
+  recipesUsing,
+  searchRecipes,
+  type GameData,
+  type ServiceTier,
+} from "../src/index.js";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
 const { recipes } = buildRecipeBook(sample as unknown as GameData);
@@ -40,6 +47,59 @@ describe("buildRecipeBook", () => {
       label: "Cursed kitchen (advanced)",
       tier: "advanced",
       locations: [],
+    });
+  });
+
+  describe("service tiers", () => {
+    function forgeRecipe(requiredTier: ServiceTier, forges: Record<string, ServiceTier[]>) {
+      const data = structuredClone(sample) as unknown as GameData;
+      data.services = Object.values(forges)
+        .flat()
+        .map((tier) => ({
+          id: `${tier}_forge`,
+          name: `${tier} forge`,
+          icon: "",
+          tier,
+          serviceType: "crafting",
+          keywords: ["forge"],
+          relatedSkills: [],
+        }));
+      data.locations = Object.entries(forges).map(([id, tiers]) => ({
+        id,
+        name: id,
+        icon: "",
+        faction: "",
+        keywords: [],
+        serviceList: tiers.map((tier) => `${tier}_forge`),
+      }));
+      data.recipes = data.recipes.filter((r) => r.id === "smelt_a_gold_bar");
+      data.recipes[0]!.requirements = [
+        { type: "service", name: null, opposite: false, requirement: { serviceKeyword: "forge", tier: requiredTier } },
+      ];
+      return buildRecipeBook(data).recipes[0]!.service!;
+    }
+
+    it.each<[ServiceTier, ServiceTier, string[]]>([
+      ["basic", "basic", ["town"]],
+      ["advanced", "basic", ["town"]],
+      ["advanced", "advanced", ["town"]],
+      ["basic", "advanced", []],
+    ])("a %s forge for a %s recipe lists %j", (serviceTier, requiredTier, expected) => {
+      expect(forgeRecipe(requiredTier, { town: [serviceTier] }).locations.map((l) => l.id)).toEqual(expected);
+    });
+
+    it("marks each location with the lowest qualifying tier it has", () => {
+      const service = forgeRecipe("basic", { both: ["basic", "advanced"], city: ["advanced"] });
+      expect(service.locations).toEqual([
+        { id: "both", name: "both", tier: "basic" },
+        { id: "city", name: "city", tier: "advanced" },
+      ]);
+    });
+
+    it("keeps the label and tier at the recipe's required tier", () => {
+      const service = forgeRecipe("basic", { city: ["advanced"] });
+      expect(service.label).toBe("Forge (basic)");
+      expect(service.tier).toBe("basic");
     });
   });
 

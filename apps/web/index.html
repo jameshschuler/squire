@@ -12,6 +12,11 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>Squire</title>
+    <script>
+      const theme = localStorage.getItem("squire-theme");
+      const dark = theme === "dark" || (theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+      document.documentElement.classList.toggle("dark", dark);
+    </script>
   </head>
   <body>
     <div id="root"></div>

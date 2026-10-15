@@ -4,6 +4,7 @@ import { GameIcon } from "@/components/shared/GameIcon";
 import { formatPercent, formatSkillLevel } from "@/lib/format";
 import { RecipeItemRow } from "./RecipeItemRow";
 import { RecipeSection } from "./RecipeSection";
+import { ServiceLocations } from "./ServiceLocations";
 
 export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
   return (
@@ -52,7 +53,7 @@ export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
 
       {recipe.service && (
         <RecipeSection title="Where to craft">
-          <p className="leading-7">{recipe.service.locations.map((l) => l.name).join(" · ") || "No known location"}</p>
+          <ServiceLocations service={recipe.service} />
         </RecipeSection>
       )}
     </article>
