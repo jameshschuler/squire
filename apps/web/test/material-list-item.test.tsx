@@ -6,27 +6,33 @@ import { renderWithRouter } from "./render-with-router";
 
 afterEach(cleanup);
 
-const material = (skills: Material["skills"]): Material => ({
+const material = (sources: Material["sources"]): Material => ({
   item: { id: "bones", name: "Bones", icon: "" },
-  sources: [],
-  skills,
+  sources,
+  skills: [],
 });
 
 describe("MaterialListItem", () => {
-  it("links to the item and shows its gathering skills", async () => {
+  it("links to the item and shows just its name", async () => {
     await renderWithRouter(
       <ul>
         <MaterialListItem
           material={material([
-            { id: "hunting", name: "Hunting", level: 25 },
-            { id: "foraging", name: "Foraging", level: 55 },
+            {
+              activityId: "wolf_hunting",
+              name: "Wolf hunting",
+              icon: "",
+              skills: [{ id: "hunting", name: "Hunting", level: 25 }],
+              lootType: "main",
+              locations: [],
+            },
           ])}
         />
       </ul>,
     );
     const link = screen.getByRole("link");
     expect(link.getAttribute("href")).toBe("/items/bones");
-    expect(link.textContent).toBe("BonesHunting lvl. 25 · Foraging lvl. 55");
+    expect(link.textContent).toBe("Bones");
   });
 
   it("says when there's no known source", async () => {
