@@ -1,3 +1,4 @@
+import { brotliDecompressSync, gunzipSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import type { RecipeBook } from "@jameshschuler/walkscape-sdk";
 import { buildApp } from "../src/app.js";
@@ -41,6 +42,17 @@ describe("compression", () => {
   ])("compresses the recipe book when the client accepts %s", async (acceptEncoding, expected) => {
     const res = await app().inject({ url: "/api/recipes", headers: { "accept-encoding": acceptEncoding } });
     expect(res.headers["content-encoding"]).toBe(expected);
+  });
+
+  it.each([
+    ["br", brotliDecompressSync],
+    ["gzip", gunzipSync],
+  ])("sends a %s body that decodes to the recipe book, compressed once", async (encoding, decode) => {
+    const res = await app().inject({ url: "/api/recipes", headers: { "accept-encoding": encoding } });
+    const book = JSON.parse(decode(res.rawPayload).toString()) as RecipeBook;
+    expect(book.version).toBe("v1");
+    expect(res.headers["content-type"]).toBe("application/json; charset=utf-8");
+    expect(res.headers.vary).toContain("Accept-Encoding");
   });
 
   it("sends the recipe book uncompressed when the client accepts no encoding", async () => {
