@@ -5,6 +5,7 @@ interface FavoritesContextValue {
   favoriteIds: string[];
   isFavorite: (recipeId: string) => boolean;
   toggleFavorite: (recipeId: string) => void;
+  clearFavorites: () => void;
 }
 
 const FavoritesContext = createContext<FavoritesContextValue | undefined>(undefined);
@@ -23,14 +24,16 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     return () => removeEventListener("storage", onStorage);
   }, []);
 
+  const saveFavorites = (next: string[]) => {
+    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(next));
+    setFavoriteIds(next);
+  };
+
   const value: FavoritesContextValue = {
     favoriteIds,
     isFavorite: (recipeId) => favoriteIds.includes(recipeId),
-    toggleFavorite: (recipeId) => {
-      const next = toggleFavorite(favoriteIds, recipeId);
-      localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(next));
-      setFavoriteIds(next);
-    },
+    toggleFavorite: (recipeId) => saveFavorites(toggleFavorite(favoriteIds, recipeId)),
+    clearFavorites: () => saveFavorites([]),
   };
 
   return <FavoritesContext.Provider value={value}>{children}</FavoritesContext.Provider>;

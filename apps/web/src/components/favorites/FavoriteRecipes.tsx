@@ -4,6 +4,7 @@ import type { RecipeView } from "@squire/walkscape-sdk";
 import { RecipeList } from "@/components/recipes/RecipeList";
 import { useFavoritesContext } from "@/contexts/favorites-context";
 import { favoriteRecipes } from "@/lib/favorites";
+import { ClearFavoritesButton } from "./ClearFavoritesButton";
 
 export function FavoriteRecipes({ recipes }: { recipes: RecipeView[] }) {
   const { favoriteIds } = useFavoritesContext();
@@ -11,7 +12,10 @@ export function FavoriteRecipes({ recipes }: { recipes: RecipeView[] }) {
 
   return (
     <section className="space-y-3 pt-4">
-      <h1 className="text-2xl font-semibold">Favorites</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Favorites</h1>
+        {favorites.length > 0 && <ClearFavoritesButton />}
+      </div>
       {favorites.length > 0 ? (
         <RecipeList recipes={favorites} />
       ) : (
