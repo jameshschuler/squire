@@ -1,6 +1,6 @@
 import { brotliDecompressSync, gunzipSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
-import { RECIPE_BOOK_SCHEMA, type RecipeBook } from "@jameshschuler/walkscape-sdk";
+import { RECIPE_BOOK_SCHEMA, type RecipeBook } from "../src/recipe-book/index.js";
 import { buildApp } from "../src/app.js";
 import { fakeClient } from "./fake-client.js";
 

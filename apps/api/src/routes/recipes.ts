@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
-import type { RecipeBook } from "@jameshschuler/walkscape-sdk";
+import type { RecipeBook } from "../recipe-book/index.js";
 import { encodeJson, preferredEncoding, type EncodedJson } from "../encoded-json.js";
-import type { RecipeBookSource } from "../recipe-book.js";
+import type { RecipeBookSource } from "../recipe-book-source.js";
 
 export function recipeRoutes(recipeBook: RecipeBookSource) {
   let encoded: { version: string; body: Promise<EncodedJson> } | undefined;

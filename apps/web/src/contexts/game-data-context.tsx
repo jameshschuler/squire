@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import type { RecipeBook } from "@jameshschuler/walkscape-sdk";
+import type { RecipeBook } from "@squire/api/recipe-book";
 import { fetchRecipeBook } from "@/lib/api";
 import { prefetchRecipeBookIcons } from "@/lib/icon-prefetch";
 

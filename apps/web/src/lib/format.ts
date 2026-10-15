@@ -1,4 +1,4 @@
-import type { LootType } from "@jameshschuler/walkscape-sdk";
+import type { LootType } from "@squire/api/recipe-book";
 
 export function formatPercent(ratio: number): string {
   return `${Math.round(ratio * 100)}%`;

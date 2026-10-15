@@ -1,4 +1,4 @@
-import type { RecipeView } from "@jameshschuler/walkscape-sdk";
+import type { RecipeView } from "@squire/api/recipe-book";
 import { BackButton } from "@/components/layout/BackButton";
 import { Badge } from "@/components/ui/badge";
 import { GameIcon } from "@/components/shared/GameIcon";

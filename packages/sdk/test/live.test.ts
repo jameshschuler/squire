@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { ENVIRONMENTS, buildRecipeBook, createClient, loadGameData } from "../src/index.js";
+import { ENVIRONMENTS, createClient, loadGameData, lootTableItemIds, recipesUsing } from "../src/index.js";
 
 const apiKey = process.env.WALKSCAPE_API_KEY;
 
 describe.skipIf(!apiKey)("live dev API", () => {
-  it("loads every recipe, service location and material source", { timeout: 120_000 }, async () => {
+  it("loads every recipe, location, activity and the loot tables they drop from", { timeout: 120_000 }, async () => {
     let requests = 0;
     const countingFetch: typeof fetch = (input, init) => {
       requests++;
@@ -13,15 +13,19 @@ describe.skipIf(!apiKey)("live dev API", () => {
     const client = createClient({ apiKey: apiKey!, baseUrl: ENVIRONMENTS.dev, fetch: countingFetch });
     const data = await loadGameData(client);
     const loadRequests = requests;
-    const book = buildRecipeBook(data);
 
-    expect(book.recipes).toHaveLength((await client.list("recipes")).length);
+    expect(data.recipes).toHaveLength((await client.list("recipes")).length);
     expect(data.locations).toHaveLength((await client.list("locations")).length);
-    expect(book.recipes.filter((r) => r.service && r.service.locations.length === 0)).toEqual([]);
-    expect(book.sources.bones?.map((s) => s.name)).toContain("Bear hunting");
-    expect(book.sources.bones?.every((s) => s.kind === "activity" && s.locations.length > 0)).toBe(true);
-    expect(book.sources.log_splitter?.map((s) => s.name)).toContain("Woodcutting chest");
-    expect(book.sources.simple_pan?.some((s) => s.kind === "shop")).toBe(true);
+    expect(data.activities).toHaveLength((await client.list("activities")).length);
+    const tables = new Map(data.lootTables.map((t) => [t.id, t]));
+    const referenced = data.activities.flatMap((a) => (a.tables ?? []).flatMap((ref) => ref.tables));
+    expect(referenced.filter((id) => !tables.has(id))).toEqual([]);
+    const bearHunting = data.activities.find((a) => a.name === "Bear hunting");
+    const drops = (bearHunting?.tables ?? []).flatMap((ref) =>
+      ref.tables.flatMap((id) => lootTableItemIds(tables.get(id)!)),
+    );
+    expect(drops).toContain("bones");
+    expect(recipesUsing(data.recipes, "bones").length).toBeGreaterThan(0);
     expect(loadRequests).toBeLessThan(70);
   });
 });

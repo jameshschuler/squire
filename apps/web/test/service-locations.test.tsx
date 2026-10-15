@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
-import type { RecipeService } from "@jameshschuler/walkscape-sdk";
+import type { RecipeService } from "@squire/api/recipe-book";
 import { ServiceLocations } from "@/components/recipes/ServiceLocations";
 
 afterEach(cleanup);

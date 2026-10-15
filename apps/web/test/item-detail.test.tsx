@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, screen, within } from "@testing-library/react";
-import { buildRecipeBook, findItem, type GameData } from "@jameshschuler/walkscape-sdk";
+import { buildRecipeBook, findItem } from "@squire/api/recipe-book";
+import type { GameData } from "@jameshschuler/walkscape-sdk";
 import { ItemDetail } from "@/components/items/ItemDetail";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 import { renderWithRouter } from "./render-with-router";

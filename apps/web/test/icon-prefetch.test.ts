@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { RecipeBook } from "@jameshschuler/walkscape-sdk";
+import type { RecipeBook } from "@squire/api/recipe-book";
 import { ICONS_PREFETCHED_KEY, prefetchIcons, prefetchRecipeBookIcons } from "@/lib/icon-prefetch";
 
 const ok = () => Promise.resolve(new Response(null, { status: 200 }));

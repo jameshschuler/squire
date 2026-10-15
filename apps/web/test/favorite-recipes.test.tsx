@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, screen, within } from "@testing-library/react";
-import { buildRecipeBook, type GameData } from "@jameshschuler/walkscape-sdk";
+import { buildRecipeBook } from "@squire/api/recipe-book";
+import type { GameData } from "@jameshschuler/walkscape-sdk";
 import { FavoriteRecipes } from "@/components/favorites/FavoriteRecipes";
 import { FavoritesProvider } from "@/contexts/favorites-context";
 import { FAVORITES_STORAGE_KEY } from "@/lib/favorites";

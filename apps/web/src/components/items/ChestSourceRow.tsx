@@ -1,4 +1,4 @@
-import type { ChestSource } from "@jameshschuler/walkscape-sdk";
+import type { ChestSource } from "@squire/api/recipe-book";
 import { GameIcon } from "@/components/shared/GameIcon";
 
 export function ChestSourceRow({ source }: { source: ChestSource }) {

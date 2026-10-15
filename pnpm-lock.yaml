@@ -72,9 +72,9 @@ importers:
       '@fontsource/poppins':
         specifier: ^5.3.0
         version: 5.3.0
-      '@jameshschuler/walkscape-sdk':
+      '@squire/api':
         specifier: workspace:*
-        version: link:../../packages/sdk
+        version: link:../api
       '@tanstack/react-router':
         specifier: ^1.95.0
         version: 1.170.44(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -103,6 +103,9 @@ importers:
         specifier: ^3.7.0
         version: 3.7.0
     devDependencies:
+      '@jameshschuler/walkscape-sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
       '@tailwindcss/vite':
         specifier: ^4.0.0
         version: 4.3.3(vite@6.4.4(@types/node@24.19.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.15))

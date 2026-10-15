@@ -16,8 +16,8 @@ pnpm dev                # API on :3000, web on :5173
 
 The repo has three parts:
 
-- `packages/sdk`: the WalkScape Data API client and game helpers. It will be published to npm, so keep it free of anything Squire-specific and avoid adding runtime dependencies.
-- `apps/api`: the Fastify server. It's the only place the API key lives.
+- `packages/sdk`: the WalkScape Data API client, types, loader and small helpers that return API shapes. It will be published to npm, so keep it free of anything Squire-specific and avoid adding runtime dependencies.
+- `apps/api`: the Fastify server. It's the only place the API key lives. `src/recipe-book/` turns game data into Squire's recipe book; the web app imports its types and helpers as `@squire/api/recipe-book`, so keep that folder free of server code.
 - `apps/web`: the React PWA (TanStack Router, Tailwind, shadcn, Lucide).
 
 ## Using the WalkScape API
@@ -75,7 +75,7 @@ Every change ships with tests. New logic gets unit tests, and a bug fix gets a t
 - Mock only the edges: the network, time and storage.
 - Cover empty, boundary and error cases, not just the happy path.
 
-`packages/sdk/test/live.test.ts` runs against the real dev API, but only when `WALKSCAPE_API_KEY` is set in your shell. CI skips it.
+`packages/sdk/test/live.test.ts` and `apps/api/test/recipe-book.live.test.ts` run against the real dev API, but only when `WALKSCAPE_API_KEY` is set in your shell. CI skips them.
 
 ## Publishing the SDK
 

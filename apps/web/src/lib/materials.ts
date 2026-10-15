@@ -1,10 +1,11 @@
 import {
   lowestSkillLevels,
+  words,
   type ItemSource,
   type ItemSummary,
   type RecipeBook,
   type SkillLevel,
-} from "@jameshschuler/walkscape-sdk";
+} from "@squire/api/recipe-book";
 import { uniqueSkills, type SkillOption } from "./skills";
 
 export interface Material {
@@ -75,13 +76,4 @@ function sourceSkills(source: ItemSource): SkillLevel[] {
 
 function searchableWords(material: Material): string[] {
   return [material.item.name, ...material.item.keywords].flatMap(words);
-}
-
-function words(text: string): string[] {
-  return text
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .split(/[^a-z0-9]+/)
-    .filter(Boolean);
 }

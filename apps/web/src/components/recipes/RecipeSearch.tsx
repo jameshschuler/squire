@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { searchRecipes, type RecipeView } from "@jameshschuler/walkscape-sdk";
+import { searchRecipes, type RecipeView } from "@squire/api/recipe-book";
 import { GameDataStatus } from "@/components/shared/GameDataStatus";
 import { SearchInput } from "@/components/shared/SearchInput";
 import { SkillFilter } from "@/components/shared/SkillFilter";

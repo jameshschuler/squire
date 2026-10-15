@@ -1,5 +1,6 @@
 import type { FastifyBaseLogger } from "fastify";
-import { buildRecipeBook, loadGameData, type RecipeBook, type WalkScapeClient } from "@jameshschuler/walkscape-sdk";
+import { loadGameData, type WalkScapeClient } from "@jameshschuler/walkscape-sdk";
+import { buildRecipeBook, type RecipeBook } from "./recipe-book/index.js";
 
 const VERSION_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 

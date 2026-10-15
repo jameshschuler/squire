@@ -1,6 +1,6 @@
 # @jameshschuler/walkscape-sdk
 
-An unofficial TypeScript client for the [WalkScape](https://walkscape.app) Data API, plus helpers for working with recipes.
+An unofficial, fully typed TypeScript client for the [WalkScape](https://walkscape.app) Data API, with a loader for the whole game dataset and a few helpers for working with it.
 
 It runs anywhere with a global `fetch`: Node 22+, Deno, Bun, Cloudflare Workers and browsers. It has no runtime dependencies.
 
@@ -17,16 +17,15 @@ You need a Data API key. Keys are handed out in the "Walkscape Data API" thread 
 ## Quick start
 
 ```ts
-import { ENVIRONMENTS, buildRecipeBook, createClient, loadGameData, searchRecipes } from "@jameshschuler/walkscape-sdk";
+import { ENVIRONMENTS, createClient, loadGameData, recipesUsing, type Recipe } from "@jameshschuler/walkscape-sdk";
 
 const client = createClient({ apiKey: process.env.WALKSCAPE_API_KEY!, baseUrl: ENVIRONMENTS.dev });
 
-const book = buildRecipeBook(await loadGameData(client));
-const [recipe] = searchRecipes(book.recipes, "gold bar");
+const goldBar = await client.get<Recipe>("recipes", "smelt_a_gold_bar");
+console.log(goldBar.materials); // [{ options: [{ item: "gold_nugget", amount: 7 }, { item: "gold_ore", amount: 2 }] }]
 
-console.log(recipe.name); // "Smelt a gold bar"
-console.log(recipe.materials); // [[{ name: "Gold nugget", amount: 7, ... }, { name: "Gold ore", amount: 2, ... }]]
-console.log(recipe.service?.locations.map((l) => l.name)); // ["Bilgemont Port", "Granfiddich", ...]
+const data = await loadGameData(client);
+console.log(recipesUsing(data.recipes, "gold_bar").map((r) => r.name)); // ["Assemble dynamite", ...]
 ```
 
 ## The client
@@ -46,40 +45,27 @@ Options: `apiKey` (required), `baseUrl` (defaults to `ENVIRONMENTS.prod`), `loca
 
 Errors from the API throw `WalkScapeApiError`, which has `status` and `path`.
 
-## Recipe helpers
+## Loading all game data
 
-| Function                                   | What it does                                                                                                                                                                            |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `loadGameData(client)`                     | Loads every recipe, item (in full), skill, crafting service, location, faction, activity, loot table and shop: about 60 requests, a couple of seconds.                                  |
-| `buildRecipeBook(data)`                    | Display-ready recipes (names, icons and keywords resolved, material alternatives grouped, the service needed and where to find it), sorted by level, plus `sources` for every material. |
-| `searchRecipes(recipes, query, { skill })` | Matches recipe names, outputs and materials. Best matches first.                                                                                                                        |
-| `recipesMaking(recipes, itemId)`           | Recipes that produce an item.                                                                                                                                                           |
-| `recipesUsing(recipes, itemId)`            | Recipes that take an item as a material.                                                                                                                                                |
-| `findItem(recipes, itemId)`                | An item's name, icon and in-game keywords.                                                                                                                                              |
-| `recipeBookIcons(book)`                    | Every icon path the book shows (recipes, materials, outputs and sources), each once.                                                                                                    |
-| `lowestSkillLevels(skills)`                | The lowest level needed per skill, lowest first.                                                                                                                                        |
-| `sourceKey(source)`                        | A stable key for one source of an item, e.g. for list keys or de-duplication.                                                                                                           |
+`loadGameData(client)` loads every recipe, item (in full), skill, crafting service, location, faction, activity, loot table and shop: about 60 requests, a couple of seconds. Each entry comes back exactly as the API sends it, along with the data `version`.
 
-A recipe's service counts higher tiers too: an advanced kitchen can cook basic kitchen recipes. Each location carries its region and the lowest tier it has that qualifies, so you can mark the ones that only have a better service.
+## Helpers
 
-### Where to get items
+Small helpers for questions that come up with raw API data. Each takes and returns API shapes.
 
-`book.sources` lists every way to get each recipe material, keyed by item id. Each source has a `kind`:
-
-| Kind       | Fields                                                                                                             | Example                                     |
-| ---------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------- |
-| `activity` | `skills`, `lootType` (`main` loot, a `secondary` roll, or a special table such as `gem`), `locations` with regions | Bones from _Wolf hunting_ at Sanguine Hills |
-| `chest`    | `skills`: the lowest levels of the activities that drop the chest                                                  | Log splitter from the _Woodcutting chest_   |
-| `shop`     | `locations` when the game data links the shop to one (often it doesn't)                                            | Simple pan from _granfiddich tool stall_    |
-
-Sources are ordered activities (main loot first, then by level), then shops, then chests. Shop names come through as the API gives them, in lowercase.
+| Function                                      | What it does                                                                                             |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `recipesMaking(recipes, itemId)`              | Recipes that produce an item.                                                                            |
+| `recipesUsing(recipes, itemId)`               | Recipes that take an item as a material, in any slot or option.                                          |
+| `lootTableItemIds(table)`                     | Every item id a loot table can drop, including its sub-tables.                                           |
+| `isSkillLevelRequirement(requirement)`        | Narrows a requirement to a skill level requirement.                                                      |
+| `isServiceRequirement(requirement)`           | Narrows a requirement to a crafting service requirement.                                                 |
+| `serviceKeywords(requirement)`                | The service keywords a requirement asks for, e.g. `["kitchen", "cursed"]`, whichever shape the API used. |
+| `meetsServiceTier(serviceTier, requiredTier)` | Whether a service tier qualifies. Higher tiers do: an advanced kitchen can cook basic kitchen recipes.   |
 
 ```ts
-book.sources.bones?.map((s) => s.name);
-// ["Wolf hunting", "Lizard hunting", "Deer hunting", ...]
+const kitchens = data.services.filter((s) => s.keywords.includes("kitchen") && meetsServiceTier(s.tier, "basic"));
 ```
-
-`book.schema` is `RECIPE_BOOK_SCHEMA`. It changes whenever the book's shape does, so it's safe to include in cache keys.
 
 ## Rate limits and caching
 
