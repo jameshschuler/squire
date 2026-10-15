@@ -1,14 +1,13 @@
 import { cn } from "@/lib/utils";
 
-const SHIELD_WITH_BOOK =
-  "M256 84 L396 132 V252 C396 340 336 404 256 436 C176 404 116 340 116 252 V132 Z" +
-  "M162 206 C196 192 228 194 248 210 V338 C228 322 196 320 162 334 Z" +
-  "M350 206 C316 192 284 194 264 210 V338 C284 322 316 320 350 334 Z";
+const MONOGRAM =
+  "M344 172 C344 132 304 112 256 112 C200 112 166 140 166 182 C166 226 206 242 256 256 " +
+  "C308 270 346 288 346 334 C346 376 308 400 256 400 C202 400 166 378 166 340";
 
 export function SquireLogo({ className }: { className?: string }) {
   return (
-    <svg viewBox="116 84 280 352" aria-hidden className={cn("text-amber-500 dark:text-amber-400", className)}>
-      <path d={SHIELD_WITH_BOOK} fill="currentColor" fillRule="evenodd" />
+    <svg viewBox="130 76 252 360" aria-hidden className={cn("text-amber-500 dark:text-amber-400", className)}>
+      <path d={MONOGRAM} fill="none" stroke="currentColor" strokeWidth="64" strokeLinecap="round" />
     </svg>
   );
 }
