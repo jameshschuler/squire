@@ -15,6 +15,22 @@ const byId = (id: string) => recipes.find((r) => r.id === id);
 const ids = (list: { id: string }[]) => list.map((r) => r.id);
 
 describe("buildRecipeBook", () => {
+  it("sorts recipes by level, lowest first", () => {
+    expect(ids(recipes)).toEqual(["smelt_a_gold_bar", "bake_a_bagel", "assemble_dynamite"]);
+  });
+
+  it("breaks level ties by the name of the item made, not the recipe name", () => {
+    const data = structuredClone(sample) as unknown as GameData;
+    const [bagel, bar] = [
+      data.recipes.find((r) => r.id === "bake_a_bagel")!,
+      data.recipes.find((r) => r.id === "smelt_a_gold_bar")!,
+    ];
+    bar.relatedSkills = bagel.relatedSkills;
+    bar.requirements = bagel.requirements;
+    bar.name = "Craft a gold bar";
+    expect(ids(buildRecipeBook(data).recipes)).toEqual(["bake_a_bagel", "smelt_a_gold_bar", "assemble_dynamite"]);
+  });
+
   it("lists material alternatives in each slot", () => {
     expect(byId("smelt_a_gold_bar")?.materials).toEqual([
       [
@@ -127,6 +143,10 @@ describe("searchRecipes", () => {
 
   it("returns everything for an empty query, filtered by skill", () => {
     expect(ids(searchRecipes(recipes, "  ", { skill: "smithing" }))).toEqual(["smelt_a_gold_bar"]);
+  });
+
+  it("orders equally good matches by level", () => {
+    expect(ids(searchRecipes(recipes, "a"))).toEqual(["assemble_dynamite", "smelt_a_gold_bar", "bake_a_bagel"]);
   });
 
   it("respects the limit", () => {

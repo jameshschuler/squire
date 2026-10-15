@@ -77,7 +77,7 @@ export function buildRecipeBook(data: GameData): RecipeBook {
     };
   });
 
-  return { version: data.version, recipes: recipes.sort((a, b) => a.name.localeCompare(b.name)) };
+  return { version: data.version, recipes: recipes.sort(byLevel) };
 }
 
 export function searchRecipes(recipes: RecipeView[], query: string, options: SearchOptions = {}): RecipeView[] {
@@ -90,7 +90,7 @@ export function searchRecipes(recipes: RecipeView[], query: string, options: Sea
   const scored = pool
     .map((recipe) => ({ recipe, score: searchScore(recipe, terms) }))
     .filter((s) => s.score > 0)
-    .sort((a, b) => b.score - a.score || a.recipe.name.localeCompare(b.recipe.name));
+    .sort((a, b) => b.score - a.score || byLevel(a.recipe, b.recipe));
   return scored.map((s) => s.recipe).slice(0, options.limit);
 }
 
@@ -105,6 +105,18 @@ export function recipeBookIcons(recipes: RecipeView[]): string[] {
 
 export function recipesUsing(recipes: RecipeView[], itemId: string): RecipeView[] {
   return recipes.filter((r) => r.materials.some((slot) => slot.some((m) => m.id === itemId)));
+}
+
+function byLevel(a: RecipeView, b: RecipeView): number {
+  return recipeLevel(a) - recipeLevel(b) || sortName(a).localeCompare(sortName(b)) || a.name.localeCompare(b.name);
+}
+
+function recipeLevel(recipe: RecipeView): number {
+  return Math.min(...recipe.skills.map((s) => s.level ?? 0));
+}
+
+function sortName(recipe: RecipeView): string {
+  return recipe.outputs[0]?.name ?? recipe.name;
 }
 
 function searchScore(recipe: RecipeView, terms: string[]): number {
