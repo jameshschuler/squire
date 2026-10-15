@@ -8,6 +8,7 @@ import {
   type SkillLevelRequirement,
 } from "./types.js";
 
+/** An item and how many of it a recipe takes or makes. */
 export interface RecipeItem {
   id: string;
   name: string;
@@ -18,38 +19,54 @@ export interface RecipeItem {
 export interface RecipeLocation {
   id: string;
   name: string;
+  /** The lowest service tier here that qualifies. Higher than the recipe's tier means only a better service is available. */
   tier: ServiceTier;
 }
 
+/** The crafting service a recipe needs and where to find one. Higher tiers and cursed services also qualify. */
 export interface RecipeService {
+  /** Display name, e.g. "Kitchen (basic)" or "Cursed kitchen (advanced)". */
   label: string;
   tier: ServiceTier;
   locations: RecipeLocation[];
 }
 
+/** A recipe with names and icons resolved, ready to display. */
 export interface RecipeView {
   id: string;
   name: string;
   icon: string;
+  /** Skills the recipe trains, with the level it needs (`null` when it needs none). */
   skills: { id: string; name: string; level: number | null }[];
+  /** `null` when the recipe needs no crafting service. */
   service: RecipeService | null;
+  /** One entry per material slot. Each slot takes any one of its options, e.g. 7 gold nuggets or 2 gold ore. */
   materials: RecipeItem[][];
   outputs: RecipeItem[];
   xp: { skill: string; amount: number }[];
+  /** Base steps per craft at 100% work efficiency. */
   workRequired: number;
+  /** Highest work efficiency that counts for this recipe, as a ratio (1.5 is 150%). */
   maxWorkEfficiency: number;
 }
 
+/** Every recipe, sorted by level, tagged with the game data version it came from. */
 export interface RecipeBook {
   version: string;
   recipes: RecipeView[];
 }
 
 export interface SearchOptions {
+  /** Only recipes that train this skill id, e.g. `"cooking"`. */
   skill?: string;
+  /** Return at most this many recipes. */
   limit?: number;
 }
 
+/**
+ * Turns raw game data into display-ready recipes, sorted by level (lowest first), then by the name
+ * of the item made.
+ */
 export function buildRecipeBook(data: GameData): RecipeBook {
   const items = new Map(data.items.map((i) => [i.id, i]));
   const skillNames = new Map(data.skills.map((s) => [s.id, s.name]));
@@ -81,6 +98,11 @@ export function buildRecipeBook(data: GameData): RecipeBook {
   return { version: data.version, recipes: recipes.sort(byLevel) };
 }
 
+/**
+ * Recipes where every word of `query` starts a word in the recipe name, an output or a material.
+ * Name matches rank first, then outputs, then materials; ties keep level order. An empty query
+ * returns every recipe in level order.
+ */
 export function searchRecipes(recipes: RecipeView[], query: string, options: SearchOptions = {}): RecipeView[] {
   const pool = options.skill ? recipes.filter((r) => r.skills.some((s) => s.id === options.skill)) : recipes;
   const terms = words(query);
@@ -95,15 +117,18 @@ export function searchRecipes(recipes: RecipeView[], query: string, options: Sea
   return scored.map((s) => s.recipe).slice(0, options.limit);
 }
 
+/** Recipes that produce an item. */
 export function recipesMaking(recipes: RecipeView[], itemId: string): RecipeView[] {
   return recipes.filter((r) => r.outputs.some((o) => o.id === itemId));
 }
 
+/** Every icon path a set of recipes shows (recipes, materials and outputs), each once. Handy for prefetching. */
 export function recipeBookIcons(recipes: RecipeView[]): string[] {
   const items = recipes.flatMap((r) => [r, ...r.outputs, ...r.materials.flat()]);
   return [...new Set(items.map((i) => i.icon).filter(Boolean))];
 }
 
+/** An item's name and icon, found from any recipe that makes or uses it. */
 export function findItem(recipes: RecipeView[], itemId: string): Item | undefined {
   for (const recipe of recipes) {
     const found = [...recipe.outputs, ...recipe.materials.flat()].find((i) => i.id === itemId);
@@ -114,6 +139,7 @@ export function findItem(recipes: RecipeView[], itemId: string): Item | undefine
   return undefined;
 }
 
+/** Recipes that take an item as a material, in any slot or option. */
 export function recipesUsing(recipes: RecipeView[], itemId: string): RecipeView[] {
   return recipes.filter((r) => r.materials.some((slot) => slot.some((m) => m.id === itemId)));
 }

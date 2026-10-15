@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { findItem } from "@squire/walkscape-sdk";
+import { findItem } from "@jameshschuler/walkscape-sdk";
 import { ItemDetail } from "@/components/items/ItemDetail";
 import { GameDataStatus } from "@/components/shared/GameDataStatus";
 import { useGameDataContext } from "@/contexts/game-data-context";

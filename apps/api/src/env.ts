@@ -1,4 +1,4 @@
-import { ENVIRONMENTS, type Environment } from "@squire/walkscape-sdk";
+import { ENVIRONMENTS, type Environment } from "@jameshschuler/walkscape-sdk";
 
 export interface Env {
   apiKey: string;

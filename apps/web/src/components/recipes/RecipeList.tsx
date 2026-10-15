@@ -1,4 +1,4 @@
-import type { RecipeView } from "@squire/walkscape-sdk";
+import type { RecipeView } from "@jameshschuler/walkscape-sdk";
 import { RecipeListItem } from "./RecipeListItem";
 
 export function RecipeList({ recipes }: { recipes: RecipeView[] }) {

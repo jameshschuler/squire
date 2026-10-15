@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Search } from "lucide-react";
-import { searchRecipes, type RecipeView } from "@squire/walkscape-sdk";
+import { searchRecipes, type RecipeView } from "@jameshschuler/walkscape-sdk";
 import { Input } from "@/components/ui/input";
 import { GameDataStatus } from "@/components/shared/GameDataStatus";
 import { useGameDataContext } from "@/contexts/game-data-context";

@@ -76,6 +76,12 @@ Every change ships with tests. New logic gets unit tests, and a bug fix gets a t
 
 `packages/sdk/test/live.test.ts` runs against the real dev API, but only when `WALKSCAPE_API_KEY` is set in your shell. CI skips it.
 
+## Publishing the SDK
+
+`packages/sdk` is published to npm as `@jameshschuler/walkscape-sdk`. Publish with `pnpm publish` from that folder, not `npm publish`. In the repo, `exports` points at the TypeScript source, and only pnpm swaps in the built `dist/` paths from `publishConfig`. `prepublishOnly` rebuilds before each publish.
+
+Doc comments on the SDK's exports are its documentation in editors, so keep them accurate when you change an export.
+
 ## Reporting bugs and security issues
 
 Open an issue for bugs and ideas. For a security problem, don't open a public issue. Contact the maintainer privately through GitHub instead.

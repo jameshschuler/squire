@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Star } from "lucide-react";
-import type { RecipeView } from "@squire/walkscape-sdk";
+import type { RecipeView } from "@jameshschuler/walkscape-sdk";
 import { RecipeList } from "@/components/recipes/RecipeList";
 import { useFavoritesContext } from "@/contexts/favorites-context";
 import { favoriteRecipes } from "@/lib/favorites";

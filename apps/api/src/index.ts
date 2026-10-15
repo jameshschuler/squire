@@ -1,4 +1,4 @@
-import { createClient } from "@squire/walkscape-sdk";
+import { createClient } from "@jameshschuler/walkscape-sdk";
 import { buildApp } from "./app.js";
 import { readEnv } from "./env.js";
 

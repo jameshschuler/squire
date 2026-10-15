@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import type { RecipeView } from "@squire/walkscape-sdk";
+import type { RecipeView } from "@jameshschuler/walkscape-sdk";
 import { GameIcon } from "@/components/shared/GameIcon";
 import { formatSkillLevel } from "@/lib/format";
 

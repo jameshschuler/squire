@@ -1,4 +1,9 @@
-import { WalkScapeApiError, type GameData, type ResourceName, type WalkScapeClient } from "@squire/walkscape-sdk";
+import {
+  WalkScapeApiError,
+  type GameData,
+  type ResourceName,
+  type WalkScapeClient,
+} from "@jameshschuler/walkscape-sdk";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
 export function fakeClient(version = "v1") {

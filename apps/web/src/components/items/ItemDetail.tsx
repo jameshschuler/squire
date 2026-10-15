@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { recipesMaking, recipesUsing, type Item, type RecipeView } from "@squire/walkscape-sdk";
+import { recipesMaking, recipesUsing, type Item, type RecipeView } from "@jameshschuler/walkscape-sdk";
 import { BackButton } from "@/components/layout/BackButton";
 import { RecipeList } from "@/components/recipes/RecipeList";
 import { RecipeSection } from "@/components/recipes/RecipeSection";

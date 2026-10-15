@@ -1,4 +1,4 @@
-import type { RecipeView } from "@squire/walkscape-sdk";
+import type { RecipeView } from "@jameshschuler/walkscape-sdk";
 import { useIncrementalList } from "@/hooks/useIncrementalList";
 import { RecipeList } from "./RecipeList";
 

@@ -57,4 +57,4 @@ The API is on the free plan, which sleeps after 15 minutes idle. The first reque
 
 Want to help? See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Game data and icons © WalkScape.
+Code is [MIT licensed](LICENSE). Game data and icons © WalkScape, not covered by that license.
