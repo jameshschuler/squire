@@ -11,7 +11,7 @@ export function ServiceLocations({ service }: { service: RecipeService }) {
         <li key={location.id} className="inline-flex items-center gap-1.5">
           {location.name}
           {location.tier !== service.tier && (
-            <Badge variant="outline" className="text-muted-foreground px-1.5 py-0 text-[10px] font-normal">
+            <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-normal text-muted-foreground">
               {location.tier}
             </Badge>
           )}

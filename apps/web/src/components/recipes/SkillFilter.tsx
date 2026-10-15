@@ -9,7 +9,7 @@ interface SkillFilterProps {
 
 export function SkillFilter({ skills, selected, onSelect }: SkillFilterProps) {
   return (
-    <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+    <div className="-mx-4 flex [scrollbar-width:none] gap-2 overflow-x-auto px-4 pb-1">
       <Button
         size="sm"
         variant={selected ? "outline" : "secondary"}
