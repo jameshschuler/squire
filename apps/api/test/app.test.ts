@@ -12,9 +12,9 @@ describe("GET /api/recipes", () => {
     expect(res.statusCode).toBe(200);
     expect(res.headers.etag).toBe('"v1"');
     expect(res.json<RecipeBook>().recipes.map((r) => r.id)).toEqual([
-      "assemble_dynamite",
-      "bake_a_bagel",
       "smelt_a_gold_bar",
+      "bake_a_bagel",
+      "assemble_dynamite",
     ]);
   });
 
