@@ -19,6 +19,8 @@ export interface RecipeItem {
 export interface RecipeLocation {
   id: string;
   name: string;
+  /** The region (faction) the location is in, e.g. "Jarvonia". */
+  region: string;
   /** The lowest service tier here that qualifies. Higher than the recipe's tier means only a better service is available. */
   tier: ServiceTier;
 }
@@ -179,10 +181,12 @@ function serviceView(req: ServiceRequirement, data: GameData): RecipeService {
       .filter((s) => meetsTier(s.tier, tier) && keywords.every((k) => s.keywords.includes(k)))
       .map((s) => [s.id, s.tier]),
   );
+  const regions = new Map(data.factions.map((f) => [f.id, f.name]));
   const locations = data.locations
     .flatMap((l): RecipeLocation[] => {
       const tiers = (l.serviceList ?? []).flatMap((id) => serviceTiers.get(id) ?? []);
-      return tiers.length > 0 ? [{ id: l.id, name: l.name, tier: lowestTier(tiers) }] : [];
+      const region = regions.get(l.faction) ?? humanize(l.faction);
+      return tiers.length > 0 ? [{ id: l.id, name: l.name, region, tier: lowestTier(tiers) }] : [];
     })
     .sort((a, b) => a.name.localeCompare(b.name));
   const [primary = "service", ...modifiers] = keywords;

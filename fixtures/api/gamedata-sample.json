@@ -361,5 +361,17 @@
     "erdwiss_trinketry_factory_advanced"
    ]
   }
+ ],
+ "factions": [
+  {
+   "id": "grand_duchy_of_trellin_erdwise",
+   "name": "Grand Duchy of Trellin-Erdwise",
+   "icon": "assets/icons/coatofarms/gdte.png"
+  },
+  {
+   "id": "jarvonia",
+   "name": "Jarvonia",
+   "icon": "assets/icons/coatofarms/jarvonia.png"
+  }
  ]
 }

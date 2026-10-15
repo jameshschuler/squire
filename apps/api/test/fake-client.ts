@@ -14,6 +14,7 @@ export function fakeClient(version = "v1") {
     services: data.services,
     recipes: data.recipes,
     locations: data.locations,
+    factions: data.factions,
   };
   const calls = { version: 0, list: 0, icon: 0, iconBatches: [] as number[] };
   const state = { version };

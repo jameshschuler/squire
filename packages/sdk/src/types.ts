@@ -84,6 +84,9 @@ export interface Recipe extends CompactEntity {
 
 export type Item = CompactEntity;
 
+/** A faction. Each location belongs to one, which works as its region on the map. */
+export type Faction = CompactEntity;
+
 export interface Skill extends CompactEntity {
   type: string;
 }
