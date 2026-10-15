@@ -27,7 +27,7 @@ export function RecipeSearch({ query, skill, onQueryChange, onSkillChange }: Rec
   return (
     <div className="space-y-3 pt-3">
       <div className="relative">
-        <Search className="text-muted-foreground pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2" />
+        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="search"
           value={query}
@@ -41,7 +41,7 @@ export function RecipeSearch({ query, skill, onQueryChange, onSkillChange }: Rec
       {state.status !== "ready" ? (
         <GameDataStatus state={state} />
       ) : results.length === 0 ? (
-        <p className="text-muted-foreground py-8 text-center">No recipes match.</p>
+        <p className="py-8 text-center text-muted-foreground">No recipes match.</p>
       ) : (
         <RecipeList recipes={results} />
       )}

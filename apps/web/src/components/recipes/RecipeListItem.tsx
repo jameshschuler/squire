@@ -11,7 +11,7 @@ export function RecipeListItem({ recipe }: { recipe: RecipeView }) {
         <GameIcon path={recipe.icon} />
         <span className="min-w-0">
           <span className="block font-medium">{recipe.name}</span>
-          <span className="text-muted-foreground block truncate text-sm">{details}</span>
+          <span className="block truncate text-sm text-muted-foreground">{details}</span>
         </span>
       </Link>
     </li>
