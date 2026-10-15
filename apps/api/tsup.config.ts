@@ -5,5 +5,5 @@ export default defineConfig({
   format: ["esm"],
   target: "node24",
   clean: true,
-  noExternal: ["@squire/walkscape-sdk"],
+  noExternal: ["@jameshschuler/walkscape-sdk"],
 });

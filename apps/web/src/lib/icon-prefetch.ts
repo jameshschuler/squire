@@ -1,4 +1,4 @@
-import { recipeBookIcons, type RecipeBook } from "@squire/walkscape-sdk";
+import { recipeBookIcons, type RecipeBook } from "@jameshschuler/walkscape-sdk";
 import { iconUrl } from "./api";
 
 export const ICONS_PREFETCHED_KEY = "squire-icons-prefetched";

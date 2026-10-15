@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { RecipeView } from "@squire/walkscape-sdk";
+import type { RecipeView } from "@jameshschuler/walkscape-sdk";
 import { favoriteRecipes, parseFavorites, toggleFavorite } from "@/lib/favorites";
 
 describe("parseFavorites", () => {

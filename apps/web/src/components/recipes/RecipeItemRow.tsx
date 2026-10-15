@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import type { RecipeItem } from "@squire/walkscape-sdk";
+import type { RecipeItem } from "@jameshschuler/walkscape-sdk";
 import { GameIcon } from "@/components/shared/GameIcon";
 
 export function RecipeItemRow({ item }: { item: RecipeItem }) {

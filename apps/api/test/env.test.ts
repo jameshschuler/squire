@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ENVIRONMENTS } from "@squire/walkscape-sdk";
+import { ENVIRONMENTS } from "@jameshschuler/walkscape-sdk";
 import { readEnv } from "../src/env.js";
 
 describe("readEnv", () => {

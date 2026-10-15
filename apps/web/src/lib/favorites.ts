@@ -1,4 +1,4 @@
-import type { RecipeView } from "@squire/walkscape-sdk";
+import type { RecipeView } from "@jameshschuler/walkscape-sdk";
 
 export const FAVORITES_STORAGE_KEY = "squire-favorites";
 

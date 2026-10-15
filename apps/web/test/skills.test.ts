@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { RecipeView } from "@squire/walkscape-sdk";
+import type { RecipeView } from "@jameshschuler/walkscape-sdk";
 import { recipeSkills } from "@/lib/skills";
 
 const recipe = (skills: { id: string; name: string }[]) =>

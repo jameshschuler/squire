@@ -1,4 +1,4 @@
-import type { RecipeBook } from "@squire/walkscape-sdk";
+import type { RecipeBook } from "@jameshschuler/walkscape-sdk";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "";
 

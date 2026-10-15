@@ -1,5 +1,5 @@
 {
-  "name": "@squire/walkscape-sdk",
+  "name": "@jameshschuler/walkscape-sdk",
   "version": "0.0.1",
   "description": "TypeScript client for the WalkScape Data API",
   "license": "MIT",

@@ -47,7 +47,7 @@ importers:
       '@fastify/cors':
         specifier: ^10.0.2
         version: 10.1.0
-      '@squire/walkscape-sdk':
+      '@jameshschuler/walkscape-sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
       fastify:
@@ -69,7 +69,7 @@ importers:
 
   apps/web:
     dependencies:
-      '@squire/walkscape-sdk':
+      '@jameshschuler/walkscape-sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
       '@tanstack/react-router':
