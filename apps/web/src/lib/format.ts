@@ -3,5 +3,5 @@ export function formatPercent(ratio: number): string {
 }
 
 export function formatSkillLevel(skill: { name: string; level: number | null }): string {
-  return skill.level === null ? skill.name : `${skill.name} ${skill.level}`;
+  return skill.level === null ? skill.name : `${skill.name} Lvl ${skill.level}`;
 }

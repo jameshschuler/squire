@@ -12,8 +12,8 @@ describe("formatPercent", () => {
 });
 
 describe("formatSkillLevel", () => {
-  it("adds the level when there is one", () => {
-    expect(formatSkillLevel({ name: "Cooking", level: 38 })).toBe("Cooking 38");
+  it("adds Lvl and the level when there is one", () => {
+    expect(formatSkillLevel({ name: "Cooking", level: 38 })).toBe("Cooking Lvl 38");
   });
 
   it("shows just the name without a level", () => {
