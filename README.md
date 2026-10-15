@@ -10,7 +10,7 @@ A WalkScape companion app. Right now it's a recipe book: search any recipe and s
 
 ## Run it
 
-You need Node 20+, pnpm and a WalkScape Data API key (ask in the "Walkscape Data API" thread on the WalkScape Discord).
+You need Node 24 (see `.node-version`), pnpm and a WalkScape Data API key (ask in the "Walkscape Data API" thread on the WalkScape Discord).
 
 ```sh
 cp .env.example .env   # then add your key

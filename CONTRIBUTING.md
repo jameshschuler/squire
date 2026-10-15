@@ -4,7 +4,7 @@ Thanks for helping out. Squire is a small fan-made companion app for WalkScape, 
 
 ## Getting set up
 
-You need Node 22 (see `.node-version`), pnpm 10, and a WalkScape Data API key. Keys are handed out in the "Walkscape Data API" thread on the WalkScape Discord.
+You need Node 24 (see `.node-version`), pnpm 10, and a WalkScape Data API key. Keys are handed out in the "Walkscape Data API" thread on the WalkScape Discord.
 
 ```sh
 git clone https://github.com/jameshschuler/squire.git
