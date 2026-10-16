@@ -1,4 +1,5 @@
 import { HTTP_STATUS } from "./http-status.js";
+import { loadAllEntries } from "./loaders.js";
 import type {
   Detail,
   Health,
@@ -61,6 +62,17 @@ export interface WalkScapeClient {
     filters: SearchFilters<R>,
     options: { detailed: true },
   ): Promise<Detail<R>[]>;
+  /**
+   * Every entry of a resource, in full. Some resources' lists already hold full entries, so they take
+   * one request. Others use a few bulk searches where the API allows them, then fetch anything those
+   * missed one at a time. Resources without a usable search filter (such as `pfp_option_groups`), or
+   * whose filter misses many entries (`keywords`), take up to one request per entry, which can mean a
+   * minute or two under the rate limit of 120 requests a minute.
+   *
+   * @example
+   * const items = await client.loadAll("items"); // ItemDetail[], in 3 requests
+   */
+  loadAll<R extends ResourceName>(resource: R): Promise<Detail<R>[]>;
   /** The map images available from `map(name)`, with their sizes. */
   maps(): Promise<MapList>;
   /** One map image, e.g. `map("worldmap.png")`. Read it with `arrayBuffer()` or `blob()`. */
@@ -158,12 +170,13 @@ export function createClient(options: ClientOptions): WalkScapeClient {
     return getJson(`/${resource}/search?${query}`);
   };
 
-  return {
+  const client: WalkScapeClient = {
     version: () => getJson("/version/"),
     health: () => getJson("/health/"),
     list: (resource) => getJson(`/${resource}/`),
     get: (resource, id) => getJson(`/${resource}/id/${encodeURIComponent(id)}`),
     search: search as WalkScapeClient["search"],
+    loadAll: (resource) => loadAllEntries(client, resource),
     maps: () => getJson("/maps"),
     map: (name) => send(`/maps/${encodeURIComponent(name)}`),
     icon: (path) => send(`/icons/${path.split("/").map(encodeURIComponent).join("/")}`),
@@ -176,6 +189,7 @@ export function createClient(options: ClientOptions): WalkScapeClient {
       return (await res.json()) as Record<string, string | null>;
     },
   };
+  return client;
 }
 
 function retryDelayMs(res: Response, attempt: number): number {

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { HTTP_STATUS } from "../src/http-status.js";
-import { ENVIRONMENTS, createClient, loadAll, lootTableItemIds, recipesUsing } from "../src/index.js";
+import { ENVIRONMENTS, createClient, lootTableItemIds, recipesUsing } from "../src/index.js";
 
 const apiKey = process.env.WALKSCAPE_API_KEY;
 
-describe.skipIf(!apiKey)("loadAll against the live dev API", () => {
+describe.skipIf(!apiKey)("client.loadAll against the live dev API", () => {
   it("loads whole resources in a few requests", { timeout: 120_000 }, async () => {
     let requests = 0;
     const countingFetch: typeof fetch = async (input, init) => {
@@ -16,9 +16,9 @@ describe.skipIf(!apiKey)("loadAll against the live dev API", () => {
     };
     const client = createClient({ apiKey: apiKey!, baseUrl: ENVIRONMENTS.dev, fetch: countingFetch });
     const [recipes, activities, lootTables] = await Promise.all([
-      loadAll(client, "recipes"),
-      loadAll(client, "activities"),
-      loadAll(client, "loot_tables"),
+      client.loadAll("recipes"),
+      client.loadAll("activities"),
+      client.loadAll("loot_tables"),
     ]);
     const loadRequests = requests;
 

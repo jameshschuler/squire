@@ -108,6 +108,13 @@ describe("createClient", () => {
     expect(requests[0]?.url).toBe(`${ENVIRONMENTS.prod}/items/search?canBeSold=false&type=material`);
   });
 
+  it("loads a whole resource through loadAll", async () => {
+    const { fetch, requests } = fakeFetch([json([{ id: "mining", name: "Mining" }])]);
+    const skills = await createClient({ apiKey: "k", fetch }).loadAll("skills");
+    expect(skills).toEqual([{ id: "mining", name: "Mining" }]);
+    expect(requests.map((r) => r.url)).toEqual([`${ENVIRONMENTS.prod}/skills/`]);
+  });
+
   it.each([
     ["version", (c: WalkScapeClient) => c.version(), "/version/"],
     ["health", (c: WalkScapeClient) => c.health(), "/health/"],

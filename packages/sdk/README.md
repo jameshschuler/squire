@@ -17,7 +17,7 @@ You need a Data API key. Keys are handed out in the "Walkscape Data API" thread 
 ## Quick start
 
 ```ts
-import { ENVIRONMENTS, createClient, loadAll, recipesUsing } from "@jameshschuler/walkscape-sdk";
+import { ENVIRONMENTS, createClient, recipesUsing } from "@jameshschuler/walkscape-sdk";
 
 const client = createClient({ apiKey: process.env.WALKSCAPE_API_KEY!, baseUrl: ENVIRONMENTS.dev });
 
@@ -26,7 +26,7 @@ console.log(goldBar.materials); // [{ options: [{ item: "gold_nugget", amount: 7
 
 const materials = await client.search("items", { type: "material" }); // ItemListItem[]
 
-const recipes = await loadAll(client, "recipes"); // RecipeDetail[]
+const recipes = await client.loadAll("recipes"); // RecipeDetail[]
 console.log(recipesUsing(recipes, "gold_bar").map((r) => r.name)); // ["Assemble dynamite", ...]
 ```
 
@@ -39,6 +39,7 @@ console.log(recipesUsing(recipes, "gold_bar").map((r) => r.name)); // ["Assemble
 | `list(resource)`                          | Every entry, in compact form (usually `id`, `name`, `icon`).                                              |
 | `get(resource, id)`                       | One entry in full. Throws `WalkScapeApiError` (status 404) if it doesn't exist.                           |
 | `search(resource, filters, { detailed })` | Entries matching every filter, e.g. `{ relatedSkills: "cooking" }`. Full entries when `detailed` is true. |
+| `loadAll(resource)`                       | Every entry of a resource, in full. See [Loading whole resources](#loading-whole-resources).              |
 | `version()`                               | The current game data version. It changes whenever the data does.                                         |
 | `health()`                                | Server status and uptime.                                                                                 |
 | `maps()` / `map(name)`                    | The map images available, and one map image as a `Response`.                                              |
@@ -65,16 +66,16 @@ if (item.type === "container") {
 
 ## Loading whole resources
 
-`loadAll(client, resource)` returns every entry of a resource in full. A few resources (`skills`, `achievements`, `rewards`, `routes`, `route_paths`) already list full entries, so they take one request. The rest are fetched in bulk with a few detailed searches, then anything those missed is fetched one at a time. Most resources take a handful of requests. Resources without a usable filter take up to one request per entry: `pfp_option_groups` (about 200) and `keywords` (about 100) are the slow ones, at a minute or two each under the rate limit.
+`client.loadAll(resource)` returns every entry of a resource in full. A few resources (`skills`, `achievements`, `rewards`, `routes`, `route_paths`) already list full entries, so they take one request. The rest are fetched in bulk with a few detailed searches, then anything those missed is fetched one at a time. Most resources take a handful of requests. Resources without a usable filter take up to one request per entry: `pfp_option_groups` (about 200) and `keywords` (about 100) are the slow ones, at a minute or two each under the rate limit.
 
 To load several resources, run them side by side. Track `version()` alongside so you know when to reload:
 
 ```ts
 const [{ version }, recipes, items, activities] = await Promise.all([
   client.version(),
-  loadAll(client, "recipes"),
-  loadAll(client, "items"),
-  loadAll(client, "activities"),
+  client.loadAll("recipes"),
+  client.loadAll("items"),
+  client.loadAll("activities"),
 ]);
 ```
 
@@ -93,7 +94,7 @@ Small helpers for questions that come up with raw API data. Each takes and retur
 | `meetsServiceTier(serviceTier, requiredTier)` | Whether a service tier qualifies. Higher tiers do: an expert kitchen can cook basic kitchen recipes.     |
 
 ```ts
-const services = await loadAll(client, "services");
+const services = await client.loadAll("services");
 const kitchens = services.filter((s) => s.keywords.includes("kitchen") && meetsServiceTier(s.tier, "basic"));
 ```
 

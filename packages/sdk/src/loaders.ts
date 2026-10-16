@@ -19,17 +19,12 @@ const BULK_FILTERS: { [R in keyof typeof SEARCH_VALUES]?: keyof (typeof SEARCH_V
   shops: "onlyPurchaseSellingListItems",
 };
 
-/**
- * Every entry of a resource, in full. Some resources' lists already hold full entries, so they take one
- * request. Others use a few bulk searches where the API allows them, then fetch anything those missed
- * one at a time. Resources without a usable search filter (such as `pfp_option_groups`), or whose
- * filter misses many entries (`keywords`), take up to one request per entry, which can mean a minute
- * or two under the rate limit of 120 requests a minute.
- *
- * @example
- * const items = await loadAll(client, "items"); // ItemDetail[], in 3 requests
- */
-export async function loadAll<R extends ResourceName>(client: WalkScapeClient, resource: R): Promise<Detail<R>[]> {
+type EndpointClient = Pick<WalkScapeClient, "list" | "get" | "search">;
+
+export async function loadAllEntries<R extends ResourceName>(
+  client: EndpointClient,
+  resource: R,
+): Promise<Detail<R>[]> {
   type Entry = Detail<R> & { id: string };
   if (LISTS_WITH_FULL_ENTRIES.has(resource)) {
     const entries = await client.list(resource);
@@ -45,7 +40,7 @@ export async function loadAll<R extends ResourceName>(client: WalkScapeClient, r
   return [...found.values()];
 }
 
-function bulkSearch(client: WalkScapeClient, resource: ResourceName): Promise<unknown[][]> {
+function bulkSearch(client: EndpointClient, resource: ResourceName): Promise<unknown[][]> {
   const filter = BULK_FILTERS[resource as keyof typeof BULK_FILTERS] as string | undefined;
   if (!filter) {
     return Promise.resolve([]);

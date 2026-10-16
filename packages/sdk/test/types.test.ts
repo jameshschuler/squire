@@ -25,6 +25,7 @@ describe("types", () => {
     const check = (client: WalkScapeClient) => {
       expectTypeOf(client.list("items")).resolves.toEqualTypeOf<ItemListItem[]>();
       expectTypeOf(client.get("items", "gold_ore")).resolves.toEqualTypeOf<ItemDetail>();
+      expectTypeOf(client.loadAll("items")).resolves.toEqualTypeOf<ItemDetail[]>();
       expectTypeOf(client.search("items", { type: "material" })).resolves.toEqualTypeOf<ItemListItem[]>();
       expectTypeOf(client.search("items", { canBeSold: true }, { detailed: true })).resolves.toEqualTypeOf<
         ItemDetail[]

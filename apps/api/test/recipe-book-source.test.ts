@@ -25,20 +25,23 @@ describe("createRecipeBookSource", () => {
   it("checks the version after 5 minutes but keeps the data when it hasn't changed", async () => {
     const { recipeBook, calls, clock } = setup();
     const first = await recipeBook();
-    const listsAfterLoad = calls.list;
+    const loadsAfterFirst = calls.loadAll;
     clock.now = 6 * MINUTE;
     await expect(recipeBook()).resolves.toBe(first);
     expect(calls.version).toBe(2);
-    expect(calls.list).toBe(listsAfterLoad);
+    expect(loadsAfterFirst).toBeGreaterThan(0);
+    expect(calls.loadAll).toBe(loadsAfterFirst);
   });
 
   it("reloads and logs when the game data version changes", async () => {
-    const { recipeBook, state, clock, log } = setup();
+    const { recipeBook, state, clock, log, calls } = setup();
     await recipeBook();
+    const loadsAfterFirst = calls.loadAll;
     state.version = "v2";
     clock.now = 6 * MINUTE;
     const reloaded = await recipeBook();
     expect(reloaded.version).toBe("v2");
+    expect(calls.loadAll).toBe(2 * loadsAfterFirst);
     expect(log.info).toHaveBeenCalledWith({ from: "v1", to: "v2" }, "Game data changed");
   });
 

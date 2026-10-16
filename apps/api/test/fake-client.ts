@@ -15,7 +15,7 @@ export function fakeClient(version = "v1") {
     loot_tables: data.lootTables,
     shops: data.shops,
   };
-  const calls = { version: 0, list: 0, icon: 0, iconBatches: [] as number[] };
+  const calls = { version: 0, loadAll: 0, icon: 0, iconBatches: [] as number[] };
   const state = { version };
 
   const client: WalkScapeClient = {
@@ -24,10 +24,7 @@ export function fakeClient(version = "v1") {
       return { version: state.version, details: { api: "", assets: "", locales: "" } };
     },
     health: async () => ({ status: "ok", uptime: 1 }),
-    list: async (resource) => {
-      calls.list++;
-      return (resources[resource] ?? []) as never;
-    },
+    list: async (resource) => (resources[resource] ?? []) as never,
     get: async (resource, id) => {
       const found = resources[resource]?.find((r) => r.id === id);
       if (!found) {
@@ -42,6 +39,10 @@ export function fakeClient(version = "v1") {
           return Array.isArray(actual) ? actual.includes(value) : actual === value;
         }),
       )) as WalkScapeClient["search"],
+    loadAll: async (resource) => {
+      calls.loadAll++;
+      return (resources[resource] ?? []) as never;
+    },
     maps: async () => ({ maps: [] }),
     map: async () => new Response(new Uint8Array([1])),
     icon: async (path) => {
