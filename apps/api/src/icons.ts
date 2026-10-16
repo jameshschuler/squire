@@ -1,4 +1,4 @@
-import type { WalkScapeClient } from "@jameshschuler/walkscape-sdk";
+import type { WalkScapeClient } from "@jameshschuler/walkscape-data-client";
 
 const BATCH_SIZE = 200;
 

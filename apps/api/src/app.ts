@@ -1,7 +1,7 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import compress from "@fastify/compress";
 import cors from "@fastify/cors";
-import { WalkScapeApiError, type WalkScapeClient } from "@jameshschuler/walkscape-sdk";
+import { WalkScapeApiError, type WalkScapeClient } from "@jameshschuler/walkscape-data-client";
 import { recipeBookIcons } from "./recipe-book/index.js";
 import { HTTP_STATUS } from "./http-status.js";
 import { createIconStore } from "./icons.js";

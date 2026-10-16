@@ -8,7 +8,7 @@ import type {
   ServiceDetail,
   ShopDetail,
   SkillDetail,
-} from "@jameshschuler/walkscape-sdk";
+} from "@jameshschuler/walkscape-data-client";
 
 export interface GameData {
   version: string;

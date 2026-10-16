@@ -2,11 +2,11 @@
 
 A WalkScape companion app. Right now it's a recipe book: search any recipe and see its materials, outputs and where to craft it.
 
-| Package        | What it is                                                           |
-| -------------- | -------------------------------------------------------------------- |
-| `packages/sdk` | Typed client for the WalkScape Data API                              |
-| `apps/api`     | Fastify server. Holds the API key, builds and caches the recipe book |
-| `apps/web`     | React PWA                                                            |
+| Package                | What it is                                                                                   |
+| ---------------------- | -------------------------------------------------------------------------------------------- |
+| `packages/data-client` | Typed client for the WalkScape Data API, published as `@jameshschuler/walkscape-data-client` |
+| `apps/api`             | Fastify server. Holds the API key, builds and caches the recipe book                         |
+| `apps/web`             | React PWA                                                                                    |
 
 ## Run it
 

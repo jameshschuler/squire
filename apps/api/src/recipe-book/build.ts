@@ -7,7 +7,7 @@ import type {
   ServiceDetail,
   ServiceRequirement,
   ShopDetail,
-} from "@jameshschuler/walkscape-sdk";
+} from "@jameshschuler/walkscape-data-client";
 import type { GameData } from "./game-data.js";
 import {
   getLootTableItemIds,

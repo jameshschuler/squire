@@ -1,19 +1,19 @@
 {
-  "name": "@jameshschuler/walkscape-sdk",
+  "name": "@jameshschuler/walkscape-data-client",
   "version": "0.0.1",
   "description": "Unofficial, fully typed TypeScript client for the WalkScape Data API",
   "keywords": [
     "walkscape",
     "api",
-    "sdk",
+    "api-client",
     "game-data"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jameshschuler/squire.git",
-    "directory": "packages/sdk"
+    "directory": "packages/data-client"
   },
-  "homepage": "https://github.com/jameshschuler/squire/tree/main/packages/sdk#readme",
+  "homepage": "https://github.com/jameshschuler/squire/tree/main/packages/data-client#readme",
   "bugs": "https://github.com/jameshschuler/squire/issues",
   "license": "MIT",
   "type": "module",

@@ -11,7 +11,7 @@ export default tseslint.config(
       "**/coverage",
       "apps/web/src/routeTree.gen.ts",
       "apps/web/dev-dist",
-      "packages/sdk/src/generated",
+      "packages/data-client/src/generated",
     ],
   },
   js.configs.recommended,

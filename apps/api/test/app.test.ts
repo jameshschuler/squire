@@ -1,5 +1,5 @@
 import { brotliDecompressSync, gunzipSync } from "node:zlib";
-import { WalkScapeApiError } from "@jameshschuler/walkscape-sdk";
+import { WalkScapeApiError } from "@jameshschuler/walkscape-data-client";
 import { describe, expect, it } from "vitest";
 import { RECIPE_BOOK_SCHEMA, type RecipeBook } from "../src/recipe-book/index.js";
 import { buildApp } from "../src/app.js";

@@ -12,7 +12,7 @@ import {
   words,
   type GameData,
 } from "../src/recipe-book/index.js";
-import type { ServiceTier } from "@jameshschuler/walkscape-sdk";
+import type { ServiceTier } from "@jameshschuler/walkscape-data-client";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
 const book = buildRecipeBook(sample as unknown as GameData);

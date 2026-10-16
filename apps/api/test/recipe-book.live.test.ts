@@ -1,4 +1,4 @@
-import { ENVIRONMENTS, createClient } from "@jameshschuler/walkscape-sdk";
+import { ENVIRONMENTS, createClient } from "@jameshschuler/walkscape-data-client";
 import { describe, expect, it } from "vitest";
 import { HTTP_STATUS } from "../src/http-status.js";
 import { loadGameData } from "../src/game-data.js";

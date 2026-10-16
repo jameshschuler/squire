@@ -1,4 +1,9 @@
-import type { LootTableDetail, Requirement, ServiceRequirement, ServiceTier } from "@jameshschuler/walkscape-sdk";
+import type {
+  LootTableDetail,
+  Requirement,
+  ServiceRequirement,
+  ServiceTier,
+} from "@jameshschuler/walkscape-data-client";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import {
   SERVICE_TIERS,

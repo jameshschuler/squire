@@ -3,4 +3,4 @@ coverage
 pnpm-lock.yaml
 apps/web/src/routeTree.gen.ts
 fixtures
-packages/sdk/src/generated
+packages/data-client/src/generated

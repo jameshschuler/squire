@@ -1,4 +1,4 @@
-import type { WalkScapeClient } from "@jameshschuler/walkscape-sdk";
+import type { WalkScapeClient } from "@jameshschuler/walkscape-data-client";
 import type { GameData } from "./recipe-book/index.js";
 
 export async function loadGameData(client: WalkScapeClient): Promise<GameData> {

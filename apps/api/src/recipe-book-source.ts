@@ -1,5 +1,5 @@
 import type { FastifyBaseLogger } from "fastify";
-import type { WalkScapeClient } from "@jameshschuler/walkscape-sdk";
+import type { WalkScapeClient } from "@jameshschuler/walkscape-data-client";
 import { loadGameData } from "./game-data.js";
 import { buildRecipeBook, type RecipeBook } from "./recipe-book/index.js";
 
