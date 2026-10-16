@@ -7,6 +7,7 @@
 - **Exception: the public SDK API.** Exported functions, types and options in `packages/sdk` get TSDoc comments, because they are the package's documentation in editors and on npm. Internal SDK code still follows the zero-comments rule.
 - Keep components and functions modular and minimal.
 - Always use braces for `if` statements, even single-line bodies. Write `if (existing) { return existing; }` (on separate lines), never `if (existing) return existing;`.
+- Don't nest `await`. Give each awaited value its own `const` before using it: `const data = await loadGameData(client);` then `buildRecipeBook(data)`, never `buildRecipeBook(await loadGameData(client))`. The same goes for `(await x).field`, `await (await fetch(url)).json()` and passing `await x` as an argument. In tests, use `await expect(promise).resolves…` instead of `expect(await promise)`. A single `await` that's assigned, returned or cast (`const body = (await res.json()) as Body`) is fine.
 
 ## Quality & Simplicity
 
@@ -110,6 +111,10 @@ I know the domain. The problem is answers buried under qualifiers, shorthand, an
 - `feature/short-description` — new features/improvements
 - `bugfix/short-description` — fixes to known issues
 - `hotfix/short-description` — emergency patches
+
+### Review before committing
+
+Before creating a commit or opening a pull request, run the /code-review skill on the pending changes. Fix any confirmed findings (or tell me about the ones you're leaving) before committing.
 
 ### Commit messages
 

@@ -8,7 +8,7 @@ import {
   recipesUsing,
   serviceKeywords,
   type GameData,
-  type LootTable,
+  type LootTableDetail,
   type Requirement,
   type ServiceRequirement,
 } from "../src/index.js";
@@ -61,7 +61,7 @@ describe("lootTableItemIds", () => {
       id: "t",
       tableRows: [{ rowItemID: "a" }, { rowItemID: null }],
       subTables: [{ tableRows: [{ rowItemID: "b" }] }],
-    } as unknown as LootTable;
+    } as unknown as LootTableDetail;
     expect(lootTableItemIds(table)).toEqual(["a", "b"]);
   });
 });
