@@ -39,7 +39,7 @@ describe("requirement guards", () => {
 
 describe("getServiceKeywords", () => {
   it.each([
-    [{ keywords: ["kitchen", "cursed"], serviceKeyword: "kitchen", tier: "basic" as const }, ["kitchen", "cursed"]],
+    [{ keywords: ["workshop", "cursed"], serviceKeyword: "workshop", tier: "basic" as const }, ["workshop", "cursed"]],
     [{ serviceKeyword: "kitchen", tier: "basic" as const }, ["kitchen"]],
     [{ keywords: [], serviceKeyword: null, tier: "basic" as const }, []],
   ])("reads %j", (requirement, expected) => {

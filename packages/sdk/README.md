@@ -27,7 +27,7 @@ console.log(goldBar.materials); // [{ options: [{ item: "gold_nugget", amount: 7
 const materials = await client.items.search({ type: "material" }); // ItemListItem[]
 
 const recipes = await client.recipes.loadAll(); // RecipeDetail[]
-console.log(findRecipesByMaterial(recipes, "gold_bar").map((r) => r.name)); // ["Assemble dynamite", ...]
+console.log(findRecipesByMaterial(recipes, "gold_bar").map((r) => r.name)); // ["Craft a golden sewing needle", ...]
 ```
 
 ## The client
@@ -88,19 +88,51 @@ const [{ version }, recipes, items, activities] = await Promise.all([
 
 Small helpers for questions that come up with raw API data. Each takes and returns API shapes.
 
-| Function                                      | What it does                                                                                             |
-| --------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `findRecipesByOutput(recipes, itemId)`        | Recipes that produce an item.                                                                            |
-| `findRecipesByMaterial(recipes, itemId)`      | Recipes that take an item as a material, in any slot or option.                                          |
-| `getLootTableItemIds(table)`                  | Every item id a loot table can drop, including its sub-tables.                                           |
-| `isSkillLevelRequirement(requirement)`        | Narrows a requirement to a skill level requirement.                                                      |
-| `isServiceRequirement(requirement)`           | Narrows a requirement to a crafting service requirement.                                                 |
-| `getServiceKeywords(requirement)`             | The service keywords a requirement asks for, e.g. `["kitchen", "cursed"]`, whichever shape the API used. |
-| `meetsServiceTier(serviceTier, requiredTier)` | Whether a service tier qualifies. Higher tiers do: an expert kitchen can cook basic kitchen recipes.     |
+| Function                                      | What it does                                                                                              |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `findRecipesByOutput(recipes, itemId)`        | Recipes that produce an item.                                                                             |
+| `findRecipesByMaterial(recipes, itemId)`      | Recipes that take an item as a material, in any slot or option.                                           |
+| `getLootTableItemIds(table)`                  | Every item id a loot table can drop, including its sub-tables.                                            |
+| `isSkillLevelRequirement(requirement)`        | Narrows a requirement to a skill level requirement.                                                       |
+| `isServiceRequirement(requirement)`           | Narrows a requirement to a crafting service requirement.                                                  |
+| `getServiceKeywords(requirement)`             | The service keywords a requirement asks for, e.g. `["workshop", "cursed"]`, whichever shape the API used. |
+| `meetsServiceTier(serviceTier, requiredTier)` | Whether a service tier qualifies. Higher tiers do: an expert kitchen can cook basic kitchen recipes.      |
+
+Here's what a recipe needs, and where you can make it:
 
 ```ts
-const services = await client.services.loadAll();
-const kitchens = services.filter((s) => s.keywords.includes("kitchen") && meetsServiceTier(s.tier, "basic"));
+import {
+  getServiceKeywords,
+  isServiceRequirement,
+  isSkillLevelRequirement,
+  meetsServiceTier,
+} from "@jameshschuler/walkscape-sdk";
+
+const [recipe, services] = await Promise.all([client.recipes.get("smelt_a_gold_bar"), client.services.loadAll()]);
+
+const skills = recipe.requirements.filter(isSkillLevelRequirement).map((r) => r.requirement);
+// [{ skill: "smithing", level: 15 }]
+
+const required = recipe.requirements.find(isServiceRequirement);
+if (required) {
+  const keywords = getServiceKeywords(required); // ["forge"]
+  const forges = services.filter(
+    (s) => keywords.every((k) => s.keywords.includes(k)) && meetsServiceTier(s.tier, required.requirement.tier),
+  );
+  // Basic Forge, Frozen Forge, Underwater Forge (Basic), plus two advanced forges, which qualify too
+}
+```
+
+And where an item comes from, and what it's for:
+
+```ts
+import { findRecipesByMaterial, findRecipesByOutput, getLootTableItemIds } from "@jameshschuler/walkscape-sdk";
+
+const [table, recipes] = await Promise.all([client.lootTables.get("mine_gold_ore"), client.recipes.loadAll()]);
+
+getLootTableItemIds(table); // ["gold_ore"]
+findRecipesByOutput(recipes, "gold_bar").map((r) => r.name); // ["Smelt a gold bar"]
+findRecipesByMaterial(recipes, "gold_ore").map((r) => r.name); // ["Smelt a gold bar"]
 ```
 
 ## Rate limits and caching
