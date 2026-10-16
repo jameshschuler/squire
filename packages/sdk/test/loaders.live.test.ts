@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { HTTP_STATUS } from "../src/http-status.js";
-import { ENVIRONMENTS, createClient, getLootTableItemIds, findRecipesByMaterial } from "../src/index.js";
+import { ENVIRONMENTS, createClient } from "../src/index.js";
 
 const apiKey = process.env.WALKSCAPE_API_KEY;
 
@@ -28,12 +28,6 @@ describe.skipIf(!apiKey)("client.loadAll against the live dev API", () => {
     const tables = new Map(lootTables.map((t) => [t.id, t]));
     const referenced = activities.flatMap((a) => (a.tables ?? []).flatMap((ref) => ref.tables));
     expect(referenced.filter((id) => !tables.has(id))).toEqual([]);
-    const bearHunting = activities.find((a) => a.name === "Bear hunting");
-    const drops = (bearHunting?.tables ?? []).flatMap((ref) =>
-      ref.tables.flatMap((id) => getLootTableItemIds(tables.get(id)!)),
-    );
-    expect(drops).toContain("bones");
-    expect(findRecipesByMaterial(recipes, "bones").length).toBeGreaterThan(0);
     expect(loadRequests).toBeLessThan(35);
   });
 });

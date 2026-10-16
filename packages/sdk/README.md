@@ -1,6 +1,6 @@
 # @jameshschuler/walkscape-sdk
 
-An unofficial TypeScript client for the [WalkScape](https://walkscape.app) Data API. It covers every endpoint, and its types are generated from the API's OpenAPI spec, so each resource, response and search filter is typed. It also has loaders that fetch whole resources in a few requests, plus a few small helpers.
+An unofficial TypeScript client for the [WalkScape](https://walkscape.app) Data API. It covers every endpoint, and its types are generated from the API's OpenAPI spec, so each resource, response and search filter is typed. It can also load whole resources in a few requests.
 
 It runs anywhere with a global `fetch`: Node 22+, Deno, Bun, Cloudflare Workers and browsers. It has no runtime dependencies.
 
@@ -17,7 +17,7 @@ You need a Data API key. Keys are handed out in the "Walkscape Data API" thread 
 ## Quick start
 
 ```ts
-import { ENVIRONMENTS, createClient, findRecipesByMaterial } from "@jameshschuler/walkscape-sdk";
+import { ENVIRONMENTS, createClient } from "@jameshschuler/walkscape-sdk";
 
 const client = createClient({ apiKey: process.env.WALKSCAPE_API_KEY!, baseUrl: ENVIRONMENTS.dev });
 
@@ -26,8 +26,8 @@ console.log(goldBar.materials); // [{ options: [{ item: "gold_nugget", amount: 7
 
 const materials = await client.items.search({ type: "material" }); // ItemListItem[]
 
-const recipes = await client.recipes.loadAll(); // RecipeDetail[]
-console.log(findRecipesByMaterial(recipes, "gold_bar").map((r) => r.name)); // ["Craft a golden sewing needle", ...]
+const recipes = await client.recipes.loadAll(); // RecipeDetail[], every recipe
+const usesGoldBars = recipes.filter((r) => r.materials.some((slot) => slot.options.some((o) => o.item === "gold_bar")));
 ```
 
 ## The client
@@ -82,57 +82,6 @@ const [{ version }, recipes, items, activities] = await Promise.all([
   client.items.loadAll(),
   client.activities.loadAll(),
 ]);
-```
-
-## Helpers
-
-Small helpers for questions that come up with raw API data. Each takes and returns API shapes.
-
-| Function                                      | What it does                                                                                              |
-| --------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `findRecipesByOutput(recipes, itemId)`        | Recipes that produce an item.                                                                             |
-| `findRecipesByMaterial(recipes, itemId)`      | Recipes that take an item as a material, in any slot or option.                                           |
-| `getLootTableItemIds(table)`                  | Every item id a loot table can drop, including its sub-tables.                                            |
-| `isSkillLevelRequirement(requirement)`        | Narrows a requirement to a skill level requirement.                                                       |
-| `isServiceRequirement(requirement)`           | Narrows a requirement to a crafting service requirement.                                                  |
-| `getServiceKeywords(requirement)`             | The service keywords a requirement asks for, e.g. `["workshop", "cursed"]`, whichever shape the API used. |
-| `meetsServiceTier(serviceTier, requiredTier)` | Whether a service tier qualifies. Higher tiers do: an expert kitchen can cook basic kitchen recipes.      |
-
-Here's what a recipe needs, and where you can make it:
-
-```ts
-import {
-  getServiceKeywords,
-  isServiceRequirement,
-  isSkillLevelRequirement,
-  meetsServiceTier,
-} from "@jameshschuler/walkscape-sdk";
-
-const [recipe, services] = await Promise.all([client.recipes.get("smelt_a_gold_bar"), client.services.loadAll()]);
-
-const skills = recipe.requirements.filter(isSkillLevelRequirement).map((r) => r.requirement);
-// [{ skill: "smithing", level: 15 }]
-
-const required = recipe.requirements.find(isServiceRequirement);
-if (required) {
-  const keywords = getServiceKeywords(required); // ["forge"]
-  const forges = services.filter(
-    (s) => keywords.every((k) => s.keywords.includes(k)) && meetsServiceTier(s.tier, required.requirement.tier),
-  );
-  // Basic Forge, Frozen Forge, Underwater Forge (Basic), plus two advanced forges, which qualify too
-}
-```
-
-And where an item comes from, and what it's for:
-
-```ts
-import { findRecipesByMaterial, findRecipesByOutput, getLootTableItemIds } from "@jameshschuler/walkscape-sdk";
-
-const [table, recipes] = await Promise.all([client.lootTables.get("mine_gold_ore"), client.recipes.loadAll()]);
-
-getLootTableItemIds(table); // ["gold_ore"]
-findRecipesByOutput(recipes, "gold_bar").map((r) => r.name); // ["Smelt a gold bar"]
-findRecipesByMaterial(recipes, "gold_ore").map((r) => r.name); // ["Smelt a gold bar"]
 ```
 
 ## Rate limits and caching

@@ -44,6 +44,3 @@ export type Health = JsonResponse<"/health/">;
 export type MapList = JsonResponse<"/maps">;
 
 export type ServiceTier = ServiceDetail["tier"];
-
-/** Service tiers from lowest to highest. A higher tier can craft lower-tier recipes. */
-export const SERVICE_TIERS = ["basic", "advanced", "expert"] as const satisfies readonly ServiceTier[];

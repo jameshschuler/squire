@@ -2,7 +2,6 @@ import { describe, expectTypeOf, it } from "vitest";
 import type { ApiResource, ApiResourceOf } from "../src/api-resources.js";
 import { RESOURCES, SEARCHABLE_RESOURCES } from "../src/generated/resources.js";
 import {
-  SERVICE_TIERS,
   type Detail,
   type ItemDetail,
   type ItemListItem,
@@ -12,7 +11,6 @@ import {
   type ResourceName,
   type SearchFilters,
   type SearchableResource,
-  type ServiceTier,
   type WalkScapeClient,
 } from "../src/index.js";
 
@@ -26,10 +24,6 @@ describe("types", () => {
     expectTypeOf<WalkScapeClient["pets"]>().not.toHaveProperty("search");
     expectTypeOf<WalkScapeClient["items"]>().toHaveProperty("search");
     expectTypeOf<WalkScapeClient["lootTables"]["get"]>().returns.resolves.toEqualTypeOf<LootTableDetail>();
-  });
-
-  it("lists every service tier the API knows", () => {
-    expectTypeOf<(typeof SERVICE_TIERS)[number]>().toEqualTypeOf<ServiceTier>();
   });
 
   it("names resources in camelCase, as the client does", () => {

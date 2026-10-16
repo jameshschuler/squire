@@ -1,19 +1,21 @@
-import {
-  isServiceRequirement,
-  isSkillLevelRequirement,
-  getLootTableItemIds,
-  meetsServiceTier,
-  getServiceKeywords,
-  type ActivityDetail,
-  type ItemDetail,
-  type LocationDetail,
-  type LootTable,
-  type LootTableDetail,
-  type ServiceDetail,
-  type ServiceRequirement,
-  type ShopDetail,
+import type {
+  ActivityDetail,
+  ItemDetail,
+  LocationDetail,
+  LootTable,
+  LootTableDetail,
+  ServiceDetail,
+  ServiceRequirement,
+  ShopDetail,
 } from "@jameshschuler/walkscape-sdk";
 import type { GameData } from "./game-data.js";
+import {
+  getLootTableItemIds,
+  getServiceKeywords,
+  isServiceRequirement,
+  isSkillLevelRequirement,
+  meetsServiceTier,
+} from "./game-rules.js";
 import { lowestSkillLevels, sourceKey } from "./lookup.js";
 import { byLevel, minLevel } from "./order.js";
 import {

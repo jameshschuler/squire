@@ -1,20 +1,13 @@
-import { describe, expect, it } from "vitest";
+import type { LootTableDetail, Requirement, ServiceRequirement, ServiceTier } from "@jameshschuler/walkscape-sdk";
+import { describe, expect, expectTypeOf, it } from "vitest";
 import {
+  SERVICE_TIERS,
+  getLootTableItemIds,
+  getServiceKeywords,
   isServiceRequirement,
   isSkillLevelRequirement,
-  getLootTableItemIds,
   meetsServiceTier,
-  findRecipesByOutput,
-  findRecipesByMaterial,
-  getServiceKeywords,
-  type LootTableDetail,
-  type RecipeDetail,
-  type Requirement,
-  type ServiceRequirement,
-} from "../src/index.js";
-import sample from "../../../fixtures/api/gamedata-sample.json";
-
-const data = sample as unknown as { recipes: RecipeDetail[] };
+} from "../src/recipe-book/game-rules.js";
 const service = (requirement: ServiceRequirement["requirement"]): ServiceRequirement => ({
   type: "service",
   name: null,
@@ -48,6 +41,10 @@ describe("getServiceKeywords", () => {
 });
 
 describe("meetsServiceTier", () => {
+  it("knows every service tier the API has", () => {
+    expectTypeOf<(typeof SERVICE_TIERS)[number]>().toEqualTypeOf<ServiceTier>();
+  });
+
   it("accepts the same or a higher tier", () => {
     expect(meetsServiceTier("basic", "basic")).toBe(true);
     expect(meetsServiceTier("advanced", "basic")).toBe(true);
@@ -68,14 +65,5 @@ describe("getLootTableItemIds", () => {
       subTables: [{ tableRows: [{ rowItemID: "b" }] }],
     } as unknown as LootTableDetail;
     expect(getLootTableItemIds(table)).toEqual(["a", "b"]);
-  });
-});
-
-describe("findRecipesByOutput / findRecipesByMaterial", () => {
-  it("finds raw recipes that make or use an item", () => {
-    expect(findRecipesByOutput(data.recipes, "gold_bar").map((r) => r.id)).toEqual(["smelt_a_gold_bar"]);
-    expect(findRecipesByMaterial(data.recipes, "salt_crystal").map((r) => r.id)).toEqual(["assemble_dynamite"]);
-    expect(findRecipesByMaterial(data.recipes, "gold_ore").map((r) => r.id)).toEqual(["smelt_a_gold_bar"]);
-    expect(findRecipesByMaterial(data.recipes, "unknown")).toEqual([]);
   });
 });
