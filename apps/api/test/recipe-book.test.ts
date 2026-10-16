@@ -10,8 +10,9 @@ import {
   recipesUsing,
   searchRecipes,
   words,
+  type GameData,
 } from "../src/recipe-book/index.js";
-import type { GameData, ServiceTier } from "@jameshschuler/walkscape-sdk";
+import type { ServiceTier } from "@jameshschuler/walkscape-sdk";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
 const book = buildRecipeBook(sample as unknown as GameData);
@@ -90,6 +91,18 @@ describe("buildRecipeBook", () => {
       tier: "advanced",
       locations: [],
     });
+  });
+
+  it.each([
+    ["crafting", true],
+    ["wardrobe", false],
+  ] as const)("only lists locations with a crafting service (%s: %s)", (serviceType, listed) => {
+    const data = structuredClone(sample) as unknown as GameData;
+    const kitchen = data.services.find((s) => s.id === "alight_kitchen_basic")!;
+    data.services.push({ ...kitchen, id: "closet_service", serviceType });
+    data.locations.push({ ...data.locations[0]!, id: "closet", name: "Closet", serviceList: ["closet_service"] });
+    const bagel = buildRecipeBook(data).recipes.find((r) => r.id === "bake_a_bagel")!;
+    expect(bagel.service!.locations.some((l) => l.id === "closet")).toBe(listed);
   });
 
   describe("service tiers", () => {
@@ -242,7 +255,7 @@ describe("sources", () => {
   it("labels drops from special tables and secondary rolls, main loot first", () => {
     const sources = withActivity((data) => {
       const [main, gem] = data.lootTables;
-      gem!.tableRows[0]!.rowItemID = "gold_ore";
+      gem!.tableRows![0]!.rowItemID = "gold_ore";
       data.activities[0]!.tables!.push({ isPrimary: false, type: [], rollAmount: 1, tables: [main!.id] });
     });
     expect(sources.gold_ore?.map((s) => (s.kind === "activity" ? s.lootType : s.kind))).toEqual([
@@ -278,7 +291,7 @@ describe("sources", () => {
 
   it("lists a chest that contains the material, with the levels of the activities that drop the chest", () => {
     const sources = withActivity((data) => {
-      data.lootTables.find((t) => t.id === "mining_chest_table")!.tableRows[0]!.rowItemID = "salt_crystal";
+      data.lootTables.find((t) => t.id === "mining_chest_table")!.tableRows![0]!.rowItemID = "salt_crystal";
     });
     expect(sources.salt_crystal).toEqual([
       {
@@ -309,7 +322,7 @@ describe("sources", () => {
 
   it("orders activities first, then shops, then chests", () => {
     const sources = withActivity((data) => {
-      data.lootTables.find((t) => t.id === "mining_chest_table")!.tableRows[0]!.rowItemID = "gold_ore";
+      data.lootTables.find((t) => t.id === "mining_chest_table")!.tableRows![0]!.rowItemID = "gold_ore";
       data.shops[0]!.soldItems.push("gold_ore");
     });
     expect(sources.gold_ore?.map((s) => s.kind)).toEqual(["activity", "shop", "chest"]);
@@ -322,7 +335,7 @@ describe("sources", () => {
         { ...chest, id: "chest_of_zeta", name: "Chest of Zeta" },
         { ...chest, id: "chest_of_alpha", name: "Chest of Alpha" },
       );
-      data.lootTables.find((t) => t.id === "mining_chest_table")!.tableRows[0]!.rowItemID = "salt_crystal";
+      data.lootTables.find((t) => t.id === "mining_chest_table")!.tableRows![0]!.rowItemID = "salt_crystal";
     });
     expect(sources.salt_crystal?.map((s) => s.name)).toEqual(["Mining chest", "Chest of Alpha", "Chest of Zeta"]);
   });

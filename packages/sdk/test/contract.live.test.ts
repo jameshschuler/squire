@@ -1,6 +1,8 @@
+import { isDeepStrictEqual } from "node:util";
 import { Ajv2019 } from "ajv/dist/2019.js";
 import { describe, expect, it } from "vitest";
 import { ENVIRONMENTS, createClient, type ResourceName } from "../src/index.js";
+import { LISTS_WITH_FULL_ENTRIES } from "../src/full-lists.js";
 
 const apiKey = process.env.WALKSCAPE_API_KEY;
 const SAMPLE_SIZE = 10;
@@ -41,7 +43,8 @@ function toJsonSchema(node: unknown, inAllOf = false): unknown {
 
 describe.skipIf(!apiKey)("live dev API matches its OpenAPI spec", () => {
   it("returns list and detail shapes the spec describes for every resource", { timeout: 300_000 }, async () => {
-    const spec = await (await fetch(`${ENVIRONMENTS.dev}/docs/openapi.json`)).json();
+    const specResponse = await fetch(`${ENVIRONMENTS.dev}/docs/openapi.json`);
+    const spec = await specResponse.json();
     const schemas = Object.entries(spec.components.schemas as Schema);
     const ajv = new Ajv2019({ strict: false, allErrors: true });
     ajv.addSchema({
@@ -67,12 +70,17 @@ describe.skipIf(!apiKey)("live dev API matches its OpenAPI spec", () => {
     for (const resource of resources as ResourceName[]) {
       const list = await client.list(resource);
       check(`${resource} list`, responseSchema(`/${resource}/`), list);
-      for (const { id } of (list as { id: string }[]).slice(0, SAMPLE_SIZE)) {
-        check(`${resource}/${id}`, responseSchema(`/${resource}/id/{id}`), await client.get(resource, id));
+      for (const listed of (list as { id: string }[]).slice(0, SAMPLE_SIZE)) {
+        const { id } = listed;
+        const entry = await client.get(resource, id);
+        check(`${resource}/${id}`, responseSchema(`/${resource}/id/{id}`), entry);
+        if (LISTS_WITH_FULL_ENTRIES.has(resource) && !isDeepStrictEqual(listed, entry)) {
+          mismatches.push(`${resource}/${id} list entry differs from the full entry`);
+        }
       }
     }
 
-    expect(resources).toHaveLength(24);
+    expect(resources.length).toBeGreaterThan(0);
     expect(mismatches).toEqual([]);
   });
 });

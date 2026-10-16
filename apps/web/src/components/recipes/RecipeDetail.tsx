@@ -27,8 +27,12 @@ export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
             </Badge>
           ))}
           {recipe.service && <Badge variant="outline">{recipe.service.label}</Badge>}
-          <Badge variant="outline">{formatSteps(recipe.workRequired, recipe.maxWorkEfficiency)}</Badge>
-          <Badge variant="outline">Max efficiency {formatPercent(recipe.maxWorkEfficiency)}</Badge>
+          {recipe.workRequired !== null && (
+            <Badge variant="outline">{formatSteps(recipe.workRequired, recipe.maxWorkEfficiency)}</Badge>
+          )}
+          {recipe.maxWorkEfficiency !== null && (
+            <Badge variant="outline">Max efficiency {formatPercent(recipe.maxWorkEfficiency)}</Badge>
+          )}
         </div>
       </header>
 

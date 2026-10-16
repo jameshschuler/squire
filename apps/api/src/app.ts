@@ -3,6 +3,7 @@ import compress from "@fastify/compress";
 import cors from "@fastify/cors";
 import { WalkScapeApiError, type WalkScapeClient } from "@jameshschuler/walkscape-sdk";
 import { recipeBookIcons } from "./recipe-book/index.js";
+import { HTTP_STATUS } from "./http-status.js";
 import { createIconStore } from "./icons.js";
 import { createRecipeBookSource } from "./recipe-book-source.js";
 import { healthRoutes } from "./routes/health.js";
@@ -22,11 +23,11 @@ export function buildApp({ client, logLevel, corsOrigins }: AppOptions): Fastify
     if (!(error instanceof WalkScapeApiError)) {
       return reply.send(error);
     }
-    if (error.status === 404) {
-      return reply.code(404).send({ error: "Not found" });
+    if (error.status === HTTP_STATUS.NOT_FOUND) {
+      return reply.code(HTTP_STATUS.NOT_FOUND).send({ error: "Not found" });
     }
     request.log.error({ err: error }, "WalkScape API request failed");
-    return reply.code(502).send({ error: "WalkScape API unavailable" });
+    return reply.code(HTTP_STATUS.BAD_GATEWAY).send({ error: "WalkScape API unavailable" });
   });
 
   const icons = createIconStore(client);

@@ -27,7 +27,7 @@ describe("createRecipeBookSource", () => {
     const first = await recipeBook();
     const listsAfterLoad = calls.list;
     clock.now = 6 * MINUTE;
-    expect(await recipeBook()).toBe(first);
+    await expect(recipeBook()).resolves.toBe(first);
     expect(calls.version).toBe(2);
     expect(calls.list).toBe(listsAfterLoad);
   });
@@ -37,7 +37,8 @@ describe("createRecipeBookSource", () => {
     await recipeBook();
     state.version = "v2";
     clock.now = 6 * MINUTE;
-    expect((await recipeBook()).version).toBe("v2");
+    const reloaded = await recipeBook();
+    expect(reloaded.version).toBe("v2");
     expect(log.info).toHaveBeenCalledWith({ from: "v1", to: "v2" }, "Game data changed");
   });
 

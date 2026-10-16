@@ -16,7 +16,7 @@ pnpm dev                # API on :3000, web on :5173
 
 The repo has three parts:
 
-- `packages/sdk`: the WalkScape Data API client, types, loader and small helpers that return API shapes. It will be published to npm, so keep it free of anything Squire-specific and avoid adding runtime dependencies.
+- `packages/sdk`: the WalkScape Data API client, types generated from the API's OpenAPI spec, loaders and small helpers that return API shapes. It will be published to npm, so keep it free of anything Squire-specific and avoid adding runtime dependencies.
 - `apps/api`: the Fastify server. It's the only place the API key lives. `src/recipe-book/` turns game data into Squire's recipe book; the web app imports its types and helpers as `@squire/api/recipe-book`, so keep that folder free of server code.
 - `apps/web`: the React PWA (TanStack Router, Tailwind, shadcn, Lucide).
 
@@ -57,7 +57,7 @@ ESLint and Prettier cover formatting and most rules. Beyond that:
 - **Few comments.** Add one only when the logic is genuinely hard to follow.
 - **Always use braces** on `if` statements, even one-liners. Lint enforces this.
 - **Use the game's words.** Recipe, material, service, tier, location: one name per idea, everywhere.
-- **Keep game rules out of the UI.** Recipe logic belongs in the SDK, and components just render it.
+- **Keep game rules out of the UI.** Recipe logic belongs in `apps/api/src/recipe-book/` (or in the SDK when any app could use it), and components just render it.
 
 In `apps/web`:
 
@@ -75,7 +75,11 @@ Every change ships with tests. New logic gets unit tests, and a bug fix gets a t
 - Mock only the edges: the network, time and storage.
 - Cover empty, boundary and error cases, not just the happy path.
 
-`packages/sdk/test/live.test.ts` and `apps/api/test/recipe-book.live.test.ts` run against the real dev API, but only when `WALKSCAPE_API_KEY` is set in your shell. CI skips them.
+The `*.live.test.ts` files run against the real dev API, but only when `WALKSCAPE_API_KEY` is set in your shell. CI skips them. `packages/sdk/test/contract.live.test.ts` checks real responses from every resource against the API spec, so run it after regenerating the types.
+
+## Updating the SDK types
+
+The SDK's types come from the API's OpenAPI spec. When the API changes, run `pnpm --filter @jameshschuler/walkscape-sdk generate`. It rewrites `packages/sdk/src/generated/`; never edit those files by hand. Then run the checks: if a search filter or a field the code uses changed, typecheck shows where.
 
 ## Publishing the SDK
 

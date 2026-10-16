@@ -22,7 +22,8 @@ export function createIconStore(client: WalkScapeClient): IconStore {
         return cached;
       }
       const res = await client.icon(path);
-      const icon = { type: res.headers.get("Content-Type") ?? "image/png", body: Buffer.from(await res.arrayBuffer()) };
+      const bytes = await res.arrayBuffer();
+      const icon = { type: res.headers.get("Content-Type") ?? "image/png", body: Buffer.from(bytes) };
       icons.set(path, icon);
       return icon;
     },

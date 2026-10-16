@@ -29,7 +29,8 @@ describe("BackButton", () => {
   it("goes back to the previous page", async () => {
     const router = await renderAt(["/favorites"]);
     await router.navigate({ to: "/recipes/$recipeId", params: { recipeId: "bake_bread" } });
-    fireEvent.click(await screen.findByRole("button", { name: "Back" }));
+    const back = await screen.findByRole("button", { name: "Back" });
+    fireEvent.click(back);
     await waitFor(() => expect(router.state.location.pathname).toBe("/favorites"));
   });
 

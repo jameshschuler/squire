@@ -4,17 +4,16 @@ import {
   lootTableItemIds,
   meetsServiceTier,
   serviceKeywords,
-  type Activity,
-  type GameData,
+  type ActivityDetail,
   type ItemDetail,
-  type Location,
+  type LocationDetail,
   type LootTable,
-  type LootTableRef,
-  type Requirement,
-  type Service,
+  type LootTableDetail,
+  type ServiceDetail,
   type ServiceRequirement,
-  type Shop,
+  type ShopDetail,
 } from "@jameshschuler/walkscape-sdk";
+import type { GameData } from "./game-data.js";
 import { lowestSkillLevels, sourceKey } from "./lookup.js";
 import { byLevel, minLevel } from "./order.js";
 import {
@@ -67,7 +66,7 @@ export function buildRecipeBook(data: GameData): RecipeBook {
       service: service ? serviceView(service, data.services, locationsByService) : null,
       materials: recipe.materials.map((m) => m.options.map((o) => item(o.item, o.amount))),
       outputs: Object.entries(recipe.itemRewards).map(([id, amount]) => item(id, amount)),
-      xp: Object.entries(recipe.xpRewards).map(([skill, amount]) => ({ skill: skillName(skill), amount })),
+      xp: Object.entries(recipe.xpRewards ?? {}).map(([skill, amount]) => ({ skill: skillName(skill), amount })),
       workRequired: recipe.workRequired,
       maxWorkEfficiency: recipe.maxWorkEfficiency,
     };
@@ -125,10 +124,10 @@ function groupDrops(drops: Drop[]): Map<string, ItemSource[]> {
 }
 
 function dropsFromActivity(
-  activity: Activity,
+  activity: ActivityDetail,
   locationsByActivity: Map<string, LocationSummary[]>,
   skillName: (id: string) => string,
-  tables: Map<string, LootTable>,
+  tables: Map<string, LootTableDetail>,
 ): Drop[] {
   const skills = skillLevels(activity.relatedSkillsList, activity.requirements ?? [], skillName);
   const locations = locationsByActivity.get(activity.id) ?? [];
@@ -137,7 +136,7 @@ function dropsFromActivity(
       kind: "activity",
       id: activity.id,
       name: activity.name,
-      icon: activity.icon,
+      icon: activity.icon ?? "",
       skills,
       lootType: lootTypeOf(ref),
       locations,
@@ -146,7 +145,7 @@ function dropsFromActivity(
   });
 }
 
-function dropsFromChest(chest: ItemDetail, foundBy: ItemSource[], tables: Map<string, LootTable>): Drop[] {
+function dropsFromChest(chest: ItemDetail, foundBy: ItemSource[], tables: Map<string, LootTableDetail>): Drop[] {
   const source: ChestSource = {
     kind: "chest",
     id: chest.id,
@@ -157,7 +156,7 @@ function dropsFromChest(chest: ItemDetail, foundBy: ItemSource[], tables: Map<st
   return (chest.tables ?? []).flatMap((ref) => itemsIn(ref, tables).map((itemId) => ({ itemId, source })));
 }
 
-function dropsFromShop(shop: Shop, locationsByBuilding: Map<string, LocationSummary[]>): Drop[] {
+function dropsFromShop(shop: ShopDetail, locationsByBuilding: Map<string, LocationSummary[]>): Drop[] {
   const source: ShopSource = {
     kind: "shop",
     id: shop.id,
@@ -168,14 +167,14 @@ function dropsFromShop(shop: Shop, locationsByBuilding: Map<string, LocationSumm
   return shop.soldItems.map((itemId) => ({ itemId, source }));
 }
 
-function itemsIn(ref: LootTableRef, tables: Map<string, LootTable>): string[] {
+function itemsIn(ref: LootTable, tables: Map<string, LootTableDetail>): string[] {
   return ref.tables.flatMap((id) => {
     const table = tables.get(id);
     return table ? lootTableItemIds(table) : [];
   });
 }
 
-function lootTypeOf(ref: LootTableRef): LootType {
+function lootTypeOf(ref: LootTable): LootType {
   return (ref.isPrimary ? "main" : (ref.type[0] ?? "secondary")) as LootType;
 }
 
@@ -198,7 +197,11 @@ function compareLevels(a: number, b: number): number {
   return a === b ? 0 : a - b;
 }
 
-function skillLevels(skillIds: string[], requirements: Requirement[], skillName: (id: string) => string): SkillLevel[] {
+function skillLevels(
+  skillIds: string[],
+  requirements: { type: string }[],
+  skillName: (id: string) => string,
+): SkillLevel[] {
   const levels = new Map(
     requirements.filter(isSkillLevelRequirement).map((r) => [r.requirement.skill, r.requirement.level]),
   );
@@ -207,13 +210,16 @@ function skillLevels(skillIds: string[], requirements: Requirement[], skillName:
 
 function serviceView(
   req: ServiceRequirement,
-  services: Service[],
+  services: ServiceDetail[],
   locationsByService: Map<string, LocationSummary[]>,
 ): RecipeService {
   const { tier } = req.requirement;
   const keywords = serviceKeywords(req);
   const offers = services
-    .filter((s) => meetsServiceTier(s.tier, tier) && keywords.every((k) => s.keywords.includes(k)))
+    .filter(
+      (s) =>
+        s.serviceType === "crafting" && meetsServiceTier(s.tier, tier) && keywords.every((k) => s.keywords.includes(k)),
+    )
     .flatMap((s) => (locationsByService.get(s.id) ?? []).map((location) => ({ ...location, tier: s.tier })));
 
   const lowestByLocation = new Map<string, RecipeLocation>();
@@ -229,9 +235,9 @@ function serviceView(
 }
 
 function indexLocations(
-  locations: Location[],
+  locations: LocationDetail[],
   regions: Map<string, string>,
-  keysOf: (location: Location) => string[] | undefined,
+  keysOf: (location: LocationDetail) => string[] | undefined,
 ): Map<string, LocationSummary[]> {
   const index = new Map<string, LocationSummary[]>();
   for (const location of [...locations].sort((a, b) => a.name.localeCompare(b.name))) {

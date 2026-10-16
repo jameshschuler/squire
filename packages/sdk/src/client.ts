@@ -1,4 +1,16 @@
-import type { ResourceName, VersionInfo } from "./types.js";
+import { HTTP_STATUS } from "./http-status.js";
+import type {
+  Detail,
+  Health,
+  ListItem,
+  MapList,
+  ResourceName,
+  SearchFilters,
+  SearchableResource,
+  VersionInfo,
+} from "./types.js";
+
+const RETRY_BASE_DELAY_MS = 500;
 
 /** Base URLs of the WalkScape Data API. Use `dev` while developing; it may change without warning. */
 export const ENVIRONMENTS = {
@@ -21,9 +33,6 @@ export interface ClientOptions {
   maxRetries?: number;
 }
 
-/** Field filters for `search`, e.g. `{ relatedSkills: "cooking" }`. */
-export type SearchParams = Record<string, string | number | boolean>;
-
 /**
  * A WalkScape Data API client. JSON responses are cached by ETag, so repeat requests for
  * unchanged data come back as cheap 304s.
@@ -31,15 +40,31 @@ export type SearchParams = Record<string, string | number | boolean>;
 export interface WalkScapeClient {
   /** Current game data version. It changes whenever the game data does, so poll this to know when to reload. */
   version(): Promise<VersionInfo>;
+  /** Server status and uptime. */
+  health(): Promise<Health>;
   /** Every entry of a resource, in its compact form (usually `id`, `name`, `icon`). */
-  list<T>(resource: ResourceName): Promise<T[]>;
+  list<R extends ResourceName>(resource: R): Promise<ListItem<R>[]>;
   /** One entry by id, in full. Throws `WalkScapeApiError` with status 404 when it doesn't exist. */
-  get<T>(resource: ResourceName, id: string): Promise<T>;
+  get<R extends ResourceName>(resource: R, id: string): Promise<Detail<R>>;
   /**
-   * Entries matching every field in `params`. Pass `detailed: true` for full entries instead of the
-   * compact form. Throws if `params` is empty, because the API rejects that.
+   * Entries matching every filter, in compact form. Throws if `filters` is empty, because the API
+   * rejects that.
    */
-  search<T>(resource: ResourceName, params: SearchParams, options?: { detailed?: boolean }): Promise<T[]>;
+  search<R extends SearchableResource>(
+    resource: R,
+    filters: SearchFilters<R>,
+    options?: { detailed?: false },
+  ): Promise<ListItem<R>[]>;
+  /** Entries matching every filter, in full. */
+  search<R extends SearchableResource>(
+    resource: R,
+    filters: SearchFilters<R>,
+    options: { detailed: true },
+  ): Promise<Detail<R>[]>;
+  /** The map images available from `map(name)`, with their sizes. */
+  maps(): Promise<MapList>;
+  /** One map image, e.g. `map("worldmap.png")`. Read it with `arrayBuffer()` or `blob()`. */
+  map(name: string): Promise<Response>;
   /** One icon image, e.g. `icon(item.icon)`. Read it with `arrayBuffer()` or `blob()`. */
   icon(path: string): Promise<Response>;
   /** Many icons in one request, as data URIs keyed by path (`null` when not found). Send at most 200 paths. */
@@ -74,7 +99,7 @@ interface CacheEntry {
  *
  * @example
  * const client = createClient({ apiKey: process.env.WALKSCAPE_API_KEY!, baseUrl: ENVIRONMENTS.dev });
- * const items = await client.list<CompactEntity>("items");
+ * const items = await client.list("items");
  */
 export function createClient(options: ClientOptions): WalkScapeClient {
   const baseUrl = (options.baseUrl ?? ENVIRONMENTS.prod).replace(/\/+$/, "");
@@ -91,12 +116,16 @@ export function createClient(options: ClientOptions): WalkScapeClient {
   async function send(path: string, request: SendOptions = {}): Promise<Response> {
     for (let attempt = 0; ; attempt++) {
       const res = await fetchFn(`${baseUrl}${path}`, { ...request, headers: headers(request.headers) });
-      if ((res.status === 429 || res.status >= 500) && attempt < maxRetries) {
+      if (
+        (res.status === HTTP_STATUS.TOO_MANY_REQUESTS || res.status >= HTTP_STATUS.INTERNAL_SERVER_ERROR) &&
+        attempt < maxRetries
+      ) {
         await sleep(retryDelayMs(res, attempt));
         continue;
       }
-      if (!res.ok && res.status !== 304) {
-        throw new WalkScapeApiError(res.status, path, await errorMessage(res));
+      if (!res.ok && res.status !== HTTP_STATUS.NOT_MODIFIED) {
+        const message = await errorMessage(res);
+        throw new WalkScapeApiError(res.status, path, message);
       }
       return res;
     }
@@ -105,7 +134,7 @@ export function createClient(options: ClientOptions): WalkScapeClient {
   async function getJson<T>(path: string): Promise<T> {
     const cached = cache.get(path);
     const res = await send(path, cached ? { headers: { "If-None-Match": cached.etag } } : {});
-    if (res.status === 304 && cached) {
+    if (res.status === HTTP_STATUS.NOT_MODIFIED && cached) {
       return cached.body as T;
     }
     const body = (await res.json()) as T;
@@ -116,20 +145,27 @@ export function createClient(options: ClientOptions): WalkScapeClient {
     return body;
   }
 
+  const search = (resource: string, filters: object, { detailed = false } = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(filters).flatMap(([k, v]): [string, string][] => (v === undefined ? [] : [[k, String(v)]])),
+    );
+    if (query.size === 0) {
+      throw new Error(`search(${resource}) needs at least one filter`);
+    }
+    if (detailed) {
+      query.set("detailed", "true");
+    }
+    return getJson(`/${resource}/search?${query}`);
+  };
+
   return {
-    version: () => getJson("/version"),
-    list: (resource) => getJson(`/${resource}`),
-    get: (resource, id) => getJson(`/${resource}/${encodeURIComponent(id)}`),
-    search: (resource, params, { detailed = false } = {}) => {
-      const query = new URLSearchParams(Object.entries(params).map(([k, v]): [string, string] => [k, String(v)]));
-      if (query.size === 0) {
-        throw new Error(`search(${resource}) needs at least one parameter`);
-      }
-      if (detailed) {
-        query.set("detailed", "true");
-      }
-      return getJson(`/${resource}/search?${query}`);
-    },
+    version: () => getJson("/version/"),
+    health: () => getJson("/health/"),
+    list: (resource) => getJson(`/${resource}/`),
+    get: (resource, id) => getJson(`/${resource}/id/${encodeURIComponent(id)}`),
+    search: search as WalkScapeClient["search"],
+    maps: () => getJson("/maps"),
+    map: (name) => send(`/maps/${encodeURIComponent(name)}`),
     icon: (path) => send(`/icons/${path.split("/").map(encodeURIComponent).join("/")}`),
     icons: async (paths) => {
       const res = await send("/icons/batch", {
@@ -148,10 +184,10 @@ function retryDelayMs(res: Response, attempt: number): number {
     return retryAfter * 1000;
   }
   const reset = /\bt=(\d+)/.exec(res.headers.get("RateLimit") ?? "")?.[1];
-  if (res.status === 429 && reset) {
+  if (res.status === HTTP_STATUS.TOO_MANY_REQUESTS && reset) {
     return Number(reset) * 1000;
   }
-  return 500 * 2 ** attempt;
+  return RETRY_BASE_DELAY_MS * 2 ** attempt;
 }
 
 async function errorMessage(res: Response): Promise<string> {

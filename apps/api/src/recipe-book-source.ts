@@ -1,5 +1,6 @@
 import type { FastifyBaseLogger } from "fastify";
-import { loadGameData, type WalkScapeClient } from "@jameshschuler/walkscape-sdk";
+import type { WalkScapeClient } from "@jameshschuler/walkscape-sdk";
+import { loadGameData } from "./game-data.js";
 import { buildRecipeBook, type RecipeBook } from "./recipe-book/index.js";
 
 const VERSION_CHECK_INTERVAL_MS = 5 * 60 * 1000;
@@ -24,7 +25,8 @@ export function createRecipeBookSource(
 
   async function load(): Promise<RecipeBook> {
     const startedAt = now();
-    const loaded = buildRecipeBook(await loadGameData(client));
+    const data = await loadGameData(client);
+    const loaded = buildRecipeBook(data);
     log.info({ version: loaded.version, recipes: loaded.recipes.length, ms: now() - startedAt }, "Loaded recipe book");
     onLoad?.(loaded);
     return loaded;

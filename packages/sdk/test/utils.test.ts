@@ -7,14 +7,14 @@ import {
   recipesMaking,
   recipesUsing,
   serviceKeywords,
-  type GameData,
   type LootTableDetail,
+  type RecipeDetail,
   type Requirement,
   type ServiceRequirement,
 } from "../src/index.js";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
-const data = sample as unknown as GameData;
+const data = sample as unknown as { recipes: RecipeDetail[] };
 const service = (requirement: ServiceRequirement["requirement"]): ServiceRequirement => ({
   type: "service",
   name: null,
@@ -52,6 +52,11 @@ describe("meetsServiceTier", () => {
     expect(meetsServiceTier("basic", "basic")).toBe(true);
     expect(meetsServiceTier("advanced", "basic")).toBe(true);
     expect(meetsServiceTier("basic", "advanced")).toBe(false);
+    expect(meetsServiceTier("expert", "basic")).toBe(true);
+  });
+
+  it("never meets a tier it doesn't know", () => {
+    expect(meetsServiceTier("expert", "master")).toBe(false);
   });
 });
 

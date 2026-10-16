@@ -36,11 +36,14 @@
   ],
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
+    "generate": "openapi-typescript https://tools-api.dev.walkscape.app/docs/openapi.json -o src/generated/openapi.ts --root-types --root-types-no-schema-prefix && node scripts/generate-search-values.mjs https://tools-api.dev.walkscape.app/docs/openapi.json src/generated/search-values.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
+    "ajv": "^8.20.0",
+    "openapi-typescript": "^7.13.0",
     "tsup": "^8.3.5",
     "vitest": "^5.0.4"
   }

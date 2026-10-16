@@ -1,9 +1,5 @@
-import {
-  WalkScapeApiError,
-  type GameData,
-  type ResourceName,
-  type WalkScapeClient,
-} from "@jameshschuler/walkscape-sdk";
+import { WalkScapeApiError, type ResourceName, type WalkScapeClient } from "@jameshschuler/walkscape-sdk";
+import type { GameData } from "../src/recipe-book/index.js";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
 export function fakeClient(version = "v1") {
@@ -17,6 +13,7 @@ export function fakeClient(version = "v1") {
     factions: data.factions,
     activities: data.activities,
     loot_tables: data.lootTables,
+    shops: data.shops,
   };
   const calls = { version: 0, list: 0, icon: 0, iconBatches: [] as number[] };
   const state = { version };
@@ -26,24 +23,27 @@ export function fakeClient(version = "v1") {
       calls.version++;
       return { version: state.version, details: { api: "", assets: "", locales: "" } };
     },
-    list: async <T>(resource: ResourceName) => {
+    health: async () => ({ status: "ok", uptime: 1 }),
+    list: async (resource) => {
       calls.list++;
-      return (resources[resource] ?? []) as T[];
+      return (resources[resource] ?? []) as never;
     },
-    get: async <T>(resource: ResourceName, id: string) => {
+    get: async (resource, id) => {
       const found = resources[resource]?.find((r) => r.id === id);
       if (!found) {
-        throw new WalkScapeApiError(404, `/${resource}/${id}`, "Not found");
+        throw new WalkScapeApiError(404, `/${resource}/id/${id}`, "Not found");
       }
-      return found as T;
+      return found as never;
     },
-    search: async <T>(resource: ResourceName, params: Record<string, unknown>) =>
+    search: (async (resource: ResourceName, filters: Record<string, unknown>) =>
       (resources[resource] ?? []).filter((entry) =>
-        Object.entries(params).every(([field, value]) => {
+        Object.entries(filters).every(([field, value]) => {
           const actual = (entry as Record<string, unknown>)[field];
           return Array.isArray(actual) ? actual.includes(value) : actual === value;
         }),
-      ) as T[],
+      )) as WalkScapeClient["search"],
+    maps: async () => ({ maps: [] }),
+    map: async () => new Response(new Uint8Array([1])),
     icon: async (path) => {
       calls.icon++;
       if (path.includes("missing")) {

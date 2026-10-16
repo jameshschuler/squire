@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import type { RecipeBook } from "../recipe-book/index.js";
+import { HTTP_STATUS } from "../http-status.js";
 import { encodeJson, preferredEncoding, type EncodedJson } from "../encoded-json.js";
 import type { RecipeBookSource } from "../recipe-book-source.js";
 
@@ -19,10 +20,11 @@ export function recipeRoutes(recipeBook: RecipeBookSource) {
       const etag = `"${book.schema}-${book.version}"`;
       reply.header("ETag", etag).header("Cache-Control", "no-cache").header("Vary", "Accept-Encoding");
       if (request.headers["if-none-match"] === etag) {
-        return reply.code(304).send();
+        return reply.code(HTTP_STATUS.NOT_MODIFIED).send();
       }
       const encoding = preferredEncoding(request.headers["accept-encoding"]);
-      const body = (await encodedBody(book))[encoding];
+      const encodings = await encodedBody(book);
+      const body = encodings[encoding];
       if (encoding !== "identity") {
         reply.header("Content-Encoding", encoding);
       }

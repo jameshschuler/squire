@@ -36,7 +36,7 @@ describe("GameDataProvider", () => {
       </GameDataProvider>,
     );
     expect(screen.getByText("loading")).toBeDefined();
-    expect(await screen.findByText("2 recipes")).toBeDefined();
+    await expect(screen.findByText("2 recipes")).resolves.toBeDefined();
   });
 
   it("reports a failed load", async () => {
@@ -46,7 +46,7 @@ describe("GameDataProvider", () => {
         <Probe />
       </GameDataProvider>,
     );
-    expect(await screen.findByText("Failed to load recipes (502)")).toBeDefined();
+    await expect(screen.findByText("Failed to load recipes (502)")).resolves.toBeDefined();
   });
 
   it("throws when used outside the provider", () => {

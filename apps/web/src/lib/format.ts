@@ -4,9 +4,9 @@ export function formatPercent(ratio: number): string {
   return `${Math.round(ratio * 100)}%`;
 }
 
-export function formatSteps(workRequired: number, maxWorkEfficiency: number): string {
+export function formatSteps(workRequired: number, maxWorkEfficiency: number | null): string {
   const baseSteps = `${workRequired} base steps`;
-  if (maxWorkEfficiency <= 1) {
+  if (maxWorkEfficiency === null || maxWorkEfficiency <= 1) {
     return baseSteps;
   }
   return `${baseSteps} · ${Math.ceil(workRequired / maxWorkEfficiency)} min steps`;

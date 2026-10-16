@@ -42,7 +42,7 @@ describe("createClient", () => {
     ]);
     const client = createClient({ apiKey: "k", fetch });
     await client.list("items");
-    expect(await client.list("items")).toEqual([{ id: "a" }]);
+    await expect(client.list("items")).resolves.toEqual([{ id: "a" }]);
     expect(requests[1]?.headers["If-None-Match"]).toBe('"v1"');
   });
 
@@ -92,6 +92,14 @@ describe("createClient", () => {
   it("rejects a search with no filters", () => {
     const { fetch } = fakeFetch([]);
     expect(() => createClient({ apiKey: "k", fetch }).search("recipes", {})).toThrow("needs at least one filter");
+  });
+
+  it("skips filters left undefined", async () => {
+    const { fetch, requests } = fakeFetch([json([])]);
+    const client = createClient({ apiKey: "k", fetch });
+    await client.search("items", { type: "material", quality: undefined });
+    expect(requests[0]?.url).toBe(`${ENVIRONMENTS.prod}/items/search?type=material`);
+    expect(() => client.search("items", { type: undefined })).toThrow("needs at least one filter");
   });
 
   it("sends true/false filters as strings", async () => {

@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildRecipeBook, type ItemSource } from "@squire/api/recipe-book";
-import type { GameData } from "@jameshschuler/walkscape-sdk";
+import { buildRecipeBook, type ItemSource, type GameData } from "@squire/api/recipe-book";
 import { CHESTS_FILTER, SHOPS_FILTER, materialFilters, rawMaterials, searchMaterials } from "@/lib/materials";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 

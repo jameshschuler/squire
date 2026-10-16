@@ -34,7 +34,7 @@ API (`.env`):
 
 Web: set `VITE_API_URL` at build time when the API is on a different domain. Leave it unset to call `/api` on the same domain.
 
-Set `WALKSCAPE_API_KEY` in your shell to also run the live API tests in `packages/sdk` and `apps/api`.
+Set `WALKSCAPE_API_KEY` in your shell to also run the live API tests (`*.live.test.ts`).
 
 ## Deploy (Render)
 

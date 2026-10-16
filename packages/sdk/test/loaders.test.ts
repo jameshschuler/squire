@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { loadAll, loadGameData, type ResourceName, type WalkScapeClient } from "../src/index.js";
+import { loadAll, type ResourceName, type WalkScapeClient } from "../src/index.js";
 
 type Entry = { id: string; full: boolean; canBeSold?: boolean };
 
@@ -7,15 +7,12 @@ function fakeClient(entries: Partial<Record<ResourceName, Entry[]>>) {
   const list = vi.fn(async (resource: ResourceName) => (entries[resource] ?? []).map(({ id }) => ({ id })));
   const get = vi.fn(async (resource: ResourceName, id: string) => entries[resource]!.find((e) => e.id === id));
   const search = vi.fn(async (resource: ResourceName, filters: Record<string, unknown>) =>
-    (entries[resource] ?? []).filter((e) =>
-      Object.entries(filters).every(([k, v]) => String(e[k as keyof Entry]) === String(v)),
-    ),
+    (entries[resource] ?? []).filter((e) => Object.entries(filters).every(([k, v]) => e[k as keyof Entry] === v)),
   );
   const client = {
     list,
     get,
     search,
-    version: async () => ({ version: "v1" }),
   } as unknown as WalkScapeClient;
   return { client, list, get, search };
 }
@@ -28,13 +25,13 @@ describe("loadAll", () => {
         { id: "token", full: true, canBeSold: false },
       ],
     });
-    expect(await loadAll(client, "items")).toEqual([
+    await expect(loadAll(client, "items")).resolves.toEqual([
       { id: "ore", full: true, canBeSold: true },
       { id: "token", full: true, canBeSold: false },
     ]);
     expect(search.mock.calls).toEqual([
-      ["items", { canBeSold: "true" }, { detailed: true }],
-      ["items", { canBeSold: "false" }, { detailed: true }],
+      ["items", { canBeSold: true }, { detailed: true }],
+      ["items", { canBeSold: false }, { detailed: true }],
     ]);
     expect(get).not.toHaveBeenCalled();
   });
@@ -46,7 +43,8 @@ describe("loadAll", () => {
         { id: "odd", full: true },
       ],
     });
-    expect((await loadAll(client, "items")).map((e) => e.id)).toEqual(["ore", "odd"]);
+    const items = await loadAll(client, "items");
+    expect(items.map((e) => e.id)).toEqual(["ore", "odd"]);
     expect(get.mock.calls).toEqual([["items", "odd"]]);
   });
 
@@ -57,7 +55,7 @@ describe("loadAll", () => {
         { id: "dog", full: true },
       ],
     });
-    expect(await loadAll(client, "pets")).toEqual([
+    await expect(loadAll(client, "pets")).resolves.toEqual([
       { id: "cat", full: true },
       { id: "dog", full: true },
     ]);
@@ -65,18 +63,15 @@ describe("loadAll", () => {
     expect(get).toHaveBeenCalledTimes(2);
   });
 
+  it("takes a resource whose list already holds full entries from the list alone", async () => {
+    const { client, search, get } = fakeClient({ skills: [{ id: "mining", full: true }] });
+    await expect(loadAll(client, "skills")).resolves.toEqual([{ id: "mining" }]);
+    expect(search).not.toHaveBeenCalled();
+    expect(get).not.toHaveBeenCalled();
+  });
+
   it("returns nothing for an empty resource", async () => {
     const { client } = fakeClient({});
-    expect(await loadAll(client, "pets")).toEqual([]);
-  });
-});
-
-describe("loadGameData", () => {
-  it("tags every resource it loads with the data version", async () => {
-    const { client } = fakeClient({ shops: [{ id: "stall", full: true }] });
-    const data = await loadGameData(client);
-    expect(data.version).toBe("v1");
-    expect(data.shops).toEqual([{ id: "stall", full: true }]);
-    expect(data.recipes).toEqual([]);
+    await expect(loadAll(client, "pets")).resolves.toEqual([]);
   });
 });

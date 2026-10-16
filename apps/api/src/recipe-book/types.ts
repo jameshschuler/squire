@@ -1,7 +1,7 @@
 import type { ServiceTier } from "@jameshschuler/walkscape-sdk";
 
 // Bump whenever the RecipeBook shape changes, so cached copies on devices refresh.
-export const RECIPE_BOOK_SCHEMA = 2;
+export const RECIPE_BOOK_SCHEMA = 3;
 
 export interface ItemSummary {
   id: string;
@@ -26,7 +26,7 @@ export interface RecipeLocation extends LocationSummary {
 
 export interface RecipeService {
   label: string;
-  tier: ServiceTier;
+  tier: string;
   locations: RecipeLocation[];
 }
 
@@ -45,8 +45,8 @@ export interface RecipeView {
   materials: RecipeItem[][];
   outputs: RecipeItem[];
   xp: { skill: string; amount: number }[];
-  workRequired: number;
-  maxWorkEfficiency: number;
+  workRequired: number | null;
+  maxWorkEfficiency: number | null;
 }
 
 export type LootType = "main" | "secondary" | "gem" | "birdNest" | "chestTable" | "collectible" | "petEgg";
