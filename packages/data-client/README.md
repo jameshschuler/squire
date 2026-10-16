@@ -46,7 +46,7 @@ The client itself also has:
 | Method                        | Returns                                                                         |
 | ----------------------------- | ------------------------------------------------------------------------------- |
 | `version()`                   | The current game data version. It changes whenever the data does.               |
-| `health()`                    | Server status and uptime.                                                       |
+| `health()`                    | Server status, uptime and data version.                                         |
 | `maps()` / `map(name)`        | The map images available, and one map image as a `Response`.                    |
 | `icon(path)` / `icons(paths)` | One icon image as a `Response`, or up to 200 icons in one request as data URIs. |
 

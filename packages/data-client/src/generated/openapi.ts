@@ -5055,7 +5055,7 @@ export interface paths {
         };
         /**
          * Health check
-         * @description Returns the current status and uptime of the API server.
+         * @description Returns the current status, uptime and data version of the API server. Does not require authentication.
          */
         get: {
             parameters: {
@@ -5080,6 +5080,11 @@ export interface paths {
                              * @example 3600
                              */
                             uptime?: number;
+                            /**
+                             * @description Combined API, asset and locale version hash
+                             * @example 1a2b3c4d
+                             */
+                            version?: string;
                         };
                     };
                 };
@@ -5312,7 +5317,7 @@ export interface components {
              * @enum {string}
              */
             type: "traveling";
-            requirement: Record<string, never>;
+            requirement: Record<string, unknown>;
         };
         ServiceRequirement: {
             name: string | null;
@@ -5788,7 +5793,7 @@ export interface components {
             /** @example pink_front.png */
             cardFrontBackgroundImage: string;
         };
-        AchievementDetail: components["schemas"]["AchievementListItem"] & Record<string, never>;
+        AchievementDetail: components["schemas"]["AchievementListItem"] & Record<string, unknown>;
         ActivityListItem: {
             /** @description Unique identifier for the activity */
             id: string;
@@ -5896,8 +5901,8 @@ export interface components {
              */
             type: "outpost" | "temple" | "fishingStore" | "generalStore" | "activityShop" | "marketStall" | "bank" | "tavern" | "house" | "castle" | "animalShelter" | "barber" | "clothingShop";
         };
-        CooldownListItem: components["schemas"]["Cooldown"] & Record<string, never>;
-        CooldownDetail: components["schemas"]["CooldownListItem"] & Record<string, never>;
+        CooldownListItem: components["schemas"]["Cooldown"] & Record<string, unknown>;
+        CooldownDetail: components["schemas"]["CooldownListItem"] & Record<string, unknown>;
         FactionListItem: {
             /** @example grand_duchy_of_trellin_erdwise */
             id: string;
@@ -6869,7 +6874,7 @@ export interface components {
             /** @description List of items granted by this reward */
             rewardItems: components["schemas"]["ItemReward"][];
         };
-        RewardDetail: components["schemas"]["RewardListItem"] & Record<string, never>;
+        RewardDetail: components["schemas"]["RewardListItem"] & Record<string, unknown>;
         RouteListItem: {
             /** @description Unique identifier for the route */
             id: string;
@@ -6892,7 +6897,7 @@ export interface components {
             /** @description IDs of the route paths associated with this route */
             paths?: string[];
         };
-        RouteDetail: components["schemas"]["RouteListItem"] & Record<string, never>;
+        RouteDetail: components["schemas"]["RouteListItem"] & Record<string, unknown>;
         RoutePathListItem: {
             /** @description Unique identifier for the route path */
             id: string;
@@ -6901,7 +6906,7 @@ export interface components {
             /** @description List of [longitude, latitude]/[x, y] pairs representing the route path's points */
             points: number[][];
         };
-        RoutePathDetail: components["schemas"]["RoutePathListItem"] & Record<string, never>;
+        RoutePathDetail: components["schemas"]["RoutePathListItem"] & Record<string, unknown>;
         ServiceListItem: {
             /** @description Unique identifier for the service */
             id: string;
@@ -7029,7 +7034,7 @@ export interface components {
             /** @description URL to the large icon image for the skill's type */
             typeIconBig: string;
         };
-        SkillDetail: components["schemas"]["SkillListItem"] & Record<string, never>;
+        SkillDetail: components["schemas"]["SkillListItem"] & Record<string, unknown>;
         StatListItem: {
             id: components["schemas"]["StatId"];
             /** @description Localized stat name */

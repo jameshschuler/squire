@@ -37,7 +37,7 @@ export type SearchFilters<R extends SearchableResource> = {
 /** The current game data version, from `version()`. */
 export type VersionInfo = JsonResponse<"/version/">;
 
-/** Server status and uptime, from `health()`. */
+/** Server status, uptime and data version, from `health()`. It doesn't need an API key. */
 export type Health = JsonResponse<"/health/">;
 
 /** The map images the API serves, from `maps()`. */

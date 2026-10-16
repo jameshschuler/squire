@@ -19,6 +19,8 @@ const BULK_FILTERS: { [R in keyof typeof SEARCH_VALUES]?: keyof (typeof SEARCH_V
   shops: "onlyPurchaseSellingListItems",
 };
 
+type Entry = { id: string };
+
 export interface Endpoints {
   list(resource: ApiResource): Promise<unknown[]>;
   get(resource: ApiResource, id: string): Promise<unknown>;
@@ -26,14 +28,13 @@ export interface Endpoints {
 }
 
 export async function loadAllEntries(endpoints: Endpoints, resource: ApiResource): Promise<unknown[]> {
-  type Entry = { id: string };
   if (LISTS_WITH_FULL_ENTRIES.has(resource)) {
-    const entries = await endpoints.list(resource);
-    return entries;
+    return endpoints.list(resource);
   }
   const [compact, batches] = await Promise.all([endpoints.list(resource), bulkSearch(endpoints, resource)]);
   const found = new Map((batches.flat() as Entry[]).map((entry) => [entry.id, entry]));
-  const missing = (compact as { id: string }[]).map((entry) => entry.id).filter((id) => !found.has(id));
+  const ids = new Set((compact as Entry[]).map((entry) => entry.id));
+  const missing = [...ids].filter((id) => !found.has(id));
   const fetched = (await mapPool(missing, (id) => endpoints.get(resource, id))) as Entry[];
   for (const entry of fetched) {
     found.set(entry.id, entry);

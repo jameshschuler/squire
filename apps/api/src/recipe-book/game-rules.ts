@@ -24,9 +24,7 @@ export function getServiceKeywords(requirement: ServiceRequirement): string[] {
 }
 
 export function meetsServiceTier(serviceTier: ServiceTier, requiredTier: string): boolean {
-  const requiredRank = SERVICE_TIERS.indexOf(requiredTier as ServiceTier);
-  const isKnownTier = requiredRank !== -1;
-  return isKnownTier && SERVICE_TIERS.indexOf(serviceTier) >= requiredRank;
+  return SERVICE_TIERS.indexOf(serviceTier) >= SERVICE_TIERS.indexOf(requiredTier as ServiceTier);
 }
 
 export function getLootTableItemIds(table: LootTableDetail): string[] {

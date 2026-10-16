@@ -59,6 +59,19 @@ describe("createClient", () => {
     await expect(pending).resolves.toEqual({ version: "x" });
   });
 
+  it("backs off normally when the rate limit says it resets in 0 seconds", async () => {
+    vi.useFakeTimers();
+    const { fetch, requests } = fakeFetch([
+      json({ error: "Too many requests" }, 429, { RateLimit: '"120-in-1min"; r=0; t=0' }),
+      json({ version: "x" }),
+    ]);
+    const pending = createClient({ apiKey: "k", fetch }).version();
+    await vi.advanceTimersByTimeAsync(499);
+    expect(requests).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(1);
+    await expect(pending).resolves.toEqual({ version: "x" });
+  });
+
   it("gives up after maxRetries", async () => {
     const { fetch } = fakeFetch([json({ error: "down" }, 503), json({ error: "down" }, 503)]);
     await expect(createClient({ apiKey: "k", fetch, maxRetries: 1 }).version()).rejects.toMatchObject({ status: 503 });
@@ -91,9 +104,9 @@ describe("createClient", () => {
     );
   });
 
-  it("rejects a search with no filters", () => {
+  it("rejects a search with no filters", async () => {
     const { fetch } = fakeFetch([]);
-    expect(() => createClient({ apiKey: "k", fetch }).recipes.search({})).toThrow("needs at least one filter");
+    await expect(createClient({ apiKey: "k", fetch }).recipes.search({})).rejects.toThrow("needs at least one filter");
   });
 
   it("skips filters left undefined", async () => {
@@ -101,7 +114,7 @@ describe("createClient", () => {
     const client = createClient({ apiKey: "k", fetch });
     await client.items.search({ type: "material", quality: undefined });
     expect(requests[0]?.url).toBe(`${ENVIRONMENTS.prod}/items/search?type=material`);
-    expect(() => client.items.search({ type: undefined })).toThrow("needs at least one filter");
+    await expect(client.items.search({ type: undefined })).rejects.toThrow("needs at least one filter");
   });
 
   it("sends true/false filters as strings", async () => {

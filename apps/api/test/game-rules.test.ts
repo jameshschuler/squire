@@ -57,8 +57,8 @@ describe("meetsServiceTier", () => {
     expect(meetsServiceTier("expert", "basic")).toBe(true);
   });
 
-  it("never meets a tier it doesn't know", () => {
-    expect(meetsServiceTier("expert", "master")).toBe(false);
+  it("lets any service meet a required tier it doesn't know, so the recipe still lists places to make it", () => {
+    expect(meetsServiceTier("basic", "master")).toBe(true);
   });
 });
 

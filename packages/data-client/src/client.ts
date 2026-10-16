@@ -59,7 +59,7 @@ export interface ResourceClient<R extends ResourceName> {
 /** The endpoints of a resource that has search filters, e.g. `client.items`. */
 export interface SearchableResourceClient<R extends SearchableResource> extends ResourceClient<R> {
   /**
-   * Entries matching every filter, in compact form. Throws if `filters` is empty, because the API
+   * Entries matching every filter, in compact form. Rejects if `filters` is empty, because the API
    * rejects that.
    */
   search(filters: SearchFilters<R>, options?: { detailed?: false }): Promise<ListItem<R>[]>;
@@ -82,7 +82,7 @@ export type ResourceClients = {
 export interface WalkScapeClient extends ResourceClients {
   /** Current game data version. It changes whenever the game data does, so poll this to know when to reload. */
   version(): Promise<VersionInfo>;
-  /** Server status and uptime. */
+  /** Server status, uptime and data version. */
   health(): Promise<Health>;
   /** The map images available from `map(name)`, with their sizes. */
   maps(): Promise<MapList>;
@@ -171,7 +171,7 @@ export function createClient(options: ClientOptions): WalkScapeClient {
   const endpoints: Endpoints = {
     list: (resource) => getJson(`/${resource}/`),
     get: (resource, id) => getJson(`/${resource}/id/${encodeURIComponent(id)}`),
-    search: (resource, filters, detailed) => {
+    search: async (resource, filters, detailed) => {
       const query = new URLSearchParams(
         Object.entries(filters).flatMap(([k, v]): [string, string][] => (v === undefined ? [] : [[k, String(v)]])),
       );
@@ -219,9 +219,9 @@ function retryDelayMs(res: Response, attempt: number): number {
   if (retryAfter > 0) {
     return retryAfter * 1000;
   }
-  const reset = /\bt=(\d+)/.exec(res.headers.get("RateLimit") ?? "")?.[1];
-  if (res.status === HTTP_STATUS.TOO_MANY_REQUESTS && reset) {
-    return Number(reset) * 1000;
+  const resetSeconds = Number(/\bt=(\d+)/.exec(res.headers.get("RateLimit") ?? "")?.[1]);
+  if (res.status === HTTP_STATUS.TOO_MANY_REQUESTS && resetSeconds > 0) {
+    return resetSeconds * 1000;
   }
   return RETRY_BASE_DELAY_MS * 2 ** attempt;
 }
