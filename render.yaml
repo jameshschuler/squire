@@ -29,6 +29,8 @@ services:
     buildFilter:
       paths:
         - apps/web/**
+        - apps/api/src/recipe-book/**
+        - apps/api/package.json
         - packages/sdk/**
         - pnpm-lock.yaml
     envVars:

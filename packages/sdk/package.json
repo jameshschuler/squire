@@ -1,12 +1,12 @@
 {
   "name": "@jameshschuler/walkscape-sdk",
   "version": "0.0.1",
-  "description": "Unofficial TypeScript client for the WalkScape Data API, with recipe helpers",
+  "description": "Unofficial, fully typed TypeScript client for the WalkScape Data API",
   "keywords": [
     "walkscape",
     "api",
     "sdk",
-    "recipes"
+    "game-data"
   ],
   "repository": {
     "type": "git",

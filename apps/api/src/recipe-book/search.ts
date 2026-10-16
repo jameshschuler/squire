@@ -29,7 +29,7 @@ export function searchRecipes(recipes: RecipeView[], query: string, options: Rec
 export function words(text: string): string[] {
   return text
     .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .split(/[^a-z0-9]+/)
     .filter(Boolean);

@@ -19,6 +19,22 @@ export default tseslint.config(
     languageOptions: { globals: globals.node },
   },
   {
+    files: ["apps/api/src/recipe-book/**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["node:*", "fastify", "@fastify/*", "../*"],
+              message: "The web app imports recipe-book, so keep it free of server code.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ["apps/web/**/*.{ts,tsx}"],
     languageOptions: { globals: globals.browser },
     plugins: { "react-hooks": reactHooks, "react-refresh": reactRefresh },

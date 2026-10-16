@@ -9,6 +9,7 @@ import {
   recipesMaking,
   recipesUsing,
   searchRecipes,
+  words,
 } from "../src/recipe-book/index.js";
 import type { GameData, ServiceTier } from "@jameshschuler/walkscape-sdk";
 import sample from "../../../fixtures/api/gamedata-sample.json";
@@ -373,5 +374,17 @@ describe("lowestSkillLevels", () => {
 
   it("returns nothing for no skills", () => {
     expect(lowestSkillLevels([])).toEqual([]);
+  });
+});
+
+describe("words", () => {
+  it.each([
+    ["Smelt a gold bar", ["smelt", "a", "gold", "bar"]],
+    ["Pâté en croûte", ["pate", "en", "croute"]],
+    ["fish-bone, (cooked)!", ["fish", "bone", "cooked"]],
+    ["", []],
+    ["  --  ", []],
+  ])("splits %j", (text, expected) => {
+    expect(words(text)).toEqual(expected);
   });
 });
