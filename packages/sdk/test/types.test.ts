@@ -1,10 +1,13 @@
 import { describe, expectTypeOf, it } from "vitest";
+import { RESOURCES, SEARCHABLE_RESOURCES } from "../src/generated/resources.js";
 import {
   SERVICE_TIERS,
   type Detail,
   type ItemDetail,
   type ItemListItem,
   type ListItem,
+  type LootTableDetail,
+  type ResourceName,
   type SearchFilters,
   type SearchableResource,
   type ServiceTier,
@@ -12,6 +15,17 @@ import {
 } from "../src/index.js";
 
 describe("types", () => {
+  it("generates the same resource lists the spec's types describe", () => {
+    expectTypeOf<(typeof RESOURCES)[number]>().toEqualTypeOf<ResourceName>();
+    expectTypeOf<(typeof SEARCHABLE_RESOURCES)[number]>().toEqualTypeOf<SearchableResource>();
+  });
+
+  it("only gives search to resources with filters", () => {
+    expectTypeOf<WalkScapeClient["pets"]>().not.toHaveProperty("search");
+    expectTypeOf<WalkScapeClient["items"]>().toHaveProperty("search");
+    expectTypeOf<WalkScapeClient["lootTables"]["get"]>().returns.resolves.toEqualTypeOf<LootTableDetail>();
+  });
+
   it("lists every service tier the API knows", () => {
     expectTypeOf<(typeof SERVICE_TIERS)[number]>().toEqualTypeOf<ServiceTier>();
   });
@@ -23,13 +37,11 @@ describe("types", () => {
 
   it("returns each resource's own shapes from the client", () => {
     const check = (client: WalkScapeClient) => {
-      expectTypeOf(client.list("items")).resolves.toEqualTypeOf<ItemListItem[]>();
-      expectTypeOf(client.get("items", "gold_ore")).resolves.toEqualTypeOf<ItemDetail>();
-      expectTypeOf(client.loadAll("items")).resolves.toEqualTypeOf<ItemDetail[]>();
-      expectTypeOf(client.search("items", { type: "material" })).resolves.toEqualTypeOf<ItemListItem[]>();
-      expectTypeOf(client.search("items", { canBeSold: true }, { detailed: true })).resolves.toEqualTypeOf<
-        ItemDetail[]
-      >();
+      expectTypeOf(client.items.list()).resolves.toEqualTypeOf<ItemListItem[]>();
+      expectTypeOf(client.items.get("gold_ore")).resolves.toEqualTypeOf<ItemDetail>();
+      expectTypeOf(client.items.loadAll()).resolves.toEqualTypeOf<ItemDetail[]>();
+      expectTypeOf(client.items.search({ type: "material" })).resolves.toEqualTypeOf<ItemListItem[]>();
+      expectTypeOf(client.items.search({ canBeSold: true }, { detailed: true })).resolves.toEqualTypeOf<ItemDetail[]>();
     };
     expectTypeOf(check).toBeFunction();
   });

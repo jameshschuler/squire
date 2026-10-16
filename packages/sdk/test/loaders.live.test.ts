@@ -16,13 +16,13 @@ describe.skipIf(!apiKey)("client.loadAll against the live dev API", () => {
     };
     const client = createClient({ apiKey: apiKey!, baseUrl: ENVIRONMENTS.dev, fetch: countingFetch });
     const [recipes, activities, lootTables] = await Promise.all([
-      client.loadAll("recipes"),
-      client.loadAll("activities"),
-      client.loadAll("loot_tables"),
+      client.recipes.loadAll(),
+      client.activities.loadAll(),
+      client.lootTables.loadAll(),
     ]);
     const loadRequests = requests;
 
-    const [recipeList, activityList] = await Promise.all([client.list("recipes"), client.list("activities")]);
+    const [recipeList, activityList] = await Promise.all([client.recipes.list(), client.activities.list()]);
     expect(recipes).toHaveLength(recipeList.length);
     expect(activities).toHaveLength(activityList.length);
     const tables = new Map(lootTables.map((t) => [t.id, t]));

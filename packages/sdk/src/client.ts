@@ -1,10 +1,13 @@
 import { HTTP_STATUS } from "./http-status.js";
-import { loadAllEntries } from "./loaders.js";
+import { RESOURCES, SEARCHABLE_RESOURCES } from "./generated/resources.js";
+import { loadAllEntries, type Endpoints } from "./loaders.js";
+import { resourceKey } from "./resource-keys.js";
 import type {
   Detail,
   Health,
   ListItem,
   MapList,
+  ResourceKey,
   ResourceName,
   SearchFilters,
   SearchableResource,
@@ -34,45 +37,53 @@ export interface ClientOptions {
   maxRetries?: number;
 }
 
-/**
- * A WalkScape Data API client. JSON responses are cached by ETag, so repeat requests for
- * unchanged data come back as cheap 304s.
- */
-export interface WalkScapeClient {
-  /** Current game data version. It changes whenever the game data does, so poll this to know when to reload. */
-  version(): Promise<VersionInfo>;
-  /** Server status and uptime. */
-  health(): Promise<Health>;
-  /** Every entry of a resource, in its compact form (usually `id`, `name`, `icon`). */
-  list<R extends ResourceName>(resource: R): Promise<ListItem<R>[]>;
+/** One resource's endpoints, e.g. `client.pets`. */
+export interface ResourceClient<R extends ResourceName> {
+  /** Every entry, in compact form (usually `id`, `name`, `icon`). */
+  list(): Promise<ListItem<R>[]>;
   /** One entry by id, in full. Throws `WalkScapeApiError` with status 404 when it doesn't exist. */
-  get<R extends ResourceName>(resource: R, id: string): Promise<Detail<R>>;
+  get(id: string): Promise<Detail<R>>;
+  /**
+   * Every entry, in full. Some resources' lists already hold full entries, so they take one request.
+   * Others use a few bulk searches where the API allows them, then fetch anything those missed one at
+   * a time. Resources without a usable search filter (such as `pfpOptionGroups`), or whose filter
+   * misses many entries (`keywords`), take up to one request per entry, which can mean a minute or two
+   * under the rate limit of 120 requests a minute.
+   *
+   * @example
+   * const items = await client.items.loadAll(); // ItemDetail[], in 3 requests
+   */
+  loadAll(): Promise<Detail<R>[]>;
+}
+
+/** The endpoints of a resource that has search filters, e.g. `client.items`. */
+export interface SearchableResourceClient<R extends SearchableResource> extends ResourceClient<R> {
   /**
    * Entries matching every filter, in compact form. Throws if `filters` is empty, because the API
    * rejects that.
    */
-  search<R extends SearchableResource>(
-    resource: R,
-    filters: SearchFilters<R>,
-    options?: { detailed?: false },
-  ): Promise<ListItem<R>[]>;
+  search(filters: SearchFilters<R>, options?: { detailed?: false }): Promise<ListItem<R>[]>;
   /** Entries matching every filter, in full. */
-  search<R extends SearchableResource>(
-    resource: R,
-    filters: SearchFilters<R>,
-    options: { detailed: true },
-  ): Promise<Detail<R>[]>;
-  /**
-   * Every entry of a resource, in full. Some resources' lists already hold full entries, so they take
-   * one request. Others use a few bulk searches where the API allows them, then fetch anything those
-   * missed one at a time. Resources without a usable search filter (such as `pfp_option_groups`), or
-   * whose filter misses many entries (`keywords`), take up to one request per entry, which can mean a
-   * minute or two under the rate limit of 120 requests a minute.
-   *
-   * @example
-   * const items = await client.loadAll("items"); // ItemDetail[], in 3 requests
-   */
-  loadAll<R extends ResourceName>(resource: R): Promise<Detail<R>[]>;
+  search(filters: SearchFilters<R>, options: { detailed: true }): Promise<Detail<R>[]>;
+}
+
+/**
+ * One property per resource, in camelCase: `client.items`, `client.lootTables`, `client.routePaths`.
+ * Only resources with search filters have `search`.
+ */
+export type ResourceClients = {
+  [R in ResourceName as ResourceKey<R>]: R extends SearchableResource ? SearchableResourceClient<R> : ResourceClient<R>;
+};
+
+/**
+ * A WalkScape Data API client. JSON responses are cached by ETag, so repeat requests for
+ * unchanged data come back as cheap 304s.
+ */
+export interface WalkScapeClient extends ResourceClients {
+  /** Current game data version. It changes whenever the game data does, so poll this to know when to reload. */
+  version(): Promise<VersionInfo>;
+  /** Server status and uptime. */
+  health(): Promise<Health>;
   /** The map images available from `map(name)`, with their sizes. */
   maps(): Promise<MapList>;
   /** One map image, e.g. `map("worldmap.png")`. Read it with `arrayBuffer()` or `blob()`. */
@@ -111,7 +122,7 @@ interface CacheEntry {
  *
  * @example
  * const client = createClient({ apiKey: process.env.WALKSCAPE_API_KEY!, baseUrl: ENVIRONMENTS.dev });
- * const items = await client.list("items");
+ * const items = await client.items.list();
  */
 export function createClient(options: ClientOptions): WalkScapeClient {
   const baseUrl = (options.baseUrl ?? ENVIRONMENTS.prod).replace(/\/+$/, "");
@@ -157,26 +168,38 @@ export function createClient(options: ClientOptions): WalkScapeClient {
     return body;
   }
 
-  const search = (resource: string, filters: object, { detailed = false } = {}) => {
-    const query = new URLSearchParams(
-      Object.entries(filters).flatMap(([k, v]): [string, string][] => (v === undefined ? [] : [[k, String(v)]])),
-    );
-    if (query.size === 0) {
-      throw new Error(`search(${resource}) needs at least one filter`);
-    }
-    if (detailed) {
-      query.set("detailed", "true");
-    }
-    return getJson(`/${resource}/search?${query}`);
-  };
-
-  const client: WalkScapeClient = {
-    version: () => getJson("/version/"),
-    health: () => getJson("/health/"),
+  const endpoints: Endpoints = {
     list: (resource) => getJson(`/${resource}/`),
     get: (resource, id) => getJson(`/${resource}/id/${encodeURIComponent(id)}`),
-    search: search as WalkScapeClient["search"],
-    loadAll: (resource) => loadAllEntries(client, resource),
+    search: (resource, filters, detailed) => {
+      const query = new URLSearchParams(
+        Object.entries(filters).flatMap(([k, v]): [string, string][] => (v === undefined ? [] : [[k, String(v)]])),
+      );
+      if (query.size === 0) {
+        throw new Error(`${resourceKey(resource)}.search() needs at least one filter`);
+      }
+      if (detailed) {
+        query.set("detailed", "true");
+      }
+      return getJson(`/${resource}/search?${query}`);
+    },
+  };
+  const searchable = new Set<ResourceName>(SEARCHABLE_RESOURCES);
+  const resourceClient = (resource: ResourceName) => ({
+    list: () => endpoints.list(resource),
+    get: (id: string) => endpoints.get(resource, id),
+    loadAll: () => loadAllEntries(endpoints, resource),
+    ...(searchable.has(resource) && {
+      search: (filters: object, { detailed = false } = {}) =>
+        endpoints.search(resource as SearchableResource, filters, detailed),
+    }),
+  });
+  const resources = Object.fromEntries(RESOURCES.map((resource) => [resourceKey(resource), resourceClient(resource)]));
+
+  return {
+    ...(resources as unknown as ResourceClients),
+    version: () => getJson("/version/"),
+    health: () => getJson("/health/"),
     maps: () => getJson("/maps"),
     map: (name) => send(`/maps/${encodeURIComponent(name)}`),
     icon: (path) => send(`/icons/${path.split("/").map(encodeURIComponent).join("/")}`),
@@ -189,7 +212,6 @@ export function createClient(options: ClientOptions): WalkScapeClient {
       return (await res.json()) as Record<string, string | null>;
     },
   };
-  return client;
 }
 
 function retryDelayMs(res: Response, attempt: number): number {

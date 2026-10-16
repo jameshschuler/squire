@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import type { ResourceName, WalkScapeClient } from "../src/index.js";
-import { loadAllEntries } from "../src/loaders.js";
+import type { ResourceName } from "../src/index.js";
+import { loadAllEntries, type Endpoints } from "../src/loaders.js";
 
 type Entry = { id: string; full: boolean; canBeSold?: boolean };
 
@@ -10,11 +10,7 @@ function fakeClient(entries: Partial<Record<ResourceName, Entry[]>>) {
   const search = vi.fn(async (resource: ResourceName, filters: Record<string, unknown>) =>
     (entries[resource] ?? []).filter((e) => Object.entries(filters).every(([k, v]) => e[k as keyof Entry] === v)),
   );
-  const client = {
-    list,
-    get,
-    search,
-  } as unknown as WalkScapeClient;
+  const client: Endpoints = { list, get, search };
   return { client, list, get, search };
 }
 
@@ -31,8 +27,8 @@ describe("loadAllEntries", () => {
       { id: "token", full: true, canBeSold: false },
     ]);
     expect(search.mock.calls).toEqual([
-      ["items", { canBeSold: true }, { detailed: true }],
-      ["items", { canBeSold: false }, { detailed: true }],
+      ["items", { canBeSold: true }, true],
+      ["items", { canBeSold: false }, true],
     ]);
     expect(get).not.toHaveBeenCalled();
   });

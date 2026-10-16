@@ -11,6 +11,13 @@ type JsonResponse<P extends keyof paths> = paths[P]["get"] extends {
 /** Resources the Data API serves, e.g. `"items"` or `"recipes"`. Each supports `list` and `get`. */
 export type ResourceName = { [P in keyof paths]: P extends `/${infer R}/id/{id}` ? R : never }[keyof paths];
 
+type CamelCase<S extends string> = S extends `${infer Head}_${infer Tail}`
+  ? `${Head}${Capitalize<CamelCase<Tail>>}`
+  : S;
+
+/** The client property for a resource: `"loot_tables"` is `client.lootTables`. */
+export type ResourceKey<R extends ResourceName> = CamelCase<R>;
+
 /** An entry in its compact form (usually `id`, `name` and `icon`), as `list` and plain `search` return it. */
 export type ListItem<R extends ResourceName> = JsonResponse<`/${R}/`> extends (infer T)[] ? T : never;
 

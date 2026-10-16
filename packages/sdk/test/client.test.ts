@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ENVIRONMENTS, WalkScapeApiError, createClient, type WalkScapeClient } from "../src/index.js";
+import { RESOURCES } from "../src/generated/resources.js";
+import { resourceKey } from "../src/resource-keys.js";
 
 type Reply = () => Response;
 
@@ -28,7 +30,7 @@ afterEach(() => {
 describe("createClient", () => {
   it("sends the bearer key to the configured base URL", async () => {
     const { fetch, requests } = fakeFetch([json([])]);
-    await createClient({ apiKey: "k", baseUrl: ENVIRONMENTS.dev, fetch }).list("items");
+    await createClient({ apiKey: "k", baseUrl: ENVIRONMENTS.dev, fetch }).items.list();
     expect(requests[0]).toEqual({
       url: "https://tools-api-dev.dev.walkscape.app/items/",
       headers: { Authorization: "Bearer k" },
@@ -41,8 +43,8 @@ describe("createClient", () => {
       () => new Response(null, { status: 304 }),
     ]);
     const client = createClient({ apiKey: "k", fetch });
-    await client.list("items");
-    await expect(client.list("items")).resolves.toEqual([{ id: "a" }]);
+    await client.items.list();
+    await expect(client.items.list()).resolves.toEqual([{ id: "a" }]);
     expect(requests[1]?.headers["If-None-Match"]).toBe('"v1"');
   });
 
@@ -65,7 +67,7 @@ describe("createClient", () => {
   it("throws WalkScapeApiError with the API's message on 401", async () => {
     const { fetch } = fakeFetch([json({ error: "Unauthorized" }, 401)]);
     const error = await createClient({ apiKey: "bad", fetch })
-      .list("items")
+      .items.list()
       .catch((e: unknown) => e);
     expect(error).toBeInstanceOf(WalkScapeApiError);
     expect((error as WalkScapeApiError).message).toBe("401 /items/: Unauthorized");
@@ -73,7 +75,7 @@ describe("createClient", () => {
 
   it("builds detailed searches", async () => {
     const { fetch, requests } = fakeFetch([json([])]);
-    await createClient({ apiKey: "k", fetch }).search("recipes", { relatedSkills: "cooking" }, { detailed: true });
+    await createClient({ apiKey: "k", fetch }).recipes.search({ relatedSkills: "cooking" }, { detailed: true });
     expect(requests[0]?.url).toBe(`${ENVIRONMENTS.prod}/recipes/search?relatedSkills=cooking&detailed=true`);
   });
 
@@ -91,26 +93,58 @@ describe("createClient", () => {
 
   it("rejects a search with no filters", () => {
     const { fetch } = fakeFetch([]);
-    expect(() => createClient({ apiKey: "k", fetch }).search("recipes", {})).toThrow("needs at least one filter");
+    expect(() => createClient({ apiKey: "k", fetch }).recipes.search({})).toThrow("needs at least one filter");
   });
 
   it("skips filters left undefined", async () => {
     const { fetch, requests } = fakeFetch([json([])]);
     const client = createClient({ apiKey: "k", fetch });
-    await client.search("items", { type: "material", quality: undefined });
+    await client.items.search({ type: "material", quality: undefined });
     expect(requests[0]?.url).toBe(`${ENVIRONMENTS.prod}/items/search?type=material`);
-    expect(() => client.search("items", { type: undefined })).toThrow("needs at least one filter");
+    expect(() => client.items.search({ type: undefined })).toThrow("needs at least one filter");
   });
 
   it("sends true/false filters as strings", async () => {
     const { fetch, requests } = fakeFetch([json([])]);
-    await createClient({ apiKey: "k", fetch }).search("items", { canBeSold: false, type: "material" });
+    await createClient({ apiKey: "k", fetch }).items.search({ canBeSold: false, type: "material" });
     expect(requests[0]?.url).toBe(`${ENVIRONMENTS.prod}/items/search?canBeSold=false&type=material`);
+  });
+
+  it("has a camelCase namespace for every resource, with search only where the API has filters", () => {
+    const client = createClient({ apiKey: "k", fetch: fakeFetch([]).fetch }) as unknown as Record<
+      string,
+      Record<string, unknown>
+    >;
+    const unsearchable = ["globalVariables", "jobBoards", "pets", "pfpOptionGroups", "routePaths", "terrainModifiers"];
+    const namespaces = [
+      ...["abilities", "achievements", "activities", "buildings", "cooldowns", "factions", "items", "keywords"],
+      ...["locations", "lootTables", "pfpOptions", "recipes", "rewards", "routes", "services", "shops", "skills"],
+      ...["stats", ...unsearchable],
+    ];
+    expect(namespaces).toHaveLength(RESOURCES.length);
+    for (const key of namespaces) {
+      const methods = unsearchable.includes(key) ? ["get", "list", "loadAll"] : ["get", "list", "loadAll", "search"];
+      expect(Object.keys(client[key] ?? {}).sort(), key).toEqual(methods);
+    }
+  });
+
+  it.each([
+    ["items", "items"],
+    ["loot_tables", "lootTables"],
+    ["pfp_option_groups", "pfpOptionGroups"],
+  ] as const)("names %s as %s", (resource, key) => {
+    expect(resourceKey(resource)).toBe(key);
+  });
+
+  it("names multi-word resources in camelCase and calls their snake_case paths", async () => {
+    const { fetch, requests } = fakeFetch([json([])]);
+    await createClient({ apiKey: "k", fetch }).lootTables.list();
+    expect(requests[0]?.url).toBe(`${ENVIRONMENTS.prod}/loot_tables/`);
   });
 
   it("loads a whole resource through loadAll", async () => {
     const { fetch, requests } = fakeFetch([json([{ id: "mining", name: "Mining" }])]);
-    const skills = await createClient({ apiKey: "k", fetch }).loadAll("skills");
+    const skills = await createClient({ apiKey: "k", fetch }).skills.loadAll();
     expect(skills).toEqual([{ id: "mining", name: "Mining" }]);
     expect(requests.map((r) => r.url)).toEqual([`${ENVIRONMENTS.prod}/skills/`]);
   });
@@ -118,7 +152,7 @@ describe("createClient", () => {
   it.each([
     ["version", (c: WalkScapeClient) => c.version(), "/version/"],
     ["health", (c: WalkScapeClient) => c.health(), "/health/"],
-    ["get", (c: WalkScapeClient) => c.get("items", "gold ore"), "/items/id/gold%20ore"],
+    ["get", (c: WalkScapeClient) => c.items.get("gold ore"), "/items/id/gold%20ore"],
     ["maps", (c: WalkScapeClient) => c.maps(), "/maps"],
     ["map", (c: WalkScapeClient) => c.map("world map.png"), "/maps/world%20map.png"],
   ])("calls the documented path for %s", async (_name, call, path) => {

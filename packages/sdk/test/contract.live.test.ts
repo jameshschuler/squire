@@ -3,6 +3,7 @@ import { Ajv2019 } from "ajv/dist/2019.js";
 import { describe, expect, it } from "vitest";
 import { ENVIRONMENTS, createClient, type ResourceName } from "../src/index.js";
 import { LISTS_WITH_FULL_ENTRIES } from "../src/full-lists.js";
+import { resourceKey } from "../src/resource-keys.js";
 
 const apiKey = process.env.WALKSCAPE_API_KEY;
 const SAMPLE_SIZE = 10;
@@ -68,11 +69,15 @@ describe.skipIf(!apiKey)("live dev API matches its OpenAPI spec", () => {
     };
 
     for (const resource of resources as ResourceName[]) {
-      const list = await client.list(resource);
+      const endpoints = client[resourceKey(resource)] as unknown as {
+        list(): Promise<{ id: string }[]>;
+        get(id: string): Promise<unknown>;
+      };
+      const list = await endpoints.list();
       check(`${resource} list`, responseSchema(`/${resource}/`), list);
-      for (const listed of (list as { id: string }[]).slice(0, SAMPLE_SIZE)) {
+      for (const listed of list.slice(0, SAMPLE_SIZE)) {
         const { id } = listed;
-        const entry = await client.get(resource, id);
+        const entry = await endpoints.get(id);
         check(`${resource}/${id}`, responseSchema(`/${resource}/id/{id}`), entry);
         if (LISTS_WITH_FULL_ENTRIES.has(resource) && !isDeepStrictEqual(listed, entry)) {
           mismatches.push(`${resource}/${id} list entry differs from the full entry`);
