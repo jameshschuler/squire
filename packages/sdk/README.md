@@ -17,7 +17,7 @@ You need a Data API key. Keys are handed out in the "Walkscape Data API" thread 
 ## Quick start
 
 ```ts
-import { ENVIRONMENTS, createClient, recipesUsing } from "@jameshschuler/walkscape-sdk";
+import { ENVIRONMENTS, createClient, findRecipesByMaterial } from "@jameshschuler/walkscape-sdk";
 
 const client = createClient({ apiKey: process.env.WALKSCAPE_API_KEY!, baseUrl: ENVIRONMENTS.dev });
 
@@ -27,7 +27,7 @@ console.log(goldBar.materials); // [{ options: [{ item: "gold_nugget", amount: 7
 const materials = await client.items.search({ type: "material" }); // ItemListItem[]
 
 const recipes = await client.recipes.loadAll(); // RecipeDetail[]
-console.log(recipesUsing(recipes, "gold_bar").map((r) => r.name)); // ["Assemble dynamite", ...]
+console.log(findRecipesByMaterial(recipes, "gold_bar").map((r) => r.name)); // ["Assemble dynamite", ...]
 ```
 
 ## The client
@@ -67,7 +67,7 @@ if (item.type === "container") {
 }
 ```
 
-`ListItem<"items">` and `Detail<"items">` give you a resource's compact and full shapes by name, and `SearchFilters<"items">` its filters.
+`ListItem<"lootTables">` and `Detail<"lootTables">` give you a resource's compact and full shapes by name, and `SearchFilters<"items">` its filters. Resource names are camelCase, as on the client.
 
 ## Loading whole resources
 
@@ -90,12 +90,12 @@ Small helpers for questions that come up with raw API data. Each takes and retur
 
 | Function                                      | What it does                                                                                             |
 | --------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `recipesMaking(recipes, itemId)`              | Recipes that produce an item.                                                                            |
-| `recipesUsing(recipes, itemId)`               | Recipes that take an item as a material, in any slot or option.                                          |
-| `lootTableItemIds(table)`                     | Every item id a loot table can drop, including its sub-tables.                                           |
+| `findRecipesByOutput(recipes, itemId)`        | Recipes that produce an item.                                                                            |
+| `findRecipesByMaterial(recipes, itemId)`      | Recipes that take an item as a material, in any slot or option.                                          |
+| `getLootTableItemIds(table)`                  | Every item id a loot table can drop, including its sub-tables.                                           |
 | `isSkillLevelRequirement(requirement)`        | Narrows a requirement to a skill level requirement.                                                      |
 | `isServiceRequirement(requirement)`           | Narrows a requirement to a crafting service requirement.                                                 |
-| `serviceKeywords(requirement)`                | The service keywords a requirement asks for, e.g. `["kitchen", "cursed"]`, whichever shape the API used. |
+| `getServiceKeywords(requirement)`             | The service keywords a requirement asks for, e.g. `["kitchen", "cursed"]`, whichever shape the API used. |
 | `meetsServiceTier(serviceTier, requiredTier)` | Whether a service tier qualifies. Higher tiers do: an expert kitchen can cook basic kitchen recipes.     |
 
 ```ts

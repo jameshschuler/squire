@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   isServiceRequirement,
   isSkillLevelRequirement,
-  lootTableItemIds,
+  getLootTableItemIds,
   meetsServiceTier,
-  recipesMaking,
-  recipesUsing,
-  serviceKeywords,
+  findRecipesByOutput,
+  findRecipesByMaterial,
+  getServiceKeywords,
   type LootTableDetail,
   type RecipeDetail,
   type Requirement,
@@ -37,13 +37,13 @@ describe("requirement guards", () => {
   });
 });
 
-describe("serviceKeywords", () => {
+describe("getServiceKeywords", () => {
   it.each([
     [{ keywords: ["kitchen", "cursed"], serviceKeyword: "kitchen", tier: "basic" as const }, ["kitchen", "cursed"]],
     [{ serviceKeyword: "kitchen", tier: "basic" as const }, ["kitchen"]],
     [{ keywords: [], serviceKeyword: null, tier: "basic" as const }, []],
   ])("reads %j", (requirement, expected) => {
-    expect(serviceKeywords(service(requirement))).toEqual(expected);
+    expect(getServiceKeywords(service(requirement))).toEqual(expected);
   });
 });
 
@@ -60,22 +60,22 @@ describe("meetsServiceTier", () => {
   });
 });
 
-describe("lootTableItemIds", () => {
+describe("getLootTableItemIds", () => {
   it("lists items from rows and sub-tables, skipping rows without an item", () => {
     const table = {
       id: "t",
       tableRows: [{ rowItemID: "a" }, { rowItemID: null }],
       subTables: [{ tableRows: [{ rowItemID: "b" }] }],
     } as unknown as LootTableDetail;
-    expect(lootTableItemIds(table)).toEqual(["a", "b"]);
+    expect(getLootTableItemIds(table)).toEqual(["a", "b"]);
   });
 });
 
-describe("recipesMaking / recipesUsing", () => {
+describe("findRecipesByOutput / findRecipesByMaterial", () => {
   it("finds raw recipes that make or use an item", () => {
-    expect(recipesMaking(data.recipes, "gold_bar").map((r) => r.id)).toEqual(["smelt_a_gold_bar"]);
-    expect(recipesUsing(data.recipes, "salt_crystal").map((r) => r.id)).toEqual(["assemble_dynamite"]);
-    expect(recipesUsing(data.recipes, "gold_ore").map((r) => r.id)).toEqual(["smelt_a_gold_bar"]);
-    expect(recipesUsing(data.recipes, "unknown")).toEqual([]);
+    expect(findRecipesByOutput(data.recipes, "gold_bar").map((r) => r.id)).toEqual(["smelt_a_gold_bar"]);
+    expect(findRecipesByMaterial(data.recipes, "salt_crystal").map((r) => r.id)).toEqual(["assemble_dynamite"]);
+    expect(findRecipesByMaterial(data.recipes, "gold_ore").map((r) => r.id)).toEqual(["smelt_a_gold_bar"]);
+    expect(findRecipesByMaterial(data.recipes, "unknown")).toEqual([]);
   });
 });

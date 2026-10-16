@@ -10,11 +10,11 @@ export function findItem(recipes: RecipeView[], itemId: string): ItemSummary | u
   return undefined;
 }
 
-export function recipesMaking(recipes: RecipeView[], itemId: string): RecipeView[] {
+export function findRecipesByOutput(recipes: RecipeView[], itemId: string): RecipeView[] {
   return recipes.filter((r) => r.outputs.some((o) => o.id === itemId));
 }
 
-export function recipesUsing(recipes: RecipeView[], itemId: string): RecipeView[] {
+export function findRecipesByMaterial(recipes: RecipeView[], itemId: string): RecipeView[] {
   return recipes.filter((r) => r.materials.some((slot) => slot.some((m) => m.id === itemId)));
 }
 

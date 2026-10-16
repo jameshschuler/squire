@@ -1,7 +1,8 @@
 import { isDeepStrictEqual } from "node:util";
 import { Ajv2019 } from "ajv/dist/2019.js";
 import { describe, expect, it } from "vitest";
-import { ENVIRONMENTS, createClient, type ResourceName } from "../src/index.js";
+import type { ApiResource } from "../src/api-resources.js";
+import { ENVIRONMENTS, createClient } from "../src/index.js";
 import { LISTS_WITH_FULL_ENTRIES } from "../src/full-lists.js";
 import { resourceKey } from "../src/resource-keys.js";
 
@@ -68,7 +69,7 @@ describe.skipIf(!apiKey)("live dev API matches its OpenAPI spec", () => {
       }
     };
 
-    for (const resource of resources as ResourceName[]) {
+    for (const resource of resources as ApiResource[]) {
       const endpoints = client[resourceKey(resource)] as unknown as {
         list(): Promise<{ id: string }[]>;
         get(id: string): Promise<unknown>;

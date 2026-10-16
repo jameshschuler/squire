@@ -1,4 +1,5 @@
 import { HTTP_STATUS } from "./http-status.js";
+import type { ApiResource, ApiResourceOf } from "./api-resources.js";
 import { RESOURCES, SEARCHABLE_RESOURCES } from "./generated/resources.js";
 import { loadAllEntries, type Endpoints } from "./loaders.js";
 import { resourceKey } from "./resource-keys.js";
@@ -7,7 +8,6 @@ import type {
   Health,
   ListItem,
   MapList,
-  ResourceKey,
   ResourceName,
   SearchFilters,
   SearchableResource,
@@ -72,7 +72,7 @@ export interface SearchableResourceClient<R extends SearchableResource> extends 
  * Only resources with search filters have `search`.
  */
 export type ResourceClients = {
-  [R in ResourceName as ResourceKey<R>]: R extends SearchableResource ? SearchableResourceClient<R> : ResourceClient<R>;
+  [R in ResourceName]: R extends SearchableResource ? SearchableResourceClient<R> : ResourceClient<R>;
 };
 
 /**
@@ -184,14 +184,14 @@ export function createClient(options: ClientOptions): WalkScapeClient {
       return getJson(`/${resource}/search?${query}`);
     },
   };
-  const searchable = new Set<ResourceName>(SEARCHABLE_RESOURCES);
-  const resourceClient = (resource: ResourceName) => ({
+  const searchable = new Set<ApiResource>(SEARCHABLE_RESOURCES);
+  const resourceClient = (resource: ApiResource) => ({
     list: () => endpoints.list(resource),
     get: (id: string) => endpoints.get(resource, id),
     loadAll: () => loadAllEntries(endpoints, resource),
     ...(searchable.has(resource) && {
       search: (filters: object, { detailed = false } = {}) =>
-        endpoints.search(resource as SearchableResource, filters, detailed),
+        endpoints.search(resource as ApiResourceOf<SearchableResource>, filters, detailed),
     }),
   });
   const resources = Object.fromEntries(RESOURCES.map((resource) => [resourceKey(resource), resourceClient(resource)]));

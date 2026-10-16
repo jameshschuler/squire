@@ -1,5 +1,5 @@
-import type { ResourceKey, ResourceName } from "./types.js";
+import type { ApiResource, CamelCase } from "./api-resources.js";
 
-export function resourceKey<R extends ResourceName>(resource: R): ResourceKey<R> {
-  return resource.replace(/_([a-z0-9])/g, (_, letter: string) => letter.toUpperCase()) as ResourceKey<R>;
+export function resourceKey<A extends ApiResource>(resource: A): CamelCase<A> {
+  return resource.replace(/_([a-z0-9])/g, (_, letter: string) => letter.toUpperCase()) as CamelCase<A>;
 }

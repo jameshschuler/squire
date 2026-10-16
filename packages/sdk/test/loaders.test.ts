@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
-import type { ResourceName } from "../src/index.js";
+import type { ApiResource } from "../src/api-resources.js";
 import { loadAllEntries, type Endpoints } from "../src/loaders.js";
 
 type Entry = { id: string; full: boolean; canBeSold?: boolean };
 
-function fakeClient(entries: Partial<Record<ResourceName, Entry[]>>) {
-  const list = vi.fn(async (resource: ResourceName) => (entries[resource] ?? []).map(({ id }) => ({ id })));
-  const get = vi.fn(async (resource: ResourceName, id: string) => entries[resource]!.find((e) => e.id === id));
-  const search = vi.fn(async (resource: ResourceName, filters: Record<string, unknown>) =>
+function fakeClient(entries: Partial<Record<ApiResource, Entry[]>>) {
+  const list = vi.fn(async (resource: ApiResource) => (entries[resource] ?? []).map(({ id }) => ({ id })));
+  const get = vi.fn(async (resource: ApiResource, id: string) => entries[resource]!.find((e) => e.id === id));
+  const search = vi.fn(async (resource: ApiResource, filters: Record<string, unknown>) =>
     (entries[resource] ?? []).filter((e) => Object.entries(filters).every(([k, v]) => e[k as keyof Entry] === v)),
   );
   const client: Endpoints = { list, get, search };
@@ -40,7 +40,7 @@ describe("loadAllEntries", () => {
         { id: "odd", full: true },
       ],
     });
-    const items = await loadAllEntries(client, "items");
+    const items = (await loadAllEntries(client, "items")) as Entry[];
     expect(items.map((e) => e.id)).toEqual(["ore", "odd"]);
     expect(get.mock.calls).toEqual([["items", "odd"]]);
   });

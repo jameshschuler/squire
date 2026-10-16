@@ -21,7 +21,7 @@ export function isServiceRequirement(requirement: { type: string }): requirement
  * The service keywords a requirement asks for. The API uses two shapes: a `keywords` list (e.g.
  * `["kitchen", "cursed"]`) or a single `serviceKeyword`.
  */
-export function serviceKeywords(requirement: ServiceRequirement): string[] {
+export function getServiceKeywords(requirement: ServiceRequirement): string[] {
   const { serviceKeyword, keywords } = requirement.requirement;
   if (keywords?.length) {
     return keywords;
@@ -40,17 +40,17 @@ export function meetsServiceTier(serviceTier: ServiceTier, requiredTier: string)
 }
 
 /** Every item id a loot table can drop, including its sub-tables. Money rows are skipped. */
-export function lootTableItemIds(table: LootTableDetail): string[] {
+export function getLootTableItemIds(table: LootTableDetail): string[] {
   const rows = [...(table.tableRows ?? []), ...(table.subTables ?? []).flatMap((sub) => sub.tableRows ?? [])];
   return rows.flatMap((row) => (row.rowItemID ? [row.rowItemID] : []));
 }
 
 /** Recipes that produce an item. */
-export function recipesMaking(recipes: RecipeDetail[], itemId: string): RecipeDetail[] {
+export function findRecipesByOutput(recipes: RecipeDetail[], itemId: string): RecipeDetail[] {
   return recipes.filter((r) => itemId in r.itemRewards);
 }
 
 /** Recipes that take an item as a material, in any slot or option. */
-export function recipesUsing(recipes: RecipeDetail[], itemId: string): RecipeDetail[] {
+export function findRecipesByMaterial(recipes: RecipeDetail[], itemId: string): RecipeDetail[] {
   return recipes.filter((r) => r.materials.some((slot) => slot.options.some((o) => o.item === itemId)));
 }

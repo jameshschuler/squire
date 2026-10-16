@@ -6,8 +6,8 @@ import {
   RECIPE_BOOK_SCHEMA,
   sourceKey,
   lowestSkillLevels,
-  recipesMaking,
-  recipesUsing,
+  findRecipesByOutput,
+  findRecipesByMaterial,
   searchRecipes,
   words,
   type GameData,
@@ -188,11 +188,11 @@ describe("searchRecipes", () => {
   });
 });
 
-describe("recipesMaking / recipesUsing", () => {
+describe("findRecipesByOutput / findRecipesByMaterial", () => {
   it("finds recipes that make or use an item", () => {
-    expect(ids(recipesMaking(recipes, "gold_bar"))).toEqual(["smelt_a_gold_bar"]);
-    expect(ids(recipesUsing(recipes, "salt_crystal"))).toEqual(["assemble_dynamite"]);
-    expect(recipesUsing(recipes, "unknown")).toEqual([]);
+    expect(ids(findRecipesByOutput(recipes, "gold_bar"))).toEqual(["smelt_a_gold_bar"]);
+    expect(ids(findRecipesByMaterial(recipes, "salt_crystal"))).toEqual(["assemble_dynamite"]);
+    expect(findRecipesByMaterial(recipes, "unknown")).toEqual([]);
   });
 });
 

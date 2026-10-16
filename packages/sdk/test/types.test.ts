@@ -1,4 +1,5 @@
 import { describe, expectTypeOf, it } from "vitest";
+import type { ApiResource, ApiResourceOf } from "../src/api-resources.js";
 import { RESOURCES, SEARCHABLE_RESOURCES } from "../src/generated/resources.js";
 import {
   SERVICE_TIERS,
@@ -7,6 +8,7 @@ import {
   type ItemListItem,
   type ListItem,
   type LootTableDetail,
+  type LootTableListItem,
   type ResourceName,
   type SearchFilters,
   type SearchableResource,
@@ -16,8 +18,8 @@ import {
 
 describe("types", () => {
   it("generates the same resource lists the spec's types describe", () => {
-    expectTypeOf<(typeof RESOURCES)[number]>().toEqualTypeOf<ResourceName>();
-    expectTypeOf<(typeof SEARCHABLE_RESOURCES)[number]>().toEqualTypeOf<SearchableResource>();
+    expectTypeOf<(typeof RESOURCES)[number]>().toEqualTypeOf<ApiResource>();
+    expectTypeOf<(typeof SEARCHABLE_RESOURCES)[number]>().toEqualTypeOf<ApiResourceOf<SearchableResource>>();
   });
 
   it("only gives search to resources with filters", () => {
@@ -28,6 +30,16 @@ describe("types", () => {
 
   it("lists every service tier the API knows", () => {
     expectTypeOf<(typeof SERVICE_TIERS)[number]>().toEqualTypeOf<ServiceTier>();
+  });
+
+  it("names resources in camelCase, as the client does", () => {
+    expectTypeOf<"lootTables">().toExtend<ResourceName>();
+    expectTypeOf<"loot_tables">().not.toExtend<ResourceName>();
+    expectTypeOf<ListItem<"lootTables">>().toEqualTypeOf<LootTableListItem>();
+    expectTypeOf<keyof WalkScapeClient>().toExtend<
+      ResourceName | "version" | "health" | "maps" | "map" | "icon" | "icons"
+    >();
+    expectTypeOf<ResourceName>().toExtend<keyof WalkScapeClient>();
   });
 
   it("maps resources to their list and detail shapes", () => {

@@ -1,9 +1,9 @@
 import {
   isServiceRequirement,
   isSkillLevelRequirement,
-  lootTableItemIds,
+  getLootTableItemIds,
   meetsServiceTier,
-  serviceKeywords,
+  getServiceKeywords,
   type ActivityDetail,
   type ItemDetail,
   type LocationDetail,
@@ -170,7 +170,7 @@ function dropsFromShop(shop: ShopDetail, locationsByBuilding: Map<string, Locati
 function itemsIn(ref: LootTable, tables: Map<string, LootTableDetail>): string[] {
   return ref.tables.flatMap((id) => {
     const table = tables.get(id);
-    return table ? lootTableItemIds(table) : [];
+    return table ? getLootTableItemIds(table) : [];
   });
 }
 
@@ -214,7 +214,7 @@ function serviceView(
   locationsByService: Map<string, LocationSummary[]>,
 ): RecipeService {
   const { tier } = req.requirement;
-  const keywords = serviceKeywords(req);
+  const keywords = getServiceKeywords(req);
   const offers = services
     .filter(
       (s) =>

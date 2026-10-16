@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { recipesMaking, recipesUsing, type ItemSummary, type RecipeBook } from "@squire/api/recipe-book";
+import { findRecipesByOutput, findRecipesByMaterial, type ItemSummary, type RecipeBook } from "@squire/api/recipe-book";
 import { BackButton } from "@/components/layout/BackButton";
 import { RecipeList } from "@/components/recipes/RecipeList";
 import { RecipeSection } from "@/components/recipes/RecipeSection";
@@ -13,10 +13,10 @@ interface ItemDetailProps {
 }
 
 export function ItemDetail({ item, book }: ItemDetailProps) {
-  const making = useMemo(() => recipesMaking(book.recipes, item.id), [book, item.id]);
-  const using = useMemo(() => recipesUsing(book.recipes, item.id), [book, item.id]);
+  const madeBy = useMemo(() => findRecipesByOutput(book.recipes, item.id), [book, item.id]);
+  const usedIn = useMemo(() => findRecipesByMaterial(book.recipes, item.id), [book, item.id]);
   const sources = book.sources[item.id] ?? [];
-  const isCrafted = making.length > 0;
+  const isCrafted = madeBy.length > 0;
 
   return (
     <article className="space-y-6 pt-2">
@@ -32,12 +32,12 @@ export function ItemDetail({ item, book }: ItemDetailProps) {
       )}
       {isCrafted && (
         <RecipeSection title="Made by">
-          <RecipeList recipes={making} />
+          <RecipeList recipes={madeBy} />
         </RecipeSection>
       )}
       <RecipeSection title="Used in">
-        {using.length > 0 ? (
-          <RecipeList recipes={using} />
+        {usedIn.length > 0 ? (
+          <RecipeList recipes={usedIn} />
         ) : (
           <p className="text-muted-foreground">No recipe uses this.</p>
         )}
