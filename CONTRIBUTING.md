@@ -86,7 +86,7 @@ The data client's types come from the API's OpenAPI spec. When the API changes, 
 `packages/data-client` is published to npm as `@jameshschuler/walkscape-data-client`. Releases go out from CI:
 
 1. In a PR, bump `version` in `packages/data-client/package.json` and add a `CHANGELOG.md` entry.
-2. After it merges, tag the merge commit and push the tag: `git tag data-client-vX.Y.Z && git push origin data-client-vX.Y.Z`.
+2. After it merges, tag the PR's merge commit and push the tag: `git fetch origin && git tag data-client-vX.Y.Z <merge-commit> && git push origin data-client-vX.Y.Z`. The merge commit is on the PR page, or run `gh pr view <number> --json mergeCommit -q .mergeCommit.oid`.
 3. `.github/workflows/release-data-client.yml` checks that the tag matches the version, runs the data client's typecheck, tests and build, then publishes to npm through trusted publishing (no npm token) and creates a GitHub Release.
 
 In the repo, `exports` points at the TypeScript source. `pnpm pack` swaps in the built `dist/` paths from `publishConfig`, which is why the workflow packs with pnpm before publishing with npm.
