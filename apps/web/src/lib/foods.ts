@@ -1,26 +1,7 @@
-import {
-  TRAVELLING,
-  words,
-  type Effect,
-  type ItemEffects,
-  type ItemSummary,
-  type RecipeBook,
-} from "@squire/api/recipe-book";
+import { TRAVELLING, words, type Effect, type Food } from "@squire/api/recipe-book";
+import { formatCondition } from "./format";
 import { matchesWords } from "./match";
 import { uniqueSkills, type SkillOption } from "./skills";
-
-export type Food = ItemSummary & { effects: ItemEffects };
-
-export function listFoods(book: RecipeBook): Food[] {
-  const foods = new Map<string, Food>();
-  for (const item of book.recipes.flatMap((r) => [...r.outputs, ...r.materials.flat()])) {
-    if (item.effects && !foods.has(item.id)) {
-      const { id, name, icon, keywords, effects } = item;
-      foods.set(id, { id, name, icon, keywords, effects });
-    }
-  }
-  return [...foods.values()].sort((a, b) => a.name.localeCompare(b.name));
-}
 
 export function foodFilters(foods: Food[]): SkillOption[] {
   const targets = foods.flatMap((food) => food.effects.effects.flatMap((effect) => effect.appliesTo));
@@ -37,4 +18,8 @@ export function searchFoods(foods: Food[], query: string, { filter }: { filter?:
   return foods.filter(
     (food) => (!filter || effectsFor(food, filter).length > 0) && matchesWords(terms, [food.name, ...food.keywords]),
   );
+}
+
+export function whereFoodApplies(food: Food): string {
+  return [...new Set(food.effects.effects.map((effect) => effect.condition))].map(formatCondition).join(" · ");
 }

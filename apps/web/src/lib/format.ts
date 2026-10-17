@@ -61,3 +61,8 @@ export function formatKeyword(keyword: string): string {
 export function formatEffect(effect: { normal: string; stat: string }): string {
   return `${effect.normal} ${effect.stat.charAt(0).toLowerCase()}${effect.stat.slice(1)}`;
 }
+
+export function formatCondition(condition: string): string {
+  const short = condition.replace(/^While (doing )?/, "");
+  return short.charAt(0).toUpperCase() + short.slice(1);
+}

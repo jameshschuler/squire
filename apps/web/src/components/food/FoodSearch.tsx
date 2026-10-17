@@ -3,7 +3,8 @@ import { GameDataStatus } from "@/components/shared/GameDataStatus";
 import { SearchInput } from "@/components/shared/SearchInput";
 import { SkillFilter } from "@/components/shared/SkillFilter";
 import { useGameDataContext } from "@/contexts/game-data-context";
-import { foodFilters, listFoods, searchFoods, type Food } from "@/lib/foods";
+import type { Food } from "@squire/api/recipe-book";
+import { foodFilters, searchFoods } from "@/lib/foods";
 import { knownOption } from "@/lib/skills";
 import { FoodResults } from "./FoodResults";
 
@@ -19,7 +20,7 @@ interface FoodSearchProps {
 export function FoodSearch({ query, skill, onQueryChange, onSkillChange }: FoodSearchProps) {
   const state = useGameDataContext();
   const book = state.status === "ready" ? state.book : undefined;
-  const foods = useMemo(() => (book ? listFoods(book) : NO_FOODS), [book]);
+  const foods = book?.foods ?? NO_FOODS;
   const filters = useMemo(() => foodFilters(foods), [foods]);
   const filter = knownOption(filters, skill);
   const results = useMemo(() => searchFoods(foods, query, { filter }), [foods, query, filter]);

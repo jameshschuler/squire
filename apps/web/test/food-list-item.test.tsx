@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, screen } from "@testing-library/react";
 import { FoodListItem } from "@/components/food/FoodListItem";
-import type { Food } from "@/lib/foods";
+import type { Food } from "@squire/api/recipe-book";
 import { renderWithRouter } from "./render-with-router";
 
 afterEach(cleanup);
@@ -36,12 +36,13 @@ describe("FoodListItem", () => {
     expect(screen.getByText("+7% work efficiency")).toBeDefined();
   });
 
-  it("shows just the name when no skill is chosen", async () => {
+  it("says where the food applies when no skill is chosen", async () => {
     await renderWithRouter(
       <ul>
         <FoodListItem food={salmonPie} filter={undefined} />
       </ul>,
     );
-    expect(screen.getByRole("link").textContent).toBe("Salmon pie");
+    expect(screen.getByText("Woodcutting")).toBeDefined();
+    expect(screen.queryByText(/work efficiency/)).toBeNull();
   });
 });

@@ -1,5 +1,5 @@
 import { useIncrementalList } from "@/hooks/useIncrementalList";
-import type { Food } from "@/lib/foods";
+import type { Food } from "@squire/api/recipe-book";
 import { FoodListItem } from "./FoodListItem";
 
 const PAGE_SIZE = 50;

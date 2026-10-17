@@ -23,7 +23,9 @@ import {
   RECIPE_BOOK_SCHEMA,
   type ActivitySource,
   type ChestSource,
+  type Food,
   type ItemSource,
+  type ItemSummary,
   type LocationSummary,
   type LootType,
   type RecipeBook,
@@ -49,12 +51,13 @@ export function buildRecipeBook(data: GameData): RecipeBook {
   const items = new Map(data.items.map((i) => [i.id, i]));
   const skillNames = new Map(data.skills.map((s) => [s.id, s.name]));
   const skillName = (id: string) => skillNames.get(id) ?? humanize(id);
-  const item = (id: string, amount: number): RecipeItem => {
+  const summary = (id: string): ItemSummary => {
     const found = items.get(id);
     const keywords = [...new Set(found?.keywords ?? [])];
     const effects = found ? itemEffects(found, data.skills) : null;
-    return { id, name: found?.name ?? humanize(id), icon: found?.icon ?? "", keywords, effects, amount };
+    return { id, name: found?.name ?? humanize(id), icon: found?.icon ?? "", keywords, effects };
   };
+  const item = (id: string, amount: number): RecipeItem => ({ ...summary(id), amount });
   const regions = new Map(data.factions.map((f) => [f.id, f.name]));
   const locationsByService = indexLocations(data.locations, regions, (l) => l.serviceList);
   const locationsByActivity = indexLocations(data.locations, regions, (l) => l.activityList);
@@ -76,12 +79,21 @@ export function buildRecipeBook(data: GameData): RecipeBook {
     };
   });
 
-  const materialIds = new Set(recipes.flatMap((r) => r.materials.flat().map((m) => m.id)));
+  const foods = data.items
+    .filter((i) => i.type === "consumable")
+    .map((i) => summary(i.id))
+    .filter((food): food is Food => food.effects !== null)
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const sourcedIds = new Set([
+    ...recipes.flatMap((r) => r.materials.flat().map((m) => m.id)),
+    ...foods.map((f) => f.id),
+  ]);
   return {
     schema: RECIPE_BOOK_SCHEMA,
     version: data.version,
     recipes: recipes.sort(byLevel),
-    sources: itemSources(data, materialIds, { locationsByActivity, locationsByBuilding }, skillName),
+    foods,
+    sources: itemSources(data, sourcedIds, { locationsByActivity, locationsByBuilding }, skillName),
   };
 }
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatCondition,
   formatDuration,
   formatEffect,
   formatKeyword,
@@ -28,6 +29,17 @@ describe("formatKeyword", () => {
     ["ore", "ore"],
   ])("formats %s as %s", (keyword, expected) => {
     expect(formatKeyword(keyword)).toBe(expected);
+  });
+});
+
+describe("formatCondition", () => {
+  it.each([
+    ["While doing Woodcutting", "Woodcutting"],
+    ["While doing gathering skills", "Gathering skills"],
+    ["While travelling", "Travelling"],
+    ["Global", "Global"],
+  ])("shortens %s to %s", (condition, expected) => {
+    expect(formatCondition(condition)).toBe(expected);
   });
 });
 

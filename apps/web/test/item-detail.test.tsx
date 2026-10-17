@@ -10,7 +10,7 @@ const book = buildRecipeBook(sample as unknown as GameData);
 afterEach(cleanup);
 
 async function renderItem(itemId: string) {
-  await renderWithRouter(<ItemDetail item={findItem(book.recipes, itemId)!} book={book} />);
+  await renderWithRouter(<ItemDetail item={findItem(book, itemId)!} book={book} />);
 }
 
 const sectionTitles = () => screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
@@ -54,7 +54,7 @@ describe("ItemDetail", () => {
   });
 
   it("shows what a food does right after its keywords", async () => {
-    const goldBar = findItem(book.recipes, "gold_bar")!;
+    const goldBar = findItem(book, "gold_bar")!;
     const effects = {
       steps: 1000,
       effects: [
@@ -73,7 +73,7 @@ describe("ItemDetail", () => {
   });
 
   it("shows keywords with spaces instead of underscores", async () => {
-    const goldBar = findItem(book.recipes, "gold_bar")!;
+    const goldBar = findItem(book, "gold_bar")!;
     await renderWithRouter(<ItemDetail item={{ ...goldBar, keywords: ["cooked_fish"] }} book={book} />);
     expect(section("Keywords").getByText("cooked fish")).toBeDefined();
   });

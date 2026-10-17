@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { GameIcon } from "@/components/shared/GameIcon";
-import { effectsFor, type Food } from "@/lib/foods";
+import type { Food } from "@squire/api/recipe-book";
+import { effectsFor, whereFoodApplies } from "@/lib/foods";
 import { formatEffect } from "@/lib/format";
 
 export function FoodListItem({ food, filter }: { food: Food; filter: string | undefined }) {
@@ -10,11 +11,9 @@ export function FoodListItem({ food, filter }: { food: Food; filter: string | un
         <GameIcon path={food.icon} />
         <span className="min-w-0">
           <span className="block font-medium">{food.name}</span>
-          {filter && (
-            <span className="block text-sm text-muted-foreground">
-              {effectsFor(food, filter).map(formatEffect).join(" · ")}
-            </span>
-          )}
+          <span className="block text-sm text-muted-foreground">
+            {filter ? effectsFor(food, filter).map(formatEffect).join(" · ") : whereFoodApplies(food)}
+          </span>
         </span>
       </Link>
     </li>
