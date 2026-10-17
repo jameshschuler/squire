@@ -40,8 +40,12 @@ export default defineConfig({
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname === "/api/recipes",
-            handler: "NetworkFirst",
-            options: { cacheName: "recipe-book", networkTimeoutSeconds: 3 },
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "recipe-book",
+              expiration: { maxEntries: 1 },
+              cacheableResponse: { statuses: [200] },
+            },
           },
           {
             urlPattern: ({ url }) => url.pathname.startsWith("/api/icons/"),
