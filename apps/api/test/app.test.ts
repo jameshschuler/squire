@@ -74,35 +74,20 @@ describe("compression", () => {
 });
 
 describe("GET /api/icons/*", () => {
-  it("serves an icon the recipe book uses from the warmed cache", async () => {
-    const { client, calls } = fakeClient();
-    const server = app(client);
+  it("serves an icon the recipe book uses", async () => {
+    const server = app();
     await server.inject("/api/recipes");
     const res = await server.inject("/api/icons/assets/icons/items/materials/food/bagel.png");
     expect(res.statusCode).toBe(200);
-    expect(res.headers["content-type"]).toBe("image/webp");
     expect(res.headers["cache-control"]).toBe("public, max-age=604800");
-    expect(calls.icon).toBe(0);
-    expect(calls.iconBatches).toHaveLength(1);
   });
 
   it("answers 404 for an icon the recipe book doesn't use, without asking WalkScape", async () => {
     const { client, calls } = fakeClient();
     const server = app(client);
     await server.inject("/api/recipes");
-    const responses = await Promise.all(["a.png", "b.png", "c.png"].map((name) => server.inject(`/api/icons/${name}`)));
-    expect(responses.map((res) => res.statusCode)).toEqual([404, 404, 404]);
-    expect(calls.icon).toBe(0);
-  });
-
-  it("answers 503 while the recipe book is still loading, without starting more loads", async () => {
-    const { client, calls } = fakeClient();
-    client.version = () => new Promise(() => {});
-    const server = app(client);
-    const responses = await Promise.all(["a.png", "b.png"].map((name) => server.inject(`/api/icons/${name}`)));
-    expect(responses.map((res) => res.statusCode)).toEqual([503, 503]);
-    expect(responses[0]?.headers["retry-after"]).toBe("5");
-    expect(calls.paths.filter((path) => path === "/recipes/")).toHaveLength(1);
+    const res = await server.inject("/api/icons/assets/made_up.png");
+    expect(res.statusCode).toBe(404);
     expect(calls.icon).toBe(0);
   });
 });

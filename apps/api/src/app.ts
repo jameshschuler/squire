@@ -45,8 +45,5 @@ export function buildApp({ client, logLevel, corsOrigins }: AppOptions): Fastify
   app.register(healthRoutes);
   app.register(recipeRoutes(recipeBook));
   app.register(iconRoutes(icons));
-  app.addHook("onReady", async () => {
-    recipeBook().catch((err: unknown) => app.log.warn({ err }, "Failed to load the recipe book at startup"));
-  });
   return app;
 }

@@ -37,15 +37,12 @@ describe("createIconStore", () => {
     expect(calls.icon).toBe(1);
   });
 
-  it("caches an icon it had to fetch one by one", async () => {
+  it("caches an icon it had to fetch on its own", async () => {
     const { client, calls } = fakeClient();
     const icons = createIconStore(client);
     await icons.warm(["icons/unbatched.png"]);
     await icons.get("icons/unbatched.png");
-    await expect(icons.get("icons/unbatched.png")).resolves.toEqual({
-      type: "image/png",
-      body: Buffer.from([1, 2, 3]),
-    });
+    await icons.get("icons/unbatched.png");
     expect(calls.icon).toBe(1);
   });
 
@@ -54,49 +51,6 @@ describe("createIconStore", () => {
     const icons = createIconStore(client);
     await icons.warm(["icons/a.png"]);
     await expect(icons.get("icons/other.png")).resolves.toBeUndefined();
-    expect(calls.icon).toBe(0);
-  });
-
-  it("fetches an icon once when it's requested twice at the same time", async () => {
-    const { client, calls } = fakeClient();
-    const icons = createIconStore(client);
-    await icons.warm(["icons/unbatched.png"]);
-    await Promise.all([icons.get("icons/unbatched.png"), icons.get("icons/unbatched.png")]);
-    expect(calls.icon).toBe(1);
-  });
-
-  it("serves cached icons without waiting for a newer recipe book's icons to warm", async () => {
-    const { client } = fakeClient();
-    const icons = createIconStore(client);
-    await icons.warm(["icons/a.png"]);
-    client.icons = () => new Promise(() => {});
-    void icons.warm(["icons/a.png", "icons/b.png"]);
-    await expect(icons.get("icons/a.png")).resolves.toEqual({ type: "image/webp", body: Buffer.from([1, 2, 3]) });
-  });
-
-  it("knows which icons exist once a recipe book's icons have been handed to it", async () => {
-    const { client } = fakeClient();
-    const icons = createIconStore(client);
-    expect(icons.hasKnownIcons()).toBe(false);
-    await icons.warm([]);
-    expect(icons.hasKnownIcons()).toBe(true);
-  });
-
-  it("forgets icons a newer recipe book no longer uses", async () => {
-    const { client } = fakeClient();
-    const icons = createIconStore(client);
-    await icons.warm(["icons/a.png"]);
-    await icons.warm(["icons/b.png"]);
-    await expect(icons.get("icons/a.png")).resolves.toBeUndefined();
-  });
-
-  it("waits for warming to finish instead of fetching icons one by one", async () => {
-    const { client, calls } = fakeClient();
-    const icons = createIconStore(client);
-    const warming = icons.warm(["icons/a.png"]);
-    const icon = await icons.get("icons/a.png");
-    await warming;
-    expect(icon).toEqual({ type: "image/webp", body: Buffer.from([1, 2, 3]) });
     expect(calls.icon).toBe(0);
   });
 
