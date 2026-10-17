@@ -26,18 +26,20 @@ describe("ServiceLocations", () => {
     expect(row("Town").textContent).toBe("Town (Jarvonia)");
   });
 
-  it("shows each location with its region in brackets", () => {
+  it("lists locations by region, then by name, with the region in brackets", () => {
     render(
       <ServiceLocations
         service={service([
           { id: "frusenholm", name: "Frusenholm", region: "Jarvonia", tier: "basic" },
           { id: "salsfirth", name: "Salsfirth", region: "Grand Duchy of Trellin-Erdwise", tier: "basic" },
+          { id: "centaham", name: "Centaham", region: "Jarvonia", tier: "basic" },
         ])}
       />,
     );
     expect(screen.getAllByRole("listitem").map((li) => li.textContent)).toEqual([
-      "Frusenholm (Jarvonia)",
       "Salsfirth (GDTE)",
+      "Centaham (Jarvonia)",
+      "Frusenholm (Jarvonia)",
     ]);
   });
 
