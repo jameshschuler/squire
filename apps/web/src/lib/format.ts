@@ -53,3 +53,7 @@ export function formatRegion(region: string): string {
 export function formatDuration(steps: number): string {
   return `${steps.toLocaleString("en-US")} steps`;
 }
+
+export function formatKeyword(keyword: string): string {
+  return keyword.replace(/_/g, " ");
+}

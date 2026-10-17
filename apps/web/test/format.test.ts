@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatDuration,
+  formatKeyword,
   formatPercent,
   formatRegion,
   formatSkillLevel,
@@ -16,6 +17,16 @@ describe("formatPercent", () => {
     [1.125, "113%"],
   ])("formats %s as %s", (ratio, expected) => {
     expect(formatPercent(ratio)).toBe(expected);
+  });
+});
+
+describe("formatKeyword", () => {
+  it.each([
+    ["cooked_fish", "cooked fish"],
+    ["hunting_product", "hunting product"],
+    ["ore", "ore"],
+  ])("formats %s as %s", (keyword, expected) => {
+    expect(formatKeyword(keyword)).toBe(expected);
   });
 });
 

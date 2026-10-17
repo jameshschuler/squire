@@ -4,20 +4,58 @@ import { ItemEffectsSection } from "@/components/items/ItemEffectsSection";
 
 afterEach(cleanup);
 
+const rows = () => screen.getAllByRole("row").map((row) => [...row.children].map((cell) => cell.textContent));
+
 describe("ItemEffectsSection", () => {
-  it("puts the duration in the heading and the fine value after each effect", () => {
-    render(<ItemEffectsSection effects={{ steps: 1000, effects: [{ text: "+3% work efficiency", fine: "+6%" }] }} />);
-    expect(screen.getByRole("heading").textContent).toBe("Effects · 1,000 steps");
-    expect(screen.getByRole("listitem").textContent).toBe("+3% work efficiency +6% fine");
+  it("puts the duration in the heading and lists each condition once, with normal and fine values", () => {
+    render(
+      <ItemEffectsSection
+        effects={{
+          steps: 500,
+          effects: [
+            { condition: "While doing Woodcutting", stat: "Steps required", normal: "-1", fine: "-2" },
+            { condition: "While doing Woodcutting", stat: "Double rewards", normal: "+2%", fine: "+4%" },
+          ],
+        }}
+      />,
+    );
+    expect(screen.getByRole("heading").textContent).toBe("Effects · 500 steps");
+    expect(rows()).toEqual([
+      ["While doing Woodcutting", "Normal", "Fine"],
+      ["Steps required", "-1", "-2"],
+      ["Double rewards", "+2%", "+4%"],
+    ]);
   });
 
-  it("leaves out the fine value when it's the same as the normal one", () => {
-    render(<ItemEffectsSection effects={{ steps: 1000, effects: [{ text: "+5% work efficiency", fine: null }] }} />);
-    expect(screen.getByRole("listitem").textContent).toBe("+5% work efficiency");
+  it("gives each condition its own group", () => {
+    render(
+      <ItemEffectsSection
+        effects={{
+          steps: 750,
+          effects: [
+            { condition: "While doing Foraging", stat: "Chance to find gold", normal: "25%", fine: "50%" },
+            { condition: "While doing Hunting", stat: "Chance to find gold", normal: "25%", fine: "50%" },
+          ],
+        }}
+      />,
+    );
+    expect(rows().map((row) => row[0])).toEqual([
+      "While doing Foraging",
+      "Chance to find gold",
+      "While doing Hunting",
+      "Chance to find gold",
+    ]);
   });
 
   it("titles the section plainly when the duration isn't in steps", () => {
-    render(<ItemEffectsSection effects={{ steps: null, effects: [{ text: "+5% work efficiency", fine: null }] }} />);
+    render(
+      <ItemEffectsSection
+        effects={{
+          steps: null,
+          effects: [{ condition: "Global", stat: "Inventory space", normal: "+5", fine: "+10" }],
+        }}
+      />,
+    );
     expect(screen.getByRole("heading").textContent).toBe("Effects");
   });
 });

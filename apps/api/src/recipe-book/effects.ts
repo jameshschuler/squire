@@ -26,13 +26,13 @@ function effectLine(attribute: Attribute, fine: Attribute | undefined): Effect[]
   }
   const isChance = attribute.customText !== "";
   const format = (value: StatValue) => (isChance ? formatAmount(value) : formatSigned(value));
-  const subject = isChance ? lowerFirst(stripTags(attribute.customText)) : attribute.statText.toLowerCase();
-  const effect = `${format(stat)} ${subject}${condition(attribute)}`;
-  const fineStat = fine && statValue(fine);
+  const fineStat = (fine && statValue(fine)) ?? stat;
   return [
     {
-      text: isGlobal(attribute) ? `Global ${effect}` : effect,
-      fine: fineStat && fineStat.value !== stat.value ? format(fineStat) : null,
+      condition: condition(attribute),
+      stat: isChance ? stripTags(attribute.customText) : attribute.statText,
+      normal: format(stat),
+      fine: format(fineStat),
     },
   ];
 }
@@ -43,20 +43,16 @@ function statValue(attribute: Attribute): StatValue | undefined {
 
 function condition(attribute: Attribute): string {
   if (attribute.skillText) {
-    return ` in ${attribute.skillText}`;
+    return `While doing ${attribute.skillText}`;
   }
   const requirement = attribute.requirements?.[0];
   if (requirement?.type === "traveling") {
-    return " while travelling";
+    return "While travelling";
   }
   if (requirement?.type === "mainSkillType") {
-    return ` in ${requirement.requirement.type} skills`;
+    return `While doing ${requirement.requirement.type} skills`;
   }
-  return "";
-}
-
-function isGlobal(attribute: Attribute): boolean {
-  return !attribute.skillText && !attribute.requirements?.length;
+  return "Global";
 }
 
 function formatSigned(stat: StatValue): string {
@@ -69,8 +65,4 @@ function formatAmount({ value, isPercent }: StatValue): string {
 
 function stripTags(text: string): string {
   return text.replace(/<[^>]+>/g, "");
-}
-
-function lowerFirst(text: string): string {
-  return text.charAt(0).toLowerCase() + text.slice(1);
 }

@@ -1,19 +1,36 @@
 import type { ItemEffects } from "@squire/api/recipe-book";
 import { RecipeSection } from "@/components/recipes/RecipeSection";
+import { groupByCondition } from "@/lib/effects";
 import { formatDuration } from "@/lib/format";
 
 export function ItemEffectsSection({ effects }: { effects: ItemEffects }) {
   const title = effects.steps === null ? "Effects" : `Effects · ${formatDuration(effects.steps)}`;
   return (
     <RecipeSection title={title}>
-      <ul className="space-y-1 py-1">
-        {effects.effects.map((effect) => (
-          <li key={effect.text}>
-            {effect.text}
-            {effect.fine && <span className="ml-2 text-sm text-muted-foreground"> {effect.fine} fine</span>}
-          </li>
+      <table className="w-full">
+        {groupByCondition(effects.effects).map(([condition, group]) => (
+          <tbody key={condition}>
+            <tr className="text-sm text-muted-foreground">
+              <th scope="rowgroup" className="pt-2 pb-1 text-left font-normal">
+                {condition}
+              </th>
+              <th scope="col" className="w-16 pt-2 pb-1 text-right font-normal">
+                Normal
+              </th>
+              <th scope="col" className="w-16 pt-2 pb-1 text-right font-normal">
+                Fine
+              </th>
+            </tr>
+            {group.map((effect) => (
+              <tr key={effect.stat}>
+                <td className="py-0.5 pr-2">{effect.stat}</td>
+                <td className="py-0.5 text-right tabular-nums">{effect.normal}</td>
+                <td className="py-0.5 text-right tabular-nums">{effect.fine}</td>
+              </tr>
+            ))}
+          </tbody>
         ))}
-      </ul>
+      </table>
     </RecipeSection>
   );
 }

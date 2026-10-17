@@ -55,11 +55,24 @@ describe("ItemDetail", () => {
 
   it("shows what a food does right after its keywords", async () => {
     const goldBar = findItem(book.recipes, "gold_bar")!;
-    const effects = { steps: 1000, effects: [{ text: "+7% work efficiency in Woodcutting", fine: "+14%" }] };
+    const effects = {
+      steps: 1000,
+      effects: [{ condition: "While doing Woodcutting", stat: "Work efficiency", normal: "+7%", fine: "+14%" }],
+    };
     await renderWithRouter(<ItemDetail item={{ ...goldBar, effects }} book={book} />);
     expect(sectionTitles().slice(0, 2)).toEqual(["Keywords", "Effects · 1,000 steps"]);
-    expect(section("Effects · 1,000 steps").getByRole("listitem").textContent).toBe(
-      "+7% work efficiency in Woodcutting +14% fine",
-    );
+    const rows = section("Effects · 1,000 steps")
+      .getAllByRole("row")
+      .map((row) => [...row.children].map((cell) => cell.textContent));
+    expect(rows).toEqual([
+      ["While doing Woodcutting", "Normal", "Fine"],
+      ["Work efficiency", "+7%", "+14%"],
+    ]);
+  });
+
+  it("shows keywords with spaces instead of underscores", async () => {
+    const goldBar = findItem(book.recipes, "gold_bar")!;
+    await renderWithRouter(<ItemDetail item={{ ...goldBar, keywords: ["cooked_fish"] }} book={book} />);
+    expect(section("Keywords").getByText("cooked fish")).toBeDefined();
   });
 });
