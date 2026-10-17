@@ -62,29 +62,33 @@ describe("compression", () => {
   });
 
   it("doesn't compress icons, which are already compressed images", async () => {
-    const res = await app().inject({
-      url: "/api/icons/assets/icons/items/bagel.png",
+    const server = app();
+    await server.inject("/api/recipes");
+    const res = await server.inject({
+      url: "/api/icons/assets/icons/items/materials/food/bagel.png",
       headers: { "accept-encoding": "gzip" },
     });
+    expect(res.statusCode).toBe(200);
     expect(res.headers["content-encoding"]).toBeUndefined();
   });
 });
 
 describe("GET /api/icons/*", () => {
-  it("proxies the icon and caches it in memory", async () => {
-    const { client, calls } = fakeClient();
-    const server = app(client);
-    const first = await server.inject("/api/icons/assets/icons/items/bagel.png");
-    await server.inject("/api/icons/assets/icons/items/bagel.png");
-    expect(first.statusCode).toBe(200);
-    expect(first.headers["content-type"]).toBe("image/png");
-    expect(first.headers["cache-control"]).toBe("public, max-age=604800");
-    expect(calls.icon).toBe(1);
+  it("serves an icon the recipe book uses", async () => {
+    const server = app();
+    await server.inject("/api/recipes");
+    const res = await server.inject("/api/icons/assets/icons/items/materials/food/bagel.png");
+    expect(res.statusCode).toBe(200);
+    expect(res.headers["cache-control"]).toBe("public, max-age=604800");
   });
 
-  it("answers 404 for an unknown icon", async () => {
-    const res = await app().inject("/api/icons/assets/missing.png");
+  it("answers 404 for an icon the recipe book doesn't use, without asking WalkScape", async () => {
+    const { client, calls } = fakeClient();
+    const server = app(client);
+    await server.inject("/api/recipes");
+    const res = await server.inject("/api/icons/assets/made_up.png");
     expect(res.statusCode).toBe(404);
+    expect(calls.icon).toBe(0);
   });
 });
 

@@ -37,12 +37,21 @@ describe("createIconStore", () => {
     expect(calls.icon).toBe(1);
   });
 
-  it("fetches and caches an icon that was never warmed", async () => {
+  it("caches an icon it had to fetch on its own", async () => {
     const { client, calls } = fakeClient();
     const icons = createIconStore(client);
-    await icons.get("icons/a.png");
-    await icons.get("icons/a.png");
+    await icons.warm(["icons/unbatched.png"]);
+    await icons.get("icons/unbatched.png");
+    await icons.get("icons/unbatched.png");
     expect(calls.icon).toBe(1);
+  });
+
+  it("returns nothing for an icon the recipe book doesn't use, without asking WalkScape", async () => {
+    const { client, calls } = fakeClient();
+    const icons = createIconStore(client);
+    await icons.warm(["icons/a.png"]);
+    await expect(icons.get("icons/other.png")).resolves.toBeUndefined();
+    expect(calls.icon).toBe(0);
   });
 
   it("does nothing when there is nothing to warm", async () => {

@@ -8,15 +8,19 @@ export interface Icon {
 }
 
 export interface IconStore {
-  get(path: string): Promise<Icon>;
+  get(path: string): Promise<Icon | undefined>;
   warm(paths: string[]): Promise<number>;
 }
 
 export function createIconStore(client: WalkScapeClient): IconStore {
   const icons = new Map<string, Icon>();
+  let known = new Set<string>();
 
   return {
     async get(path) {
+      if (!known.has(path)) {
+        return undefined;
+      }
       const cached = icons.get(path);
       if (cached) {
         return cached;
@@ -29,6 +33,7 @@ export function createIconStore(client: WalkScapeClient): IconStore {
     },
 
     async warm(paths) {
+      known = new Set(paths);
       const missing = paths.filter((path) => !icons.has(path));
       let loaded = 0;
       for (let i = 0; i < missing.length; i += BATCH_SIZE) {

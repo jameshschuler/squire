@@ -143,6 +143,7 @@ export function createClient(options: ClientOptions): WalkScapeClient {
         (res.status === HTTP_STATUS.TOO_MANY_REQUESTS || res.status >= HTTP_STATUS.INTERNAL_SERVER_ERROR) &&
         attempt < maxRetries
       ) {
+        void res.body?.cancel().catch(() => undefined);
         await sleep(retryDelayMs(res, attempt));
         continue;
       }
