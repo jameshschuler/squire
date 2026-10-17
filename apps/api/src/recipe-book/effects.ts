@@ -1,4 +1,4 @@
-import type { Attribute, ItemDetail, SkillDetail } from "@jameshschuler/walkscape-data-client";
+import type { Attribute, ItemDetail, Requirement, SkillDetail } from "@jameshschuler/walkscape-data-client";
 import type { Effect, EffectTarget, ItemEffects } from "./types.js";
 
 export const TRAVELLING: EffectTarget = { id: "travelling", name: "Travelling" };
@@ -59,18 +59,33 @@ function condition(attribute: Attribute): string {
 }
 
 function appliesTo(attribute: Attribute, skills: SkillDetail[]): EffectTarget[] {
+  const everything = () => [...skills.map(skillTarget), TRAVELLING];
   const requirement = attribute.requirements?.[0];
-  const target = (skill: SkillDetail): EffectTarget => ({ id: skill.id, name: skill.name });
-  if (requirement?.type === "mainSkill") {
-    return skills.filter((skill) => skill.id === requirement.requirement.skill).map(target);
+  if (!requirement) {
+    return everything();
   }
-  if (requirement?.type === "mainSkillType") {
-    return skills.filter((skill) => skill.type === requirement.requirement.type).map(target);
+  const matching = requirementTargets(requirement, skills);
+  if (!matching || !requirement.opposite) {
+    return matching ?? [];
   }
-  if (requirement?.type === "traveling") {
+  return everything().filter((target) => !matching.some((match) => match.id === target.id));
+}
+
+function requirementTargets(requirement: Requirement, skills: SkillDetail[]): EffectTarget[] | undefined {
+  if (requirement.type === "mainSkill") {
+    return skills.filter((skill) => skill.id === requirement.requirement.skill).map(skillTarget);
+  }
+  if (requirement.type === "mainSkillType") {
+    return skills.filter((skill) => skill.type === requirement.requirement.type).map(skillTarget);
+  }
+  if (requirement.type === "traveling") {
     return [TRAVELLING];
   }
-  return requirement ? [] : [...skills.map(target), TRAVELLING];
+  return undefined;
+}
+
+function skillTarget(skill: SkillDetail): EffectTarget {
+  return { id: skill.id, name: skill.name };
 }
 
 function formatSigned(stat: StatValue): string {

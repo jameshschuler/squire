@@ -87,4 +87,46 @@ describe("itemEffects", () => {
     attribute.requirements = [{ type: "locationHasKeywords", name: null, opposite: false, requirement: {} }] as never;
     expect(itemEffects(pie, SKILLS)!.effects[0]!.appliesTo).toEqual([]);
   });
+
+  const negated = (id: string) => {
+    const item = structuredClone(food(id));
+    const buffs = item.type === "consumable" ? item.buffs! : [];
+    const requirement = buffs[0]!.data[0]!.buffs[0]!.attributes[0]!.requirements![0]!;
+    requirement.opposite = true;
+    return item;
+  };
+  const appliesTo = (item: ItemDetail) => itemEffects(item, SKILLS)!.effects[0]!.appliesTo.map((target) => target.id);
+
+  it("applies a negated skill requirement to every other skill and travelling", () => {
+    expect(appliesTo(negated("salmon_pie"))).toEqual([
+      ...ALL_SKILLS.filter((skill) => skill !== "woodcutting"),
+      "travelling",
+    ]);
+  });
+
+  it("applies a negated skill type requirement to skills of other types and travelling", () => {
+    expect(appliesTo(negated("dried_fruit"))).toEqual([
+      "agility",
+      "carpentry",
+      "cooking",
+      "crafting",
+      "smithing",
+      "tailoring",
+      "trinketry",
+      "travelling",
+    ]);
+  });
+
+  it("applies a negated travelling requirement to every skill but not travelling", () => {
+    expect(appliesTo(negated("bread"))).toEqual(ALL_SKILLS);
+  });
+
+  it("still applies a negated requirement it doesn't recognize to nothing", () => {
+    const pie = structuredClone(food("salmon_pie"));
+    const buffs = pie.type === "consumable" ? pie.buffs! : [];
+    buffs[0]!.data[0]!.buffs[0]!.attributes[0]!.requirements = [
+      { type: "locationHasKeywords", name: null, opposite: true, requirement: {} },
+    ] as never;
+    expect(appliesTo(pie)).toEqual([]);
+  });
 });
