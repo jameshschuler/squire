@@ -4,7 +4,7 @@ export function findItem(recipes: RecipeView[], itemId: string): ItemSummary | u
   for (const recipe of recipes) {
     const found = [...recipe.outputs, ...recipe.materials.flat()].find((i) => i.id === itemId);
     if (found) {
-      return { id: found.id, name: found.name, icon: found.icon, keywords: found.keywords };
+      return { id: found.id, name: found.name, icon: found.icon, keywords: found.keywords, effects: found.effects };
     }
   }
   return undefined;

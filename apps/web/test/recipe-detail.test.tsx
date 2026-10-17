@@ -41,4 +41,14 @@ describe("RecipeDetail", () => {
     expect(screen.queryByText(/base steps/)).toBeNull();
     expect(screen.getByText(/Max efficiency/)).toBeDefined();
   });
+
+  it("leaves a food's effects to its item page", async () => {
+    const effects = {
+      steps: 500,
+      effects: [{ condition: "Global", stat: "Double rewards", normal: "+1%", fine: "+2%" }],
+    };
+    await renderRecipe({ ...goldBar, outputs: [{ ...goldBar.outputs[0]!, effects }] });
+    expect(screen.queryByRole("heading", { name: /Effects/ })).toBeNull();
+    expect(screen.queryByText("Double rewards")).toBeNull();
+  });
 });

@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { formatPercent, formatRegion, formatSkillLevel, formatSteps, formatTitle, lootTypeLabel } from "@/lib/format";
+import {
+  formatDuration,
+  formatKeyword,
+  formatPercent,
+  formatRegion,
+  formatSkillLevel,
+  formatSteps,
+  formatTitle,
+  lootTypeLabel,
+} from "@/lib/format";
 
 describe("formatPercent", () => {
   it.each([
@@ -8,6 +17,26 @@ describe("formatPercent", () => {
     [1.125, "113%"],
   ])("formats %s as %s", (ratio, expected) => {
     expect(formatPercent(ratio)).toBe(expected);
+  });
+});
+
+describe("formatKeyword", () => {
+  it.each([
+    ["cooked_fish", "cooked fish"],
+    ["hunting_product", "hunting product"],
+    ["ore", "ore"],
+  ])("formats %s as %s", (keyword, expected) => {
+    expect(formatKeyword(keyword)).toBe(expected);
+  });
+});
+
+describe("formatDuration", () => {
+  it.each([
+    [500, "500 steps"],
+    [1000, "1,000 steps"],
+    [10000, "10,000 steps"],
+  ])("formats %s steps as %s", (steps, expected) => {
+    expect(formatDuration(steps)).toBe(expected);
   });
 });
 

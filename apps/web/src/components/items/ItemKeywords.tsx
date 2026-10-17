@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { formatKeyword } from "@/lib/format";
 
 export function ItemKeywords({ keywords }: { keywords: string[] }) {
   return (
@@ -6,7 +7,7 @@ export function ItemKeywords({ keywords }: { keywords: string[] }) {
       {keywords.map((keyword) => (
         <li key={keyword}>
           <Badge variant="secondary" className="font-normal">
-            {keyword}
+            {formatKeyword(keyword)}
           </Badge>
         </li>
       ))}
