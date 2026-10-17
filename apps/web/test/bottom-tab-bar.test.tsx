@@ -13,6 +13,7 @@ describe("BottomTabBar", () => {
     await renderWithRouter(<BottomTabBar />);
     expect(tab("Recipes").getAttribute("href")).toBe("/");
     expect(tab("Materials").getAttribute("href")).toBe("/materials");
+    expect(tab("Food").getAttribute("href")).toBe("/food");
     expect(tab("Favorites").getAttribute("href")).toBe("/favorites");
     expect(tab("Recipes").getAttribute("aria-current")).toBe("page");
     expect(tab("Favorites").getAttribute("aria-current")).toBeNull();

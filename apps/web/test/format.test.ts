@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatDuration,
+  formatEffect,
   formatKeyword,
   formatPercent,
   formatRegion,
@@ -27,6 +28,16 @@ describe("formatKeyword", () => {
     ["ore", "ore"],
   ])("formats %s as %s", (keyword, expected) => {
     expect(formatKeyword(keyword)).toBe(expected);
+  });
+});
+
+describe("formatEffect", () => {
+  it.each([
+    ["+7%", "Work efficiency", "+7% work efficiency"],
+    ["-1", "Steps required", "-1 steps required"],
+    ["25%", "Chance to find 1 to 10 gold pieces", "25% chance to find 1 to 10 gold pieces"],
+  ])("formats %s %s as %s", (normal, stat, expected) => {
+    expect(formatEffect({ normal, stat })).toBe(expected);
   });
 });
 

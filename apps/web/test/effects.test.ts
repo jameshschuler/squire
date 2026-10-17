@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { groupByCondition } from "@/lib/effects";
 
-const effect = (condition: string, stat: string) => ({ condition, stat, normal: "+1%", fine: "+2%" });
+const effect = (condition: string, stat: string) => ({ condition, stat, normal: "+1%", fine: "+2%", appliesTo: [] });
 
 describe("groupByCondition", () => {
   it("groups effects under their condition, in the order they first appear", () => {

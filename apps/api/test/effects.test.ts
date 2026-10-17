@@ -1,9 +1,28 @@
-import type { ItemDetail } from "@jameshschuler/walkscape-data-client";
+import type { ItemDetail, SkillDetail } from "@jameshschuler/walkscape-data-client";
 import { describe, expect, it } from "vitest";
 import { itemEffects } from "../src/recipe-book/effects.js";
 import foods from "../../../fixtures/api/foods.json";
 
 const food = (id: string) => (foods as unknown as ItemDetail[]).find((f) => f.id === id)!;
+
+const SKILL_TYPES = {
+  agility: "utility",
+  carpentry: "artisan",
+  cooking: "artisan",
+  crafting: "artisan",
+  fishing: "gathering",
+  foraging: "gathering",
+  hunting: "gathering",
+  mining: "gathering",
+  smithing: "artisan",
+  tailoring: "artisan",
+  trinketry: "artisan",
+  woodcutting: "gathering",
+};
+const SKILLS = Object.entries(SKILL_TYPES).map(
+  ([id, type]) => ({ id, name: id.charAt(0).toUpperCase() + id.slice(1), type }) as SkillDetail,
+);
+const ALL_SKILLS = Object.keys(SKILL_TYPES);
 
 describe("itemEffects", () => {
   const effect = (condition: string, stat: string, normal: string, fine = normal) => ({
@@ -30,17 +49,42 @@ describe("itemEffects", () => {
     ["bug_bait", 5000, [effect("While doing Fishing", "Steps required", "-1", "-2")]],
     ["beef_stew", 10000, [effect("Global", "Inventory space", "+5", "+10")]],
   ])("describes %s's buff from its stats", (id, steps, effects) => {
-    expect(itemEffects(food(id))).toEqual({ steps, effects });
+    expect(itemEffects(food(id), SKILLS)).toMatchObject({ steps, effects });
   });
 
   it("ignores the game's effect text, which can contradict the stats", () => {
     const bagel = structuredClone(food("bagel"));
     const buffs = bagel.type === "consumable" ? bagel.buffs! : [];
     buffs[0]!.data[0]!.buffs[0]!.attributes[0]!.text = "Chance to find <hl>1</hl> fishing bait";
-    expect(itemEffects(bagel)?.effects).toEqual([effect("While doing Agility", "Work efficiency", "+5%")]);
+    expect(itemEffects(bagel, SKILLS)?.effects).toMatchObject([
+      effect("While doing Agility", "Work efficiency", "+5%"),
+    ]);
   });
 
   it("has no effects for items that aren't consumables", () => {
-    expect(itemEffects({ ...food("bagel"), type: "material" } as unknown as ItemDetail)).toBeNull();
+    expect(itemEffects({ ...food("bagel"), type: "material" } as unknown as ItemDetail, SKILLS)).toBeNull();
+  });
+
+  it.each([
+    ["salmon_pie", ["woodcutting"]],
+    ["dried_fruit", ["fishing", "foraging", "hunting", "mining", "woodcutting"]],
+    ["bread", ["travelling"]],
+    ["beef_stew", [...ALL_SKILLS, "travelling"]],
+  ])("says which skills %s's effect applies to", (id, expected) => {
+    const [effect] = itemEffects(food(id), SKILLS)!.effects;
+    expect(effect!.appliesTo.map((target) => target.id)).toEqual(expected);
+  });
+
+  it("names the skills an effect applies to", () => {
+    const [effect] = itemEffects(food("salmon_pie"), SKILLS)!.effects;
+    expect(effect!.appliesTo).toEqual([{ id: "woodcutting", name: "Woodcutting" }]);
+  });
+
+  it("doesn't treat an effect with a requirement it doesn't recognize as global", () => {
+    const pie = structuredClone(food("salmon_pie"));
+    const buffs = pie.type === "consumable" ? pie.buffs! : [];
+    const attribute = buffs[0]!.data[0]!.buffs[0]!.attributes[0]!;
+    attribute.requirements = [{ type: "locationHasKeywords", name: null, opposite: false, requirement: {} }] as never;
+    expect(itemEffects(pie, SKILLS)!.effects[0]!.appliesTo).toEqual([]);
   });
 });

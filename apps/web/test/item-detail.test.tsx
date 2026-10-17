@@ -57,7 +57,9 @@ describe("ItemDetail", () => {
     const goldBar = findItem(book.recipes, "gold_bar")!;
     const effects = {
       steps: 1000,
-      effects: [{ condition: "While doing Woodcutting", stat: "Work efficiency", normal: "+7%", fine: "+14%" }],
+      effects: [
+        { condition: "While doing Woodcutting", stat: "Work efficiency", normal: "+7%", fine: "+14%", appliesTo: [] },
+      ],
     };
     await renderWithRouter(<ItemDetail item={{ ...goldBar, effects }} book={book} />);
     expect(sectionTitles().slice(0, 2)).toEqual(["Keywords", "Effects · 1,000 steps"]);

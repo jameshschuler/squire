@@ -52,7 +52,7 @@ export function buildRecipeBook(data: GameData): RecipeBook {
   const item = (id: string, amount: number): RecipeItem => {
     const found = items.get(id);
     const keywords = [...new Set(found?.keywords ?? [])];
-    const effects = found ? itemEffects(found) : null;
+    const effects = found ? itemEffects(found, data.skills) : null;
     return { id, name: found?.name ?? humanize(id), icon: found?.icon ?? "", keywords, effects, amount };
   };
   const regions = new Map(data.factions.map((f) => [f.id, f.name]));

@@ -13,8 +13,8 @@ describe("ItemEffectsSection", () => {
         effects={{
           steps: 500,
           effects: [
-            { condition: "While doing Woodcutting", stat: "Steps required", normal: "-1", fine: "-2" },
-            { condition: "While doing Woodcutting", stat: "Double rewards", normal: "+2%", fine: "+4%" },
+            { condition: "While doing Woodcutting", stat: "Steps required", normal: "-1", fine: "-2", appliesTo: [] },
+            { condition: "While doing Woodcutting", stat: "Double rewards", normal: "+2%", fine: "+4%", appliesTo: [] },
           ],
         }}
       />,
@@ -33,8 +33,20 @@ describe("ItemEffectsSection", () => {
         effects={{
           steps: 750,
           effects: [
-            { condition: "While doing Foraging", stat: "Chance to find gold", normal: "25%", fine: "50%" },
-            { condition: "While doing Hunting", stat: "Chance to find gold", normal: "25%", fine: "50%" },
+            {
+              condition: "While doing Foraging",
+              stat: "Chance to find gold",
+              normal: "25%",
+              fine: "50%",
+              appliesTo: [],
+            },
+            {
+              condition: "While doing Hunting",
+              stat: "Chance to find gold",
+              normal: "25%",
+              fine: "50%",
+              appliesTo: [],
+            },
           ],
         }}
       />,
@@ -52,7 +64,7 @@ describe("ItemEffectsSection", () => {
       <ItemEffectsSection
         effects={{
           steps: null,
-          effects: [{ condition: "Global", stat: "Inventory space", normal: "+5", fine: "+10" }],
+          effects: [{ condition: "Global", stat: "Inventory space", normal: "+5", fine: "+10", appliesTo: [] }],
         }}
       />,
     );

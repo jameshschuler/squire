@@ -57,3 +57,7 @@ export function formatDuration(steps: number): string {
 export function formatKeyword(keyword: string): string {
   return keyword.replace(/_/g, " ");
 }
+
+export function formatEffect(effect: { normal: string; stat: string }): string {
+  return `${effect.normal} ${effect.stat.charAt(0).toLowerCase()}${effect.stat.slice(1)}`;
+}
