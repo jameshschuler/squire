@@ -33,7 +33,12 @@ export function fakeClient(version = "v1") {
       const { iconPaths } = JSON.parse(String(init?.body)) as { iconPaths: string[] };
       calls.iconBatches.push(iconPaths.length);
       return json(
-        Object.fromEntries(iconPaths.map((p) => [p, p.includes("missing") ? null : "data:image/webp;base64,AQID"])),
+        Object.fromEntries(
+          iconPaths.map((p) => [
+            p,
+            p.includes("missing") || p.includes("unbatched") ? null : "data:image/webp;base64,AQID",
+          ]),
+        ),
       );
     }
     if (url.pathname.startsWith("/icons/")) {

@@ -62,29 +62,48 @@ describe("compression", () => {
   });
 
   it("doesn't compress icons, which are already compressed images", async () => {
-    const res = await app().inject({
-      url: "/api/icons/assets/icons/items/bagel.png",
+    const server = app();
+    await server.inject("/api/recipes");
+    const res = await server.inject({
+      url: "/api/icons/assets/icons/items/materials/food/bagel.png",
       headers: { "accept-encoding": "gzip" },
     });
+    expect(res.statusCode).toBe(200);
     expect(res.headers["content-encoding"]).toBeUndefined();
   });
 });
 
 describe("GET /api/icons/*", () => {
-  it("proxies the icon and caches it in memory", async () => {
+  it("serves an icon the recipe book uses from the warmed cache", async () => {
     const { client, calls } = fakeClient();
     const server = app(client);
-    const first = await server.inject("/api/icons/assets/icons/items/bagel.png");
-    await server.inject("/api/icons/assets/icons/items/bagel.png");
-    expect(first.statusCode).toBe(200);
-    expect(first.headers["content-type"]).toBe("image/png");
-    expect(first.headers["cache-control"]).toBe("public, max-age=604800");
-    expect(calls.icon).toBe(1);
+    await server.inject("/api/recipes");
+    const res = await server.inject("/api/icons/assets/icons/items/materials/food/bagel.png");
+    expect(res.statusCode).toBe(200);
+    expect(res.headers["content-type"]).toBe("image/webp");
+    expect(res.headers["cache-control"]).toBe("public, max-age=604800");
+    expect(calls.icon).toBe(0);
+    expect(calls.iconBatches).toHaveLength(1);
   });
 
-  it("answers 404 for an unknown icon", async () => {
-    const res = await app().inject("/api/icons/assets/missing.png");
-    expect(res.statusCode).toBe(404);
+  it("answers 404 for an icon the recipe book doesn't use, without asking WalkScape", async () => {
+    const { client, calls } = fakeClient();
+    const server = app(client);
+    await server.inject("/api/recipes");
+    const responses = await Promise.all(["a.png", "b.png", "c.png"].map((name) => server.inject(`/api/icons/${name}`)));
+    expect(responses.map((res) => res.statusCode)).toEqual([404, 404, 404]);
+    expect(calls.icon).toBe(0);
+  });
+
+  it("answers 503 while the recipe book is still loading, without starting more loads", async () => {
+    const { client, calls } = fakeClient();
+    client.version = () => new Promise(() => {});
+    const server = app(client);
+    const responses = await Promise.all(["a.png", "b.png"].map((name) => server.inject(`/api/icons/${name}`)));
+    expect(responses.map((res) => res.statusCode)).toEqual([503, 503]);
+    expect(responses[0]?.headers["retry-after"]).toBe("5");
+    expect(calls.paths.filter((path) => path === "/recipes/")).toHaveLength(1);
+    expect(calls.icon).toBe(0);
   });
 });
 
