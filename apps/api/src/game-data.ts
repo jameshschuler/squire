@@ -8,7 +8,7 @@ export async function loadGameData(client: WalkScapeClient): Promise<GameData> {
       client.recipes.loadAll(),
       client.items.loadAll(),
       client.skills.loadAll(),
-      client.services.loadAll(),
+      client.services.search({ serviceType: "crafting" }, { detailed: true }),
       client.locations.loadAll(),
       client.factions.loadAll(),
       client.activities.loadAll(),

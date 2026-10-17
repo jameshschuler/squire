@@ -19,11 +19,12 @@ export function fakeClient(version = "v1") {
     loot_tables: data.lootTables,
     shops: data.shops,
   };
-  const calls = { version: 0, lists: 0, icon: 0, iconBatches: [] as number[] };
+  const calls = { version: 0, lists: 0, icon: 0, iconBatches: [] as number[], paths: [] as string[] };
   const state = { version };
 
   const fetch: typeof globalThis.fetch = async (input, init) => {
     const url = new URL(String(input));
+    calls.paths.push(url.pathname + url.search);
     if (url.pathname === "/version/") {
       calls.version++;
       return json({ version: state.version, details: { api: "", assets: "", locales: "" } });
@@ -56,7 +57,9 @@ export function fakeClient(version = "v1") {
       return found ? json(found) : json({ error: "Not found" }, HTTP_STATUS.NOT_FOUND);
     }
     const filters = [...url.searchParams].filter(([field]) => field !== "detailed");
-    return json(entries.filter((entry) => filters.every(([field, value]) => matches(entry[field], value))));
+    const found = entries.filter((entry) => filters.every(([field, value]) => matches(entry[field], value)));
+    const detailed = url.searchParams.get("detailed") === "true";
+    return json(detailed ? found : found.map(({ id, name, icon }) => ({ id, name, icon })));
   };
 
   const client = createClient({ apiKey: "test", fetch, maxRetries: 0 });

@@ -72,6 +72,38 @@ describe("createClient", () => {
     await expect(pending).resolves.toEqual({ version: "x" });
   });
 
+  it("closes a response's body before retrying it, so its connection is freed", async () => {
+    const cancel = vi.fn();
+    const { fetch } = fakeFetch([
+      () => new Response(new ReadableStream({ cancel }), { status: 503 }),
+      json({ version: "x" }),
+    ]);
+    vi.useFakeTimers();
+    const pending = createClient({ apiKey: "k", fetch }).version();
+    await vi.advanceTimersByTimeAsync(500);
+    await expect(pending).resolves.toEqual({ version: "x" });
+    expect(cancel).toHaveBeenCalledOnce();
+  });
+
+  it("still retries when closing the old response's body fails", async () => {
+    const { fetch } = fakeFetch([
+      () =>
+        new Response(
+          new ReadableStream({
+            cancel() {
+              throw new Error("connection reset");
+            },
+          }),
+          { status: 503 },
+        ),
+      json({ version: "x" }),
+    ]);
+    vi.useFakeTimers();
+    const pending = createClient({ apiKey: "k", fetch }).version();
+    await vi.advanceTimersByTimeAsync(500);
+    await expect(pending).resolves.toEqual({ version: "x" });
+  });
+
   it("gives up after maxRetries", async () => {
     const { fetch } = fakeFetch([json({ error: "down" }, 503), json({ error: "down" }, 503)]);
     await expect(createClient({ apiKey: "k", fetch, maxRetries: 1 }).version()).rejects.toMatchObject({ status: 503 });

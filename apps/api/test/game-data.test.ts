@@ -11,6 +11,16 @@ describe("loadGameData", () => {
     expect(data.shops.map((s) => s.id)).toEqual(["granfiddich_tool_stall"]);
   });
 
+  it("loads crafting services with one search, since the recipe book uses no others", async () => {
+    const { client, calls } = fakeClient();
+    const data = await loadGameData(client);
+    expect(calls.paths.filter((path) => path.startsWith("/services/"))).toEqual([
+      "/services/search?serviceType=crafting&detailed=true",
+    ]);
+    expect(data.services.length).toBeGreaterThan(0);
+    expect(data.services.every((s) => s.serviceType === "crafting" && s.keywords.length > 0)).toBe(true);
+  });
+
   it("fails when the API doesn't report a version", async () => {
     const { client } = fakeClient();
     client.version = async () => ({});
