@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { BookOpen, Pickaxe, Star } from "lucide-react";
-import { activeTab as tabFor } from "@/lib/layout";
+import { activeTab as tabFor, type Tab } from "@/lib/layout";
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -11,7 +12,11 @@ const TABS = [
 
 export function BottomTabBar() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const activeTab = tabFor(pathname);
+  const [lastTab, setLastTab] = useState<Tab>("/");
+  const activeTab = tabFor(pathname, lastTab);
+  if (activeTab !== lastTab) {
+    setLastTab(activeTab);
+  }
 
   return (
     <nav
