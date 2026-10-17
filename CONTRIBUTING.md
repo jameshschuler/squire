@@ -83,7 +83,13 @@ The data client's types come from the API's OpenAPI spec. When the API changes, 
 
 ## Publishing the data client
 
-`packages/data-client` is published to npm as `@jameshschuler/walkscape-data-client`. Publish with `pnpm publish` from that folder, not `npm publish`. In the repo, `exports` points at the TypeScript source, and only pnpm swaps in the built `dist/` paths from `publishConfig`. `prepublishOnly` rebuilds before each publish.
+`packages/data-client` is published to npm as `@jameshschuler/walkscape-data-client`. Releases go out from CI:
+
+1. In a PR, bump `version` in `packages/data-client/package.json` and add a `CHANGELOG.md` entry.
+2. After it merges, tag the merge commit and push the tag: `git tag data-client-vX.Y.Z && git push origin data-client-vX.Y.Z`.
+3. `.github/workflows/release-data-client.yml` checks that the tag matches the version, runs the data client's typecheck, tests and build, then publishes to npm through trusted publishing (no npm token) and creates a GitHub Release.
+
+In the repo, `exports` points at the TypeScript source. `pnpm pack` swaps in the built `dist/` paths from `publishConfig`, which is why the workflow packs with pnpm before publishing with npm.
 
 Doc comments on the data client's exports are its documentation in editors, so keep them accurate when you change an export.
 

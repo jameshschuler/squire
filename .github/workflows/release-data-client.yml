@@ -1,0 +1,52 @@
+name: Release data client
+
+on:
+  push:
+    tags: ["data-client-v*"]
+
+permissions: {}
+
+jobs:
+  release:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          check-latest: true
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - name: Check the tag matches the package version
+        run: |
+          version=$(node -p "require('./packages/data-client/package.json').version")
+          if [ "$GITHUB_REF_NAME" != "data-client-v$version" ]; then
+            echo "Tag $GITHUB_REF_NAME doesn't match package version $version"
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @jameshschuler/walkscape-data-client typecheck
+      - run: pnpm --filter @jameshschuler/walkscape-data-client test
+      - run: pnpm --filter @jameshschuler/walkscape-data-client build
+      - name: Pack
+        working-directory: packages/data-client
+        run: pnpm pack --pack-destination "$RUNNER_TEMP"
+      - name: Publish to npm, unless this version already is
+        run: |
+          if npm view "@jameshschuler/walkscape-data-client@$VERSION" version > /dev/null 2>&1; then
+            echo "$VERSION is already on npm"
+          else
+            npm publish "$RUNNER_TEMP/jameshschuler-walkscape-data-client-$VERSION.tgz" --access public
+          fi
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME"
+          --notes "See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/$GITHUB_REF_NAME/packages/data-client/CHANGELOG.md)."
