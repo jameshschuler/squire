@@ -37,6 +37,10 @@ describe("formatCondition", () => {
     ["While doing Woodcutting", "Woodcutting"],
     ["While doing gathering skills", "Gathering skills"],
     ["While travelling", "Travelling"],
+    ["While not doing Woodcutting", "Not doing Woodcutting"],
+    ["While not travelling", "Not travelling"],
+    ["While not doing gathering skills", "Not doing gathering skills"],
+    ["Under certain conditions", "Under certain conditions"],
     ["Global", "Global"],
   ])("shortens %s to %s", (condition, expected) => {
     expect(formatCondition(condition)).toBe(expected);

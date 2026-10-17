@@ -24,6 +24,15 @@ const SKILLS = Object.entries(SKILL_TYPES).map(
 );
 const ALL_SKILLS = Object.keys(SKILL_TYPES);
 
+const withUnknownRequirement = (opposite: boolean) => {
+  const pie = structuredClone(food("salmon_pie"));
+  const buffs = pie.type === "consumable" ? pie.buffs! : [];
+  buffs[0]!.data[0]!.buffs[0]!.attributes[0]!.requirements = [
+    { type: "locationHasKeywords", name: null, opposite, requirement: {} },
+  ] as never;
+  return pie;
+};
+
 describe("itemEffects", () => {
   const effect = (condition: string, stat: string, normal: string, fine = normal) => ({
     condition,
@@ -81,11 +90,9 @@ describe("itemEffects", () => {
   });
 
   it("doesn't treat an effect with a requirement it doesn't recognize as global", () => {
-    const pie = structuredClone(food("salmon_pie"));
-    const buffs = pie.type === "consumable" ? pie.buffs! : [];
-    const attribute = buffs[0]!.data[0]!.buffs[0]!.attributes[0]!;
-    attribute.requirements = [{ type: "locationHasKeywords", name: null, opposite: false, requirement: {} }] as never;
-    expect(itemEffects(pie, SKILLS)!.effects[0]!.appliesTo).toEqual([]);
+    const [effect] = itemEffects(withUnknownRequirement(false), SKILLS)!.effects;
+    expect(effect!.condition).toBe("Under certain conditions");
+    expect(effect!.appliesTo).toEqual([]);
   });
 
   const negated = (id: string) => {
@@ -122,11 +129,14 @@ describe("itemEffects", () => {
   });
 
   it("still applies a negated requirement it doesn't recognize to nothing", () => {
-    const pie = structuredClone(food("salmon_pie"));
-    const buffs = pie.type === "consumable" ? pie.buffs! : [];
-    buffs[0]!.data[0]!.buffs[0]!.attributes[0]!.requirements = [
-      { type: "locationHasKeywords", name: null, opposite: true, requirement: {} },
-    ] as never;
-    expect(appliesTo(pie)).toEqual([]);
+    expect(appliesTo(withUnknownRequirement(true))).toEqual([]);
+  });
+
+  it.each([
+    ["salmon_pie", "While not doing Woodcutting"],
+    ["dried_fruit", "While not doing gathering skills"],
+    ["bread", "While not travelling"],
+  ])("labels %s's negated requirement to match where it applies", (id, condition) => {
+    expect(itemEffects(negated(id), SKILLS)!.effects[0]!.condition).toBe(condition);
   });
 });

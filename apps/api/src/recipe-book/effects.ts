@@ -31,11 +31,10 @@ function effectLine(attribute: Attribute, fine: Attribute | undefined, skills: S
   const fineStat = (fine && statValue(fine)) ?? stat;
   return [
     {
-      condition: condition(attribute),
+      ...scope(attribute, skills),
       stat: isChance ? stripTags(attribute.customText) : attribute.statText,
       normal: format(stat),
       fine: format(fineStat),
-      appliesTo: appliesTo(attribute, skills),
     },
   ];
 }
@@ -44,42 +43,43 @@ function statValue(attribute: Attribute): StatValue | undefined {
   return attribute.stats[0] as StatValue | undefined;
 }
 
-function condition(attribute: Attribute): string {
-  if (attribute.skillText) {
-    return `While doing ${attribute.skillText}`;
-  }
-  const requirement = attribute.requirements?.[0];
-  if (requirement?.type === "traveling") {
-    return "While travelling";
-  }
-  if (requirement?.type === "mainSkillType") {
-    return `While doing ${requirement.requirement.type} skills`;
-  }
-  return "Global";
-}
-
-function appliesTo(attribute: Attribute, skills: SkillDetail[]): EffectTarget[] {
+function scope(attribute: Attribute, skills: SkillDetail[]): Pick<Effect, "condition" | "appliesTo"> {
   const everything = () => [...skills.map(skillTarget), TRAVELLING];
   const requirement = attribute.requirements?.[0];
   if (!requirement) {
-    return everything();
+    return { condition: "Global", appliesTo: everything() };
   }
-  const matching = requirementTargets(requirement, skills);
-  if (!matching || !requirement.opposite) {
-    return matching ?? [];
+  const named = describeRequirement(requirement, skills);
+  if (!named) {
+    return { condition: "Under certain conditions", appliesTo: [] };
   }
-  return everything().filter((target) => !matching.some((match) => match.id === target.id));
+  if (!requirement.opposite) {
+    return { condition: `While ${named.activity}`, appliesTo: named.targets };
+  }
+  const namedIds = new Set(named.targets.map((target) => target.id));
+  return {
+    condition: `While not ${named.activity}`,
+    appliesTo: everything().filter((target) => !namedIds.has(target.id)),
+  };
 }
 
-function requirementTargets(requirement: Requirement, skills: SkillDetail[]): EffectTarget[] | undefined {
+function describeRequirement(
+  requirement: Requirement,
+  skills: SkillDetail[],
+): { activity: string; targets: EffectTarget[] } | undefined {
   if (requirement.type === "mainSkill") {
-    return skills.filter((skill) => skill.id === requirement.requirement.skill).map(skillTarget);
+    const matching = skills.filter((skill) => skill.id === requirement.requirement.skill);
+    return {
+      activity: `doing ${matching[0]?.name ?? requirement.requirement.skill}`,
+      targets: matching.map(skillTarget),
+    };
   }
   if (requirement.type === "mainSkillType") {
-    return skills.filter((skill) => skill.type === requirement.requirement.type).map(skillTarget);
+    const matching = skills.filter((skill) => skill.type === requirement.requirement.type);
+    return { activity: `doing ${requirement.requirement.type} skills`, targets: matching.map(skillTarget) };
   }
   if (requirement.type === "traveling") {
-    return [TRAVELLING];
+    return { activity: "travelling", targets: [TRAVELLING] };
   }
   return undefined;
 }
