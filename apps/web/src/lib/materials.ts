@@ -13,28 +13,35 @@ export interface Material {
   item: ItemSummary;
   sources: ItemSource[];
   skills: SkillLevel[];
+  isCrafted: boolean;
 }
 
 export const CHESTS_FILTER = "chests";
 export const SHOPS_FILTER = "shops";
+export const CRAFTED_FILTER = "crafted";
 
 export interface MaterialSearchOptions {
-  /** A skill id, or `CHESTS_FILTER` / `SHOPS_FILTER`. */
+  /** A skill id, or `CHESTS_FILTER` / `SHOPS_FILTER` / `CRAFTED_FILTER`. */
   filter?: string;
 }
 
-export function rawMaterials(book: RecipeBook): Material[] {
+export function listMaterials(book: RecipeBook): Material[] {
   const crafted = new Set(book.recipes.flatMap((r) => r.outputs.map((o) => o.id)));
   const items = new Map<string, ItemSummary>();
   for (const { id, name, icon, keywords, effects } of book.recipes.flatMap((r) => r.materials.flat())) {
-    if (!crafted.has(id) && !items.has(id)) {
+    if (!items.has(id)) {
       items.set(id, { id, name, icon, keywords, effects });
     }
   }
   return [...items.values()]
     .map((item) => {
       const sources = book.sources[item.id] ?? [];
-      return { item, sources, skills: lowestSkillLevels(sources.flatMap(sourceSkills)) };
+      return {
+        item,
+        sources,
+        skills: lowestSkillLevels(sources.flatMap(sourceSkills)),
+        isCrafted: crafted.has(item.id),
+      };
     })
     .sort((a, b) => a.item.name.localeCompare(b.item.name));
 }
@@ -45,6 +52,7 @@ export function materialFilters(materials: Material[]): SkillOption[] {
     ...uniqueSkills(materials.flatMap((m) => m.skills)),
     ...(hasSource("chest") ? [{ id: CHESTS_FILTER, name: "Chests" }] : []),
     ...(hasSource("shop") ? [{ id: SHOPS_FILTER, name: "Shops" }] : []),
+    ...(materials.some((m) => m.isCrafted) ? [{ id: CRAFTED_FILTER, name: "Crafted" }] : []),
   ];
 }
 
@@ -65,6 +73,9 @@ function matchesFilter(material: Material, filter: string): boolean {
   }
   if (filter === SHOPS_FILTER) {
     return material.sources.some((s) => s.kind === "shop");
+  }
+  if (filter === CRAFTED_FILTER) {
+    return material.isCrafted;
   }
   return material.skills.some((s) => s.id === filter);
 }
