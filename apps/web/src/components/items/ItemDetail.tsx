@@ -4,6 +4,7 @@ import { BackButton } from "@/components/layout/BackButton";
 import { RecipeList } from "@/components/recipes/RecipeList";
 import { RecipeSection } from "@/components/recipes/RecipeSection";
 import { GameIcon } from "@/components/shared/GameIcon";
+import { ItemEffectsList } from "@/components/shared/ItemEffectsList";
 import { ItemKeywords } from "./ItemKeywords";
 import { ItemSources } from "./ItemSources";
 
@@ -28,6 +29,11 @@ export function ItemDetail({ item, book }: ItemDetailProps) {
       {item.keywords.length > 0 && (
         <RecipeSection title="Keywords">
           <ItemKeywords keywords={item.keywords} />
+        </RecipeSection>
+      )}
+      {item.effects && (
+        <RecipeSection title="Effects">
+          <ItemEffectsList effects={item.effects} />
         </RecipeSection>
       )}
       {isCrafted && (

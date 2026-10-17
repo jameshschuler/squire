@@ -10,7 +10,11 @@ describe("MaterialListItem", () => {
     await renderWithRouter(
       <ul>
         <MaterialListItem
-          material={{ item: { id: "bones", name: "Bones", icon: "", keywords: [] }, sources: [], skills: [] }}
+          material={{
+            item: { id: "bones", name: "Bones", icon: "", keywords: [], effects: null },
+            sources: [],
+            skills: [],
+          }}
         />
       </ul>,
     );

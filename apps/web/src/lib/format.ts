@@ -49,3 +49,7 @@ const REGION_SHORT_NAMES: Record<string, string> = {
 export function formatRegion(region: string): string {
   return REGION_SHORT_NAMES[region] ?? region;
 }
+
+export function formatDuration(steps: number): string {
+  return `Lasts ${steps.toLocaleString("en-US")} steps`;
+}

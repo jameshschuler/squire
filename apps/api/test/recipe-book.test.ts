@@ -44,8 +44,15 @@ describe("buildRecipeBook", () => {
   it("lists material alternatives in each slot", () => {
     expect(byId("smelt_a_gold_bar")?.materials).toEqual([
       [
-        { id: "gold_nugget", name: "Gold nugget", icon: expect.any(String), keywords: ["nugget", "light"], amount: 7 },
-        { id: "gold_ore", name: "Gold ore", icon: expect.any(String), keywords: ["ore"], amount: 2 },
+        {
+          id: "gold_nugget",
+          name: "Gold nugget",
+          icon: expect.any(String),
+          keywords: ["nugget", "light"],
+          effects: null,
+          amount: 7,
+        },
+        { id: "gold_ore", name: "Gold ore", icon: expect.any(String), keywords: ["ore"], effects: null, amount: 2 },
       ],
     ]);
   });
@@ -354,7 +361,13 @@ describe("findItem", () => {
     ["a material", "salt_crystal", "Salt crystal"],
     ["a material alternative", "gold_ore", "Gold ore"],
   ])("finds %s", (_, id, name) => {
-    expect(findItem(recipes, id)).toEqual({ id, name, icon: expect.any(String), keywords: expect.any(Array) });
+    expect(findItem(recipes, id)).toEqual({
+      id,
+      name,
+      icon: expect.any(String),
+      keywords: expect.any(Array),
+      effects: null,
+    });
   });
 
   it("returns undefined for an item no recipe mentions", () => {

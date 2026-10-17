@@ -2,6 +2,7 @@ import type { RecipeView } from "@squire/api/recipe-book";
 import { BackButton } from "@/components/layout/BackButton";
 import { Badge } from "@/components/ui/badge";
 import { GameIcon } from "@/components/shared/GameIcon";
+import { ItemEffectsList } from "@/components/shared/ItemEffectsList";
 import { formatPercent, formatSkillLevel, formatSteps } from "@/lib/format";
 import { FavoriteButton } from "./FavoriteButton";
 import { RecipeItemRow } from "./RecipeItemRow";
@@ -9,6 +10,7 @@ import { RecipeSection } from "./RecipeSection";
 import { ServiceLocations } from "./ServiceLocations";
 
 export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
+  const effects = recipe.outputs.find((output) => output.effects)?.effects;
   return (
     <article className="space-y-6 pt-2">
       <BackButton />
@@ -54,6 +56,12 @@ export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
           <RecipeItemRow key={item.id} item={item} />
         ))}
       </RecipeSection>
+
+      {effects && (
+        <RecipeSection title="Effects">
+          <ItemEffectsList effects={effects} />
+        </RecipeSection>
+      )}
 
       {recipe.service && (
         <RecipeSection title="Where to craft">

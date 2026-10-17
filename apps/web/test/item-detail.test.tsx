@@ -52,4 +52,13 @@ describe("ItemDetail", () => {
         .map((li) => li.textContent),
     ).toEqual(["nugget", "light"]);
   });
+
+  it("shows what a food does right after its keywords", async () => {
+    const goldBar = findItem(book.recipes, "gold_bar")!;
+    const effects = { steps: 1000, lines: ["+7% work efficiency while Woodcutting (fine: +14%)"] };
+    await renderWithRouter(<ItemDetail item={{ ...goldBar, effects }} book={book} />);
+    expect(sectionTitles().slice(0, 2)).toEqual(["Keywords", "Effects"]);
+    expect(section("Effects").getByText("+7% work efficiency while Woodcutting (fine: +14%)")).toBeDefined();
+    expect(section("Effects").getByText("Lasts 1,000 steps")).toBeDefined();
+  });
 });

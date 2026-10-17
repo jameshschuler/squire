@@ -1,0 +1,1015 @@
+[
+ {
+  "id": "salmon_pie",
+  "name": "Salmon pie",
+  "desc": "Fish in a pie, oh my!",
+  "keywords": [
+   "food",
+   "food",
+   "woodcutting"
+  ],
+  "type": "consumable",
+  "quality": "common",
+  "consumableType": "food",
+  "itemValue": {
+   "currency": "money",
+   "value": {
+    "common": 7,
+    "fine": 38
+   }
+  },
+  "buffs": [
+   {
+    "duration": {
+     "steps": 1000
+    },
+    "data": [
+     {
+      "type": "normal",
+      "buffs": [
+       {
+        "id": "buffobj-copy-buff_obj-40b26421-4207-4abd-99a1-3d912ed8909f",
+        "type": "attributes",
+        "runtimeType": "attributes",
+        "attributes": [
+         {
+          "id": "attribute-copy-buff_attr-6fa10887-ca71-4f81-a1af-ce9135d43013",
+          "customIcon": null,
+          "customTextLocalizationKey": null,
+          "customText": "",
+          "textLocalizationKey": "attributes.singulars.skilling.workEfficiency.whileMainSkill.text",
+          "text": "<stat s=\"workEfficiency\"/> while <supp k=\"skill\"/>",
+          "statText": "Work efficiency",
+          "skillText": "Woodcutting",
+          "tables": null,
+          "requirements": [
+           {
+            "type": "mainSkill",
+            "name": null,
+            "opposite": false,
+            "requirement": {
+             "skill": "woodcutting"
+            }
+           }
+          ],
+          "stats": [
+           {
+            "stat": "work_efficiency",
+            "name": "Work efficiency",
+            "type": "workEfficiency",
+            "isPercent": true,
+            "value": 0.07,
+            "isNegative": false,
+            "isMultiplicative": true
+           }
+          ]
+         }
+        ],
+        "fineAttributes": [
+         {
+          "id": "attribute-copy-buff_attr-c923cf97-8c8a-4dd9-85c4-af110023cb75",
+          "customIcon": null,
+          "customTextLocalizationKey": null,
+          "customText": "",
+          "textLocalizationKey": "attributes.singulars.skilling.workEfficiency.whileMainSkill.text",
+          "text": "<stat s=\"workEfficiency\"/> while <supp k=\"skill\"/>",
+          "statText": "Work efficiency",
+          "skillText": "Woodcutting",
+          "tables": null,
+          "requirements": [
+           {
+            "type": "mainSkill",
+            "name": null,
+            "opposite": false,
+            "requirement": {
+             "skill": "woodcutting"
+            }
+           }
+          ],
+          "stats": [
+           {
+            "stat": "work_efficiency",
+            "name": "Work efficiency",
+            "type": "workEfficiency",
+            "isPercent": true,
+            "value": 0.14,
+            "isNegative": false,
+            "isMultiplicative": true
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "canBeFine": true,
+  "canBeSold": true,
+  "canBeBanked": true,
+  "canBeTraded": true,
+  "canBeDropped": true,
+  "icon": "assets/icons/items/syrenthia/salmon_pie.png"
+ },
+ {
+  "id": "bagel",
+  "name": "Bagel",
+  "desc": "A bun with a hole in it. Actually just a sugar-free donut.",
+  "keywords": [
+   "food",
+   "sandwich",
+   "food",
+   "agility"
+  ],
+  "type": "consumable",
+  "quality": "common",
+  "consumableType": "food",
+  "itemValue": {
+   "currency": "money",
+   "value": {
+    "common": 4,
+    "fine": 24
+   }
+  },
+  "buffs": [
+   {
+    "duration": {
+     "steps": 1000
+    },
+    "data": [
+     {
+      "type": "normal",
+      "buffs": [
+       {
+        "id": "buffobj-copy-buff_obj-ac582d68-9782-467d-945a-527649cad818",
+        "type": "attributes",
+        "runtimeType": "attributes",
+        "attributes": [
+         {
+          "id": "attribute-copy-buff_attr-da1870b2-3cd5-4111-9de2-1a5be2c93799",
+          "customIcon": null,
+          "customTextLocalizationKey": null,
+          "customText": "",
+          "textLocalizationKey": "attributes.singulars.skilling.workEfficiency.whileMainSkill.text",
+          "text": "<stat s=\"workEfficiency\"/> while <supp k=\"skill\"/>",
+          "statText": "Work efficiency",
+          "skillText": "Agility",
+          "tables": null,
+          "requirements": [
+           {
+            "type": "mainSkill",
+            "name": null,
+            "opposite": false,
+            "requirement": {
+             "skill": "agility"
+            }
+           }
+          ],
+          "stats": [
+           {
+            "stat": "work_efficiency",
+            "name": "Work efficiency",
+            "type": "workEfficiency",
+            "isPercent": true,
+            "value": 0.05,
+            "isNegative": false,
+            "isMultiplicative": true
+           }
+          ]
+         }
+        ],
+        "fineAttributes": [
+         {
+          "id": "attribute-copy-buff_attr-9bc74621-1953-48b3-b089-789feb13b73b",
+          "customIcon": null,
+          "customTextLocalizationKey": null,
+          "customText": "",
+          "textLocalizationKey": "attributes.singulars.skilling.doubleAction.whileMainSkill.text",
+          "text": "<stat s=\"doubleAction\"/> while <supp k=\"skill\"/>",
+          "statText": "Double action",
+          "skillText": "Agility",
+          "tables": null,
+          "requirements": [
+           {
+            "type": "mainSkill",
+            "name": null,
+            "opposite": false,
+            "requirement": {
+             "skill": "agility"
+            }
+           }
+          ],
+          "stats": [
+           {
+            "stat": "double_action",
+            "name": "Double action",
+            "type": "doubleAction",
+            "isPercent": true,
+            "value": 0.05,
+            "isNegative": false,
+            "isMultiplicative": true
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "canBeFine": true,
+  "canBeSold": true,
+  "canBeBanked": true,
+  "canBeTraded": true,
+  "canBeDropped": true,
+  "icon": "assets/icons/items/materials/food/bagel.png"
+ },
+ {
+  "id": "beer",
+  "name": "Beer",
+  "desc": "Fermentation may have been a greater discovery than fire.",
+  "keywords": [
+   "beverage",
+   "alcohol",
+   "beverage",
+   "global"
+  ],
+  "type": "consumable",
+  "quality": "common",
+  "consumableType": "food",
+  "itemValue": {
+   "currency": "money",
+   "value": {
+    "common": 1,
+    "fine": 11
+   }
+  },
+  "buffs": [
+   {
+    "duration": {
+     "steps": 1000
+    },
+    "data": [
+     {
+      "type": "normal",
+      "buffs": [
+       {
+        "id": "buffobj-copy-buff_obj-d54ddf4a-81a6-4047-b533-472e86552e3f",
+        "type": "attributes",
+        "runtimeType": "attributes",
+        "attributes": [
+         {
+          "id": "attribute-copy-buff_attr-aeb0233e-2b6a-4a7e-977f-c3fe0bde9301",
+          "customIcon": null,
+          "customTextLocalizationKey": null,
+          "customText": "",
+          "textLocalizationKey": "attributes.singulars.skilling.experience.global.text",
+          "text": "Global <stat s=\"bonusExperience\"/>",
+          "statText": "Bonus experience",
+          "skillText": "",
+          "tables": null,
+          "requirements": [],
+          "stats": [
+           {
+            "stat": "bonus_experience",
+            "name": "Bonus experience",
+            "type": "bonusExperience",
+            "isPercent": true,
+            "value": -0.04,
+            "isNegative": true,
+            "isMultiplicative": true
+           }
+          ]
+         },
+         {
+          "id": "attribute-copy-buff_attr-92dad4a4-2203-49dd-bae6-87d784821a5c",
+          "customIcon": null,
+          "customTextLocalizationKey": null,
+          "customText": "",
+          "textLocalizationKey": "attributes.singulars.skilling.doubleRewards.global.text",
+          "text": "Global <stat s=\"doubleRewards\"/>",
+          "statText": "Double rewards",
+          "skillText": "",
+          "tables": null,
+          "requirements": [],
+          "stats": [
+           {
+            "stat": "double_rewards",
+            "name": "Double rewards",
+            "type": "doubleRewards",
+            "isPercent": true,
+            "value": 0.02,
+            "isNegative": false,
+            "isMultiplicative": true
+           }
+          ]
+         }
+        ],
+        "fineAttributes": [
+         {
+          "id": "attribute-copy-buff_attr-92a233ce-4d62-49d3-b155-aa9008dd645b",
+          "customIcon": null,
+          "customTextLocalizationKey": null,
+          "customText": "",
+          "textLocalizationKey": "attributes.singulars.skilling.experience.global.text",
+          "text": "Global <stat s=\"bonusExperience\"/>",
+          "statText": "Bonus experience",
+          "skillText": "",
+          "tables": null,
+          "requirements": [],
+          "stats": [
+           {
+            "stat": "bonus_experience",
+            "name": "Bonus experience",
+            "type": "bonusExperience",
+            "isPercent": true,
+            "value": -0.04,
+            "isNegative": true,
+            "isMultiplicative": true
+           }
+          ]
+         },
+         {
+          "id": "attribute-copy-buff_attr-37d01239-718a-4d30-a576-3742d1f9040c",
+          "customIcon": null,
+          "customTextLocalizationKey": null,
+          "customText": "",
+          "textLocalizationKey": "attributes.singulars.skilling.doubleRewards.global.text",
+          "text": "Global <stat s=\"doubleRewards\"/>",
+          "statText": "Double rewards",
+          "skillText": "",
+          "tables": null,
+          "requirements": [],
+          "stats": [
+           {
+            "stat": "double_rewards",
+            "name": "Double rewards",
+            "type": "doubleRewards",
+            "isPercent": true,
+            "value": 0.04,
+            "isNegative": false,
+            "isMultiplicative": true
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "canBeFine": true,
+  "canBeSold": true,
+  "canBeBanked": true,
+  "canBeTraded": true,
+  "canBeDropped": true,
+  "icon": "assets/icons/items/materials/food/beer.png"
+ },
+ {
+  "id": "bread",
+  "name": "Bread",
+  "desc": "The base of the food pyramid.",
+  "keywords": [
+   "food",
+   "food",
+   "travelling"
+  ],
+  "type": "consumable",
+  "quality": "common",
+  "consumableType": "food",
+  "itemValue": {
+   "currency": "money",
+   "value": {
+    "common": 4,
+    "fine": 24
+   }
+  },
+  "buffs": [
+   {
+    "duration": {
+     "steps": 1000
+    },
+    "data": [
+     {
+      "type": "normal",
+      "buffs": [
+       {
+        "id": "buffobj-copy-buff_obj-26ef624d-71d4-40d2-979c-0ad5aaa0a7f8",
+        "type": "attributes",
+        "runtimeType": "attributes",
+        "attributes": [
+         {
+          "id": "attribute-copy-buff_attr-b221b52a-92d4-4844-befa-bf3a8798ce07",
+          "customIcon": null,
+          "customTextLocalizationKey": null,
+          "customText": "",
+          "textLocalizationKey": "attributes.singulars.skilling.workEfficiency.whileTraveling.text",
+          "text": "<stat s=\"workEfficiency\"/> while travelling",
+          "statText": "Work efficiency",
+          "skillText": "",
+          "tables": null,
+          "requirements": [
+           {
+            "type": "traveling",
+            "name": null,
+            "opposite": false,
+            "requirement": {}
+           }
+          ],
+          "stats": [
+           {
+            "stat": "work_efficiency",
+            "name": "Work efficiency",
+            "type": "workEfficiency",
+            "isPercent": true,
+            "value": 0.1,
+            "isNegative": false,
+            "isMultiplicative": true
+           }
+          ]
+         }
+        ],
+        "fineAttributes": [
+         {
+          "id": "c387ce34-038a-4692-b35e-337468648d21",
+          "customIcon": null,
+          "customTextLocalizationKey": null,
+          "customText": "",
+          "textLocalizationKey": "attributes.singulars.skilling.workEfficiency.whileTraveling.text",
+          "text": "<stat s=\"workEfficiency\"/> while travelling",
+          "statText": "Work efficiency",
+          "skillText": "",
+          "tables": null,
+          "requirements": [
+           {
+            "type": "traveling",
+            "name": null,
+            "opposite": false,
+            "requirement": {}
+           }
+          ],
+          "stats": [
+           {
+            "stat": "work_efficiency",
+            "name": "Work efficiency",
+            "type": "workEfficiency",
+            "isPercent": true,
+            "value": 0.25,
+            "isNegative": false,
+            "isMultiplicative": true
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "canBeFine": true,
+  "canBeSold": true,
+  "canBeBanked": true,
+  "canBeTraded": true,
+  "canBeDropped": true,
+  "icon": "assets/icons/items/materials/food/bread.png"
+ },
+ {
+  "id": "crab_rolls",
+  "name": "Crab rolls",
+  "desc": "Crab rolls, a delicate and flavourful treat, feature succulent crab meat nestled in a soft, buttery roll, often accompanied by fresh lettuce and a tangy sauce.",
+  "keywords": [
+   "food",
+   "sandwich",
+   "food",
+   "foraging",
+   "hunting"
+  ],
+  "type": "consumable",
+  "quality": "common",
+  "consumableType": "food",
+  "itemValue": {
+   "currency": "money",
+   "value": {
+    "common": 4,
+    "fine": 24
+   }
+  },
+  "buffs": [
+   {
+    "duration": {
+     "steps": 750
+    },
+    "data": [
+     {
+      "type": "normal",
+      "buffs": [
+       {
+        "id": "1c917bc0-8b79-4721-9967-85ed9f9e4dfe",
+        "type": "attributes",
+        "runtimeType": "attributes",
+        "attributes": [
+         {
+          "id": "3c7ef14a-3da6-4bad-8e45-c69182ede569",
+          "customIcon": "assets/icons/text/stats/skilling/bonus_money.png",
+          "customTextLocalizationKey": "attributes.singulars.custom.gainZeroToTenMoney.text",
+          "customText": "Chance to find <hl>1</hl> to <hl>10</hl> gold pieces",
+          "textLocalizationKey": "attributes.singulars.custom.gainZeroToTenMoney.text",
+          "text": "Chance to find <hl>1</hl> to <hl>10</hl> gold pieces",
+          "statText": "Roll special table",
+          "skillText": "Foraging",
+          "tables": [
+           {
+            "isPrimary": false,
+            "type": [],
+            "rollAmount": 1,
+            "tables": [
+             "gain_ten_money"
+            ]
+           }
+          ],
+          "requirements": [
+           {
+            "type": "mainSkill",
+            "name": "",
+            "opposite": false,
+            "requirement": {
+             "skill": "foraging"
+            }
+           }
+          ],
+          "stats": [
+           {
+            "stat": "roll_special_table",
+            "name": "Roll special table",
+            "type": "rollSpecialTable",
+            "isPercent": true,
+            "value": 0.25,
+            "isNegative": false,
+            "isMultiplicative": true
+           }
+          ]
+         },
+         {
+          "id": "88844d74-782f-4e2e-9520-8e77c74b4f9a",
+          "customIcon": "assets/icons/text/stats/skilling/bonus_money.png",
+          "customTextLocalizationKey": "attributes.singulars.custom.gainZeroToTenMoney.text",
+          "customText": "Chance to find <hl>1</hl> to <hl>10</hl> gold pieces",
+          "textLocalizationKey": "attributes.singulars.custom.gainZeroToTenMoney.text",
+          "text": "Chance to find <hl>1</hl> to <hl>10</hl> gold pieces",
+          "statText": "Roll special table",
+          "skillText": "Hunting",
+          "tables": [
+           {
+            "isPrimary": false,
+            "type": [],
+            "rollAmount": 1,
+            "tables": [
+             "gain_ten_money"
+            ]
+           }
+          ],
+          "requirements": [
+           {
+            "type": "mainSkill",
+            "name": "",
+            "opposite": false,
+            "requirement": {
+             "skill": "hunting"
+            }
+           }
+          ],
+          "stats": [
+           {
+            "stat": "roll_special_table",
+            "name": "Roll special table",
+            "type": "rollSpecialTable",
+            "isPercent": true,
+            "value": 0.25,
+            "isNegative": false,
+            "isMultiplicative": true
+           }
+          ]
+         }
+        ],
+        "fineAttributes": [
+         {
+          "id": "aa8748b7-77c6-403d-835e-d5d97f3f04e4",
+          "customIcon": "assets/icons/text/stats/skilling/bonus_money.png",
+          "customTextLocalizationKey": "attributes.singulars.custom.gainZeroToTenMoney.text",
+          "customText": "Chance to find <hl>1</hl> to <hl>10</hl> gold pieces",
+          "textLocalizationKey": "attributes.singulars.custom.gainZeroToTenMoney.text",
+          "text": "Chance to find <hl>1</hl> to <hl>10</hl> gold pieces",
+          "statText": "Roll special table",
+          "skillText": "Foraging",
+          "tables": [
+           {
+            "isPrimary": false,
+            "type": [],
+            "rollAmount": 1,
+            "tables": [
+             "gain_ten_money"
+            ]
+           }
+          ],
+          "requirements": [
+           {
+            "type": "mainSkill",
+            "name": "",
+            "opposite": false,
+            "requirement": {
+             "skill": "foraging"
+            }
+           }
+          ],
+          "stats": [
+           {
+            "stat": "roll_special_table",
+            "name": "Roll special table",
+            "type": "rollSpecialTable",
+            "isPercent": true,
+            "value": 0.5,
+            "isNegative": false,
+            "isMultiplicative": true
+           }
+          ]
+         },
+         {
+          "id": "8a6c255f-1963-4e13-a4e5-76f4dc470c82",
+          "customIcon": "assets/icons/text/stats/skilling/bonus_money.png",
+          "customTextLocalizationKey": "attributes.singulars.custom.gainZeroToTenMoney.text",
+          "customText": "Chance to find <hl>1</hl> to <hl>10</hl> gold pieces",
+          "textLocalizationKey": "attributes.singulars.custom.gainZeroToTenMoney.text",
+          "text": "Chance to find <hl>1</hl> to <hl>10</hl> gold pieces",
+          "statText": "Roll special table",
+          "skillText": "Hunting",
+          "tables": [
+           {
+            "isPrimary": false,
+            "type": [],
+            "rollAmount": 1,
+            "tables": [
+             "gain_ten_money"
+            ]
+           }
+          ],
+          "requirements": [
+           {
+            "type": "mainSkill",
+            "name": "",
+            "opposite": false,
+            "requirement": {
+             "skill": "hunting"
+            }
+           }
+          ],
+          "stats": [
+           {
+            "stat": "roll_special_table",
+            "name": "Roll special table",
+            "type": "rollSpecialTable",
+            "isPercent": true,
+            "value": 0.5,
+            "isNegative": false,
+            "isMultiplicative": true
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "canBeFine": true,
+  "canBeSold": true,
+  "canBeBanked": true,
+  "canBeTraded": true,
+  "canBeDropped": true,
+  "icon": "assets/icons/items/materials/food/crab_roll_sandwich.png"
+ },
+ {
+  "id": "dried_fruit",
+  "name": "Dried fruit",
+  "desc": "A mix of different fruits that have been dehydrated to keep from spoiling. They still taste quite good!",
+  "keywords": [
+   "food",
+   "food",
+   "gathering"
+  ],
+  "type": "consumable",
+  "quality": "common",
+  "consumableType": "food",
+  "itemValue": {
+   "currency": "money",
+   "value": {
+    "common": 25,
+    "fine": 119
+   }
+  },
+  "buffs": [
+   {
+    "duration": {
+     "steps": 5000
+    },
+    "data": [
+     {
+      "type": "normal",
+      "buffs": [
+       {
+        "id": "7d92806e-49e6-48f9-8d5b-c2739f5db0bf",
+        "type": "attributes",
+        "runtimeType": "attributes",
+        "attributes": [
+         {
+          "id": "ce496a82-09cc-456b-9ff7-fcb5dd360c8a",
+          "customIcon": "",
+          "customTextLocalizationKey": "",
+          "customText": "",
+          "textLocalizationKey": "",
+          "text": "",
+          "statText": "Double action",
+          "skillText": "",
+          "tables": null,
+          "requirements": [
+           {
+            "type": "mainSkillType",
+            "name": "",
+            "opposite": false,
+            "requirement": {
+             "type": "gathering"
+            }
+           }
+          ],
+          "stats": [
+           {
+            "stat": "double_action",
+            "name": "Double action",
+            "type": "doubleAction",
+            "isPercent": true,
+            "value": 0.06,
+            "isNegative": false,
+            "isMultiplicative": true
+           }
+          ]
+         }
+        ],
+        "fineAttributes": [
+         {
+          "id": "89e90c0b-fccf-43db-bf71-1a5298682da5",
+          "customIcon": "",
+          "customTextLocalizationKey": "",
+          "customText": "",
+          "textLocalizationKey": "",
+          "text": "",
+          "statText": "Double action",
+          "skillText": "",
+          "tables": null,
+          "requirements": [
+           {
+            "type": "mainSkillType",
+            "name": "",
+            "opposite": false,
+            "requirement": {
+             "type": "gathering"
+            }
+           }
+          ],
+          "stats": [
+           {
+            "stat": "double_action",
+            "name": "Double action",
+            "type": "doubleAction",
+            "isPercent": true,
+            "value": 0.09,
+            "isNegative": false,
+            "isMultiplicative": true
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "canBeFine": true,
+  "canBeSold": true,
+  "canBeBanked": true,
+  "canBeTraded": true,
+  "canBeDropped": true,
+  "icon": "assets/icons/items/consumables/dried_fruit.png"
+ },
+ {
+  "id": "bug_bait",
+  "name": "Bug bait",
+  "desc": "The bug will be a fish's dinner, and the fish will be your dinner. But whose dinner will you be?",
+  "keywords": [
+   "fishing",
+   "fishing_bait"
+  ],
+  "type": "consumable",
+  "quality": "common",
+  "consumableType": "food",
+  "itemValue": {
+   "currency": "money",
+   "value": {
+    "common": 4,
+    "fine": 24
+   }
+  },
+  "buffs": [
+   {
+    "duration": {
+     "steps": 5000
+    },
+    "data": [
+     {
+      "type": "normal",
+      "buffs": [
+       {
+        "id": "buffobj-copy-buff_obj-85865a06-9579-44d8-8b79-2082fc947a54",
+        "type": "attributes",
+        "runtimeType": "attributes",
+        "attributes": [
+         {
+          "id": "attribute-copy-buff_attr-68717552-fa10-4524-84b8-fb832e2d35c9",
+          "customIcon": null,
+          "customTextLocalizationKey": null,
+          "customText": "",
+          "textLocalizationKey": "attributes.singulars.skilling.stepsRequired.whileMainSkill.text",
+          "text": "<stat s=\"stepsRequired\"/> while <supp k=\"skill\"/>",
+          "statText": "Steps required",
+          "skillText": "Fishing",
+          "tables": null,
+          "requirements": [
+           {
+            "type": "mainSkill",
+            "name": null,
+            "opposite": false,
+            "requirement": {
+             "skill": "fishing"
+            }
+           }
+          ],
+          "stats": [
+           {
+            "stat": "steps_required",
+            "name": "Steps required",
+            "type": "stepsRequired",
+            "isPercent": false,
+            "value": -1,
+            "isNegative": false,
+            "isMultiplicative": true
+           }
+          ]
+         }
+        ],
+        "fineAttributes": [
+         {
+          "id": "attribute-copy-buff_attr-0cef6cdc-28db-4f22-90e8-d624d42cdf31",
+          "customIcon": null,
+          "customTextLocalizationKey": null,
+          "customText": "",
+          "textLocalizationKey": "attributes.singulars.skilling.stepsRequired.whileMainSkill.text",
+          "text": "<stat s=\"stepsRequired\"/> while <supp k=\"skill\"/>",
+          "statText": "Steps required",
+          "skillText": "Fishing",
+          "tables": null,
+          "requirements": [
+           {
+            "type": "mainSkill",
+            "name": null,
+            "opposite": false,
+            "requirement": {
+             "skill": "fishing"
+            }
+           }
+          ],
+          "stats": [
+           {
+            "stat": "steps_required",
+            "name": "Steps required",
+            "type": "stepsRequired",
+            "isPercent": false,
+            "value": -2,
+            "isNegative": false,
+            "isMultiplicative": true
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "canBeFine": true,
+  "canBeSold": true,
+  "canBeBanked": true,
+  "canBeTraded": true,
+  "canBeDropped": true,
+  "icon": "assets/icons/items/gear/skill_gear/fishing/gdte_bait.png"
+ },
+ {
+  "id": "beef_stew",
+  "name": "Beef stew",
+  "desc": "A hearty beef stew, simmered to perfection with tender chunks of beef, root vegetables, and a rich, flavourful broth.",
+  "keywords": [
+   "food",
+   "food",
+   "global"
+  ],
+  "type": "consumable",
+  "quality": "common",
+  "consumableType": "food",
+  "itemValue": {
+   "currency": "money",
+   "value": {
+    "common": 7,
+    "fine": 38
+   }
+  },
+  "buffs": [
+   {
+    "duration": {
+     "steps": 10000
+    },
+    "data": [
+     {
+      "type": "normal",
+      "buffs": [
+       {
+        "id": "ef2d3b9d-89a1-4e6a-9f56-f5d40d5bde08",
+        "type": "attributes",
+        "runtimeType": "attributes",
+        "attributes": [
+         {
+          "id": "31361cc9-f874-4f37-8c5a-5bb378830914",
+          "customIcon": "",
+          "customTextLocalizationKey": "",
+          "customText": "",
+          "textLocalizationKey": "",
+          "text": "",
+          "statText": "Inventory space",
+          "skillText": "",
+          "tables": null,
+          "requirements": [],
+          "stats": [
+           {
+            "stat": "inventory_space",
+            "name": "Inventory space",
+            "type": "inventorySpace",
+            "isPercent": false,
+            "value": 5,
+            "isNegative": false,
+            "isMultiplicative": true
+           }
+          ]
+         }
+        ],
+        "fineAttributes": [
+         {
+          "id": "1a195e9e-7aac-4129-bdfb-01facd3ca1fc",
+          "customIcon": "",
+          "customTextLocalizationKey": "",
+          "customText": "",
+          "textLocalizationKey": "",
+          "text": "",
+          "statText": "Inventory space",
+          "skillText": "",
+          "tables": null,
+          "requirements": [],
+          "stats": [
+           {
+            "stat": "inventory_space",
+            "name": "Inventory space",
+            "type": "inventorySpace",
+            "isPercent": false,
+            "value": 10,
+            "isNegative": false,
+            "isMultiplicative": true
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "canBeFine": true,
+  "canBeSold": true,
+  "canBeBanked": true,
+  "canBeTraded": true,
+  "canBeDropped": true,
+  "icon": "assets/icons/items/materials/food/beef_stew.png"
+ }
+]
