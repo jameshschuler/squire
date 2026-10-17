@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import { Link } from "@tanstack/react-router";
 import { BottomTabBar } from "@/components/layout/BottomTabBar";
 import { renderWithRouter } from "./render-with-router";
 
@@ -21,6 +22,23 @@ describe("BottomTabBar", () => {
     await renderWithRouter(<BottomTabBar />);
     fireEvent.click(tab("Materials"));
     await waitFor(() => expect(tab("Materials").getAttribute("aria-current")).toBe("page"));
+  });
+
+  it("keeps materials active on an item opened from the materials tab", async () => {
+    await renderWithRouter(
+      <>
+        <BottomTabBar />
+        <Link to="/items/$itemId" params={{ itemId: "bones" }}>
+          Bones
+        </Link>
+      </>,
+    );
+    fireEvent.click(tab("Materials"));
+    await waitFor(() => expect(tab("Materials").getAttribute("aria-current")).toBe("page"));
+    fireEvent.click(screen.getByRole("link", { name: "Bones" }));
+    await waitFor(() => expect(screen.getByRole("link", { name: "Bones" }).getAttribute("aria-current")).toBe("page"));
+    expect(tab("Materials").getAttribute("aria-current")).toBe("page");
+    expect(tab("Recipes").getAttribute("aria-current")).toBeNull();
   });
 
   it("marks favorites active after navigating there", async () => {

@@ -4,7 +4,12 @@ export function showsFooter(pathname: string): boolean {
   return !DETAIL_PAGE.test(pathname);
 }
 
-export function activeTab(pathname: string): "/" | "/materials" | "/favorites" {
+export type Tab = "/" | "/materials" | "/favorites";
+
+export function activeTab(pathname: string, previousTab: Tab): Tab {
+  if (DETAIL_PAGE.test(pathname)) {
+    return previousTab;
+  }
   if (pathname.startsWith("/materials")) {
     return "/materials";
   }
