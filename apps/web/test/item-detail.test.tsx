@@ -55,11 +55,11 @@ describe("ItemDetail", () => {
 
   it("shows what a food does right after its keywords", async () => {
     const goldBar = findItem(book.recipes, "gold_bar")!;
-    const effects = { steps: 1000, effects: [{ text: "+7% work efficiency while Woodcutting", fine: "+14%" }] };
+    const effects = { steps: 1000, effects: [{ text: "+7% work efficiency in Woodcutting", fine: "+14%" }] };
     await renderWithRouter(<ItemDetail item={{ ...goldBar, effects }} book={book} />);
     expect(sectionTitles().slice(0, 2)).toEqual(["Keywords", "Effects · 1,000 steps"]);
     expect(section("Effects · 1,000 steps").getByRole("listitem").textContent).toBe(
-      "+7% work efficiency while Woodcutting +14% fine",
+      "+7% work efficiency in Woodcutting +14% fine",
     );
   });
 });

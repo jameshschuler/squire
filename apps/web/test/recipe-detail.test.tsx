@@ -42,16 +42,10 @@ describe("RecipeDetail", () => {
     expect(screen.getByText(/Max efficiency/)).toBeDefined();
   });
 
-  it("shows the effects of a food it makes", async () => {
+  it("leaves a food's effects to its item page", async () => {
     const effects = { steps: 500, effects: [{ text: "Global +1% double rewards", fine: "+2%" }] };
     await renderRecipe({ ...goldBar, outputs: [{ ...goldBar.outputs[0]!, effects }] });
-    expect(screen.getByRole("heading", { name: "Effects · 500 steps" })).toBeDefined();
-    expect(screen.getByText("Global +1% double rewards")).toBeDefined();
-    expect(screen.getByText("+2% fine")).toBeDefined();
-  });
-
-  it("has no effects section for a recipe that doesn't make food", async () => {
-    await renderRecipe(goldBar);
     expect(screen.queryByRole("heading", { name: /Effects/ })).toBeNull();
+    expect(screen.queryByText("Global +1% double rewards")).toBeNull();
   });
 });

@@ -43,7 +43,7 @@ function statValue(attribute: Attribute): StatValue | undefined {
 
 function condition(attribute: Attribute): string {
   if (attribute.skillText) {
-    return ` while ${attribute.skillText}`;
+    return ` in ${attribute.skillText}`;
   }
   const requirement = attribute.requirements?.[0];
   if (requirement?.type === "traveling") {

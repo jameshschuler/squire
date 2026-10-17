@@ -7,8 +7,8 @@ const food = (id: string) => (foods as unknown as ItemDetail[]).find((f) => f.id
 
 describe("itemEffects", () => {
   it.each([
-    ["salmon_pie", 1000, [{ text: "+7% work efficiency while Woodcutting", fine: "+14%" }]],
-    ["bagel", 1000, [{ text: "+5% work efficiency while Agility", fine: null }]],
+    ["salmon_pie", 1000, [{ text: "+7% work efficiency in Woodcutting", fine: "+14%" }]],
+    ["bagel", 1000, [{ text: "+5% work efficiency in Agility", fine: null }]],
     [
       "beer",
       1000,
@@ -22,12 +22,12 @@ describe("itemEffects", () => {
       "crab_rolls",
       750,
       [
-        { text: "25% chance to find 1 to 10 gold pieces while Foraging", fine: "50%" },
-        { text: "25% chance to find 1 to 10 gold pieces while Hunting", fine: "50%" },
+        { text: "25% chance to find 1 to 10 gold pieces in Foraging", fine: "50%" },
+        { text: "25% chance to find 1 to 10 gold pieces in Hunting", fine: "50%" },
       ],
     ],
     ["dried_fruit", 5000, [{ text: "+6% double action in gathering skills", fine: "+9%" }]],
-    ["bug_bait", 5000, [{ text: "-1 steps required while Fishing", fine: "-2" }]],
+    ["bug_bait", 5000, [{ text: "-1 steps required in Fishing", fine: "-2" }]],
     ["beef_stew", 10000, [{ text: "Global +5 inventory space", fine: "+10" }]],
   ])("describes %s's buff from its stats", (id, steps, effects) => {
     expect(itemEffects(food(id))).toEqual({ steps, effects });
@@ -37,7 +37,7 @@ describe("itemEffects", () => {
     const bagel = structuredClone(food("bagel"));
     const buffs = bagel.type === "consumable" ? bagel.buffs! : [];
     buffs[0]!.data[0]!.buffs[0]!.attributes[0]!.text = "Chance to find <hl>1</hl> fishing bait";
-    expect(itemEffects(bagel)?.effects).toEqual([{ text: "+5% work efficiency while Agility", fine: null }]);
+    expect(itemEffects(bagel)?.effects).toEqual([{ text: "+5% work efficiency in Agility", fine: null }]);
   });
 
   it("has no effects for items that aren't consumables", () => {

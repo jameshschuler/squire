@@ -4,7 +4,7 @@ import { BackButton } from "@/components/layout/BackButton";
 import { RecipeList } from "@/components/recipes/RecipeList";
 import { RecipeSection } from "@/components/recipes/RecipeSection";
 import { GameIcon } from "@/components/shared/GameIcon";
-import { ItemEffectsSection } from "@/components/shared/ItemEffectsSection";
+import { ItemEffectsSection } from "./ItemEffectsSection";
 import { ItemKeywords } from "./ItemKeywords";
 import { ItemSources } from "./ItemSources";
 

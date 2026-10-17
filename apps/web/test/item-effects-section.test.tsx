@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
-import { ItemEffectsSection } from "@/components/shared/ItemEffectsSection";
+import { ItemEffectsSection } from "@/components/items/ItemEffectsSection";
 
 afterEach(cleanup);
 
