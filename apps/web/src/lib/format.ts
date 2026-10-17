@@ -51,5 +51,5 @@ export function formatRegion(region: string): string {
 }
 
 export function formatDuration(steps: number): string {
-  return `Lasts ${steps.toLocaleString("en-US")} steps`;
+  return `${steps.toLocaleString("en-US")} steps`;
 }

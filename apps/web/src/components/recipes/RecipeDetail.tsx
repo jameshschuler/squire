@@ -2,7 +2,7 @@ import type { RecipeView } from "@squire/api/recipe-book";
 import { BackButton } from "@/components/layout/BackButton";
 import { Badge } from "@/components/ui/badge";
 import { GameIcon } from "@/components/shared/GameIcon";
-import { ItemEffectsList } from "@/components/shared/ItemEffectsList";
+import { ItemEffectsSection } from "@/components/shared/ItemEffectsSection";
 import { formatPercent, formatSkillLevel, formatSteps } from "@/lib/format";
 import { FavoriteButton } from "./FavoriteButton";
 import { RecipeItemRow } from "./RecipeItemRow";
@@ -57,11 +57,7 @@ export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
         ))}
       </RecipeSection>
 
-      {effects && (
-        <RecipeSection title="Effects">
-          <ItemEffectsList effects={effects} />
-        </RecipeSection>
-      )}
+      {effects && <ItemEffectsSection effects={effects} />}
 
       {recipe.service && (
         <RecipeSection title="Where to craft">

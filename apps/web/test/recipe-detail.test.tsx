@@ -43,15 +43,15 @@ describe("RecipeDetail", () => {
   });
 
   it("shows the effects of a food it makes", async () => {
-    const effects = { steps: 500, lines: ["Global +1% double rewards (fine: +2%)"] };
+    const effects = { steps: 500, effects: [{ text: "Global +1% double rewards", fine: "+2%" }] };
     await renderRecipe({ ...goldBar, outputs: [{ ...goldBar.outputs[0]!, effects }] });
-    expect(screen.getByRole("heading", { name: "Effects" })).toBeDefined();
-    expect(screen.getByText("Global +1% double rewards (fine: +2%)")).toBeDefined();
-    expect(screen.getByText("Lasts 500 steps")).toBeDefined();
+    expect(screen.getByRole("heading", { name: "Effects · 500 steps" })).toBeDefined();
+    expect(screen.getByText("Global +1% double rewards")).toBeDefined();
+    expect(screen.getByText("+2% fine")).toBeDefined();
   });
 
   it("has no effects section for a recipe that doesn't make food", async () => {
     await renderRecipe(goldBar);
-    expect(screen.queryByRole("heading", { name: "Effects" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: /Effects/ })).toBeNull();
   });
 });

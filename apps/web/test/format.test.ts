@@ -21,9 +21,9 @@ describe("formatPercent", () => {
 
 describe("formatDuration", () => {
   it.each([
-    [500, "Lasts 500 steps"],
-    [1000, "Lasts 1,000 steps"],
-    [10000, "Lasts 10,000 steps"],
+    [500, "500 steps"],
+    [1000, "1,000 steps"],
+    [10000, "10,000 steps"],
   ])("formats %s steps as %s", (steps, expected) => {
     expect(formatDuration(steps)).toBe(expected);
   });

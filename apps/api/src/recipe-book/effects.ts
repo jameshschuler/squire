@@ -1,5 +1,5 @@
 import type { Attribute, ItemDetail } from "@jameshschuler/walkscape-data-client";
-import type { ItemEffects } from "./types.js";
+import type { Effect, ItemEffects } from "./types.js";
 
 interface StatValue {
   value: number;
@@ -11,15 +11,15 @@ export function itemEffects(item: ItemDetail): ItemEffects | null {
   if (!buff) {
     return null;
   }
-  const lines = buff.data.flatMap((data) =>
+  const effects = buff.data.flatMap((data) =>
     data.buffs.flatMap((group) =>
       group.attributes.flatMap((attribute, i) => effectLine(attribute, group.fineAttributes[i])),
     ),
   );
-  return { steps: "steps" in buff.duration ? buff.duration.steps : null, lines };
+  return { steps: "steps" in buff.duration ? buff.duration.steps : null, effects };
 }
 
-function effectLine(attribute: Attribute, fine: Attribute | undefined): string[] {
+function effectLine(attribute: Attribute, fine: Attribute | undefined): Effect[] {
   const stat = statValue(attribute);
   if (!stat) {
     return [];
@@ -29,8 +29,12 @@ function effectLine(attribute: Attribute, fine: Attribute | undefined): string[]
   const subject = isChance ? lowerFirst(stripTags(attribute.customText)) : attribute.statText.toLowerCase();
   const effect = `${format(stat)} ${subject}${condition(attribute)}`;
   const fineStat = fine && statValue(fine);
-  const fineNote = fineStat && fineStat.value !== stat.value ? ` (fine: ${format(fineStat)})` : "";
-  return [isGlobal(attribute) ? `Global ${effect}${fineNote}` : `${effect}${fineNote}`];
+  return [
+    {
+      text: isGlobal(attribute) ? `Global ${effect}` : effect,
+      fine: fineStat && fineStat.value !== stat.value ? format(fineStat) : null,
+    },
+  ];
 }
 
 function statValue(attribute: Attribute): StatValue | undefined {
