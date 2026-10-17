@@ -1,0 +1,5 @@
+export const HTTP_STATUS = {
+  NOT_MODIFIED: 304,
+  TOO_MANY_REQUESTS: 429,
+  INTERNAL_SERVER_ERROR: 500,
+} as const;

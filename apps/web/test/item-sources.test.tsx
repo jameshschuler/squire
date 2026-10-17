@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
-import type { ActivitySource, ChestSource, ShopSource } from "@jameshschuler/walkscape-sdk";
+import type { ActivitySource, ChestSource, ShopSource } from "@squire/api/recipe-book";
 import { ItemSources } from "@/components/items/ItemSources";
 
 afterEach(cleanup);

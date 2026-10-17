@@ -1,6 +1,7 @@
 import { brotliDecompressSync, gunzipSync } from "node:zlib";
+import { WalkScapeApiError } from "@jameshschuler/walkscape-data-client";
 import { describe, expect, it } from "vitest";
-import { RECIPE_BOOK_SCHEMA, type RecipeBook } from "@jameshschuler/walkscape-sdk";
+import { RECIPE_BOOK_SCHEMA, type RecipeBook } from "../src/recipe-book/index.js";
 import { buildApp } from "../src/app.js";
 import { fakeClient } from "./fake-client.js";
 
@@ -28,7 +29,7 @@ describe("GET /api/recipes", () => {
   it("answers 502 when the WalkScape API fails", async () => {
     const { client } = fakeClient();
     client.version = async () => {
-      throw new (await import("@jameshschuler/walkscape-sdk")).WalkScapeApiError(503, "/version", "down");
+      throw new WalkScapeApiError(503, "/version", "down");
     };
     const res = await app(client).inject("/api/recipes");
     expect(res.statusCode).toBe(502);

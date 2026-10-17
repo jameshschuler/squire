@@ -5,7 +5,15 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["**/dist", "**/coverage", "apps/web/src/routeTree.gen.ts", "apps/web/dev-dist"] },
+  {
+    ignores: [
+      "**/dist",
+      "**/coverage",
+      "apps/web/src/routeTree.gen.ts",
+      "apps/web/dev-dist",
+      "packages/data-client/src/generated",
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -15,8 +23,24 @@ export default tseslint.config(
     },
   },
   {
-    files: ["packages/**/*.ts", "apps/api/**/*.ts"],
+    files: ["packages/**/*.{ts,mjs}", "apps/api/**/*.ts"],
     languageOptions: { globals: globals.node },
+  },
+  {
+    files: ["apps/api/src/recipe-book/**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["node:*", "fastify", "@fastify/*", "../*"],
+              message: "The web app imports recipe-book, so keep it free of server code.",
+            },
+          ],
+        },
+      ],
+    },
   },
   {
     files: ["apps/web/**/*.{ts,tsx}"],

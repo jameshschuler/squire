@@ -1,19 +1,19 @@
 {
-  "name": "@jameshschuler/walkscape-sdk",
+  "name": "@jameshschuler/walkscape-data-client",
   "version": "0.0.1",
-  "description": "Unofficial TypeScript client for the WalkScape Data API, with recipe helpers",
+  "description": "Unofficial, fully typed TypeScript client for the WalkScape Data API",
   "keywords": [
     "walkscape",
     "api",
-    "sdk",
-    "recipes"
+    "api-client",
+    "game-data"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jameshschuler/squire.git",
-    "directory": "packages/sdk"
+    "directory": "packages/data-client"
   },
-  "homepage": "https://github.com/jameshschuler/squire/tree/main/packages/sdk#readme",
+  "homepage": "https://github.com/jameshschuler/squire/tree/main/packages/data-client#readme",
   "bugs": "https://github.com/jameshschuler/squire/issues",
   "license": "MIT",
   "type": "module",
@@ -36,11 +36,14 @@
   ],
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
+    "generate": "openapi-typescript https://tools-api.dev.walkscape.app/docs/openapi.json -o src/generated/openapi.ts --root-types --root-types-no-schema-prefix --empty-objects-unknown && node scripts/generate-resources.mjs https://tools-api.dev.walkscape.app/docs/openapi.json src/generated/resources.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
+    "ajv": "^8.20.0",
+    "openapi-typescript": "^7.13.0",
     "tsup": "^8.3.5",
     "vitest": "^5.0.4"
   }

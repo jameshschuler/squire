@@ -9,7 +9,7 @@ services:
     buildFilter:
       paths:
         - apps/api/**
-        - packages/sdk/**
+        - packages/data-client/**
         - pnpm-lock.yaml
     envVars:
       - key: WALKSCAPE_API_KEY
@@ -29,7 +29,9 @@ services:
     buildFilter:
       paths:
         - apps/web/**
-        - packages/sdk/**
+        - apps/api/src/recipe-book/**
+        - apps/api/package.json
+        - packages/data-client/**
         - pnpm-lock.yaml
     envVars:
       - key: VITE_API_URL

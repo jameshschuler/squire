@@ -17,6 +17,7 @@ describe("formatSteps", () => {
     [150, 1.7, "150 base steps · 89 min steps"],
     [200, 2, "200 base steps · 100 min steps"],
     [80, 1, "80 base steps"],
+    [80, null, "80 base steps"],
   ])("formats %s work with a %s cap as %s", (work, cap, expected) => {
     expect(formatSteps(work, cap)).toBe(expected);
   });

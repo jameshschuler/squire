@@ -1,5 +1,5 @@
 import { MapPin } from "lucide-react";
-import type { RecipeService } from "@jameshschuler/walkscape-sdk";
+import type { RecipeService } from "@squire/api/recipe-book";
 import { Badge } from "@/components/ui/badge";
 import { formatRegion } from "@/lib/format";
 

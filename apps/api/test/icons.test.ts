@@ -32,7 +32,7 @@ describe("createIconStore", () => {
   it("skips icons the batch endpoint doesn't have, and fetches them one by one on request", async () => {
     const { client, calls } = fakeClient();
     const icons = createIconStore(client);
-    expect(await icons.warm(["icons/missing.png", "icons/a.png"])).toBe(1);
+    await expect(icons.warm(["icons/missing.png", "icons/a.png"])).resolves.toBe(1);
     await expect(icons.get("icons/missing.png")).rejects.toMatchObject({ status: 404 });
     expect(calls.icon).toBe(1);
   });
@@ -47,7 +47,7 @@ describe("createIconStore", () => {
 
   it("does nothing when there is nothing to warm", async () => {
     const { client, calls } = fakeClient();
-    expect(await createIconStore(client).warm([])).toBe(0);
+    await expect(createIconStore(client).warm([])).resolves.toBe(0);
     expect(calls.iconBatches).toEqual([]);
   });
 });

@@ -1,4 +1,4 @@
-import { sourceKey, type ItemSource } from "@jameshschuler/walkscape-sdk";
+import { sourceKey, type ItemSource } from "@squire/api/recipe-book";
 import { ActivitySourceRow } from "./ActivitySourceRow";
 import { ChestSourceRow } from "./ChestSourceRow";
 import { ShopSourceRow } from "./ShopSourceRow";

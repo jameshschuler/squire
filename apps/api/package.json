@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "exports": {
+    "./recipe-book": "./src/recipe-book/index.ts"
+  },
   "scripts": {
     "dev": "tsx watch --env-file=../../.env src/index.ts | pino-pretty",
     "build": "tsup",
@@ -13,7 +16,7 @@
   "dependencies": {
     "@fastify/compress": "^8.3.0",
     "@fastify/cors": "^10.0.2",
-    "@jameshschuler/walkscape-sdk": "workspace:*",
+    "@jameshschuler/walkscape-data-client": "workspace:*",
     "fastify": "^5.2.0"
   },
   "devDependencies": {

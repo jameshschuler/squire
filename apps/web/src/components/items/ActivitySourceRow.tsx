@@ -1,4 +1,4 @@
-import type { ActivitySource } from "@jameshschuler/walkscape-sdk";
+import type { ActivitySource } from "@squire/api/recipe-book";
 import { Badge } from "@/components/ui/badge";
 import { GameIcon } from "@/components/shared/GameIcon";
 import { formatSkillLevel, lootTypeLabel } from "@/lib/format";

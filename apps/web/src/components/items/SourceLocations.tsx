@@ -1,5 +1,5 @@
 import { MapPin } from "lucide-react";
-import type { LocationSummary } from "@jameshschuler/walkscape-sdk";
+import type { LocationSummary } from "@squire/api/recipe-book";
 import { formatRegion } from "@/lib/format";
 
 export function SourceLocations({ locations }: { locations: LocationSummary[] }) {

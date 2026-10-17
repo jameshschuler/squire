@@ -16,8 +16,8 @@ pnpm dev                # API on :3000, web on :5173
 
 The repo has three parts:
 
-- `packages/sdk`: the WalkScape Data API client and game helpers. It will be published to npm, so keep it free of anything Squire-specific and avoid adding runtime dependencies.
-- `apps/api`: the Fastify server. It's the only place the API key lives.
+- `packages/data-client`: the WalkScape Data API client, with types generated from the API's OpenAPI spec and loaders for whole resources. It will be published to npm, so keep it free of anything Squire-specific and avoid adding runtime dependencies.
+- `apps/api`: the Fastify server. It's the only place the API key lives. `src/recipe-book/` turns game data into Squire's recipe book; the web app imports its types and helpers as `@squire/api/recipe-book`, so keep that folder free of server code.
 - `apps/web`: the React PWA (TanStack Router, Tailwind, shadcn, Lucide).
 
 ## Using the WalkScape API
@@ -40,7 +40,7 @@ The repo has three parts:
 
    `pnpm format` fixes formatting.
 
-4. Commit with a prefix: `feat:`, `fix:`, `improvement:`, `docs:`, `refactor:`, `ci:`, `chore:` or `revert:`. A scope is welcome, e.g. `feat(web):` or `fix(sdk):`.
+4. Commit with a prefix: `feat:`, `fix:`, `improvement:`, `docs:`, `refactor:`, `ci:`, `chore:` or `revert:`. A scope is welcome, e.g. `feat(web):` or `fix(data-client):`.
 5. Open a PR against `main` with two sections: `## Summary` (what changed and why) and `## Testing` (what you ran and how you checked it).
 
 `main` is protected. Every change lands through a PR, and the **CI passed** check has to be green before merging. Open PRs against `main` rather than stacking them on other branches. Stacked PRs merge into their base branch, not into `main`.
@@ -57,7 +57,7 @@ ESLint and Prettier cover formatting and most rules. Beyond that:
 - **Few comments.** Add one only when the logic is genuinely hard to follow.
 - **Always use braces** on `if` statements, even one-liners. Lint enforces this.
 - **Use the game's words.** Recipe, material, service, tier, location: one name per idea, everywhere.
-- **Keep game rules out of the UI.** Recipe logic belongs in the SDK, and components just render it.
+- **Keep game rules out of the UI.** Recipe logic belongs in `apps/api/src/recipe-book/` (or in the data client when any app could use it), and components just render it.
 
 In `apps/web`:
 
@@ -75,13 +75,17 @@ Every change ships with tests. New logic gets unit tests, and a bug fix gets a t
 - Mock only the edges: the network, time and storage.
 - Cover empty, boundary and error cases, not just the happy path.
 
-`packages/sdk/test/live.test.ts` runs against the real dev API, but only when `WALKSCAPE_API_KEY` is set in your shell. CI skips it.
+The `*.live.test.ts` files run against the real dev API, but only when `WALKSCAPE_API_KEY` is set in your shell. CI skips them. `packages/data-client/test/contract.live.test.ts` checks real responses from every resource against the API spec, so run it after regenerating the types.
 
-## Publishing the SDK
+## Updating the data client's types
 
-`packages/sdk` is published to npm as `@jameshschuler/walkscape-sdk`. Publish with `pnpm publish` from that folder, not `npm publish`. In the repo, `exports` points at the TypeScript source, and only pnpm swaps in the built `dist/` paths from `publishConfig`. `prepublishOnly` rebuilds before each publish.
+The data client's types come from the API's OpenAPI spec. When the API changes, run `pnpm --filter @jameshschuler/walkscape-data-client generate`. It rewrites `packages/data-client/src/generated/`; never edit those files by hand. Then run the checks: if a search filter or a field the code uses changed, typecheck shows where.
 
-Doc comments on the SDK's exports are its documentation in editors, so keep them accurate when you change an export.
+## Publishing the data client
+
+`packages/data-client` is published to npm as `@jameshschuler/walkscape-data-client`. Publish with `pnpm publish` from that folder, not `npm publish`. In the repo, `exports` points at the TypeScript source, and only pnpm swaps in the built `dist/` paths from `publishConfig`. `prepublishOnly` rebuilds before each publish.
+
+Doc comments on the data client's exports are its documentation in editors, so keep them accurate when you change an export.
 
 ## Reporting bugs and security issues
 

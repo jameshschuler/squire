@@ -1,5 +1,5 @@
 import { Store } from "lucide-react";
-import type { ShopSource } from "@jameshschuler/walkscape-sdk";
+import type { ShopSource } from "@squire/api/recipe-book";
 import { formatTitle } from "@/lib/format";
 import { SourceLocations } from "./SourceLocations";
 

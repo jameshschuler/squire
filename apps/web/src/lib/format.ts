@@ -1,12 +1,12 @@
-import type { LootType } from "@jameshschuler/walkscape-sdk";
+import type { LootType } from "@squire/api/recipe-book";
 
 export function formatPercent(ratio: number): string {
   return `${Math.round(ratio * 100)}%`;
 }
 
-export function formatSteps(workRequired: number, maxWorkEfficiency: number): string {
+export function formatSteps(workRequired: number, maxWorkEfficiency: number | null): string {
   const baseSteps = `${workRequired} base steps`;
-  if (maxWorkEfficiency <= 1) {
+  if (maxWorkEfficiency === null || maxWorkEfficiency <= 1) {
     return baseSteps;
   }
   return `${baseSteps} · ${Math.ceil(workRequired / maxWorkEfficiency)} min steps`;
