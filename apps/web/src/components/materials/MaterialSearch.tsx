@@ -3,7 +3,7 @@ import { GameDataStatus } from "@/components/shared/GameDataStatus";
 import { SearchInput } from "@/components/shared/SearchInput";
 import { SkillFilter } from "@/components/shared/SkillFilter";
 import { useGameDataContext } from "@/contexts/game-data-context";
-import { materialFilters, rawMaterials, searchMaterials, type Material } from "@/lib/materials";
+import { listMaterials, materialFilters, searchMaterials, type Material } from "@/lib/materials";
 import { knownOption } from "@/lib/skills";
 import { MaterialResults } from "./MaterialResults";
 
@@ -19,7 +19,7 @@ interface MaterialSearchProps {
 export function MaterialSearch({ query, skill, onQueryChange, onSkillChange }: MaterialSearchProps) {
   const state = useGameDataContext();
   const book = state.status === "ready" ? state.book : undefined;
-  const materials = useMemo(() => (book ? rawMaterials(book) : NO_MATERIALS), [book]);
+  const materials = useMemo(() => (book ? listMaterials(book) : NO_MATERIALS), [book]);
   const filters = useMemo(() => materialFilters(materials), [materials]);
   const filter = knownOption(filters, skill);
   const results = useMemo(() => searchMaterials(materials, query, { filter }), [materials, query, filter]);
@@ -27,7 +27,7 @@ export function MaterialSearch({ query, skill, onQueryChange, onSkillChange }: M
 
   return (
     <div className="space-y-3 pt-3">
-      <SearchInput value={query} placeholder="Search raw materials…" onChange={onQueryChange} />
+      <SearchInput value={query} placeholder="Search materials…" onChange={onQueryChange} />
       <SkillFilter skills={filters} selected={filter} onSelect={onSkillChange} />
       {state.status !== "ready" ? (
         <GameDataStatus state={state} />

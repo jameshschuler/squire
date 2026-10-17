@@ -14,6 +14,7 @@ describe("MaterialListItem", () => {
             item: { id: "bones", name: "Bones", icon: "", keywords: [], effects: null },
             sources: [],
             skills: [],
+            isCrafted: false,
           }}
         />
       </ul>,
