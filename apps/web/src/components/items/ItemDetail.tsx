@@ -4,6 +4,7 @@ import { BackButton } from "@/components/layout/BackButton";
 import { RecipeList } from "@/components/recipes/RecipeList";
 import { RecipeSection } from "@/components/recipes/RecipeSection";
 import { GameIcon } from "@/components/shared/GameIcon";
+import { QualityBadge } from "@/components/shared/QualityBadge";
 import { ItemEffectsSection } from "./ItemEffectsSection";
 import { ItemKeywords } from "./ItemKeywords";
 import { ItemSources } from "./ItemSources";
@@ -22,10 +23,13 @@ export function ItemDetail({ item, book }: ItemDetailProps) {
   return (
     <article className="space-y-6 pt-2">
       <BackButton />
-      <h1 className="flex items-center gap-3 text-2xl font-semibold">
-        <GameIcon path={item.icon} size={48} />
-        {item.name}
-      </h1>
+      <div className="flex items-center gap-3">
+        <h1 className="flex items-center gap-3 text-2xl font-semibold">
+          <GameIcon path={item.icon} size={48} />
+          {item.name}
+        </h1>
+        {item.quality && <QualityBadge quality={item.quality} />}
+      </div>
       {item.keywords.length > 0 && (
         <RecipeSection title="Keywords">
           <ItemKeywords keywords={item.keywords} />

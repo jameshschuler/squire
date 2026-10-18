@@ -35,6 +35,7 @@ describe("formatKeyword", () => {
 describe("formatCondition", () => {
   it.each([
     ["While doing Woodcutting", "Woodcutting"],
+    ["While doing Agility (with other conditions)", "Agility"],
     ["While doing gathering skills", "Gathering skills"],
     ["While travelling", "Travelling"],
     ["While not doing Woodcutting", "Not doing Woodcutting"],

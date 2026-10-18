@@ -2,6 +2,7 @@ import type { Attribute, ItemDetail, Requirement, SkillDetail } from "@jameshsch
 import type { Effect, EffectTarget, ItemEffects } from "./types.js";
 
 export const TRAVELLING: EffectTarget = { id: "travelling", name: "Travelling" };
+export const OTHER_CONDITIONS = " (with other conditions)";
 
 interface StatValue {
   value: number;
@@ -68,7 +69,7 @@ function scope(attribute: Attribute, skills: SkillDetail[]): Pick<Effect, "condi
   if (known.length === 0) {
     return { condition: "Under certain conditions", appliesTo: [] };
   }
-  const others = known.length < requirements.length ? " (with other conditions)" : "";
+  const others = known.length < requirements.length ? OTHER_CONDITIONS : "";
   return {
     condition: `While ${known.map((part) => part.label).join(" and ")}${others}`,
     appliesTo: everything.filter((target) => known.every((part) => part.matches(target))),

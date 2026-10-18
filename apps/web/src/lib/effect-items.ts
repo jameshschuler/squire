@@ -25,5 +25,7 @@ export function searchEffectItems(
 }
 
 export function whereItemApplies(item: ItemWithEffects): string {
-  return [...new Set(item.effects.effects.map((effect) => effect.condition))].map(formatCondition).join(" · ");
+  const targeted = item.effects.effects.filter((effect) => effect.appliesTo.length > 0);
+  const shown = targeted.length > 0 ? targeted : item.effects.effects;
+  return [...new Set(shown.map((effect) => formatCondition(effect.condition)))].join(" · ");
 }

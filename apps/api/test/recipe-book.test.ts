@@ -50,11 +50,20 @@ describe("buildRecipeBook", () => {
           id: "gold_nugget",
           name: "Gold nugget",
           icon: expect.any(String),
+          quality: "common",
           keywords: ["nugget", "light"],
           effects: null,
           amount: 7,
         },
-        { id: "gold_ore", name: "Gold ore", icon: expect.any(String), keywords: ["ore"], effects: null, amount: 2 },
+        {
+          id: "gold_ore",
+          name: "Gold ore",
+          icon: expect.any(String),
+          quality: "common",
+          keywords: ["ore"],
+          effects: null,
+          amount: 2,
+        },
       ],
     ]);
   });
@@ -369,6 +378,7 @@ describe("findItem", () => {
       id,
       name,
       icon: expect.any(String),
+      quality: "common",
       keywords: expect.any(Array),
       effects: null,
     });
@@ -460,6 +470,17 @@ describe("loot", () => {
     const crafted = structuredClone(data);
     crafted.recipes[0]!.itemRewards = { birch_skis: 1 };
     expect(buildRecipeBook(crafted).loot.map((l) => l.name)).not.toContain("Birch skis");
+  });
+
+  it("keeps each item's tier", () => {
+    expect(withLoot.loot.map((l) => l.quality)).toEqual(["epic", "rare", "common", "uncommon"]);
+  });
+
+  it("has no tier for an item missing from the game data", () => {
+    const missing = structuredClone(data);
+    missing.recipes[0]!.itemRewards = { not_in_game_data: 1 };
+    const output = buildRecipeBook(missing).recipes[0]!.outputs[0]!;
+    expect(output.quality).toBeNull();
   });
 
   it("finds a loot item no recipe mentions", () => {

@@ -28,9 +28,9 @@ export interface MaterialSearchOptions {
 export function listMaterials(book: RecipeBook): Material[] {
   const crafted = new Set(book.recipes.flatMap((r) => r.outputs.map((o) => o.id)));
   const items = new Map<string, ItemSummary>();
-  for (const { id, name, icon, keywords, effects } of book.recipes.flatMap((r) => r.materials.flat())) {
-    if (!items.has(id)) {
-      items.set(id, { id, name, icon, keywords, effects });
+  for (const { amount: _amount, ...item } of book.recipes.flatMap((r) => r.materials.flat())) {
+    if (!items.has(item.id)) {
+      items.set(item.id, item);
     }
   }
   return [...items.values()]

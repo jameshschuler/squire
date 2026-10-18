@@ -4,7 +4,8 @@ export function findItem(book: RecipeBook, itemId: string): ItemSummary | undefi
   for (const recipe of book.recipes) {
     const found = [...recipe.outputs, ...recipe.materials.flat()].find((i) => i.id === itemId);
     if (found) {
-      return { id: found.id, name: found.name, icon: found.icon, keywords: found.keywords, effects: found.effects };
+      const { amount: _amount, ...item } = found;
+      return item;
     }
   }
   return book.foods.find((food) => food.id === itemId) ?? book.loot.find((loot) => loot.id === itemId);

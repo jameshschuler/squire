@@ -23,6 +23,7 @@ function withEffects(book: RecipeBook, effectsById: Record<string, Effect[]>): R
     id,
     name: name(id),
     icon: "",
+    quality: "common" as const,
     keywords: [],
     effects: { steps: 1000, effects },
   }));
@@ -71,12 +72,12 @@ describe("effectsFor", () => {
 });
 
 describe("whereItemApplies", () => {
-  const conditioned = (condition: string, stat: string, normal: string): Effect => ({
+  const conditioned = (condition: string, stat: string, normal: string, appliesTo = [target("agility")]): Effect => ({
     condition,
     stat,
     normal,
     fine: normal,
-    appliesTo: [],
+    appliesTo,
   });
 
   it("lists each place the food applies once, in order", () => {
@@ -90,13 +91,21 @@ describe("whereItemApplies", () => {
     expect(whereItemApplies(food!)).toBe("Foraging · Global");
   });
 
-  it("keeps a partly known condition as one entry", () => {
+  it("shows only the skill, once, for partly known conditions and drops unknown ones", () => {
     const [food] = withEffects(base, {
       bagel: [
+        conditioned("Under certain conditions", "Work efficiency", "+5%", []),
         conditioned("While doing Agility (with other conditions)", "Work efficiency", "+5%"),
-        conditioned("Global", "Bonus experience", "+1%"),
+        conditioned("While doing Agility", "Steps required", "-1"),
       ],
     }).foods;
-    expect(whereItemApplies(food!)).toBe("Agility (with other conditions) · Global");
+    expect(whereItemApplies(food!)).toBe("Agility");
+  });
+
+  it("says when every condition is unknown", () => {
+    const [food] = withEffects(base, {
+      bagel: [conditioned("Under certain conditions", "Work efficiency", "+5%", [])],
+    }).foods;
+    expect(whereItemApplies(food!)).toBe("Under certain conditions");
   });
 });

@@ -10,6 +10,7 @@ const salmonPie: ItemWithEffects = {
   id: "salmon_pie",
   name: "Salmon pie",
   icon: "",
+  quality: "common",
   keywords: [],
   effects: {
     steps: 1000,
@@ -26,6 +27,15 @@ const salmonPie: ItemWithEffects = {
 };
 
 describe("EffectItemListItem", () => {
+  it("shows the item's tier", async () => {
+    await renderWithRouter(
+      <ul>
+        <EffectItemListItem item={{ ...salmonPie, quality: "rare" }} filter={undefined} />
+      </ul>,
+    );
+    expect(screen.getByText("rare")).toBeDefined();
+  });
+
   it("links to the food and shows the effect that helps the chosen skill", async () => {
     await renderWithRouter(
       <ul>
