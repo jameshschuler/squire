@@ -312,6 +312,38 @@ describe("itemEffects for crafted gear", () => {
     expect(new Set(tier("ethereal").effects.map((e) => e.condition))).toEqual(new Set(["While doing Woodcutting"]));
   });
 
+  it("keeps flat and percentage bonuses with the same label apart across tiers", () => {
+    const gear = structuredClone(hatchet);
+    const bonus = (value: number, isPercent: boolean) => ({
+      ...gear.itemAttrs![0]!,
+      statText: "Bonus experience",
+      stats: [{ ...gear.itemAttrs![0]!.stats[0]!, stat: "bonus_experience", value, isPercent }],
+    });
+    gear.itemAttrs = [bonus(5, false)];
+    gear.itemQualityAttrs = [
+      { quality: "uncommon", attributes: [bonus(0.02, true)] },
+      { quality: "rare", attributes: [bonus(1, false), bonus(0.01, true)] },
+    ];
+    const tiers = itemEffects(gear, NAMES)!.tiers.map((t) => t.effects.map((e) => `${e.stat} ${e.normal}`));
+    expect(tiers).toEqual([
+      ["Bonus experience +5", "Bonus experience +2%"],
+      ["Bonus experience +6", "Bonus experience +3%"],
+    ]);
+  });
+
+  it("sums repeated base lines into every tier, without float noise", () => {
+    const gear = structuredClone(hatchet);
+    const steps = (value: number) => ({
+      ...gear.itemAttrs![0]!,
+      statText: "Steps required",
+      stats: [{ ...gear.itemAttrs![0]!.stats[0]!, stat: "steps_required", value, isPercent: false }],
+    });
+    gear.itemAttrs = [steps(0.1), steps(0.2)];
+    gear.itemQualityAttrs = [{ quality: "uncommon", attributes: [steps(1)] }];
+    const [uncommon] = itemEffects(gear, NAMES)!.tiers;
+    expect(uncommon!.effects.map((e) => e.normal)).toEqual(["+1.3"]);
+  });
+
   it("gives gear without tiers an empty tier list", () => {
     const ankh = (gearItems as unknown as ItemDetail[]).find((item) => item.id === "ancient_ankh")!;
     expect(itemEffects(ankh, NAMES)!.tiers).toEqual([]);

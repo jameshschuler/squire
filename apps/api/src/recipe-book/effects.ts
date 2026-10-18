@@ -19,6 +19,7 @@ export interface EffectNames {
 }
 
 interface StatValue {
+  stat: string;
   value: number;
   isPercent: boolean;
 }
@@ -42,20 +43,25 @@ function qualityTotals(
   base: Attribute[],
   tiers: { quality: ItemQuality; attributes: Attribute[] | null }[],
 ): { quality: ItemQuality; attributes: Attribute[] }[] {
-  const totals = new Map(base.map((attribute) => [attributeKey(attribute), attribute]));
+  const totals = new Map<string, Attribute>();
+  const add = (attributes: Attribute[]) => {
+    for (const attribute of attributes) {
+      const key = attributeKey(attribute);
+      totals.set(key, addStats(totals.get(key), attribute));
+    }
+  };
+  add(base);
   return [...tiers]
     .sort((a, b) => QUALITIES.indexOf(a.quality) - QUALITIES.indexOf(b.quality))
     .map(({ quality, attributes }) => {
-      for (const attribute of attributes ?? []) {
-        const key = attributeKey(attribute);
-        totals.set(key, addStats(totals.get(key), attribute));
-      }
+      add(attributes ?? []);
       return { quality, attributes: [...totals.values()] };
     });
 }
 
 function attributeKey(attribute: Attribute): string {
-  return JSON.stringify([attribute.statText, attribute.customText, attribute.requirements ?? []]);
+  const stat = statValue(attribute);
+  return JSON.stringify([stat?.stat, stat?.isPercent, attribute.customText, attribute.requirements ?? []]);
 }
 
 function addStats(total: Attribute | undefined, attribute: Attribute): Attribute {
@@ -219,7 +225,7 @@ function formatSigned(stat: StatValue): string {
 }
 
 function formatAmount({ value, isPercent }: StatValue): string {
-  return isPercent ? `${Number((value * 100).toFixed(2))}%` : `${value}`;
+  return isPercent ? `${Number((value * 100).toFixed(2))}%` : `${Number(value.toFixed(2))}`;
 }
 
 function customText(text: string, items: Map<string, ItemDetail>): string {
