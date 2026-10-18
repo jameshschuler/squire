@@ -2,6 +2,7 @@ import type { ItemDetail, SkillDetail } from "@jameshschuler/walkscape-data-clie
 import { describe, expect, it } from "vitest";
 import { itemEffects } from "../src/recipe-book/effects.js";
 import foods from "../../../fixtures/api/foods.json";
+import lootItems from "../../../fixtures/api/loot.json";
 
 const food = (id: string) => (foods as unknown as ItemDetail[]).find((f) => f.id === id)!;
 
@@ -138,5 +139,47 @@ describe("itemEffects", () => {
     ["bread", "While not travelling"],
   ])("labels %s's negated requirement to match where it applies", (id, condition) => {
     expect(itemEffects(negated(id), SKILLS)!.effects[0]!.condition).toBe(condition);
+  });
+});
+
+describe("itemEffects for loot", () => {
+  const loot = (name: string) => (lootItems as unknown as ItemDetail[]).find((item) => item.name === name)!;
+  const effectsOf = (name: string) => itemEffects(loot(name), SKILLS)!;
+
+  it("reads gear effects, with no duration and no fine version", () => {
+    const wrench = effectsOf("Adjustable wrench");
+    expect(wrench.steps).toBeNull();
+    expect(wrench.effects[0]).toEqual({
+      condition: "While doing Crafting",
+      stat: "Work efficiency",
+      normal: "+7%",
+      fine: null,
+      appliesTo: [{ id: "crafting", name: "Crafting" }],
+    });
+  });
+
+  it("treats gear with no requirement as global", () => {
+    expect(effectsOf("Absorbing amulet").effects.map((e) => e.condition)).toEqual(["Global", "Global"]);
+  });
+
+  it.each([
+    ["Birch skis", 0, "While doing Agility (with other conditions)", ["agility"]],
+    ["Bogwood boots", 2, "While doing Carpentry (with other conditions)", ["carpentry"]],
+  ])("keeps %s's skill when another requirement is one it doesn't model", (name, index, condition, appliesTo) => {
+    const effect = effectsOf(name).effects[index]!;
+    expect(effect.condition).toBe(condition);
+    expect(effect.appliesTo.map((t) => t.id)).toEqual(appliesTo);
+  });
+
+  it("combines several known requirements", () => {
+    const skis = structuredClone(loot("Birch skis"));
+    const attribute = skis.type === "loot" ? skis.itemAttrs![0]! : undefined;
+    attribute!.requirements = [
+      { type: "mainSkillType", name: null, opposite: false, requirement: { type: "gathering" } },
+      { type: "mainSkill", name: null, opposite: true, requirement: { skill: "fishing" } },
+    ] as never;
+    const [effect] = itemEffects(skis, SKILLS)!.effects;
+    expect(effect!.condition).toBe("While doing gathering skills and not doing Fishing");
+    expect(effect!.appliesTo.map((t) => t.id)).toEqual(["foraging", "hunting", "mining", "woodcutting"]);
   });
 });

@@ -9,32 +9,35 @@ interface StatValue {
 }
 
 export function itemEffects(item: ItemDetail, skills: SkillDetail[]): ItemEffects | null {
+  if (item.type === "loot") {
+    const effects = (item.itemAttrs ?? []).flatMap((attribute) => effectLine(attribute, null, skills));
+    return effects.length > 0 ? { steps: null, effects } : null;
+  }
   const buff = item.type === "consumable" ? item.buffs?.[0] : undefined;
   if (!buff) {
     return null;
   }
   const effects = buff.data.flatMap((data) =>
     data.buffs.flatMap((group) =>
-      group.attributes.flatMap((attribute, i) => effectLine(attribute, group.fineAttributes[i], skills)),
+      group.attributes.flatMap((attribute, i) => effectLine(attribute, group.fineAttributes[i] ?? attribute, skills)),
     ),
   );
   return { steps: "steps" in buff.duration ? buff.duration.steps : null, effects };
 }
 
-function effectLine(attribute: Attribute, fine: Attribute | undefined, skills: SkillDetail[]): Effect[] {
+function effectLine(attribute: Attribute, fine: Attribute | null, skills: SkillDetail[]): Effect[] {
   const stat = statValue(attribute);
   if (!stat) {
     return [];
   }
   const isChance = attribute.customText !== "";
   const format = (value: StatValue) => (isChance ? formatAmount(value) : formatSigned(value));
-  const fineStat = (fine && statValue(fine)) ?? stat;
   return [
     {
       ...scope(attribute, skills),
       stat: isChance ? stripTags(attribute.customText) : attribute.statText,
       normal: format(stat),
-      fine: format(fineStat),
+      fine: fine ? format(statValue(fine) ?? stat) : null,
     },
   ];
 }
@@ -44,22 +47,31 @@ function statValue(attribute: Attribute): StatValue | undefined {
 }
 
 function scope(attribute: Attribute, skills: SkillDetail[]): Pick<Effect, "condition" | "appliesTo"> {
-  const everything = () => [...skills.map(skillTarget), TRAVELLING];
-  const requirement = attribute.requirements?.[0];
-  if (!requirement) {
-    return { condition: "Global", appliesTo: everything() };
+  const everything = [...skills.map(skillTarget), TRAVELLING];
+  const requirements = attribute.requirements ?? [];
+  if (requirements.length === 0) {
+    return { condition: "Global", appliesTo: everything };
   }
-  const named = describeRequirement(requirement, skills);
-  if (!named) {
+  const known = requirements.flatMap((requirement) => {
+    const named = describeRequirement(requirement, skills);
+    if (!named) {
+      return [];
+    }
+    const ids = new Set(named.targets.map((target) => target.id));
+    return [
+      {
+        label: requirement.opposite ? `not ${named.activity}` : named.activity,
+        matches: (target: EffectTarget) => ids.has(target.id) !== requirement.opposite,
+      },
+    ];
+  });
+  if (known.length === 0) {
     return { condition: "Under certain conditions", appliesTo: [] };
   }
-  if (!requirement.opposite) {
-    return { condition: `While ${named.activity}`, appliesTo: named.targets };
-  }
-  const namedIds = new Set(named.targets.map((target) => target.id));
+  const others = known.length < requirements.length ? " (with other conditions)" : "";
   return {
-    condition: `While not ${named.activity}`,
-    appliesTo: everything().filter((target) => !namedIds.has(target.id)),
+    condition: `While ${known.map((part) => part.label).join(" and ")}${others}`,
+    appliesTo: everything.filter((target) => known.every((part) => part.matches(target))),
   };
 }
 

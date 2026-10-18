@@ -8,6 +8,7 @@ const book: RecipeBook = {
   schema: 2,
   version: "v1",
   foods: [],
+  loot: [],
   recipes: [
     {
       id: "r",

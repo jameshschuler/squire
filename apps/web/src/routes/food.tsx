@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FoodSearch } from "@/components/food/FoodSearch";
+import { EffectItemSearch } from "@/components/effects/EffectItemSearch";
 import { validateListSearch } from "@/lib/list-search";
 
 export const Route = createFileRoute("/food")({
@@ -12,7 +12,9 @@ function FoodPage() {
   const navigate = Route.useNavigate();
 
   return (
-    <FoodSearch
+    <EffectItemSearch
+      kind="foods"
+      noun="food"
       query={q}
       skill={skill}
       onQueryChange={(value) => navigate({ search: (prev) => ({ ...prev, q: value || undefined }), replace: true })}

@@ -5,27 +5,32 @@ import { formatDuration } from "@/lib/format";
 
 export function ItemEffectsSection({ effects }: { effects: ItemEffects }) {
   const title = effects.steps === null ? "Effects" : `Effects · ${formatDuration(effects.steps)}`;
+  const hasFine = effects.effects.some((effect) => effect.fine !== null);
   return (
     <RecipeSection title={title}>
       <table className="w-full">
         {groupByCondition(effects.effects).map(([condition, group]) => (
           <tbody key={condition}>
             <tr className="text-sm text-muted-foreground">
-              <th scope="rowgroup" className="pt-2 pb-1 text-left font-normal">
+              <th scope="rowgroup" colSpan={hasFine ? 1 : 2} className="pt-2 pb-1 text-left font-normal">
                 {condition}
               </th>
-              <th scope="col" className="w-16 pt-2 pb-1 text-right font-normal">
-                Normal
-              </th>
-              <th scope="col" className="w-16 pt-2 pb-1 text-right font-normal">
-                Fine
-              </th>
+              {hasFine && (
+                <>
+                  <th scope="col" className="w-16 pt-2 pb-1 text-right font-normal">
+                    Normal
+                  </th>
+                  <th scope="col" className="w-16 pt-2 pb-1 text-right font-normal">
+                    Fine
+                  </th>
+                </>
+              )}
             </tr>
-            {group.map((effect) => (
-              <tr key={effect.stat}>
+            {group.map((effect, i) => (
+              <tr key={`${effect.stat}-${i}`}>
                 <td className="py-0.5 pr-2">{effect.stat}</td>
                 <td className="py-0.5 text-right tabular-nums">{effect.normal}</td>
-                <td className="py-0.5 text-right tabular-nums">{effect.fine}</td>
+                {hasFine && <td className="py-0.5 text-right tabular-nums">{effect.fine}</td>}
               </tr>
             ))}
           </tbody>

@@ -14,6 +14,7 @@ import {
 } from "../src/recipe-book/index.js";
 import type { ItemDetail, ServiceTier } from "@jameshschuler/walkscape-data-client";
 import foodItems from "../../../fixtures/api/foods.json";
+import lootItems from "../../../fixtures/api/loot.json";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
 const book = buildRecipeBook(sample as unknown as GameData);
@@ -226,6 +227,7 @@ describe("recipeBookIcons", () => {
         version: "v",
         recipes: [{ ...recipe!, icon: "", outputs: [], materials: [] }],
         foods: [],
+        loot: [],
         sources: {},
       }),
     ).toEqual([]);
@@ -437,5 +439,30 @@ describe("foods", () => {
   it("includes food icons in the icons to prefetch", () => {
     const driedFruit = withFoods.foods.find((f) => f.id === "dried_fruit")!;
     expect(recipeBookIcons(withFoods)).toContain(driedFruit.icon);
+  });
+});
+
+describe("loot", () => {
+  const data = structuredClone(sample) as unknown as GameData;
+  data.items.push(...(lootItems as unknown as ItemDetail[]));
+  const withLoot = buildRecipeBook(data);
+
+  it("lists loot items with effects, A–Z", () => {
+    expect(withLoot.loot.map((l) => l.name)).toEqual([
+      "Absorbing amulet",
+      "Adjustable wrench",
+      "Birch skis",
+      "Bogwood boots",
+    ]);
+  });
+
+  it("leaves out loot items a recipe makes", () => {
+    const crafted = structuredClone(data);
+    crafted.recipes[0]!.itemRewards = { birch_skis: 1 };
+    expect(buildRecipeBook(crafted).loot.map((l) => l.name)).not.toContain("Birch skis");
+  });
+
+  it("finds a loot item no recipe mentions", () => {
+    expect(findItem(withLoot, "adjustable_wrench")?.name).toBe("Adjustable wrench");
   });
 });

@@ -23,7 +23,7 @@ import {
   RECIPE_BOOK_SCHEMA,
   type ActivitySource,
   type ChestSource,
-  type Food,
+  type ItemWithEffects,
   type ItemSource,
   type ItemSummary,
   type LocationSummary,
@@ -79,20 +79,25 @@ export function buildRecipeBook(data: GameData): RecipeBook {
     };
   });
 
-  const foods = data.items
-    .filter((i) => i.type === "consumable")
-    .map((i) => summary(i.id))
-    .filter((food): food is Food => food.effects !== null)
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const withEffects = (type: ItemDetail["type"], exclude = new Set<string>()) =>
+    data.items
+      .filter((i) => i.type === type && !exclude.has(i.id))
+      .map((i) => summary(i.id))
+      .filter((found): found is ItemWithEffects => found.effects !== null)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  const foods = withEffects("consumable");
+  const loot = withEffects("loot", new Set(recipes.flatMap((r) => r.outputs.map((o) => o.id))));
   const sourcedIds = new Set([
     ...recipes.flatMap((r) => r.materials.flat().map((m) => m.id)),
     ...foods.map((f) => f.id),
+    ...loot.map((l) => l.id),
   ]);
   return {
     schema: RECIPE_BOOK_SCHEMA,
     version: data.version,
     recipes: recipes.sort(byLevel),
     foods,
+    loot,
     sources: itemSources(data, sourcedIds, { locationsByActivity, locationsByBuilding }, skillName),
   };
 }

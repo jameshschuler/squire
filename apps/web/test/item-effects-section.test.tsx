@@ -70,4 +70,18 @@ describe("ItemEffectsSection", () => {
     );
     expect(screen.getByRole("heading").textContent).toBe("Effects");
   });
+
+  it("shows one value column for gear, which has no fine version", () => {
+    render(
+      <ItemEffectsSection
+        effects={{
+          steps: null,
+          effects: [
+            { condition: "While doing Crafting", stat: "Work efficiency", normal: "+7%", fine: null, appliesTo: [] },
+          ],
+        }}
+      />,
+    );
+    expect(rows()).toEqual([["While doing Crafting"], ["Work efficiency", "+7%"]]);
+  });
 });
