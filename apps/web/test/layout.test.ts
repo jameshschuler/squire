@@ -16,6 +16,7 @@ describe("activeTab", () => {
   it.each([
     ["/", "/"],
     ["/materials", "/materials"],
+    ["/food", "/food"],
     ["/favorites", "/favorites"],
   ])("on %s: %s", (pathname, expected) => {
     expect(activeTab(pathname, "/favorites")).toBe(expected);

@@ -12,7 +12,8 @@ import {
   words,
   type GameData,
 } from "../src/recipe-book/index.js";
-import type { ServiceTier } from "@jameshschuler/walkscape-data-client";
+import type { ItemDetail, ServiceTier } from "@jameshschuler/walkscape-data-client";
+import foodItems from "../../../fixtures/api/foods.json";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
 const book = buildRecipeBook(sample as unknown as GameData);
@@ -58,7 +59,7 @@ describe("buildRecipeBook", () => {
   });
 
   it("gives items their in-game keywords, each once", () => {
-    expect(findItem(recipes, "bagel")?.keywords).toEqual(["food", "sandwich", "agility"]);
+    expect(findItem(book, "bagel")?.keywords).toEqual(["food", "sandwich", "agility"]);
   });
 
   it("pulls skill levels and the service out of requirements", () => {
@@ -224,6 +225,7 @@ describe("recipeBookIcons", () => {
         schema: RECIPE_BOOK_SCHEMA,
         version: "v",
         recipes: [{ ...recipe!, icon: "", outputs: [], materials: [] }],
+        foods: [],
         sources: {},
       }),
     ).toEqual([]);
@@ -361,7 +363,7 @@ describe("findItem", () => {
     ["a material", "salt_crystal", "Salt crystal"],
     ["a material alternative", "gold_ore", "Gold ore"],
   ])("finds %s", (_, id, name) => {
-    expect(findItem(recipes, id)).toEqual({
+    expect(findItem(book, id)).toEqual({
       id,
       name,
       icon: expect.any(String),
@@ -370,8 +372,8 @@ describe("findItem", () => {
     });
   });
 
-  it("returns undefined for an item no recipe mentions", () => {
-    expect(findItem(recipes, "unknown")).toBeUndefined();
+  it("returns undefined for an item that isn't in any recipe or the food list", () => {
+    expect(findItem(book, "unknown")).toBeUndefined();
   });
 });
 
@@ -412,5 +414,28 @@ describe("words", () => {
     ["  --  ", []],
   ])("splits %j", (text, expected) => {
     expect(words(text)).toEqual(expected);
+  });
+});
+
+describe("foods", () => {
+  const data = structuredClone(sample) as unknown as GameData;
+  const known = new Set(data.items.map((i) => i.id));
+  data.items.push(...(foodItems as unknown as ItemDetail[]).filter((food) => !known.has(food.id)));
+  const withFoods = buildRecipeBook(data);
+
+  it("lists every food in the game data A–Z, including ones no recipe uses", () => {
+    const names = withFoods.foods.map((f) => f.name);
+    expect(names).toContain("Dried fruit");
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
+    expect(withFoods.foods.every((f) => f.effects)).toBe(true);
+  });
+
+  it("finds a food no recipe mentions", () => {
+    expect(findItem(withFoods, "dried_fruit")?.effects?.steps).toBe(5000);
+  });
+
+  it("includes food icons in the icons to prefetch", () => {
+    const driedFruit = withFoods.foods.find((f) => f.id === "dried_fruit")!;
+    expect(recipeBookIcons(withFoods)).toContain(driedFruit.icon);
   });
 });

@@ -6,6 +6,7 @@ import {
   type RecipeBook,
   type SkillLevel,
 } from "@squire/api/recipe-book";
+import { matchesWords } from "./match";
 import { uniqueSkills, type SkillOption } from "./skills";
 
 export interface Material {
@@ -62,9 +63,7 @@ export function searchMaterials(
 ): Material[] {
   const terms = words(query);
   return materials.filter(
-    (m) =>
-      (!filter || matchesFilter(m, filter)) &&
-      terms.every((term) => searchableWords(m).some((word) => word.startsWith(term))),
+    (m) => (!filter || matchesFilter(m, filter)) && matchesWords(terms, [m.item.name, ...m.item.keywords]),
   );
 }
 
@@ -83,8 +82,4 @@ function matchesFilter(material: Material, filter: string): boolean {
 
 function sourceSkills(source: ItemSource): SkillLevel[] {
   return source.kind === "activity" ? source.skills : [];
-}
-
-function searchableWords(material: Material): string[] {
-  return [material.item.name, ...material.item.keywords].flatMap(words);
 }

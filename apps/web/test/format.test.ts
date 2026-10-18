@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatCondition,
   formatDuration,
+  formatEffect,
   formatKeyword,
   formatPercent,
   formatRegion,
@@ -27,6 +29,31 @@ describe("formatKeyword", () => {
     ["ore", "ore"],
   ])("formats %s as %s", (keyword, expected) => {
     expect(formatKeyword(keyword)).toBe(expected);
+  });
+});
+
+describe("formatCondition", () => {
+  it.each([
+    ["While doing Woodcutting", "Woodcutting"],
+    ["While doing gathering skills", "Gathering skills"],
+    ["While travelling", "Travelling"],
+    ["While not doing Woodcutting", "Not doing Woodcutting"],
+    ["While not travelling", "Not travelling"],
+    ["While not doing gathering skills", "Not doing gathering skills"],
+    ["Under certain conditions", "Under certain conditions"],
+    ["Global", "Global"],
+  ])("shortens %s to %s", (condition, expected) => {
+    expect(formatCondition(condition)).toBe(expected);
+  });
+});
+
+describe("formatEffect", () => {
+  it.each([
+    ["+7%", "Work efficiency", "+7% work efficiency"],
+    ["-1", "Steps required", "-1 steps required"],
+    ["25%", "Chance to find 1 to 10 gold pieces", "25% chance to find 1 to 10 gold pieces"],
+  ])("formats %s %s as %s", (normal, stat, expected) => {
+    expect(formatEffect({ normal, stat })).toBe(expected);
   });
 });
 

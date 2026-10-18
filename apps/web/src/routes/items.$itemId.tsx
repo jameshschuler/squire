@@ -14,7 +14,7 @@ function ItemPage() {
   if (state.status !== "ready") {
     return <GameDataStatus state={state} />;
   }
-  const item = findItem(state.book.recipes, itemId);
+  const item = findItem(state.book, itemId);
   if (!item) {
     return <p className="py-8 text-center text-muted-foreground">Item not found.</p>;
   }
