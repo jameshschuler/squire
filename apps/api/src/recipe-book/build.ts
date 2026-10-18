@@ -68,6 +68,7 @@ export function buildRecipeBook(data: GameData): RecipeBook {
       name: found?.name ?? humanize(id),
       icon: found?.icon ?? "",
       quality: found?.quality ?? null,
+      isCollectible: found?.type === "collectible",
       keywords,
       effects,
     };

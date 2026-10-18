@@ -3,6 +3,7 @@ import { findRecipesByOutput, findRecipesByMaterial, type ItemSummary, type Reci
 import { BackButton } from "@/components/layout/BackButton";
 import { RecipeList } from "@/components/recipes/RecipeList";
 import { RecipeSection } from "@/components/recipes/RecipeSection";
+import { CollectibleBadge } from "@/components/shared/CollectibleBadge";
 import { GameIcon } from "@/components/shared/GameIcon";
 import { QualityBadge } from "@/components/shared/QualityBadge";
 import { ItemEffectsSection } from "./ItemEffectsSection";
@@ -28,7 +29,11 @@ export function ItemDetail({ item, book }: ItemDetailProps) {
           <GameIcon path={item.icon} size={48} />
           {item.name}
         </h1>
-        {item.quality && !item.effects?.tiers.length && <QualityBadge quality={item.quality} />}
+        {item.isCollectible ? (
+          <CollectibleBadge />
+        ) : (
+          item.quality && !item.effects?.tiers.length && <QualityBadge quality={item.quality} />
+        )}
       </div>
       {item.keywords.length > 0 && (
         <RecipeSection title="Keywords">

@@ -54,6 +54,12 @@ describe("ItemDetail", () => {
     ).toEqual(["nugget", "light"]);
   });
 
+  it("tags a collectible", async () => {
+    const goldBar = findItem(book, "gold_bar")!;
+    await renderWithRouter(<ItemDetail item={{ ...goldBar, isCollectible: true }} book={book} />);
+    expect(screen.getByText("Collectible")).toBeDefined();
+  });
+
   it("leaves out the tier badge on crafted gear, whose tiers are picked under Effects", async () => {
     const goldBar = findItem(book, "gold_bar")!;
     const tier = { quality: "uncommon" as const, effects: [] };

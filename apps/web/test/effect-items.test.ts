@@ -25,6 +25,7 @@ function withEffects(book: RecipeBook, effectsById: Record<string, Effect[]>): R
     name: name(id),
     icon: "",
     quality: "common" as const,
+    isCollectible: false,
     keywords: [],
     effects: { steps: 1000, tiers: [], effects },
   }));

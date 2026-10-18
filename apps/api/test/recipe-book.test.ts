@@ -52,6 +52,7 @@ describe("buildRecipeBook", () => {
           name: "Gold nugget",
           icon: expect.any(String),
           quality: "common",
+          isCollectible: false,
           keywords: ["nugget", "light"],
           effects: null,
           amount: 7,
@@ -61,6 +62,7 @@ describe("buildRecipeBook", () => {
           name: "Gold ore",
           icon: expect.any(String),
           quality: "common",
+          isCollectible: false,
           keywords: ["ore"],
           effects: null,
           amount: 2,
@@ -380,6 +382,7 @@ describe("findItem", () => {
       name,
       icon: expect.any(String),
       quality: "common",
+      isCollectible: false,
       keywords: expect.any(Array),
       effects: null,
     });
@@ -527,6 +530,7 @@ describe("loot", () => {
     const names = buildRecipeBook(withCollectible).loot.map((l) => l.name);
     expect(names).toContain("Ancient ankh");
     expect(names).not.toContain("Steel hatchet");
+    expect(buildRecipeBook(withCollectible).loot.find((l) => l.id === "ancient_ankh")?.isCollectible).toBe(true);
   });
 
   it("finds a loot item no recipe mentions", () => {

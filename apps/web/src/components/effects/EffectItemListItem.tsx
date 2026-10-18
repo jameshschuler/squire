@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ItemWithEffects } from "@squire/api/recipe-book";
+import { CollectibleBadge } from "@/components/shared/CollectibleBadge";
 import { GameIcon } from "@/components/shared/GameIcon";
 import { QualityBadge } from "@/components/shared/QualityBadge";
 import { summarizeEffects, whereItemApplies } from "@/lib/effect-items";
@@ -21,7 +22,11 @@ export function EffectItemListItem({ item, filter, showQuality }: EffectItemList
             {filter ? summarizeEffects(item, filter) : whereItemApplies(item)}
           </span>
         </span>
-        {showQuality && item.quality && <QualityBadge quality={item.quality} />}
+        {item.isCollectible ? (
+          <CollectibleBadge />
+        ) : (
+          showQuality && item.quality && <QualityBadge quality={item.quality} />
+        )}
       </Link>
     </li>
   );

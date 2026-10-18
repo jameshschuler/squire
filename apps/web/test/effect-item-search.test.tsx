@@ -10,6 +10,7 @@ const item = (name: string, quality: ItemWithEffects["quality"]): ItemWithEffect
   name,
   icon: "",
   quality,
+  isCollectible: false,
   keywords: [],
   effects: {
     steps: null,
