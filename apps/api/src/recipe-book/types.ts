@@ -1,7 +1,7 @@
 import type { ItemDetail, ServiceTier } from "@jameshschuler/walkscape-data-client";
 
 // Bump whenever the RecipeBook shape changes, so cached copies on devices refresh.
-export const RECIPE_BOOK_SCHEMA = 17;
+export const RECIPE_BOOK_SCHEMA = 21;
 
 export interface EffectTarget {
   id: string;
@@ -17,18 +17,27 @@ export interface Effect {
   appliesTo: EffectTarget[];
 }
 
-export interface ItemEffects {
-  steps: number | null;
+export interface QualityEffects {
+  quality: ItemQuality;
   effects: Effect[];
 }
 
+export interface ItemEffects {
+  steps: number | null;
+  effects: Effect[];
+  tiers: QualityEffects[];
+}
+
 export type ItemQuality = ItemDetail["quality"];
+
+export const QUALITIES: ItemQuality[] = ["common", "uncommon", "rare", "epic", "legendary", "ethereal"];
 
 export interface ItemSummary {
   id: string;
   name: string;
   icon: string;
   quality: ItemQuality | null;
+  isCollectible: boolean;
   keywords: string[];
   effects: ItemEffects | null;
 }
@@ -123,6 +132,6 @@ export interface RecipeBook {
   version: string;
   recipes: RecipeView[];
   foods: ItemWithEffects[];
-  loot: ItemWithEffects[];
+  loot: ItemSummary[];
   sources: Record<string, ItemSource[]>;
 }

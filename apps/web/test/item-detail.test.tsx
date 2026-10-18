@@ -54,10 +54,26 @@ describe("ItemDetail", () => {
     ).toEqual(["nugget", "light"]);
   });
 
+  it("tags a collectible", async () => {
+    const goldBar = findItem(book, "gold_bar")!;
+    await renderWithRouter(<ItemDetail item={{ ...goldBar, isCollectible: true }} book={book} />);
+    expect(screen.getByText("Collectible")).toBeDefined();
+  });
+
+  it("leaves out the tier badge on crafted gear, whose tiers are picked under Effects", async () => {
+    const goldBar = findItem(book, "gold_bar")!;
+    const tier = { quality: "uncommon" as const, effects: [] };
+    await renderWithRouter(
+      <ItemDetail item={{ ...goldBar, effects: { steps: null, effects: [], tiers: [tier] } }} book={book} />,
+    );
+    expect(screen.queryByText("common")).toBeNull();
+  });
+
   it("shows what a food does right after its keywords", async () => {
     const goldBar = findItem(book, "gold_bar")!;
     const effects = {
       steps: 1000,
+      tiers: [],
       effects: [
         {
           condition: "While doing Woodcutting",

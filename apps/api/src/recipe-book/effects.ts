@@ -1,6 +1,13 @@
 import type { Attribute, ItemDetail, Requirement, SkillDetail } from "@jameshschuler/walkscape-data-client";
 import { capitalize, spaced } from "./text.js";
-import type { Effect, EffectTarget, ItemEffects } from "./types.js";
+import {
+  QUALITIES,
+  type Effect,
+  type EffectTarget,
+  type ItemEffects,
+  type ItemQuality,
+  type QualityEffects,
+} from "./types.js";
 
 export const TRAVELLING: EffectTarget = { id: "travelling", name: "Travelling" };
 const OTHER_CONDITIONS = " (with other conditions)";
@@ -12,16 +19,62 @@ export interface EffectNames {
 }
 
 interface StatValue {
+  stat: string;
   value: number;
   isPercent: boolean;
 }
 
 export function itemEffects(item: ItemDetail, names: EffectNames): ItemEffects | null {
-  if (item.type === "loot") {
-    const effects = (item.itemAttrs ?? []).flatMap((attribute) => effectLine(attribute, null, names));
-    return effects.length > 0 ? { steps: null, effects } : null;
+  if (item.type === "consumable") {
+    return foodEffects(item, names);
   }
-  const buff = item.type === "consumable" ? item.buffs?.[0] : undefined;
+  const gearEffects = (attributes: Attribute[]) =>
+    attributes.flatMap((attribute) => effectLine(attribute, null, names));
+  const base = item.itemAttrs ?? [];
+  const effects = gearEffects(base);
+  const tiers = qualityTotals(base, item.itemQualityAttrs ?? []).map(({ quality, attributes }): QualityEffects => ({
+    quality,
+    effects: gearEffects(attributes),
+  }));
+  return effects.length > 0 || tiers.length > 0 ? { steps: null, effects, tiers } : null;
+}
+
+function qualityTotals(
+  base: Attribute[],
+  tiers: { quality: ItemQuality; attributes: Attribute[] | null }[],
+): { quality: ItemQuality; attributes: Attribute[] }[] {
+  const totals = new Map<string, Attribute>();
+  const add = (attributes: Attribute[]) => {
+    for (const attribute of attributes) {
+      const key = attributeKey(attribute);
+      totals.set(key, addStats(totals.get(key), attribute));
+    }
+  };
+  add(base);
+  return [...tiers]
+    .sort((a, b) => QUALITIES.indexOf(a.quality) - QUALITIES.indexOf(b.quality))
+    .map(({ quality, attributes }) => {
+      add(attributes ?? []);
+      return { quality, attributes: [...totals.values()] };
+    });
+}
+
+function attributeKey(attribute: Attribute): string {
+  const stat = statValue(attribute);
+  return JSON.stringify([stat?.stat, stat?.isPercent, attribute.customText, attribute.requirements ?? []]);
+}
+
+function addStats(total: Attribute | undefined, attribute: Attribute): Attribute {
+  const stat = statValue(attribute);
+  const totalStat = total && statValue(total);
+  if (!stat || !totalStat) {
+    return attribute;
+  }
+  return { ...attribute, stats: [{ ...stat, value: totalStat.value + stat.value }] };
+}
+
+function foodEffects(item: Extract<ItemDetail, { type: "consumable" }>, names: EffectNames): ItemEffects | null {
+  const buff = item.buffs?.[0];
   if (!buff) {
     return null;
   }
@@ -30,7 +83,7 @@ export function itemEffects(item: ItemDetail, names: EffectNames): ItemEffects |
       group.attributes.flatMap((attribute, i) => effectLine(attribute, group.fineAttributes[i] ?? attribute, names)),
     ),
   );
-  return { steps: "steps" in buff.duration ? buff.duration.steps : null, effects };
+  return { steps: "steps" in buff.duration ? buff.duration.steps : null, effects, tiers: [] };
 }
 
 function effectLine(attribute: Attribute, fine: Attribute | null, names: EffectNames): Effect[] {
@@ -131,7 +184,7 @@ function describeRequirement(
     case "achievementPoint":
       return { label: `having ${requirement.value} achievement points` };
     case "totalSkillLevel":
-      return { label: `at total level ${requirement.levels}` };
+      return { label: `at total skill level ${requirement.levels}` };
     case "skillLevel":
       return { label: `at ${skillName(requirement.skill)} level ${requirement.level}` };
     case "itemAnywhere":
@@ -172,7 +225,7 @@ function formatSigned(stat: StatValue): string {
 }
 
 function formatAmount({ value, isPercent }: StatValue): string {
-  return isPercent ? `${Number((value * 100).toFixed(2))}%` : `${value}`;
+  return isPercent ? `${Number((value * 100).toFixed(2))}%` : `${Number(value.toFixed(2))}`;
 }
 
 function customText(text: string, items: Map<string, ItemDetail>): string {

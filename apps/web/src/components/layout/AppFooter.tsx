@@ -1,7 +1,8 @@
-import { Globe, MessageCircle } from "lucide-react";
+import { BookOpenText, Globe, MessageCircle } from "lucide-react";
 
 const LINKS = [
   { label: "WalkScape", href: "https://walkscape.app", Icon: Globe },
+  { label: "Wiki", href: "https://wiki.walkscape.app/wiki/WalkScape:_Grind_by_walking!", Icon: BookOpenText },
   { label: "Discord", href: "https://discord.gg/Kk6VecJFEk", Icon: MessageCircle },
 ];
 

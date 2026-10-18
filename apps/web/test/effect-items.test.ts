@@ -1,6 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { buildRecipeBook, type Effect, type GameData, type RecipeBook } from "@squire/api/recipe-book";
-import { effectsFor, effectFilters, searchEffectItems, summarizeEffects, whereItemApplies } from "@/lib/effect-items";
+import {
+  buildRecipeBook,
+  type Effect,
+  type GameData,
+  type ItemSummary,
+  type RecipeBook,
+} from "@squire/api/recipe-book";
+import {
+  COLLECTIBLES_FILTER,
+  effectsFor,
+  effectFilters,
+  itemSubtitle,
+  searchEffectItems,
+  summarizeEffects,
+  whereItemApplies,
+} from "@/lib/effect-items";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
 const base = buildRecipeBook(sample as unknown as GameData);
@@ -25,8 +39,9 @@ function withEffects(book: RecipeBook, effectsById: Record<string, Effect[]>): R
     name: name(id),
     icon: "",
     quality: "common" as const,
+    isCollectible: false,
     keywords: [],
-    effects: { steps: 1000, effects },
+    effects: { steps: 1000, tiers: [], effects },
   }));
   return { ...book, foods: foods.sort((a, b) => a.name.localeCompare(b.name)) };
 }
@@ -102,5 +117,62 @@ describe("summarizeEffects", () => {
 
   it("is empty when nothing applies to the filter", () => {
     expect(summarizeEffects(withStats("Work efficiency"), "mining")).toBe("");
+  });
+});
+
+describe("items with no effects", () => {
+  const wine: ItemSummary = {
+    id: "wine",
+    name: "Wine",
+    icon: "",
+    quality: "common",
+    isCollectible: true,
+    keywords: [],
+    effects: null,
+  };
+
+  it("says so where the item applies", () => {
+    expect(whereItemApplies(wine)).toBe("No effects");
+  });
+
+  it("shows up in search but not under a skill", () => {
+    expect(searchEffectItems([wine], "wine")).toEqual([wine]);
+    expect(searchEffectItems([wine], "", { filter: "agility" })).toEqual([]);
+  });
+
+  it("adds only the Collectibles chip", () => {
+    expect(effectFilters([wine])).toEqual([{ id: COLLECTIBLES_FILTER, name: "Collectibles" }]);
+  });
+});
+
+describe("the Collectibles chip", () => {
+  const collectible = (id: string, isCollectible: boolean): ItemSummary => ({
+    id,
+    name: id,
+    icon: "",
+    quality: "common",
+    isCollectible,
+    keywords: [],
+    effects: {
+      steps: null,
+      tiers: [],
+      effects: [{ ...effect("Work efficiency", "agility"), scope: "Agility" }],
+    },
+  });
+  const ankh = collectible("ankh", true);
+  const wrench = collectible("wrench", false);
+
+  it("comes after the skills, only when there are collectibles", () => {
+    expect(effectFilters([ankh, wrench]).map((f) => f.id)).toEqual(["agility", COLLECTIBLES_FILTER]);
+    expect(effectFilters([wrench]).map((f) => f.id)).toEqual(["agility"]);
+  });
+
+  it("filters to collectibles", () => {
+    expect(searchEffectItems([ankh, wrench], "", { filter: COLLECTIBLES_FILTER })).toEqual([ankh]);
+  });
+
+  it("keeps showing where each collectible applies", () => {
+    expect(itemSubtitle(ankh, COLLECTIBLES_FILTER)).toBe("Agility");
+    expect(itemSubtitle(ankh, "agility")).toBe("+1% work efficiency");
   });
 });

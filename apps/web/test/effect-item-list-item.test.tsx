@@ -11,9 +11,11 @@ const salmonPie: ItemWithEffects = {
   name: "Salmon pie",
   icon: "",
   quality: "common",
+  isCollectible: false,
   keywords: [],
   effects: {
     steps: 1000,
+    tiers: [],
     effects: [
       {
         condition: "While doing Woodcutting",
@@ -44,6 +46,18 @@ describe("EffectItemListItem", () => {
       </ul>,
     );
     expect(screen.getByRole("link").textContent).toBe("Salmon pieWoodcutting");
+  });
+
+  it.each([
+    [true, "Collectible"],
+    [false, "common"],
+  ])("tags collectibles in place of their tier (collectible: %s)", async (isCollectible, badge) => {
+    await renderWithRouter(
+      <ul>
+        <EffectItemListItem item={{ ...salmonPie, isCollectible }} filter={undefined} showQuality />
+      </ul>,
+    );
+    expect(screen.getByRole("link").textContent).toBe(`Salmon pieWoodcutting${badge}`);
   });
 
   it("hides the tier when asked to", async () => {

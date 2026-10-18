@@ -17,9 +17,31 @@ const book: RecipeBook = {
       skills: [],
       service: null,
       materials: [
-        [{ id: "m", name: "M", icon: "material.png", quality: null, keywords: [], effects: null, amount: 1 }],
+        [
+          {
+            id: "m",
+            name: "M",
+            icon: "material.png",
+            quality: null,
+            isCollectible: false,
+            keywords: [],
+            effects: null,
+            amount: 1,
+          },
+        ],
       ],
-      outputs: [{ id: "o", name: "O", icon: "recipe.png", quality: null, keywords: [], effects: null, amount: 1 }],
+      outputs: [
+        {
+          id: "o",
+          name: "O",
+          icon: "recipe.png",
+          quality: null,
+          isCollectible: false,
+          keywords: [],
+          effects: null,
+          amount: 1,
+        },
+      ],
       xp: [],
       workRequired: 1,
       maxWorkEfficiency: 1,
