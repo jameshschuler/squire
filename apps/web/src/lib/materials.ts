@@ -18,10 +18,7 @@ export interface Material {
 
 export const CHESTS_FILTER = "chests";
 export const SHOPS_FILTER = "shops";
-export const REWARDS_FILTER = "rewards";
 export const CRAFTED_FILTER = "crafted";
-
-const REWARD_KINDS: ItemSource["kind"][] = ["achievement", "reward"];
 
 export interface MaterialSearchOptions {
   filter?: string;
@@ -49,12 +46,11 @@ export function listMaterials(book: RecipeBook): Material[] {
 }
 
 export function materialFilters(materials: Material[]): SkillOption[] {
-  const hasSource = (...kinds: ItemSource["kind"][]) => materials.some((m) => hasSourceKind(m, ...kinds));
+  const hasSource = (kind: ItemSource["kind"]) => materials.some((m) => hasSourceKind(m, kind));
   return [
     ...uniqueSkills(materials.flatMap((m) => m.skills)),
     ...(hasSource("chest") ? [{ id: CHESTS_FILTER, name: "Chests" }] : []),
     ...(hasSource("shop") ? [{ id: SHOPS_FILTER, name: "Shops" }] : []),
-    ...(hasSource(...REWARD_KINDS) ? [{ id: REWARDS_FILTER, name: "Rewards" }] : []),
     ...(materials.some((m) => m.isCrafted) ? [{ id: CRAFTED_FILTER, name: "Crafted" }] : []),
   ];
 }
@@ -77,17 +73,14 @@ function matchesFilter(material: Material, filter: string): boolean {
   if (filter === SHOPS_FILTER) {
     return hasSourceKind(material, "shop");
   }
-  if (filter === REWARDS_FILTER) {
-    return hasSourceKind(material, ...REWARD_KINDS);
-  }
   if (filter === CRAFTED_FILTER) {
     return material.isCrafted;
   }
   return material.skills.some((s) => s.id === filter);
 }
 
-function hasSourceKind(material: Material, ...kinds: ItemSource["kind"][]): boolean {
-  return material.sources.some((s) => kinds.includes(s.kind));
+function hasSourceKind(material: Material, kind: ItemSource["kind"]): boolean {
+  return material.sources.some((s) => s.kind === kind);
 }
 
 function sourceSkills(source: ItemSource): SkillLevel[] {
