@@ -14,6 +14,7 @@ const salmonPie: ItemWithEffects = {
   keywords: [],
   effects: {
     steps: 1000,
+    tiers: [],
     effects: [
       {
         condition: "While doing Woodcutting",

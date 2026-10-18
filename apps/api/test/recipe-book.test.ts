@@ -14,6 +14,7 @@ import {
 } from "../src/recipe-book/index.js";
 import type { ItemDetail, ServiceTier } from "@jameshschuler/walkscape-data-client";
 import foodItems from "../../../fixtures/api/foods.json";
+import gearItems from "../../../fixtures/api/gear.json";
 import lootItems from "../../../fixtures/api/loot.json";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
@@ -518,6 +519,14 @@ describe("loot", () => {
       id: "salt_crystal",
     };
     expect(buildRecipeBook(rewarded).sources.salt_crystal).toBeUndefined();
+  });
+
+  it("lists collectibles with the loot", () => {
+    const withCollectible = structuredClone(data);
+    withCollectible.items.push(...(gearItems as unknown as ItemDetail[]));
+    const names = buildRecipeBook(withCollectible).loot.map((l) => l.name);
+    expect(names).toContain("Ancient ankh");
+    expect(names).not.toContain("Steel hatchet");
   });
 
   it("finds a loot item no recipe mentions", () => {

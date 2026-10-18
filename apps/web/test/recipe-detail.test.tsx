@@ -45,6 +45,7 @@ describe("RecipeDetail", () => {
   it("leaves a food's effects to its item page", async () => {
     const effects = {
       steps: 500,
+      tiers: [],
       effects: [
         { condition: "Global", scope: null, stat: "Double rewards", normal: "+1%", fine: "+2%", appliesTo: [] },
       ],

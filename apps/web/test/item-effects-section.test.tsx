@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import type { Effect } from "@squire/api/recipe-book";
 import { ItemEffectsSection } from "@/components/items/ItemEffectsSection";
 
 afterEach(cleanup);
@@ -12,6 +13,7 @@ describe("ItemEffectsSection", () => {
       <ItemEffectsSection
         effects={{
           steps: 500,
+          tiers: [],
           effects: [
             {
               condition: "While doing Woodcutting",
@@ -46,6 +48,7 @@ describe("ItemEffectsSection", () => {
       <ItemEffectsSection
         effects={{
           steps: 750,
+          tiers: [],
           effects: [
             {
               condition: "While doing Foraging",
@@ -80,6 +83,7 @@ describe("ItemEffectsSection", () => {
       <ItemEffectsSection
         effects={{
           steps: null,
+          tiers: [],
           effects: [
             { condition: "Global", scope: null, stat: "Inventory space", normal: "+5", fine: "+10", appliesTo: [] },
           ],
@@ -94,6 +98,7 @@ describe("ItemEffectsSection", () => {
       <ItemEffectsSection
         effects={{
           steps: null,
+          tiers: [],
           effects: [
             {
               condition: "While doing Crafting",
@@ -108,5 +113,47 @@ describe("ItemEffectsSection", () => {
       />,
     );
     expect(rows()).toEqual([["While doing Crafting"], ["Work efficiency", "+7%"]]);
+  });
+
+  describe("crafted gear tiers", () => {
+    const effect = (stat: string, normal: string): Effect => ({
+      condition: "While doing Woodcutting",
+      scope: "Woodcutting",
+      stat,
+      normal,
+      fine: null,
+      appliesTo: [],
+    });
+    const hatchet = {
+      steps: null,
+      effects: [effect("Work efficiency", "+9%")],
+      tiers: [
+        { quality: "uncommon" as const, effects: [effect("Work efficiency", "+11%"), effect("Chest finding", "+13%")] },
+        { quality: "ethereal" as const, effects: [effect("Work efficiency", "+27%"), effect("Chest finding", "+26%")] },
+      ],
+    };
+    const tier = (name: string) => screen.getByRole("button", { name });
+
+    it("names the tiers like the game and starts on Normal", () => {
+      render(<ItemEffectsSection effects={hatchet} />);
+      expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual(["Normal", "Good", "Eternal"]);
+      expect(tier("Normal").getAttribute("aria-pressed")).toBe("true");
+      expect(rows().slice(1)).toEqual([["Work efficiency", "+9%"]]);
+    });
+
+    it("shows a tier's total effects when picked", () => {
+      render(<ItemEffectsSection effects={hatchet} />);
+      fireEvent.click(tier("Eternal"));
+      expect(tier("Eternal").getAttribute("aria-pressed")).toBe("true");
+      expect(rows().slice(1)).toEqual([
+        ["Work efficiency", "+27%"],
+        ["Chest finding", "+26%"],
+      ]);
+    });
+
+    it("has no tier picker for gear without tiers", () => {
+      render(<ItemEffectsSection effects={{ ...hatchet, tiers: [] }} />);
+      expect(screen.queryByRole("button")).toBeNull();
+    });
   });
 });

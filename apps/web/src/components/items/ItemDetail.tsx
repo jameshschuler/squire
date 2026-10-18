@@ -28,14 +28,14 @@ export function ItemDetail({ item, book }: ItemDetailProps) {
           <GameIcon path={item.icon} size={48} />
           {item.name}
         </h1>
-        {item.quality && <QualityBadge quality={item.quality} />}
+        {item.quality && !item.effects?.tiers.length && <QualityBadge quality={item.quality} />}
       </div>
       {item.keywords.length > 0 && (
         <RecipeSection title="Keywords">
           <ItemKeywords keywords={item.keywords} />
         </RecipeSection>
       )}
-      {item.effects && <ItemEffectsSection effects={item.effects} />}
+      {item.effects && <ItemEffectsSection key={item.id} effects={item.effects} />}
       {isCrafted && (
         <RecipeSection title="Made by">
           <RecipeList recipes={madeBy} />

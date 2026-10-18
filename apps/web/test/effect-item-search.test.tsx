@@ -13,6 +13,7 @@ const item = (name: string, quality: ItemWithEffects["quality"]): ItemWithEffect
   keywords: [],
   effects: {
     steps: null,
+    tiers: [],
     effects: [{ condition: "Global", scope: null, stat: "Work efficiency", normal: "+1%", fine: null, appliesTo: [] }],
   },
 });

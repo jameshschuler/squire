@@ -26,7 +26,7 @@ function withEffects(book: RecipeBook, effectsById: Record<string, Effect[]>): R
     icon: "",
     quality: "common" as const,
     keywords: [],
-    effects: { steps: 1000, effects },
+    effects: { steps: 1000, tiers: [], effects },
   }));
   return { ...book, foods: foods.sort((a, b) => a.name.localeCompare(b.name)) };
 }

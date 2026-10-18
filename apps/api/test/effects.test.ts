@@ -2,6 +2,7 @@ import type { ItemDetail, SkillDetail } from "@jameshschuler/walkscape-data-clie
 import { describe, expect, it } from "vitest";
 import { itemEffects } from "../src/recipe-book/effects.js";
 import foods from "../../../fixtures/api/foods.json";
+import gearItems from "../../../fixtures/api/gear.json";
 import lootItems from "../../../fixtures/api/loot.json";
 
 const food = (id: string) => (foods as unknown as ItemDetail[]).find((f) => f.id === id)!;
@@ -271,5 +272,48 @@ describe("itemEffects for loot", () => {
     expect(effect.condition).toBe("While doing Fishing (with other conditions)");
     expect(effect.scope).toBe("Fishing");
     expect(effect.appliesTo.map((t) => t.id)).toEqual(["fishing"]);
+  });
+});
+
+describe("itemEffects for crafted gear", () => {
+  const hatchet = (gearItems as unknown as ItemDetail[]).find((item) => item.id === "steel_hatchet")!;
+  const effects = itemEffects(hatchet, NAMES)!;
+  const tier = (quality: string) => effects.tiers.find((t) => t.quality === quality)!;
+  const values = (list: { stat: string; normal: string }[]) =>
+    Object.fromEntries(list.map((effect) => [effect.stat, effect.normal]));
+
+  it("reads the base effects", () => {
+    expect(values(effects.effects)).toEqual({ "Work efficiency": "+9%" });
+  });
+
+  it("lists the tiers in order, whatever order the API sends them in", () => {
+    expect(effects.tiers.map((t) => t.quality)).toEqual(["uncommon", "rare", "epic", "legendary", "ethereal"]);
+  });
+
+  it.each([
+    ["uncommon", "+11%", "+13%", "+1%", "+15%", "+2%", "+15%"],
+    ["rare", "+14%", "+21%", "+2%", "+24%", "+4%", "+24%"],
+    ["epic", "+18%", "+24%", "+3%", "+27%", "+6%", "+27%"],
+    ["legendary", "+22%", "+25%", "+5%", "+29%", "+8%", "+29%"],
+    ["ethereal", "+27%", "+26%", "+12%", "+31%", "+10%", "+31%"],
+  ])("adds each tier to the ones below it: %s", (quality, work, chest, action, fine, rewards, nests) => {
+    expect(tier(quality).effects).toHaveLength(6);
+    expect(values(tier(quality).effects)).toEqual({
+      "Work efficiency": work,
+      "Chest finding": chest,
+      "Double action": action,
+      "Fine material finding": fine,
+      "Double rewards": rewards,
+      "Find bird nests": nests,
+    });
+  });
+
+  it("keeps each tier's condition", () => {
+    expect(new Set(tier("ethereal").effects.map((e) => e.condition))).toEqual(new Set(["While doing Woodcutting"]));
+  });
+
+  it("gives gear without tiers an empty tier list", () => {
+    const ankh = (gearItems as unknown as ItemDetail[]).find((item) => item.id === "ancient_ankh")!;
+    expect(itemEffects(ankh, NAMES)!.tiers).toEqual([]);
   });
 });
