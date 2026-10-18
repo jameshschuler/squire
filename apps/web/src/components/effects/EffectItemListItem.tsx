@@ -5,7 +5,13 @@ import { QualityBadge } from "@/components/shared/QualityBadge";
 import { effectsFor, whereItemApplies } from "@/lib/effect-items";
 import { formatEffect } from "@/lib/format";
 
-export function EffectItemListItem({ item, filter }: { item: ItemWithEffects; filter: string | undefined }) {
+interface EffectItemListItemProps {
+  item: ItemWithEffects;
+  filter: string | undefined;
+  showQuality: boolean;
+}
+
+export function EffectItemListItem({ item, filter, showQuality }: EffectItemListItemProps) {
   return (
     <li>
       <Link to="/items/$itemId" params={{ itemId: item.id }} className="flex items-center gap-3 py-2.5">
@@ -16,7 +22,7 @@ export function EffectItemListItem({ item, filter }: { item: ItemWithEffects; fi
             {filter ? effectsFor(item, filter).map(formatEffect).join(" · ") : whereItemApplies(item)}
           </span>
         </span>
-        {item.quality && <QualityBadge quality={item.quality} />}
+        {showQuality && item.quality && <QualityBadge quality={item.quality} />}
       </Link>
     </li>
   );

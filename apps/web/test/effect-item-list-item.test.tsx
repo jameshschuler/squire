@@ -30,16 +30,34 @@ describe("EffectItemListItem", () => {
   it("shows the item's tier", async () => {
     await renderWithRouter(
       <ul>
-        <EffectItemListItem item={{ ...salmonPie, quality: "rare" }} filter={undefined} />
+        <EffectItemListItem item={{ ...salmonPie, quality: "rare" }} filter={undefined} showQuality />
       </ul>,
     );
     expect(screen.getByText("rare")).toBeDefined();
   });
 
+  it("shows no tier for an item without one", async () => {
+    await renderWithRouter(
+      <ul>
+        <EffectItemListItem item={{ ...salmonPie, quality: null }} filter={undefined} showQuality />
+      </ul>,
+    );
+    expect(screen.getByRole("link").textContent).toBe("Salmon pieWoodcutting");
+  });
+
+  it("hides the tier when asked to", async () => {
+    await renderWithRouter(
+      <ul>
+        <EffectItemListItem item={salmonPie} filter={undefined} showQuality={false} />
+      </ul>,
+    );
+    expect(screen.queryByText("common")).toBeNull();
+  });
+
   it("links to the food and shows the effect that helps the chosen skill", async () => {
     await renderWithRouter(
       <ul>
-        <EffectItemListItem item={salmonPie} filter="woodcutting" />
+        <EffectItemListItem item={salmonPie} filter="woodcutting" showQuality={false} />
       </ul>,
     );
     expect(screen.getByRole("link").getAttribute("href")).toBe("/items/salmon_pie");
@@ -49,7 +67,7 @@ describe("EffectItemListItem", () => {
   it("says where the food applies when no skill is chosen", async () => {
     await renderWithRouter(
       <ul>
-        <EffectItemListItem item={salmonPie} filter={undefined} />
+        <EffectItemListItem item={salmonPie} filter={undefined} showQuality={false} />
       </ul>,
     );
     expect(screen.getByText("Woodcutting")).toBeDefined();

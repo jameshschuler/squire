@@ -36,7 +36,13 @@ export function EffectItemSearch({ kind, noun, query, skill, onQueryChange, onSk
       ) : results.length === 0 ? (
         <p className="py-8 text-center text-muted-foreground">No {noun} matches.</p>
       ) : (
-        <EffectItemResults key={listKey} listKey={listKey} items={results} filter={filter} />
+        <EffectItemResults
+          key={listKey}
+          listKey={listKey}
+          items={results}
+          filter={filter}
+          showQuality={kind === "loot"}
+        />
       )}
     </div>
   );
