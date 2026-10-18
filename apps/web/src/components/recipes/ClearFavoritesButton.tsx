@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useFavoritesContext } from "@/contexts/favorites-context";
 
-export function ClearFavoritesButton() {
+export function ClearFavoritesButton({ onCleared }: { onCleared: () => void }) {
   const { clearFavorites } = useFavoritesContext();
   return (
     <AlertDialog>
@@ -32,7 +32,14 @@ export function ClearFavoritesButton() {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={clearFavorites}>Clear all</AlertDialogAction>
+          <AlertDialogAction
+            onClick={() => {
+              clearFavorites();
+              onCleared();
+            }}
+          >
+            Clear all
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

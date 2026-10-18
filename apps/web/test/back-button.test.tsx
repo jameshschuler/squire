@@ -17,7 +17,7 @@ async function renderAt(initialEntries: string[]) {
   const rootRoute = createRootRoute();
   const page = (path: string) => createRoute({ getParentRoute: () => rootRoute, path, component: BackButton });
   const router = createRouter({
-    routeTree: rootRoute.addChildren([page("/"), page("/favorites"), page("/recipes/$recipeId")]),
+    routeTree: rootRoute.addChildren([page("/"), page("/materials"), page("/recipes/$recipeId")]),
     history: createMemoryHistory({ initialEntries }),
   });
   render(<RouterProvider router={router} />);
@@ -27,11 +27,11 @@ async function renderAt(initialEntries: string[]) {
 
 describe("BackButton", () => {
   it("goes back to the previous page", async () => {
-    const router = await renderAt(["/favorites"]);
+    const router = await renderAt(["/materials"]);
     await router.navigate({ to: "/recipes/$recipeId", params: { recipeId: "bake_bread" } });
     const back = await screen.findByRole("button", { name: "Back" });
     fireEvent.click(back);
-    await waitFor(() => expect(router.state.location.pathname).toBe("/favorites"));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/materials"));
   });
 
   it("goes to search when there's no page to go back to", async () => {
