@@ -18,10 +18,12 @@ export interface Material {
 
 export const CHESTS_FILTER = "chests";
 export const SHOPS_FILTER = "shops";
+export const REWARDS_FILTER = "rewards";
 export const CRAFTED_FILTER = "crafted";
 
+const REWARD_KINDS: ItemSource["kind"][] = ["achievement", "reward"];
+
 export interface MaterialSearchOptions {
-  /** A skill id, or `CHESTS_FILTER` / `SHOPS_FILTER` / `CRAFTED_FILTER`. */
   filter?: string;
 }
 
@@ -47,11 +49,12 @@ export function listMaterials(book: RecipeBook): Material[] {
 }
 
 export function materialFilters(materials: Material[]): SkillOption[] {
-  const hasSource = (kind: ItemSource["kind"]) => materials.some((m) => m.sources.some((s) => s.kind === kind));
+  const hasSource = (...kinds: ItemSource["kind"][]) => materials.some((m) => hasSourceKind(m, ...kinds));
   return [
     ...uniqueSkills(materials.flatMap((m) => m.skills)),
     ...(hasSource("chest") ? [{ id: CHESTS_FILTER, name: "Chests" }] : []),
     ...(hasSource("shop") ? [{ id: SHOPS_FILTER, name: "Shops" }] : []),
+    ...(hasSource(...REWARD_KINDS) ? [{ id: REWARDS_FILTER, name: "Rewards" }] : []),
     ...(materials.some((m) => m.isCrafted) ? [{ id: CRAFTED_FILTER, name: "Crafted" }] : []),
   ];
 }
@@ -69,15 +72,22 @@ export function searchMaterials(
 
 function matchesFilter(material: Material, filter: string): boolean {
   if (filter === CHESTS_FILTER) {
-    return material.sources.some((s) => s.kind === "chest");
+    return hasSourceKind(material, "chest");
   }
   if (filter === SHOPS_FILTER) {
-    return material.sources.some((s) => s.kind === "shop");
+    return hasSourceKind(material, "shop");
+  }
+  if (filter === REWARDS_FILTER) {
+    return hasSourceKind(material, ...REWARD_KINDS);
   }
   if (filter === CRAFTED_FILTER) {
     return material.isCrafted;
   }
   return material.skills.some((s) => s.id === filter);
+}
+
+function hasSourceKind(material: Material, ...kinds: ItemSource["kind"][]): boolean {
+  return material.sources.some((s) => kinds.includes(s.kind));
 }
 
 function sourceSkills(source: ItemSource): SkillLevel[] {

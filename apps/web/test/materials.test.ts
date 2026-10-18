@@ -3,6 +3,7 @@ import { buildRecipeBook, type ItemSource, type GameData } from "@squire/api/rec
 import {
   CHESTS_FILTER,
   CRAFTED_FILTER,
+  REWARDS_FILTER,
   SHOPS_FILTER,
   listMaterials,
   materialFilters,
@@ -106,6 +107,34 @@ describe("materialFilters with chests and shops", () => {
       [CHESTS_FILTER, "Chests"],
       [SHOPS_FILTER, "Shops"],
     ]);
+  });
+});
+
+describe("materialFilters with rewards", () => {
+  const rewarded = (source: ItemSource) => listMaterials({ ...book, sources: { salt_crystal: [source] } });
+
+  it.each([
+    ["an achievement", { kind: "achievement", id: "a", name: "A", icon: "" }],
+    ["a reward", { kind: "reward", id: "achievementPoints", name: "Achievement points reward", icon: "" }],
+  ] as const)("adds Rewards when a material comes from %s, and filters to it", (_, source) => {
+    const materials = rewarded(source);
+    expect(materialFilters(materials).map((f) => [f.id, f.name])).toContainEqual([REWARDS_FILTER, "Rewards"]);
+    expect(ids(searchMaterials(materials, "", { filter: REWARDS_FILTER }))).toEqual(["salt_crystal"]);
+  });
+
+  it("leaves out materials that don't come from a reward", () => {
+    const materials = listMaterials({
+      ...book,
+      sources: {
+        gold_ore: [source("mine", "mining", 1)],
+        salt_crystal: [{ kind: "reward", id: "factionReputation", name: "Faction reputation reward", icon: "" }],
+      },
+    });
+    expect(ids(searchMaterials(materials, "", { filter: REWARDS_FILTER }))).toEqual(["salt_crystal"]);
+  });
+
+  it("has no Rewards filter when nothing comes from one", () => {
+    expect(materialFilters(listMaterials(book)).map((f) => f.id)).not.toContain(REWARDS_FILTER);
   });
 });
 
