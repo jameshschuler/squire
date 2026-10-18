@@ -483,6 +483,43 @@ describe("loot", () => {
     expect(output.quality).toBeNull();
   });
 
+  it("lists an achievement points reward as a source, without its threshold", () => {
+    expect(withLoot.sources.absorbing_amulet).toEqual([
+      { kind: "reward", id: "achievementPoints", name: "Achievement points reward", icon: "" },
+    ]);
+  });
+
+  it("lists an achievement as a source, after the activities that drop the item", () => {
+    const rewarded = structuredClone(data);
+    rewarded.achievements[0]!.itemRewards[0]!.id = "gold_ore";
+    const sources = buildRecipeBook(rewarded).sources.gold_ore!;
+    expect(sources.at(0)?.kind).toBe("activity");
+    expect(sources.at(-1)).toEqual({
+      kind: "achievement",
+      id: "my_back_hurts",
+      name: "My Back Hurts",
+      icon: "",
+    });
+  });
+
+  it("names faction reputation rewards, once per item however many levels give it", () => {
+    const rewarded = structuredClone(data);
+    const level = rewarded.rewards[0]!;
+    level.rewardItems[0]!.id = "salt_crystal";
+    rewarded.rewards.push({ ...structuredClone(level), id: "reward_progress-jarvonia_lvl_4" });
+    expect(buildRecipeBook(rewarded).sources.salt_crystal?.map((s) => s.name)).toEqual(["Faction reputation reward"]);
+  });
+
+  it("skips rewards that aren't items", () => {
+    const rewarded = structuredClone(data);
+    rewarded.rewards[0]!.rewardItems[0]! = {
+      ...rewarded.rewards[0]!.rewardItems[0]!,
+      type: "pfpOption",
+      id: "salt_crystal",
+    };
+    expect(buildRecipeBook(rewarded).sources.salt_crystal).toBeUndefined();
+  });
+
   it("finds a loot item no recipe mentions", () => {
     expect(findItem(withLoot, "adjustable_wrench")?.name).toBe("Adjustable wrench");
   });

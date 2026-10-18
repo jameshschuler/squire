@@ -1,7 +1,7 @@
 import type { ItemDetail, ServiceTier } from "@jameshschuler/walkscape-data-client";
 
 // Bump whenever the RecipeBook shape changes, so cached copies on devices refresh.
-export const RECIPE_BOOK_SCHEMA = 15;
+export const RECIPE_BOOK_SCHEMA = 17;
 
 export interface EffectTarget {
   id: string;
@@ -102,7 +102,21 @@ export interface ShopSource {
   locations: LocationSummary[];
 }
 
-export type ItemSource = ActivitySource | ChestSource | ShopSource;
+export interface AchievementSource {
+  kind: "achievement";
+  id: string;
+  name: string;
+  icon: string;
+}
+
+export interface RewardSource {
+  kind: "reward";
+  id: string;
+  name: string;
+  icon: string;
+}
+
+export type ItemSource = ActivitySource | ChestSource | ShopSource | AchievementSource | RewardSource;
 
 export interface RecipeBook {
   schema: number;

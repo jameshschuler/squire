@@ -1,9 +1,12 @@
 import type {
+  AchievementDetail,
   ActivityDetail,
   ItemDetail,
+  ItemReward,
   LocationDetail,
   LootTable,
   LootTableDetail,
+  RewardDetail,
   ServiceDetail,
   ServiceRequirement,
   ShopDetail,
@@ -22,6 +25,7 @@ import { humanize } from "./text.js";
 import { byLevel, minLevel } from "./order.js";
 import {
   RECIPE_BOOK_SCHEMA,
+  type AchievementSource,
   type ActivitySource,
   type ChestSource,
   type ItemWithEffects,
@@ -34,6 +38,7 @@ import {
   type RecipeLocation,
   type RecipeService,
   type RecipeView,
+  type RewardSource,
   type ShopSource,
   type SkillLevel,
 } from "./types.js";
@@ -126,8 +131,11 @@ function itemSources(
     .filter((item) => item.tables?.length)
     .flatMap((chest) => dropsFromChest(chest, activitySourcesByItem.get(chest.id) ?? [], tables));
   const shopDrops = data.shops.flatMap((shop) => dropsFromShop(shop, locationsByBuilding));
+  const rewardDrops = [...data.achievements.flatMap(dropsFromAchievement), ...data.rewards.flatMap(dropsFromReward)];
 
-  const drops = [...activityDrops, ...chestDrops, ...shopDrops].filter((drop) => itemIds.has(drop.itemId));
+  const drops = [...activityDrops, ...chestDrops, ...shopDrops, ...rewardDrops].filter((drop) =>
+    itemIds.has(drop.itemId),
+  );
   return Object.fromEntries(groupDrops(drops));
 }
 
@@ -181,7 +189,7 @@ function dropsFromChest(chest: ItemDetail, foundBy: ItemSource[], tables: Map<st
     id: chest.id,
     name: chest.name,
     icon: chest.icon,
-    skills: lowestSkillLevels(foundBy.flatMap((s) => (s.kind === "shop" ? [] : s.skills))),
+    skills: lowestSkillLevels(foundBy.flatMap((s) => ("skills" in s ? s.skills : []))),
   };
   return (chest.tables ?? []).flatMap((ref) => itemsIn(ref, tables).map((itemId) => ({ itemId, source })));
 }
@@ -195,6 +203,25 @@ function dropsFromShop(shop: ShopDetail, locationsByBuilding: Map<string, Locati
     locations: locationsByBuilding.get(shop.id) ?? [],
   };
   return shop.soldItems.map((itemId) => ({ itemId, source }));
+}
+
+function dropsFromAchievement(achievement: AchievementDetail): Drop[] {
+  const source: AchievementSource = { kind: "achievement", id: achievement.id, name: achievement.name, icon: "" };
+  return rewardedItems(achievement.itemRewards).map((itemId) => ({ itemId, source }));
+}
+
+const REWARD_NAMES: Record<RewardDetail["type"], string> = {
+  achievementPoints: "Achievement points reward",
+  factionReputation: "Faction reputation reward",
+};
+
+function dropsFromReward(reward: RewardDetail): Drop[] {
+  const source: RewardSource = { kind: "reward", id: reward.type, name: REWARD_NAMES[reward.type], icon: "" };
+  return rewardedItems(reward.rewardItems).map((itemId) => ({ itemId, source }));
+}
+
+function rewardedItems(rewards: ItemReward[]): string[] {
+  return rewards.filter((reward) => reward.type === "item").map((reward) => reward.id);
 }
 
 function itemsIn(ref: LootTable, tables: Map<string, LootTableDetail>): string[] {
@@ -212,15 +239,22 @@ function bySource(a: ItemSource, b: ItemSource): number {
   return sourceRank(a) - sourceRank(b) || compareLevels(sourceLevel(a), sourceLevel(b)) || a.name.localeCompare(b.name);
 }
 
+const SOURCE_RANKS: Record<Exclude<ItemSource["kind"], "activity">, number> = {
+  shop: 2,
+  chest: 3,
+  achievement: 4,
+  reward: 5,
+};
+
 function sourceRank(source: ItemSource): number {
   if (source.kind === "activity") {
     return source.lootType === "main" ? 0 : 1;
   }
-  return source.kind === "shop" ? 2 : 3;
+  return SOURCE_RANKS[source.kind];
 }
 
 function sourceLevel(source: ItemSource): number {
-  return source.kind === "shop" ? 0 : minLevel(source.skills);
+  return "skills" in source ? minLevel(source.skills) : 0;
 }
 
 function compareLevels(a: number, b: number): number {

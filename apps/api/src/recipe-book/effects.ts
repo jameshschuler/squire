@@ -178,5 +178,7 @@ function formatAmount({ value, isPercent }: StatValue): string {
 function customText(text: string, items: Map<string, ItemDetail>): string {
   return text
     .replace(/<object id="([^"]+)"\s*\/>/g, (_, id: string) => items.get(id)?.name ?? spaced(id))
-    .replace(/<[^>]+>/g, "");
+    .replace(/<[^>]+>/g, "")
+    .replace(/^Chance to find (1 (?!to ))?/, "Find ")
+    .replace(/^Find (\d+) to (\d+)/, "Find $1–$2");
 }

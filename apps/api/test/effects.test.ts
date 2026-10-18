@@ -59,8 +59,8 @@ describe("itemEffects", () => {
       "crab_rolls",
       750,
       [
-        effect("While doing Foraging", "Chance to find 1 to 10 gold pieces", "25%", "50%"),
-        effect("While doing Hunting", "Chance to find 1 to 10 gold pieces", "25%", "50%"),
+        effect("While doing Foraging", "Find 1–10 gold pieces", "25%", "50%"),
+        effect("While doing Hunting", "Find 1–10 gold pieces", "25%", "50%"),
       ],
     ],
     ["dried_fruit", 5000, [effect("While doing gathering skills", "Double action", "+6%", "+9%")]],
@@ -78,9 +78,12 @@ describe("itemEffects", () => {
   });
 
   it.each([
-    ['Chance to find <hl>1</hl> <object id="map_of_jarvonia" />', "Chance to find 1 Map of Jarvonia"],
-    ['Chance to find <hl>1</hl> <object id="rough_gem" />', "Chance to find 1 rough gem"],
-  ])("names the item a chance effect finds: %s", (text, stat) => {
+    ['Chance to find <hl>1</hl> <object id="map_of_jarvonia" />', "Find Map of Jarvonia"],
+    ['Chance to find <hl>1</hl> <object id="rough_gem" />', "Find rough gem"],
+    ['Chance to find <hl>1</hl> to <hl>10</hl> <object id="rough_gem" />', "Find 1–10 rough gem"],
+    ["Chance to find <hl>1</hl> fishing bait", "Find fishing bait"],
+    ["Gain <hl>5</hl> to <hl>10</hl> gold pieces", "Gain 5 to 10 gold pieces"],
+  ])("shortens a chance effect and names what it finds: %s", (text, stat) => {
     const bagel = structuredClone(food("bagel"));
     const buffs = bagel.type === "consumable" ? bagel.buffs! : [];
     buffs[0]!.data[0]!.buffs[0]!.attributes[0]!.customText = text;

@@ -18,6 +18,8 @@ export function fakeClient(version = "v1") {
     activities: data.activities,
     loot_tables: data.lootTables,
     shops: data.shops,
+    achievements: data.achievements,
+    rewards: data.rewards,
   };
   const calls = { version: 0, lists: 0, icon: 0, iconBatches: [] as number[], paths: [] as string[] };
   const state = { version };
