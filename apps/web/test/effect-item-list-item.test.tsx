@@ -17,6 +17,7 @@ const salmonPie: ItemWithEffects = {
     effects: [
       {
         condition: "While doing Woodcutting",
+        scope: "Woodcutting",
         stat: "Work efficiency",
         normal: "+7%",
         fine: "+14%",

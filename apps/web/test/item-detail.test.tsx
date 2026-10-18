@@ -59,7 +59,14 @@ describe("ItemDetail", () => {
     const effects = {
       steps: 1000,
       effects: [
-        { condition: "While doing Woodcutting", stat: "Work efficiency", normal: "+7%", fine: "+14%", appliesTo: [] },
+        {
+          condition: "While doing Woodcutting",
+          scope: null,
+          stat: "Work efficiency",
+          normal: "+7%",
+          fine: "+14%",
+          appliesTo: [],
+        },
       ],
     };
     await renderWithRouter(<ItemDetail item={{ ...goldBar, effects }} book={book} />);

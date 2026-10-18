@@ -1,17 +1,24 @@
 import type { Attribute, ItemDetail, Requirement, SkillDetail } from "@jameshschuler/walkscape-data-client";
+import { capitalize, spaced } from "./text.js";
 import type { Effect, EffectTarget, ItemEffects } from "./types.js";
 
 export const TRAVELLING: EffectTarget = { id: "travelling", name: "Travelling" };
-export const OTHER_CONDITIONS = " (with other conditions)";
+const OTHER_CONDITIONS = " (with other conditions)";
+
+export interface EffectNames {
+  skills: SkillDetail[];
+  regions: Map<string, string>;
+  items: Map<string, ItemDetail>;
+}
 
 interface StatValue {
   value: number;
   isPercent: boolean;
 }
 
-export function itemEffects(item: ItemDetail, skills: SkillDetail[]): ItemEffects | null {
+export function itemEffects(item: ItemDetail, names: EffectNames): ItemEffects | null {
   if (item.type === "loot") {
-    const effects = (item.itemAttrs ?? []).flatMap((attribute) => effectLine(attribute, null, skills));
+    const effects = (item.itemAttrs ?? []).flatMap((attribute) => effectLine(attribute, null, names));
     return effects.length > 0 ? { steps: null, effects } : null;
   }
   const buff = item.type === "consumable" ? item.buffs?.[0] : undefined;
@@ -20,13 +27,13 @@ export function itemEffects(item: ItemDetail, skills: SkillDetail[]): ItemEffect
   }
   const effects = buff.data.flatMap((data) =>
     data.buffs.flatMap((group) =>
-      group.attributes.flatMap((attribute, i) => effectLine(attribute, group.fineAttributes[i] ?? attribute, skills)),
+      group.attributes.flatMap((attribute, i) => effectLine(attribute, group.fineAttributes[i] ?? attribute, names)),
     ),
   );
   return { steps: "steps" in buff.duration ? buff.duration.steps : null, effects };
 }
 
-function effectLine(attribute: Attribute, fine: Attribute | null, skills: SkillDetail[]): Effect[] {
+function effectLine(attribute: Attribute, fine: Attribute | null, names: EffectNames): Effect[] {
   const stat = statValue(attribute);
   if (!stat) {
     return [];
@@ -35,8 +42,8 @@ function effectLine(attribute: Attribute, fine: Attribute | null, skills: SkillD
   const format = (value: StatValue) => (isChance ? formatAmount(value) : formatSigned(value));
   return [
     {
-      ...scope(attribute, skills),
-      stat: isChance ? stripTags(attribute.customText) : attribute.statText,
+      ...effectScope(attribute, names),
+      stat: isChance ? customText(attribute.customText, names.items) : attribute.statText,
       normal: format(stat),
       fine: fine ? format(statValue(fine) ?? stat) : null,
     },
@@ -47,52 +54,111 @@ function statValue(attribute: Attribute): StatValue | undefined {
   return attribute.stats[0] as StatValue | undefined;
 }
 
-function scope(attribute: Attribute, skills: SkillDetail[]): Pick<Effect, "condition" | "appliesTo"> {
-  const everything = [...skills.map(skillTarget), TRAVELLING];
+function effectScope(attribute: Attribute, names: EffectNames): Pick<Effect, "condition" | "scope" | "appliesTo"> {
+  const everything = [...names.skills.map(skillTarget), TRAVELLING];
   const requirements = attribute.requirements ?? [];
   if (requirements.length === 0) {
-    return { condition: "Global", appliesTo: everything };
+    return { condition: "Global", scope: "Global", appliesTo: everything };
   }
   const known = requirements.flatMap((requirement) => {
-    const named = describeRequirement(requirement, skills);
+    const named = describeRequirement(requirement, names);
     if (!named) {
       return [];
     }
-    const ids = new Set(named.targets.map((target) => target.id));
+    const not = requirement.opposite ? "not " : "";
+    const narrowed = named.narrows && {
+      ids: new Set(named.narrows.targets.map((target) => target.id)),
+      scope: named.narrows.scope,
+    };
     return [
       {
-        label: requirement.opposite ? `not ${named.activity}` : named.activity,
-        matches: (target: EffectTarget) => ids.has(target.id) !== requirement.opposite,
+        label: `${not}${named.label}`,
+        scope: narrowed && `${not}${narrowed.scope}`,
+        matches: (target: EffectTarget) => !narrowed || narrowed.ids.has(target.id) !== requirement.opposite,
       },
     ];
   });
   if (known.length === 0) {
-    return { condition: "Under certain conditions", appliesTo: [] };
+    return { condition: "Under certain conditions", scope: null, appliesTo: [] };
   }
   const others = known.length < requirements.length ? OTHER_CONDITIONS : "";
+  const scopes = known.flatMap((part) => (part.scope ? [part.scope] : []));
   return {
     condition: `While ${known.map((part) => part.label).join(" and ")}${others}`,
+    scope: scopes.length > 0 ? capitalize(scopes.join(" and ")) : "Global",
     appliesTo: everything.filter((target) => known.every((part) => part.matches(target))),
   };
 }
 
+interface RequirementDescription {
+  label: string;
+  narrows?: { scope: string; targets: EffectTarget[] };
+}
+
 function describeRequirement(
-  requirement: Requirement,
-  skills: SkillDetail[],
-): { activity: string; targets: EffectTarget[] } | undefined {
-  if (requirement.type === "mainSkill") {
-    const matching = skills.filter((skill) => skill.id === requirement.requirement.skill);
-    return {
-      activity: `doing ${matching[0]?.name ?? requirement.requirement.skill}`,
-      targets: matching.map(skillTarget),
-    };
+  { type, requirement }: Requirement,
+  { skills, regions, items }: EffectNames,
+): RequirementDescription | undefined {
+  const skillName = (id: string) => skills.find((skill) => skill.id === id)?.name ?? id;
+  const region = (id: string) => regions.get(id) ?? id;
+  switch (type) {
+    case "mainSkill": {
+      const name = skillName(requirement.skill);
+      const targets = skills.filter((skill) => skill.id === requirement.skill).map(skillTarget);
+      return { label: `doing ${name}`, narrows: { scope: name, targets } };
+    }
+    case "mainSkillType": {
+      const scope = `${requirement.type} skills`;
+      const targets = skills.filter((skill) => skill.type === requirement.type).map(skillTarget);
+      return { label: `doing ${scope}`, narrows: { scope, targets } };
+    }
+    case "traveling":
+      return { label: "travelling", narrows: { scope: "travelling", targets: [TRAVELLING] } };
+    case "realm":
+      return { label: `in ${region(requirement.realm)}` };
+    case "exploreRealm":
+      return { label: `having explored ${region(requirement.realm)}` };
+    case "locationHasKeywords":
+      return { label: `at ${requirement.keywords.map(spaced).join(" or ")} locations` };
+    case "distinctKeywordItemsEquipped": {
+      const noun = requirement.quantity === 1 ? "item" : "items";
+      return { label: `wearing ${requirement.quantity} ${requirement.keywords.map(spaced).join(" or ")} ${noun}` };
+    }
+    case "distinctKeywordItemInInventory":
+      return { label: `carrying ${requirement.keywords.map(spaced).join(" or ")}` };
+    case "collectiblesOwned":
+      return { label: `owning ${requirement.amount} collectibles` };
+    case "achievementPoint":
+      return { label: `having ${requirement.value} achievement points` };
+    case "totalSkillLevel":
+      return { label: `at total level ${requirement.levels}` };
+    case "skillLevel":
+      return { label: `at ${skillName(requirement.skill)} level ${requirement.level}` };
+    case "itemAnywhere":
+      return { label: `owning ${items.get(requirement.item)?.name ?? requirement.item}` };
+    case "activityType":
+      return requirement.activity ? { label: spaced(requirement.activity) } : undefined;
+    case "historyData":
+      return describeHistory(requirement);
+    default:
+      return undefined;
   }
-  if (requirement.type === "mainSkillType") {
-    const matching = skills.filter((skill) => skill.type === requirement.requirement.type);
-    return { activity: `doing ${requirement.requirement.type} skills`, targets: matching.map(skillTarget) };
+}
+
+function describeHistory({
+  category,
+  data,
+  value,
+}: {
+  category: string;
+  data?: string;
+  value: number;
+}): RequirementDescription | undefined {
+  if (category === "actionCompleted" && data) {
+    return { label: `having done ${spaced(data)} ${value.toLocaleString("en-US")} times` };
   }
-  if (requirement.type === "traveling") {
-    return { activity: "travelling", targets: [TRAVELLING] };
+  if (category === "stepsWalkedTraveling") {
+    return { label: `having travelled ${value.toLocaleString("en-US")} steps` };
   }
   return undefined;
 }
@@ -109,6 +175,8 @@ function formatAmount({ value, isPercent }: StatValue): string {
   return isPercent ? `${Number((value * 100).toFixed(2))}%` : `${value}`;
 }
 
-function stripTags(text: string): string {
-  return text.replace(/<[^>]+>/g, "");
+function customText(text: string, items: Map<string, ItemDetail>): string {
+  return text
+    .replace(/<object id="([^"]+)"\s*\/>/g, (_, id: string) => items.get(id)?.name ?? spaced(id))
+    .replace(/<[^>]+>/g, "");
 }

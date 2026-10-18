@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildRecipeBook, type Effect, type GameData, type RecipeBook } from "@squire/api/recipe-book";
-import { effectsFor, effectFilters, searchEffectItems, whereItemApplies } from "@/lib/effect-items";
+import { effectsFor, effectFilters, searchEffectItems, summarizeEffects, whereItemApplies } from "@/lib/effect-items";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
 const base = buildRecipeBook(sample as unknown as GameData);
@@ -11,6 +11,7 @@ const target = (id: string) => ({
 });
 const effect = (stat: string, ...appliesTo: string[]): Effect => ({
   condition: "c",
+  scope: null,
   stat,
   normal: "+1%",
   fine: "+2%",
@@ -72,40 +73,34 @@ describe("effectsFor", () => {
 });
 
 describe("whereItemApplies", () => {
-  const conditioned = (condition: string, stat: string, normal: string, appliesTo = [target("agility")]): Effect => ({
-    condition,
-    stat,
-    normal,
-    fine: normal,
-    appliesTo,
+  const scoped = (...scopes: (string | null)[]) =>
+    withEffects(base, {
+      bagel: scopes.map((scope) => ({ ...effect("Work efficiency", "agility"), scope })),
+    }).foods[0]!;
+
+  it.each([
+    [["Foraging", "Foraging", "Fishing"], "Foraging · Fishing"],
+    [["Global", "Agility"], "Global"],
+    [["Agility", null], "Agility"],
+    [[null], "Under certain conditions"],
+  ])("sums up %j as %s", (scopes, expected) => {
+    expect(whereItemApplies(scoped(...scopes))).toBe(expected);
+  });
+});
+
+describe("summarizeEffects", () => {
+  const withStats = (...stats: string[]) =>
+    withEffects(base, { bagel: stats.map((stat) => effect(stat, "agility")) }).foods[0]!;
+
+  it.each([
+    [["Work efficiency"], "+1% work efficiency"],
+    [["Work efficiency", "Chest finding"], "+1% work efficiency · +1 other effect"],
+    [["Work efficiency", "Chest finding", "Double rewards"], "+1% work efficiency · +2 other effects"],
+  ])("sums up %j as %s", (stats, expected) => {
+    expect(summarizeEffects(withStats(...stats), "agility")).toBe(expected);
   });
 
-  it("lists each place the food applies once, in order", () => {
-    const [food] = withEffects(base, {
-      bagel: [
-        conditioned("While doing Foraging", "Double rewards", "+2%"),
-        conditioned("While doing Foraging", "Steps required", "-1"),
-        conditioned("Global", "Bonus experience", "-4%"),
-      ],
-    }).foods;
-    expect(whereItemApplies(food!)).toBe("Foraging · Global");
-  });
-
-  it("shows only the skill, once, for partly known conditions and drops unknown ones", () => {
-    const [food] = withEffects(base, {
-      bagel: [
-        conditioned("Under certain conditions", "Work efficiency", "+5%", []),
-        conditioned("While doing Agility (with other conditions)", "Work efficiency", "+5%"),
-        conditioned("While doing Agility", "Steps required", "-1"),
-      ],
-    }).foods;
-    expect(whereItemApplies(food!)).toBe("Agility");
-  });
-
-  it("says when every condition is unknown", () => {
-    const [food] = withEffects(base, {
-      bagel: [conditioned("Under certain conditions", "Work efficiency", "+5%", [])],
-    }).foods;
-    expect(whereItemApplies(food!)).toBe("Under certain conditions");
+  it("is empty when nothing applies to the filter", () => {
+    expect(summarizeEffects(withStats("Work efficiency"), "mining")).toBe("");
   });
 });

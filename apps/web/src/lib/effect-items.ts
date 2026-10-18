@@ -1,5 +1,5 @@
 import { TRAVELLING, words, type Effect, type ItemWithEffects } from "@squire/api/recipe-book";
-import { formatCondition } from "./format";
+import { formatEffect } from "./format";
 import { matchesWords } from "./match";
 import { uniqueSkills, type SkillOption } from "./skills";
 
@@ -11,6 +11,17 @@ export function effectFilters(items: ItemWithEffects[]): SkillOption[] {
 
 export function effectsFor(item: ItemWithEffects, filter: string): Effect[] {
   return item.effects.effects.filter((effect) => effect.appliesTo.some((target) => target.id === filter));
+}
+
+export function summarizeEffects(item: ItemWithEffects, filter: string): string {
+  const [first, ...rest] = effectsFor(item, filter);
+  if (!first) {
+    return "";
+  }
+  if (rest.length === 0) {
+    return formatEffect(first);
+  }
+  return `${formatEffect(first)} · +${rest.length} other ${rest.length === 1 ? "effect" : "effects"}`;
 }
 
 export function searchEffectItems(
@@ -25,7 +36,6 @@ export function searchEffectItems(
 }
 
 export function whereItemApplies(item: ItemWithEffects): string {
-  const targeted = item.effects.effects.filter((effect) => effect.appliesTo.length > 0);
-  const shown = targeted.length > 0 ? targeted : item.effects.effects;
-  return [...new Set(shown.map((effect) => formatCondition(effect.condition)))].join(" · ");
+  const scopes = new Set(item.effects.effects.flatMap((effect) => (effect.scope ? [effect.scope] : [])));
+  return scopes.has("Global") ? "Global" : [...scopes].join(" · ") || "Under certain conditions";
 }

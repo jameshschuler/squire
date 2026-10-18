@@ -18,6 +18,7 @@ import {
   meetsServiceTier,
 } from "./game-rules.js";
 import { lowestSkillLevels, sourceKey } from "./lookup.js";
+import { humanize } from "./text.js";
 import { byLevel, minLevel } from "./order.js";
 import {
   RECIPE_BOOK_SCHEMA,
@@ -51,10 +52,12 @@ export function buildRecipeBook(data: GameData): RecipeBook {
   const items = new Map(data.items.map((i) => [i.id, i]));
   const skillNames = new Map(data.skills.map((s) => [s.id, s.name]));
   const skillName = (id: string) => skillNames.get(id) ?? humanize(id);
+  const regions = new Map(data.factions.map((f) => [f.id, f.name]));
+  const effectNames = { skills: data.skills, regions, items };
   const summary = (id: string): ItemSummary => {
     const found = items.get(id);
     const keywords = [...new Set(found?.keywords ?? [])];
-    const effects = found ? itemEffects(found, data.skills) : null;
+    const effects = found ? itemEffects(found, effectNames) : null;
     return {
       id,
       name: found?.name ?? humanize(id),
@@ -65,7 +68,6 @@ export function buildRecipeBook(data: GameData): RecipeBook {
     };
   };
   const item = (id: string, amount: number): RecipeItem => ({ ...summary(id), amount });
-  const regions = new Map(data.factions.map((f) => [f.id, f.name]));
   const locationsByService = indexLocations(data.locations, regions, (l) => l.serviceList);
   const locationsByActivity = indexLocations(data.locations, regions, (l) => l.activityList);
   const locationsByBuilding = indexLocations(data.locations, regions, (l) => l.buildingList);
@@ -284,9 +286,4 @@ function indexLocations(
     }
   }
   return index;
-}
-
-function humanize(id: string): string {
-  const s = id.replace(/_/g, " ");
-  return s.charAt(0).toUpperCase() + s.slice(1);
 }
