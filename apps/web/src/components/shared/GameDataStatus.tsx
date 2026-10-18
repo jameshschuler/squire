@@ -8,7 +8,7 @@ export function GameDataStatus({ state }: { state: Exclude<GameDataState, { stat
   return (
     <p className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
       <Loader2 className="size-4 animate-spin" />
-      Loading recipes…
+      Loading game data…
     </p>
   );
 }

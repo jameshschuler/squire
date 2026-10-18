@@ -23,6 +23,7 @@ describe("ItemDetail", () => {
   it("shows a crafted item's recipe, then what uses it, and no sources section when nothing drops it", async () => {
     await renderItem("gold_bar");
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Gold bar");
+    expect(screen.getByText("common")).toBeDefined();
     expect(sectionTitles()).toEqual(["Keywords", "Made by", "Used in"]);
     expect(section("Made by").getByRole("link", { name: /Smelt a gold bar/ })).toBeDefined();
     expect(section("Used in").getByText("No recipe uses this.")).toBeDefined();
@@ -58,7 +59,14 @@ describe("ItemDetail", () => {
     const effects = {
       steps: 1000,
       effects: [
-        { condition: "While doing Woodcutting", stat: "Work efficiency", normal: "+7%", fine: "+14%", appliesTo: [] },
+        {
+          condition: "While doing Woodcutting",
+          scope: null,
+          stat: "Work efficiency",
+          normal: "+7%",
+          fine: "+14%",
+          appliesTo: [],
+        },
       ],
     };
     await renderWithRouter(<ItemDetail item={{ ...goldBar, effects }} book={book} />);

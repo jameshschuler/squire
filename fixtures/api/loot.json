@@ -1,0 +1,441 @@
+[
+ {
+  "id": "absorbing_amulet",
+  "name": "Absorbing amulet",
+  "desc": "This amulet, crafted from ancient metal, is known to attract fine things.",
+  "keywords": [
+   "amulet",
+   "achievement_reward",
+   "global"
+  ],
+  "type": "loot",
+  "quality": "epic",
+  "gearType": "neck",
+  "itemAttrs": [
+   {
+    "id": "attribute-copy-item_attr-36de5a61-692c-41cf-b00d-c57a981d3314",
+    "customIcon": "",
+    "customTextLocalizationKey": "",
+    "customText": "",
+    "textLocalizationKey": "attributes.singulars.skilling.fineMaterialFind.global.text",
+    "text": "Global <stat s=\"fineMaterialFind\"/>",
+    "statText": "Fine material finding",
+    "skillText": "",
+    "tables": null,
+    "requirements": [],
+    "stats": [
+     {
+      "stat": "fine_material_finding",
+      "name": "Fine material finding",
+      "type": "fineMaterialFind",
+      "isPercent": true,
+      "value": 0.1,
+      "isNegative": false,
+      "isMultiplicative": true
+     }
+    ]
+   },
+   {
+    "id": "attribute-copy-item_attr-3ea2be8b-1e60-49bb-9285-57446804c2a2",
+    "customIcon": "",
+    "customTextLocalizationKey": "",
+    "customText": "",
+    "textLocalizationKey": "attributes.singulars.special.findCollectibles.global.text",
+    "text": "Global <stat s=\"findCollectibles\">chance to find collectibles</stat>",
+    "statText": "Find collectibles",
+    "skillText": "",
+    "tables": null,
+    "requirements": [],
+    "stats": [
+     {
+      "stat": "find_collectibles",
+      "name": "Find collectibles",
+      "type": "findCollectibles",
+      "isPercent": true,
+      "value": 0.1,
+      "isNegative": false,
+      "isMultiplicative": true
+     }
+    ]
+   }
+  ],
+  "itemValue": {
+   "currency": "none",
+   "value": null
+  },
+  "canBeFine": false,
+  "canBeSold": false,
+  "canBeBanked": true,
+  "canBeTraded": false,
+  "canBeDropped": false,
+  "icon": "assets/icons/items/gear/skill_gear/global/absorbing_amulet.png"
+ },
+ {
+  "id": "adjustable_wrench",
+  "name": "Adjustable wrench",
+  "desc": "Made entirely of high grade steel from Braemercia, making it basically indestructible.",
+  "keywords": [
+   "tool",
+   "crafting_tool",
+   "wrench",
+   "crafting"
+  ],
+  "type": "loot",
+  "quality": "rare",
+  "gearType": "tool",
+  "requirements": [
+   {
+    "type": "skillLevel",
+    "name": null,
+    "opposite": false,
+    "requirement": {
+     "level": 20,
+     "skill": "crafting"
+    }
+   }
+  ],
+  "itemAttrs": [
+   {
+    "id": "reroll-this-id-537a62d8-c890-43da-8531-1917a70a3fc0",
+    "customIcon": null,
+    "customTextLocalizationKey": null,
+    "customText": "",
+    "textLocalizationKey": "attributes.singulars.skilling.workEfficiency.whileMainSkill.text",
+    "text": "<stat s=\"workEfficiency\"/> while <supp k=\"skill\"/>",
+    "statText": "Work efficiency",
+    "skillText": "Crafting",
+    "tables": null,
+    "requirements": [
+     {
+      "type": "mainSkill",
+      "name": null,
+      "opposite": false,
+      "requirement": {
+       "skill": "crafting"
+      }
+     }
+    ],
+    "stats": [
+     {
+      "stat": "work_efficiency",
+      "name": "Work efficiency",
+      "type": "workEfficiency",
+      "isPercent": true,
+      "value": 0.07,
+      "isNegative": false,
+      "isMultiplicative": true
+     }
+    ]
+   },
+   {
+    "id": "reroll-this-id-28dcd205-a199-4eef-8421-fb4baddbe62e",
+    "customIcon": null,
+    "customTextLocalizationKey": null,
+    "customText": "",
+    "textLocalizationKey": "attributes.singulars.skilling.craftingOutcome.whileMainSkill.text",
+    "text": "<stat s=\"craftingOutcome\"/> while <supp k=\"skill\"/>",
+    "statText": "Quality outcome",
+    "skillText": "Crafting",
+    "tables": null,
+    "requirements": [
+     {
+      "type": "mainSkill",
+      "name": null,
+      "opposite": false,
+      "requirement": {
+       "skill": "crafting"
+      }
+     }
+    ],
+    "stats": [
+     {
+      "stat": "quality_outcome",
+      "name": "Quality outcome",
+      "type": "qualityOutcome",
+      "isPercent": false,
+      "value": 20,
+      "isNegative": false,
+      "isMultiplicative": true
+     }
+    ]
+   },
+   {
+    "id": "reroll-this-id-b1358e2d-79ae-4b37-9a97-024231126895",
+    "customIcon": null,
+    "customTextLocalizationKey": null,
+    "customText": "",
+    "textLocalizationKey": "attributes.singulars.skilling.noMaterialsConsumed.whileMainSkill.text",
+    "text": "<stat s=\"noMaterialsConsumed\"/> while <supp k=\"skill\"/>",
+    "statText": "No materials consumed",
+    "skillText": "Crafting",
+    "tables": null,
+    "requirements": [
+     {
+      "type": "mainSkill",
+      "name": null,
+      "opposite": false,
+      "requirement": {
+       "skill": "crafting"
+      }
+     }
+    ],
+    "stats": [
+     {
+      "stat": "no_materials_consumed",
+      "name": "No materials consumed",
+      "type": "noMaterialsConsumed",
+      "isPercent": true,
+      "value": 0.04,
+      "isNegative": false,
+      "isMultiplicative": true
+     }
+    ]
+   }
+  ],
+  "itemValue": {
+   "currency": "money",
+   "value": {
+    "rare": 15
+   }
+  },
+  "canBeFine": false,
+  "canBeSold": true,
+  "canBeBanked": true,
+  "canBeTraded": true,
+  "canBeDropped": true,
+  "icon": "assets/icons/items/gear/skill_gear/crafting/adjustable_wrench.png"
+ },
+ {
+  "id": "birch_skis",
+  "name": "Birch skis",
+  "desc": "A pair of beginner's skis. Hard to control and not very fast, but they do get you down a snowy slope quicker than walking.",
+  "keywords": [
+   "skis",
+   "agility",
+   "snowy"
+  ],
+  "type": "loot",
+  "quality": "common",
+  "gearType": "feet",
+  "requirements": [
+   {
+    "type": "skillLevel",
+    "name": "",
+    "opposite": false,
+    "requirement": {
+     "level": 5,
+     "skill": "agility"
+    }
+   }
+  ],
+  "itemAttrs": [
+   {
+    "id": "attribute-copy-item_attr-f215f0c0-4097-47c4-97c8-6c8de6a97f34",
+    "customIcon": "",
+    "customTextLocalizationKey": "",
+    "customText": "",
+    "textLocalizationKey": "",
+    "text": "",
+    "statText": "Work efficiency",
+    "skillText": "Agility",
+    "tables": null,
+    "requirements": [
+     {
+      "type": "mainSkill",
+      "name": "",
+      "opposite": false,
+      "requirement": {
+       "skill": "agility"
+      }
+     },
+     {
+      "type": "locationHasKeywords",
+      "name": null,
+      "opposite": false,
+      "requirement": {
+       "keywords": [
+        "snowy"
+       ]
+      }
+     }
+    ],
+    "stats": [
+     {
+      "stat": "work_efficiency",
+      "name": "Work efficiency",
+      "type": "workEfficiency",
+      "isPercent": true,
+      "value": 0.07,
+      "isNegative": false,
+      "isMultiplicative": true
+     }
+    ]
+   }
+  ],
+  "itemValue": {
+   "currency": "money",
+   "value": {
+    "common": 4
+   }
+  },
+  "canBeFine": false,
+  "canBeSold": true,
+  "canBeBanked": true,
+  "canBeTraded": true,
+  "canBeDropped": true,
+  "icon": "assets/icons/items/gear/skill_gear/skiis_birch.png"
+ },
+ {
+  "id": "bogwood_boots",
+  "name": "Bogwood boots",
+  "desc": "These boots are sturdy and made to be comfortable when working in muddy conditions.",
+  "keywords": [
+   "regional",
+   "carpentry",
+   "gdte",
+   "halfling_rebels",
+   "swamp"
+  ],
+  "type": "loot",
+  "quality": "uncommon",
+  "gearType": "feet",
+  "requirements": [
+   {
+    "type": "skillLevel",
+    "name": "",
+    "opposite": false,
+    "requirement": {
+     "level": 10,
+     "skill": "carpentry"
+    }
+   },
+   {
+    "type": "gameData",
+    "name": "requirements.singulars.factionReputations.halflingRebelsReputation",
+    "opposite": false,
+    "requirement": {
+     "gameDataId": "halflingRebelsReputation",
+     "data": "{\"double\":\"10.0\"}"
+    }
+   }
+  ],
+  "itemAttrs": [
+   {
+    "id": "5a69ac91-1515-4754-bb7c-499f2577c09c",
+    "customIcon": "",
+    "customTextLocalizationKey": "",
+    "customText": "",
+    "textLocalizationKey": "",
+    "text": "",
+    "statText": "Work efficiency",
+    "skillText": "Carpentry",
+    "tables": null,
+    "requirements": [
+     {
+      "type": "mainSkill",
+      "name": "",
+      "opposite": false,
+      "requirement": {
+       "skill": "carpentry"
+      }
+     }
+    ],
+    "stats": [
+     {
+      "stat": "work_efficiency",
+      "name": "Work efficiency",
+      "type": "workEfficiency",
+      "isPercent": true,
+      "value": 0.06,
+      "isNegative": false,
+      "isMultiplicative": true
+     }
+    ]
+   },
+   {
+    "id": "74257d97-42af-4adc-a319-2d0e9b810480",
+    "customIcon": "",
+    "customTextLocalizationKey": "",
+    "customText": "",
+    "textLocalizationKey": "",
+    "text": "",
+    "statText": "Double rewards",
+    "skillText": "Carpentry",
+    "tables": null,
+    "requirements": [
+     {
+      "type": "mainSkill",
+      "name": "",
+      "opposite": false,
+      "requirement": {
+       "skill": "carpentry"
+      }
+     }
+    ],
+    "stats": [
+     {
+      "stat": "double_rewards",
+      "name": "Double rewards",
+      "type": "doubleRewards",
+      "isPercent": true,
+      "value": 0.02,
+      "isNegative": false,
+      "isMultiplicative": true
+     }
+    ]
+   },
+   {
+    "id": "ce3bc9d7-8d0f-46a1-b76b-b8e9e232dffa",
+    "customIcon": "",
+    "customTextLocalizationKey": "",
+    "customText": "",
+    "textLocalizationKey": "",
+    "text": "",
+    "statText": "Double action",
+    "skillText": "Carpentry",
+    "tables": null,
+    "requirements": [
+     {
+      "type": "realm",
+      "name": "",
+      "opposite": false,
+      "requirement": {
+       "realm": "grand_duchy_of_trellin_erdwise"
+      }
+     },
+     {
+      "type": "mainSkill",
+      "name": "",
+      "opposite": false,
+      "requirement": {
+       "skill": "carpentry"
+      }
+     }
+    ],
+    "stats": [
+     {
+      "stat": "double_action",
+      "name": "Double action",
+      "type": "doubleAction",
+      "isPercent": true,
+      "value": 0.02,
+      "isNegative": false,
+      "isMultiplicative": true
+     }
+    ]
+   }
+  ],
+  "itemValue": {
+   "currency": "money",
+   "value": {
+    "uncommon": 25
+   }
+  },
+  "canBeFine": false,
+  "canBeSold": true,
+  "canBeBanked": true,
+  "canBeTraded": true,
+  "canBeDropped": true,
+  "icon": "assets/icons/items/gear/bogwoods_rebel_boots.png"
+ }
+]

@@ -74,4 +74,17 @@ describe("ItemSources", () => {
     render(<ItemSources sources={[]} />);
     expect(screen.getByText("No known source yet.")).toBeDefined();
   });
+
+  it("shows achievements and rewards", () => {
+    render(
+      <ItemSources
+        sources={[
+          { kind: "achievement", id: "my_back_hurts", name: "My Back Hurts", icon: "" },
+          { kind: "reward", id: "reward_progress-achievements-75", name: "Achievement points reward", icon: "" },
+        ]}
+      />,
+    );
+    const rows = screen.getAllByRole("listitem").map((li) => li.textContent);
+    expect(rows).toEqual(["My Back HurtsAchievement", "Achievement points reward"]);
+  });
 });

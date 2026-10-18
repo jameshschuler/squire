@@ -927,5 +927,76 @@
    ],
    "shoppingLists": []
   }
+ ],
+ "achievements": [
+  {
+   "id": "my_back_hurts",
+   "name": "My Back Hurts",
+   "desc": "Time to drop or sell before you break your back.",
+   "difficulty": "easy",
+   "itemRewards": [
+    {
+     "type": "item",
+     "id": "tiny_backpack",
+     "quality": "common",
+     "tag": null,
+     "quantity": 1
+    }
+   ],
+   "cardFrontImage": "assets/achievements/card_fronts/my_back_hurts.png",
+   "cardBackImage": "assets/achievements/card_backs/red_easy.png",
+   "cardFrontBackgroundImage": "assets/achievements/card_front_backgrounds/red_front.png"
+  }
+ ],
+ "rewards": [
+  {
+   "id": "reward_progress-jarvonia_lvl_3",
+   "keywords": [],
+   "type": "factionReputation",
+   "rewardItems": [
+    {
+     "type": "item",
+     "id": "chest_of_jarvonia",
+     "quality": "common",
+     "tag": "none",
+     "quantity": 3
+    },
+    {
+     "type": "item",
+     "id": "ice_axe",
+     "quality": "rare",
+     "tag": null,
+     "quantity": 1
+    },
+    {
+     "type": "item",
+     "id": "dynamite",
+     "quality": "common",
+     "tag": null,
+     "quantity": 2
+    },
+    {
+     "type": "item",
+     "id": "spicy_pumpkin_juice",
+     "quality": "common",
+     "tag": null,
+     "quantity": 1
+    }
+   ]
+  },
+  {
+   "id": "reward_progress-achievements-75",
+   "keywords": [],
+   "type": "achievementPoints",
+   "rewardItems": [
+    {
+     "type": "item",
+     "id": "absorbing_amulet",
+     "quality": "epic",
+     "tag": null,
+     "quantity": 1
+    }
+   ]
+  }
  ]
 }

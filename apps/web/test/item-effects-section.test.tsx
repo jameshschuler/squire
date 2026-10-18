@@ -13,8 +13,22 @@ describe("ItemEffectsSection", () => {
         effects={{
           steps: 500,
           effects: [
-            { condition: "While doing Woodcutting", stat: "Steps required", normal: "-1", fine: "-2", appliesTo: [] },
-            { condition: "While doing Woodcutting", stat: "Double rewards", normal: "+2%", fine: "+4%", appliesTo: [] },
+            {
+              condition: "While doing Woodcutting",
+              scope: null,
+              stat: "Steps required",
+              normal: "-1",
+              fine: "-2",
+              appliesTo: [],
+            },
+            {
+              condition: "While doing Woodcutting",
+              scope: null,
+              stat: "Double rewards",
+              normal: "+2%",
+              fine: "+4%",
+              appliesTo: [],
+            },
           ],
         }}
       />,
@@ -35,6 +49,7 @@ describe("ItemEffectsSection", () => {
           effects: [
             {
               condition: "While doing Foraging",
+              scope: null,
               stat: "Chance to find gold",
               normal: "25%",
               fine: "50%",
@@ -42,6 +57,7 @@ describe("ItemEffectsSection", () => {
             },
             {
               condition: "While doing Hunting",
+              scope: null,
               stat: "Chance to find gold",
               normal: "25%",
               fine: "50%",
@@ -64,10 +80,33 @@ describe("ItemEffectsSection", () => {
       <ItemEffectsSection
         effects={{
           steps: null,
-          effects: [{ condition: "Global", stat: "Inventory space", normal: "+5", fine: "+10", appliesTo: [] }],
+          effects: [
+            { condition: "Global", scope: null, stat: "Inventory space", normal: "+5", fine: "+10", appliesTo: [] },
+          ],
         }}
       />,
     );
     expect(screen.getByRole("heading").textContent).toBe("Effects");
+  });
+
+  it("shows one value column for gear, which has no fine version", () => {
+    render(
+      <ItemEffectsSection
+        effects={{
+          steps: null,
+          effects: [
+            {
+              condition: "While doing Crafting",
+              scope: null,
+              stat: "Work efficiency",
+              normal: "+7%",
+              fine: null,
+              appliesTo: [],
+            },
+          ],
+        }}
+      />,
+    );
+    expect(rows()).toEqual([["While doing Crafting"], ["Work efficiency", "+7%"]]);
   });
 });

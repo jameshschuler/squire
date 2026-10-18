@@ -54,14 +54,14 @@ describe("GameDataProvider", () => {
     );
   });
 
-  it("says recipes are updating, instead of crashing, when it gets a book of another version", async () => {
+  it("says game data is updating, instead of crashing, when it gets a book of another version", async () => {
     mockFetch(new Response(JSON.stringify({ schema: RECIPE_BOOK_SCHEMA - 1, version: "v1", recipes: [] })));
     render(
       <GameDataProvider>
         <Probe />
       </GameDataProvider>,
     );
-    await expect(screen.findByText("Recipes are updating. Try again in a minute.")).resolves.toBeDefined();
+    await expect(screen.findByText("Game data is updating. Try again in a minute.")).resolves.toBeDefined();
   });
 
   it("reports a failed load", async () => {
@@ -71,7 +71,7 @@ describe("GameDataProvider", () => {
         <Probe />
       </GameDataProvider>,
     );
-    await expect(screen.findByText("Failed to load recipes (502)")).resolves.toBeDefined();
+    await expect(screen.findByText("Failed to load game data (502)")).resolves.toBeDefined();
   });
 
   it("throws when used outside the provider", () => {

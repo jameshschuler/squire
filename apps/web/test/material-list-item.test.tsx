@@ -11,7 +11,7 @@ describe("MaterialListItem", () => {
       <ul>
         <MaterialListItem
           material={{
-            item: { id: "bones", name: "Bones", icon: "", keywords: [], effects: null },
+            item: { id: "bones", name: "Bones", icon: "", quality: null, keywords: [], effects: null },
             sources: [],
             skills: [],
             isCrafted: false,

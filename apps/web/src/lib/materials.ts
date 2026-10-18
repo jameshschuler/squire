@@ -21,16 +21,15 @@ export const SHOPS_FILTER = "shops";
 export const CRAFTED_FILTER = "crafted";
 
 export interface MaterialSearchOptions {
-  /** A skill id, or `CHESTS_FILTER` / `SHOPS_FILTER` / `CRAFTED_FILTER`. */
   filter?: string;
 }
 
 export function listMaterials(book: RecipeBook): Material[] {
   const crafted = new Set(book.recipes.flatMap((r) => r.outputs.map((o) => o.id)));
   const items = new Map<string, ItemSummary>();
-  for (const { id, name, icon, keywords, effects } of book.recipes.flatMap((r) => r.materials.flat())) {
-    if (!items.has(id)) {
-      items.set(id, { id, name, icon, keywords, effects });
+  for (const { amount: _amount, ...item } of book.recipes.flatMap((r) => r.materials.flat())) {
+    if (!items.has(item.id)) {
+      items.set(item.id, item);
     }
   }
   return [...items.values()]
@@ -47,7 +46,7 @@ export function listMaterials(book: RecipeBook): Material[] {
 }
 
 export function materialFilters(materials: Material[]): SkillOption[] {
-  const hasSource = (kind: ItemSource["kind"]) => materials.some((m) => m.sources.some((s) => s.kind === kind));
+  const hasSource = (kind: ItemSource["kind"]) => materials.some((m) => hasSourceKind(m, kind));
   return [
     ...uniqueSkills(materials.flatMap((m) => m.skills)),
     ...(hasSource("chest") ? [{ id: CHESTS_FILTER, name: "Chests" }] : []),
@@ -69,15 +68,19 @@ export function searchMaterials(
 
 function matchesFilter(material: Material, filter: string): boolean {
   if (filter === CHESTS_FILTER) {
-    return material.sources.some((s) => s.kind === "chest");
+    return hasSourceKind(material, "chest");
   }
   if (filter === SHOPS_FILTER) {
-    return material.sources.some((s) => s.kind === "shop");
+    return hasSourceKind(material, "shop");
   }
   if (filter === CRAFTED_FILTER) {
     return material.isCrafted;
   }
   return material.skills.some((s) => s.id === filter);
+}
+
+function hasSourceKind(material: Material, kind: ItemSource["kind"]): boolean {
+  return material.sources.some((s) => s.kind === kind);
 }
 
 function sourceSkills(source: ItemSource): SkillLevel[] {

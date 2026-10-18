@@ -1,10 +1,12 @@
 import type {
+  AchievementDetail,
   ActivityDetail,
   FactionDetail,
   ItemDetail,
   LocationDetail,
   LootTableDetail,
   RecipeDetail,
+  RewardDetail,
   ServiceDetail,
   ShopDetail,
   SkillDetail,
@@ -21,4 +23,6 @@ export interface GameData {
   activities: ActivityDetail[];
   lootTables: LootTableDetail[];
   shops: ShopDetail[];
+  achievements: AchievementDetail[];
+  rewards: RewardDetail[];
 }

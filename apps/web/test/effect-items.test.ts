@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildRecipeBook, type Effect, type GameData, type RecipeBook } from "@squire/api/recipe-book";
-import { effectsFor, foodFilters, searchFoods, whereFoodApplies } from "@/lib/foods";
+import { effectsFor, effectFilters, searchEffectItems, summarizeEffects, whereItemApplies } from "@/lib/effect-items";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
 const base = buildRecipeBook(sample as unknown as GameData);
@@ -11,6 +11,7 @@ const target = (id: string) => ({
 });
 const effect = (stat: string, ...appliesTo: string[]): Effect => ({
   condition: "c",
+  scope: null,
   stat,
   normal: "+1%",
   fine: "+2%",
@@ -23,6 +24,7 @@ function withEffects(book: RecipeBook, effectsById: Record<string, Effect[]>): R
     id,
     name: name(id),
     icon: "",
+    quality: "common" as const,
     keywords: [],
     effects: { steps: 1000, effects },
   }));
@@ -36,28 +38,28 @@ const book = withEffects(base, {
 });
 const ids = (list: { id: string }[]) => list.map((f) => f.id);
 
-describe("foodFilters", () => {
+describe("effectFilters", () => {
   it("lists the skills foods help, A–Z, with Travelling last", () => {
-    expect(foodFilters(book.foods).map((f) => f.name)).toEqual(["Agility", "Mining", "Travelling"]);
+    expect(effectFilters(book.foods).map((f) => f.name)).toEqual(["Agility", "Mining", "Travelling"]);
   });
 
   it("has no Travelling filter when no food helps while travelling", () => {
     const foods = withEffects(base, { bagel: [effect("Work efficiency", "agility")] }).foods;
-    expect(foodFilters(foods).map((f) => f.id)).toEqual(["agility"]);
+    expect(effectFilters(foods).map((f) => f.id)).toEqual(["agility"]);
   });
 });
 
-describe("searchFoods", () => {
+describe("searchEffectItems", () => {
   const foods = book.foods;
 
   it("narrows to foods that help a skill", () => {
-    expect(ids(searchFoods(foods, "", { filter: "mining" }))).toEqual(["dynamite", "salt_crystal"]);
-    expect(ids(searchFoods(foods, "", { filter: "travelling" }))).toEqual(["salt_crystal"]);
+    expect(ids(searchEffectItems(foods, "", { filter: "mining" }))).toEqual(["dynamite", "salt_crystal"]);
+    expect(ids(searchEffectItems(foods, "", { filter: "travelling" }))).toEqual(["salt_crystal"]);
   });
 
   it("matches names", () => {
-    expect(ids(searchFoods(foods, "dyna"))).toEqual(["dynamite"]);
-    expect(searchFoods(foods, "nonsense")).toEqual([]);
+    expect(ids(searchEffectItems(foods, "dyna"))).toEqual(["dynamite"]);
+    expect(searchEffectItems(foods, "nonsense")).toEqual([]);
   });
 });
 
@@ -70,23 +72,35 @@ describe("effectsFor", () => {
   });
 });
 
-describe("whereFoodApplies", () => {
-  const conditioned = (condition: string, stat: string, normal: string): Effect => ({
-    condition,
-    stat,
-    normal,
-    fine: normal,
-    appliesTo: [],
+describe("whereItemApplies", () => {
+  const scoped = (...scopes: (string | null)[]) =>
+    withEffects(base, {
+      bagel: scopes.map((scope) => ({ ...effect("Work efficiency", "agility"), scope })),
+    }).foods[0]!;
+
+  it.each([
+    [["Foraging", "Foraging", "Fishing"], "Foraging · Fishing"],
+    [["Global", "Agility"], "Global"],
+    [["Agility", null], "Agility"],
+    [[null], "Under certain conditions"],
+  ])("sums up %j as %s", (scopes, expected) => {
+    expect(whereItemApplies(scoped(...scopes))).toBe(expected);
+  });
+});
+
+describe("summarizeEffects", () => {
+  const withStats = (...stats: string[]) =>
+    withEffects(base, { bagel: stats.map((stat) => effect(stat, "agility")) }).foods[0]!;
+
+  it.each([
+    [["Work efficiency"], "+1% work efficiency"],
+    [["Work efficiency", "Chest finding"], "+1% work efficiency · +1 other effect"],
+    [["Work efficiency", "Chest finding", "Double rewards"], "+1% work efficiency · +2 other effects"],
+  ])("sums up %j as %s", (stats, expected) => {
+    expect(summarizeEffects(withStats(...stats), "agility")).toBe(expected);
   });
 
-  it("lists each place the food applies once, in order", () => {
-    const [food] = withEffects(base, {
-      bagel: [
-        conditioned("While doing Foraging", "Double rewards", "+2%"),
-        conditioned("While doing Foraging", "Steps required", "-1"),
-        conditioned("Global", "Bonus experience", "-4%"),
-      ],
-    }).foods;
-    expect(whereFoodApplies(food!)).toBe("Foraging · Global");
+  it("is empty when nothing applies to the filter", () => {
+    expect(summarizeEffects(withStats("Work efficiency"), "mining")).toBe("");
   });
 });

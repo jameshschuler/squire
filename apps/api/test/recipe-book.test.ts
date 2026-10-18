@@ -14,6 +14,7 @@ import {
 } from "../src/recipe-book/index.js";
 import type { ItemDetail, ServiceTier } from "@jameshschuler/walkscape-data-client";
 import foodItems from "../../../fixtures/api/foods.json";
+import lootItems from "../../../fixtures/api/loot.json";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
 const book = buildRecipeBook(sample as unknown as GameData);
@@ -49,11 +50,20 @@ describe("buildRecipeBook", () => {
           id: "gold_nugget",
           name: "Gold nugget",
           icon: expect.any(String),
+          quality: "common",
           keywords: ["nugget", "light"],
           effects: null,
           amount: 7,
         },
-        { id: "gold_ore", name: "Gold ore", icon: expect.any(String), keywords: ["ore"], effects: null, amount: 2 },
+        {
+          id: "gold_ore",
+          name: "Gold ore",
+          icon: expect.any(String),
+          quality: "common",
+          keywords: ["ore"],
+          effects: null,
+          amount: 2,
+        },
       ],
     ]);
   });
@@ -226,6 +236,7 @@ describe("recipeBookIcons", () => {
         version: "v",
         recipes: [{ ...recipe!, icon: "", outputs: [], materials: [] }],
         foods: [],
+        loot: [],
         sources: {},
       }),
     ).toEqual([]);
@@ -367,6 +378,7 @@ describe("findItem", () => {
       id,
       name,
       icon: expect.any(String),
+      quality: "common",
       keywords: expect.any(Array),
       effects: null,
     });
@@ -437,5 +449,78 @@ describe("foods", () => {
   it("includes food icons in the icons to prefetch", () => {
     const driedFruit = withFoods.foods.find((f) => f.id === "dried_fruit")!;
     expect(recipeBookIcons(withFoods)).toContain(driedFruit.icon);
+  });
+});
+
+describe("loot", () => {
+  const data = structuredClone(sample) as unknown as GameData;
+  data.items.push(...(lootItems as unknown as ItemDetail[]));
+  const withLoot = buildRecipeBook(data);
+
+  it("lists loot items with effects, A–Z", () => {
+    expect(withLoot.loot.map((l) => l.name)).toEqual([
+      "Absorbing amulet",
+      "Adjustable wrench",
+      "Birch skis",
+      "Bogwood boots",
+    ]);
+  });
+
+  it("leaves out loot items a recipe makes", () => {
+    const crafted = structuredClone(data);
+    crafted.recipes[0]!.itemRewards = { birch_skis: 1 };
+    expect(buildRecipeBook(crafted).loot.map((l) => l.name)).not.toContain("Birch skis");
+  });
+
+  it("keeps each item's tier", () => {
+    expect(withLoot.loot.map((l) => l.quality)).toEqual(["epic", "rare", "common", "uncommon"]);
+  });
+
+  it("has no tier for an item missing from the game data", () => {
+    const missing = structuredClone(data);
+    missing.recipes[0]!.itemRewards = { not_in_game_data: 1 };
+    const output = buildRecipeBook(missing).recipes[0]!.outputs[0]!;
+    expect(output.quality).toBeNull();
+  });
+
+  it("lists an achievement points reward as a source, without its threshold", () => {
+    expect(withLoot.sources.absorbing_amulet).toEqual([
+      { kind: "reward", id: "achievementPoints", name: "Achievement points reward", icon: "" },
+    ]);
+  });
+
+  it("lists an achievement as a source, after the activities that drop the item", () => {
+    const rewarded = structuredClone(data);
+    rewarded.achievements[0]!.itemRewards[0]!.id = "gold_ore";
+    const sources = buildRecipeBook(rewarded).sources.gold_ore!;
+    expect(sources.at(0)?.kind).toBe("activity");
+    expect(sources.at(-1)).toEqual({
+      kind: "achievement",
+      id: "my_back_hurts",
+      name: "My Back Hurts",
+      icon: "",
+    });
+  });
+
+  it("names faction reputation rewards, once per item however many levels give it", () => {
+    const rewarded = structuredClone(data);
+    const level = rewarded.rewards[0]!;
+    level.rewardItems[0]!.id = "salt_crystal";
+    rewarded.rewards.push({ ...structuredClone(level), id: "reward_progress-jarvonia_lvl_4" });
+    expect(buildRecipeBook(rewarded).sources.salt_crystal?.map((s) => s.name)).toEqual(["Faction reputation reward"]);
+  });
+
+  it("skips rewards that aren't items", () => {
+    const rewarded = structuredClone(data);
+    rewarded.rewards[0]!.rewardItems[0]! = {
+      ...rewarded.rewards[0]!.rewardItems[0]!,
+      type: "pfpOption",
+      id: "salt_crystal",
+    };
+    expect(buildRecipeBook(rewarded).sources.salt_crystal).toBeUndefined();
+  });
+
+  it("finds a loot item no recipe mentions", () => {
+    expect(findItem(withLoot, "adjustable_wrench")?.name).toBe("Adjustable wrench");
   });
 });

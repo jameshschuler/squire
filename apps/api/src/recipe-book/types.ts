@@ -1,7 +1,7 @@
-import type { ServiceTier } from "@jameshschuler/walkscape-data-client";
+import type { ItemDetail, ServiceTier } from "@jameshschuler/walkscape-data-client";
 
 // Bump whenever the RecipeBook shape changes, so cached copies on devices refresh.
-export const RECIPE_BOOK_SCHEMA = 9;
+export const RECIPE_BOOK_SCHEMA = 17;
 
 export interface EffectTarget {
   id: string;
@@ -10,9 +10,10 @@ export interface EffectTarget {
 
 export interface Effect {
   condition: string;
+  scope: string | null;
   stat: string;
   normal: string;
-  fine: string;
+  fine: string | null;
   appliesTo: EffectTarget[];
 }
 
@@ -21,15 +22,18 @@ export interface ItemEffects {
   effects: Effect[];
 }
 
+export type ItemQuality = ItemDetail["quality"];
+
 export interface ItemSummary {
   id: string;
   name: string;
   icon: string;
+  quality: ItemQuality | null;
   keywords: string[];
   effects: ItemEffects | null;
 }
 
-export type Food = ItemSummary & { effects: ItemEffects };
+export type ItemWithEffects = ItemSummary & { effects: ItemEffects };
 
 export interface RecipeItem extends ItemSummary {
   amount: number;
@@ -98,12 +102,27 @@ export interface ShopSource {
   locations: LocationSummary[];
 }
 
-export type ItemSource = ActivitySource | ChestSource | ShopSource;
+export interface AchievementSource {
+  kind: "achievement";
+  id: string;
+  name: string;
+  icon: string;
+}
+
+export interface RewardSource {
+  kind: "reward";
+  id: string;
+  name: string;
+  icon: string;
+}
+
+export type ItemSource = ActivitySource | ChestSource | ShopSource | AchievementSource | RewardSource;
 
 export interface RecipeBook {
   schema: number;
   version: string;
   recipes: RecipeView[];
-  foods: Food[];
+  foods: ItemWithEffects[];
+  loot: ItemWithEffects[];
   sources: Record<string, ItemSource[]>;
 }

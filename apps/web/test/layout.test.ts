@@ -17,6 +17,7 @@ describe("activeTab", () => {
     ["/", "/"],
     ["/materials", "/materials"],
     ["/food", "/food"],
+    ["/loot", "/loot"],
     ["/favorites", "/favorites"],
   ])("on %s: %s", (pathname, expected) => {
     expect(activeTab(pathname, "/favorites")).toBe(expected);
@@ -24,6 +25,7 @@ describe("activeTab", () => {
 
   it.each([
     ["/items/bones", "/materials", "/materials"],
+    ["/items/birch_skis", "/loot", "/loot"],
     ["/recipes/bake_bread", "/favorites", "/favorites"],
     ["/recipes/bake_bread", "/", "/"],
   ] as const)("keeps the tab you came from on a detail page: %s from %s", (pathname, previous, expected) => {

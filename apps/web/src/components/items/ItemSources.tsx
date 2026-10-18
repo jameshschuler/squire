@@ -1,6 +1,8 @@
 import { sourceKey, type ItemSource } from "@squire/api/recipe-book";
+import { AchievementSourceRow } from "./AchievementSourceRow";
 import { ActivitySourceRow } from "./ActivitySourceRow";
 import { ChestSourceRow } from "./ChestSourceRow";
+import { RewardSourceRow } from "./RewardSourceRow";
 import { ShopSourceRow } from "./ShopSourceRow";
 
 export function ItemSources({ sources }: { sources: ItemSource[] }) {
@@ -14,6 +16,8 @@ export function ItemSources({ sources }: { sources: ItemSource[] }) {
           {source.kind === "activity" && <ActivitySourceRow source={source} />}
           {source.kind === "chest" && <ChestSourceRow source={source} />}
           {source.kind === "shop" && <ShopSourceRow source={source} />}
+          {source.kind === "achievement" && <AchievementSourceRow source={source} />}
+          {source.kind === "reward" && <RewardSourceRow source={source} />}
         </li>
       ))}
     </ul>
