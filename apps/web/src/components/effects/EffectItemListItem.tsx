@@ -1,12 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import type { ItemSummary } from "@squire/api/recipe-book";
+import type { ItemWithEffects } from "@squire/api/recipe-book";
 import { CollectibleBadge } from "@/components/shared/CollectibleBadge";
 import { GameIcon } from "@/components/shared/GameIcon";
 import { QualityBadge } from "@/components/shared/QualityBadge";
 import { itemSubtitle } from "@/lib/effect-items";
 
 interface EffectItemListItemProps {
-  item: ItemSummary;
+  item: ItemWithEffects;
   filter: string | undefined;
   showQuality: boolean;
 }

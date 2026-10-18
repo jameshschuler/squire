@@ -62,7 +62,6 @@ export function buildRecipeBook(data: GameData): RecipeBook {
   const summary = (id: string): ItemSummary => {
     const found = items.get(id);
     const keywords = [...new Set(found?.keywords ?? [])];
-    const effects = found ? itemEffects(found, effectNames) : null;
     return {
       id,
       name: found?.name ?? humanize(id),
@@ -70,7 +69,6 @@ export function buildRecipeBook(data: GameData): RecipeBook {
       quality: found?.quality ?? null,
       isCollectible: found?.type === "collectible",
       keywords,
-      effects,
     };
   };
   const item = (id: string, amount: number): RecipeItem => ({ ...summary(id), amount });
@@ -95,21 +93,23 @@ export function buildRecipeBook(data: GameData): RecipeBook {
   });
 
   const crafted = new Set(recipes.flatMap((r) => r.outputs.map((o) => o.id)));
-  const summaries = (keep: (item: ItemDetail) => boolean) =>
+  const withEffects = (keep: (item: ItemDetail) => boolean): ItemWithEffects[] =>
     data.items
       .filter(keep)
-      .map((i) => summary(i.id))
+      .map((i) => ({ ...summary(i.id), effects: itemEffects(i, effectNames) }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  const foods = summaries((i) => i.type === "consumable").filter(
-    (found): found is ItemWithEffects => found.effects !== null,
-  );
-  const loot = summaries((i) => (i.type === "collectible" || i.type === "loot") && !crafted.has(i.id)).filter(
+  const foods = withEffects((i) => i.type === "consumable").filter((found) => found.effects !== null);
+  const loot = withEffects((i) => (i.type === "collectible" || i.type === "loot") && !crafted.has(i.id)).filter(
     (found) => found.isCollectible || found.effects !== null,
+  );
+  const listed = new Set([...foods, ...loot].map((item) => item.id));
+  const gear = withEffects((i) => i.type !== "consumable" && !listed.has(i.id)).filter(
+    (found) => found.effects !== null,
   );
   const sourcedIds = new Set([
     ...recipes.flatMap((r) => r.materials.flat().map((m) => m.id)),
-    ...foods.map((f) => f.id),
-    ...loot.map((l) => l.id),
+    ...listed,
+    ...gear.map((g) => g.id),
   ]);
   return {
     schema: RECIPE_BOOK_SCHEMA,
@@ -117,6 +117,7 @@ export function buildRecipeBook(data: GameData): RecipeBook {
     recipes: recipes.sort(byLevel),
     foods,
     loot,
+    gear,
     sources: itemSources(data, sourcedIds, { locationsByActivity, locationsByBuilding }, skillName),
   };
 }

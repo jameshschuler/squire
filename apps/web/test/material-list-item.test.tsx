@@ -18,7 +18,6 @@ describe("MaterialListItem", () => {
               quality: null,
               isCollectible: false,
               keywords: [],
-              effects: null,
             },
             sources: [],
             skills: [],

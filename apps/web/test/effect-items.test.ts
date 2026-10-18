@@ -3,7 +3,7 @@ import {
   buildRecipeBook,
   type Effect,
   type GameData,
-  type ItemSummary,
+  type ItemWithEffects,
   type RecipeBook,
 } from "@squire/api/recipe-book";
 import {
@@ -121,7 +121,7 @@ describe("summarizeEffects", () => {
 });
 
 describe("items with no effects", () => {
-  const wine: ItemSummary = {
+  const wine: ItemWithEffects = {
     id: "wine",
     name: "Wine",
     icon: "",
@@ -146,7 +146,7 @@ describe("items with no effects", () => {
 });
 
 describe("the Collectibles chip", () => {
-  const collectible = (id: string, isCollectible: boolean): ItemSummary => ({
+  const collectible = (id: string, isCollectible: boolean): ItemWithEffects => ({
     id,
     name: id,
     icon: "",

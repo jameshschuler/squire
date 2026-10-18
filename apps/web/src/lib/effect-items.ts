@@ -1,11 +1,11 @@
-import { TRAVELLING, words, type Effect, type ItemSummary } from "@squire/api/recipe-book";
+import { TRAVELLING, words, type Effect, type ItemWithEffects } from "@squire/api/recipe-book";
 import { formatEffect } from "./format";
 import { matchesWords } from "./match";
 import { uniqueSkills, type SkillOption } from "./skills";
 
 export const COLLECTIBLES_FILTER = "collectibles";
 
-export function effectFilters(items: ItemSummary[]): SkillOption[] {
+export function effectFilters(items: ItemWithEffects[]): SkillOption[] {
   const targets = items.flatMap((item) => effectsOf(item).flatMap((effect) => effect.appliesTo));
   return [
     ...uniqueSkills(targets.filter((target) => target.id !== TRAVELLING.id)),
@@ -14,15 +14,15 @@ export function effectFilters(items: ItemSummary[]): SkillOption[] {
   ];
 }
 
-export function effectsFor(item: ItemSummary, filter: string): Effect[] {
+export function effectsFor(item: ItemWithEffects, filter: string): Effect[] {
   return effectsOf(item).filter((effect) => effect.appliesTo.some((target) => target.id === filter));
 }
 
-export function itemSubtitle(item: ItemSummary, filter: string | undefined): string {
+export function itemSubtitle(item: ItemWithEffects, filter: string | undefined): string {
   return filter && filter !== COLLECTIBLES_FILTER ? summarizeEffects(item, filter) : whereItemApplies(item);
 }
 
-export function summarizeEffects(item: ItemSummary, filter: string): string {
+export function summarizeEffects(item: ItemWithEffects, filter: string): string {
   const [first, ...rest] = effectsFor(item, filter);
   if (!first) {
     return "";
@@ -34,17 +34,17 @@ export function summarizeEffects(item: ItemSummary, filter: string): string {
 }
 
 export function searchEffectItems(
-  items: ItemSummary[],
+  items: ItemWithEffects[],
   query: string,
   { filter }: { filter?: string } = {},
-): ItemSummary[] {
+): ItemWithEffects[] {
   const terms = words(query);
   return items.filter(
     (item) => (!filter || matchesFilter(item, filter)) && matchesWords(terms, [item.name, ...item.keywords]),
   );
 }
 
-export function whereItemApplies(item: ItemSummary): string {
+export function whereItemApplies(item: ItemWithEffects): string {
   const effects = effectsOf(item);
   if (effects.length === 0) {
     return "No effects";
@@ -53,10 +53,10 @@ export function whereItemApplies(item: ItemSummary): string {
   return scopes.has("Global") ? "Global" : [...scopes].join(" · ") || "Under certain conditions";
 }
 
-function matchesFilter(item: ItemSummary, filter: string): boolean {
+function matchesFilter(item: ItemWithEffects, filter: string): boolean {
   return filter === COLLECTIBLES_FILTER ? item.isCollectible : effectsFor(item, filter).length > 0;
 }
 
-function effectsOf(item: ItemSummary): Effect[] {
+function effectsOf(item: ItemWithEffects): Effect[] {
   return item.effects?.effects ?? [];
 }

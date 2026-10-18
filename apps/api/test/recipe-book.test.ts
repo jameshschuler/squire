@@ -54,7 +54,6 @@ describe("buildRecipeBook", () => {
           quality: "common",
           isCollectible: false,
           keywords: ["nugget", "light"],
-          effects: null,
           amount: 7,
         },
         {
@@ -64,7 +63,6 @@ describe("buildRecipeBook", () => {
           quality: "common",
           isCollectible: false,
           keywords: ["ore"],
-          effects: null,
           amount: 2,
         },
       ],
@@ -240,6 +238,7 @@ describe("recipeBookIcons", () => {
         recipes: [{ ...recipe!, icon: "", outputs: [], materials: [] }],
         foods: [],
         loot: [],
+        gear: [],
         sources: {},
       }),
     ).toEqual([]);
@@ -536,5 +535,38 @@ describe("loot", () => {
 
   it("finds a loot item no recipe mentions", () => {
     expect(findItem(withLoot, "adjustable_wrench")?.name).toBe("Adjustable wrench");
+  });
+});
+
+describe("crafted gear", () => {
+  const data = structuredClone(sample) as unknown as GameData;
+  data.items.push(...(gearItems as unknown as ItemDetail[]));
+  data.recipes[0]!.itemRewards = { steel_hatchet: 1 };
+  const withGear = buildRecipeBook(data);
+
+  it("lists crafted items with effects once, in the gear list", () => {
+    expect(withGear.gear.map((g) => g.id)).toEqual(["steel_hatchet"]);
+  });
+
+  it("finds a crafted item with its tier effects", () => {
+    expect(findItem(withGear, "steel_hatchet")?.effects?.tiers).toHaveLength(5);
+  });
+
+  it("keeps effects off recipe outputs and materials", () => {
+    const items = withGear.recipes.flatMap((r) => [...r.outputs, ...r.materials.flat()]);
+    expect(items.some((item) => "effects" in item)).toBe(false);
+  });
+
+  it("keeps the effects of a loot item a recipe makes", () => {
+    const crafted = structuredClone(data);
+    crafted.items.push(...(lootItems as unknown as ItemDetail[]));
+    crafted.recipes[1]!.itemRewards = { adjustable_wrench: 1 };
+    const book = buildRecipeBook(crafted);
+    expect(book.loot.map((l) => l.id)).not.toContain("adjustable_wrench");
+    expect(findItem(book, "adjustable_wrench")?.effects?.effects[0]?.stat).toBe("Work efficiency");
+  });
+
+  it("gives recipe-only items no effects", () => {
+    expect(findItem(withGear, "gold_ore")?.effects).toBeNull();
   });
 });

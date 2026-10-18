@@ -1,5 +1,10 @@
 import { useMemo } from "react";
-import { findRecipesByOutput, findRecipesByMaterial, type ItemSummary, type RecipeBook } from "@squire/api/recipe-book";
+import {
+  findRecipesByOutput,
+  findRecipesByMaterial,
+  type ItemWithEffects,
+  type RecipeBook,
+} from "@squire/api/recipe-book";
 import { BackButton } from "@/components/layout/BackButton";
 import { RecipeList } from "@/components/recipes/RecipeList";
 import { RecipeSection } from "@/components/recipes/RecipeSection";
@@ -11,7 +16,7 @@ import { ItemKeywords } from "./ItemKeywords";
 import { ItemSources } from "./ItemSources";
 
 interface ItemDetailProps {
-  item: ItemSummary;
+  item: ItemWithEffects;
   book: RecipeBook;
 }
 
