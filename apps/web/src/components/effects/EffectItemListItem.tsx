@@ -3,7 +3,7 @@ import type { ItemSummary } from "@squire/api/recipe-book";
 import { CollectibleBadge } from "@/components/shared/CollectibleBadge";
 import { GameIcon } from "@/components/shared/GameIcon";
 import { QualityBadge } from "@/components/shared/QualityBadge";
-import { summarizeEffects, whereItemApplies } from "@/lib/effect-items";
+import { itemSubtitle } from "@/lib/effect-items";
 
 interface EffectItemListItemProps {
   item: ItemSummary;
@@ -18,9 +18,7 @@ export function EffectItemListItem({ item, filter, showQuality }: EffectItemList
         <GameIcon path={item.icon} />
         <span className="min-w-0 flex-1">
           <span className="block font-medium">{item.name}</span>
-          <span className="block text-sm text-muted-foreground">
-            {filter ? summarizeEffects(item, filter) : whereItemApplies(item)}
-          </span>
+          <span className="block text-sm text-muted-foreground">{itemSubtitle(item, filter)}</span>
         </span>
         {item.isCollectible ? (
           <CollectibleBadge />

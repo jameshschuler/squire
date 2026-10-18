@@ -12,6 +12,7 @@ describe("AppFooter", () => {
 
   it.each([
     ["WalkScape", "https://walkscape.app"],
+    ["Wiki", "https://wiki.walkscape.app/wiki/WalkScape:_Grind_by_walking!"],
     ["Discord", "https://discord.gg/Kk6VecJFEk"],
   ])("links to %s in a new tab", (name, href) => {
     render(<AppFooter />);
