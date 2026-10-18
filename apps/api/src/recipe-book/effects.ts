@@ -178,7 +178,7 @@ function describeRequirement(
     case "achievementPoint":
       return { label: `having ${requirement.value} achievement points` };
     case "totalSkillLevel":
-      return { label: `at total level ${requirement.levels}` };
+      return { label: `at total skill level ${requirement.levels}` };
     case "skillLevel":
       return { label: `at ${skillName(requirement.skill)} level ${requirement.level}` };
     case "itemAnywhere":

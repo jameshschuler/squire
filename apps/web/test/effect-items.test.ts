@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { buildRecipeBook, type Effect, type GameData, type RecipeBook } from "@squire/api/recipe-book";
+import {
+  buildRecipeBook,
+  type Effect,
+  type GameData,
+  type ItemSummary,
+  type RecipeBook,
+} from "@squire/api/recipe-book";
 import { effectsFor, effectFilters, searchEffectItems, summarizeEffects, whereItemApplies } from "@/lib/effect-items";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
@@ -103,5 +109,30 @@ describe("summarizeEffects", () => {
 
   it("is empty when nothing applies to the filter", () => {
     expect(summarizeEffects(withStats("Work efficiency"), "mining")).toBe("");
+  });
+});
+
+describe("items with no effects", () => {
+  const wine: ItemSummary = {
+    id: "wine",
+    name: "Wine",
+    icon: "",
+    quality: "common",
+    isCollectible: true,
+    keywords: [],
+    effects: null,
+  };
+
+  it("says so where the item applies", () => {
+    expect(whereItemApplies(wine)).toBe("No effects");
+  });
+
+  it("shows up in search but not under a skill", () => {
+    expect(searchEffectItems([wine], "wine")).toEqual([wine]);
+    expect(searchEffectItems([wine], "", { filter: "agility" })).toEqual([]);
+  });
+
+  it("adds no skill chips", () => {
+    expect(effectFilters([wine])).toEqual([]);
   });
 });

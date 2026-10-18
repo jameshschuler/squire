@@ -237,7 +237,7 @@ describe("itemEffects for loot", () => {
     ["distinctKeywordItemInInventory", { quantity: 1, keywords: ["arrows"] }, "While carrying arrows"],
     ["collectiblesOwned", { amount: 10 }, "While owning 10 collectibles"],
     ["achievementPoint", { isPercentage: false, value: 60 }, "While having 60 achievement points"],
-    ["totalSkillLevel", { levels: 100 }, "While at total level 100"],
+    ["totalSkillLevel", { levels: 100 }, "While at total skill level 100"],
     ["skillLevel", { skill: "crafting", level: 50 }, "While at Crafting level 50"],
     ["itemAnywhere", { item: "map_of_jarvonia" }, "While owning Map of Jarvonia"],
     ["activityType", { keywords: [], skill: null, activity: "sledding" }, "While sledding"],

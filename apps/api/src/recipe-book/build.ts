@@ -94,14 +94,18 @@ export function buildRecipeBook(data: GameData): RecipeBook {
     };
   });
 
-  const withEffects = (types: ItemDetail["type"][], exclude = new Set<string>()) =>
+  const crafted = new Set(recipes.flatMap((r) => r.outputs.map((o) => o.id)));
+  const summaries = (keep: (item: ItemDetail) => boolean) =>
     data.items
-      .filter((i) => types.includes(i.type) && !exclude.has(i.id))
+      .filter(keep)
       .map((i) => summary(i.id))
-      .filter((found): found is ItemWithEffects => found.effects !== null)
       .sort((a, b) => a.name.localeCompare(b.name));
-  const foods = withEffects(["consumable"]);
-  const loot = withEffects(["loot", "collectible"], new Set(recipes.flatMap((r) => r.outputs.map((o) => o.id))));
+  const foods = summaries((i) => i.type === "consumable").filter(
+    (found): found is ItemWithEffects => found.effects !== null,
+  );
+  const loot = summaries((i) => (i.type === "collectible" || i.type === "loot") && !crafted.has(i.id)).filter(
+    (found) => found.isCollectible || found.effects !== null,
+  );
   const sourcedIds = new Set([
     ...recipes.flatMap((r) => r.materials.flat().map((m) => m.id)),
     ...foods.map((f) => f.id),

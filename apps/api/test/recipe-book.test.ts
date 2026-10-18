@@ -529,6 +529,7 @@ describe("loot", () => {
     withCollectible.items.push(...(gearItems as unknown as ItemDetail[]));
     const names = buildRecipeBook(withCollectible).loot.map((l) => l.name);
     expect(names).toContain("Ancient ankh");
+    expect(names).toContain("99-year-old wine");
     expect(names).not.toContain("Steel hatchet");
     expect(buildRecipeBook(withCollectible).loot.find((l) => l.id === "ancient_ankh")?.isCollectible).toBe(true);
   });

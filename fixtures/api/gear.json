@@ -1144,5 +1144,22 @@
   "canBeTraded": false,
   "canBeDropped": true,
   "icon": "assets/icons/items/collectibles/anicent_ankh.png"
+ },
+ {
+  "id": "99_year_old_wine",
+  "name": "99-year-old wine",
+  "desc": "",
+  "type": "collectible",
+  "quality": "common",
+  "itemValue": {
+   "currency": "none",
+   "value": null
+  },
+  "canBeFine": false,
+  "canBeSold": false,
+  "canBeBanked": true,
+  "canBeTraded": false,
+  "canBeDropped": true,
+  "icon": "assets/icons/items/collectibles/99_year_old_wine.png"
  }
 ]
