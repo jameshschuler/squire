@@ -9,6 +9,7 @@ const book: RecipeBook = {
   version: "v1",
   foods: [],
   loot: [],
+  gear: [],
   recipes: [
     {
       id: "r",
@@ -25,7 +26,6 @@ const book: RecipeBook = {
             quality: null,
             isCollectible: false,
             keywords: [],
-            effects: null,
             amount: 1,
           },
         ],
@@ -38,7 +38,6 @@ const book: RecipeBook = {
           quality: null,
           isCollectible: false,
           keywords: [],
-          effects: null,
           amount: 1,
         },
       ],

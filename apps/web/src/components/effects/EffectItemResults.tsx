@@ -1,11 +1,11 @@
-import type { ItemSummary } from "@squire/api/recipe-book";
+import type { ItemWithEffects } from "@squire/api/recipe-book";
 import { useIncrementalList } from "@/hooks/useIncrementalList";
 import { EffectItemListItem } from "./EffectItemListItem";
 
 const PAGE_SIZE = 50;
 
 interface EffectItemResultsProps {
-  items: ItemSummary[];
+  items: ItemWithEffects[];
   filter: string | undefined;
   listKey: string;
   showQuality: boolean;

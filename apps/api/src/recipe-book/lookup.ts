@@ -1,14 +1,21 @@
-import type { ItemSource, ItemSummary, RecipeBook, RecipeView, SkillLevel } from "./types.js";
+import type { ItemSource, ItemWithEffects, RecipeBook, RecipeView, SkillLevel } from "./types.js";
 
-export function findItem(book: RecipeBook, itemId: string): ItemSummary | undefined {
+export function findItem(book: RecipeBook, itemId: string): ItemWithEffects | undefined {
+  const listed =
+    book.foods.find((item) => item.id === itemId) ??
+    book.loot.find((item) => item.id === itemId) ??
+    book.gear.find((item) => item.id === itemId);
+  if (listed) {
+    return listed;
+  }
   for (const recipe of book.recipes) {
     const found = [...recipe.outputs, ...recipe.materials.flat()].find((i) => i.id === itemId);
     if (found) {
       const { amount: _amount, ...item } = found;
-      return item;
+      return { ...item, effects: null };
     }
   }
-  return book.foods.find((food) => food.id === itemId) ?? book.loot.find((loot) => loot.id === itemId);
+  return undefined;
 }
 
 export function findRecipesByOutput(recipes: RecipeView[], itemId: string): RecipeView[] {
@@ -22,7 +29,11 @@ export function findRecipesByMaterial(recipes: RecipeView[], itemId: string): Re
 export function recipeBookIcons(book: RecipeBook): string[] {
   const recipeIcons = book.recipes.flatMap((r) => [r, ...r.outputs, ...r.materials.flat()]);
   const sourceIcons = Object.values(book.sources).flat();
-  return [...new Set([...recipeIcons, ...book.foods, ...book.loot, ...sourceIcons].map((i) => i.icon).filter(Boolean))];
+  return [
+    ...new Set(
+      [...recipeIcons, ...book.foods, ...book.loot, ...book.gear, ...sourceIcons].map((i) => i.icon).filter(Boolean),
+    ),
+  ];
 }
 
 export function sourceKey(source: ItemSource): string {

@@ -308,6 +308,10 @@ describe("itemEffects for crafted gear", () => {
     });
   });
 
+  it("keeps tier lines to what the item page shows", () => {
+    expect(Object.keys(tier("ethereal").effects[0]!).sort()).toEqual(["condition", "fine", "normal", "stat"]);
+  });
+
   it("keeps each tier's condition", () => {
     expect(new Set(tier("ethereal").effects.map((e) => e.condition))).toEqual(new Set(["While doing Woodcutting"]));
   });

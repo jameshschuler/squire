@@ -29,7 +29,7 @@ describe("EffectItemSearch", () => {
     ["loot", "Wrench", "rare", true],
     ["foods", "Bread", "common", false],
   ] as const)("on %s, shows the tier: %s", async (kind, name, quality, shown) => {
-    const book = { schema: RECIPE_BOOK_SCHEMA, version: "v1", recipes: [], sources: {}, foods: [], loot: [] };
+    const book = { schema: RECIPE_BOOK_SCHEMA, version: "v1", recipes: [], sources: {}, foods: [], loot: [], gear: [] };
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => new Response(JSON.stringify({ ...book, [kind]: [item(name, quality)] }))),

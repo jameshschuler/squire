@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { ItemSummary } from "@squire/api/recipe-book";
+import type { ItemWithEffects } from "@squire/api/recipe-book";
 import { GameDataStatus } from "@/components/shared/GameDataStatus";
 import { SearchInput } from "@/components/shared/SearchInput";
 import { SkillFilter } from "@/components/shared/SkillFilter";
@@ -8,7 +8,7 @@ import { effectFilters, searchEffectItems } from "@/lib/effect-items";
 import { knownOption } from "@/lib/skills";
 import { EffectItemResults } from "./EffectItemResults";
 
-const NO_ITEMS: ItemSummary[] = [];
+const NO_ITEMS: ItemWithEffects[] = [];
 
 interface EffectItemSearchProps {
   kind: "foods" | "loot";

@@ -34,7 +34,7 @@ export function itemEffects(item: ItemDetail, names: EffectNames): ItemEffects |
   const effects = gearEffects(base);
   const tiers = qualityTotals(base, item.itemQualityAttrs ?? []).map(({ quality, attributes }): QualityEffects => ({
     quality,
-    effects: gearEffects(attributes),
+    effects: gearEffects(attributes).map(({ condition, stat, normal, fine }) => ({ condition, stat, normal, fine })),
   }));
   return effects.length > 0 || tiers.length > 0 ? { steps: null, effects, tiers } : null;
 }
