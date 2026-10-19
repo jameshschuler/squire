@@ -37,6 +37,9 @@ jobs:
       - name: Pack
         working-directory: packages/data-client
         run: pnpm pack --pack-destination "$RUNNER_TEMP"
+      - name: Install the packed package and use it
+        working-directory: packages/data-client
+        run: node scripts/check-package.mjs "$RUNNER_TEMP/jameshschuler-walkscape-data-client-$VERSION.tgz"
       - name: Publish to npm, unless this version already is
         run: |
           if npm view "@jameshschuler/walkscape-data-client@$VERSION" version > /dev/null 2>&1; then
