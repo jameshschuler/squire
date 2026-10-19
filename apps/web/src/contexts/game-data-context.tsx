@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { RecipeBook } from "@squire/api/recipe-book";
 import { fetchRecipeBook } from "@/lib/api";
 import { prefetchRecipeBookIcons } from "@/lib/icon-prefetch";
@@ -6,27 +6,37 @@ import { prefetchRecipeBookIcons } from "@/lib/icon-prefetch";
 export type GameDataState =
   { status: "loading" } | { status: "ready"; book: RecipeBook } | { status: "error"; message: string };
 
-const GameDataContext = createContext<GameDataState | undefined>(undefined);
+export type GameDataContextValue = GameDataState & { refresh: () => Promise<void> };
+
+const GameDataContext = createContext<GameDataContextValue | undefined>(undefined);
 
 export function GameDataProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<GameDataState>({ status: "loading" });
 
   useEffect(() => {
+    const keepNewer = (next: GameDataState) => setState((current) => (current.status === "ready" ? current : next));
     fetchRecipeBook()
       .then((book) => {
-        setState({ status: "ready", book });
+        keepNewer({ status: "ready", book });
         void prefetchRecipeBookIcons(book);
       })
-      .catch((error: Error) => setState({ status: "error", message: error.message }));
+      .catch((error: Error) => keepNewer({ status: "error", message: error.message }));
   }, []);
 
-  return <GameDataContext.Provider value={state}>{children}</GameDataContext.Provider>;
+  const refresh = useCallback(async () => {
+    const book = await fetchRecipeBook({ fresh: true });
+    setState({ status: "ready", book });
+    void prefetchRecipeBookIcons(book);
+  }, []);
+
+  const value = useMemo(() => ({ ...state, refresh }), [state, refresh]);
+  return <GameDataContext.Provider value={value}>{children}</GameDataContext.Provider>;
 }
 
-export function useGameDataContext(): GameDataState {
-  const state = useContext(GameDataContext);
-  if (!state) {
+export function useGameDataContext(): GameDataContextValue {
+  const value = useContext(GameDataContext);
+  if (!value) {
     throw new Error("useGameDataContext must be used inside GameDataProvider");
   }
-  return state;
+  return value;
 }
