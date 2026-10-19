@@ -86,3 +86,9 @@
     @apply bg-background text-foreground antialiased;
   }
 }
+
+@media (display-mode: standalone) {
+  html {
+    overscroll-behavior-y: none;
+  }
+}

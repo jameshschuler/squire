@@ -2,6 +2,7 @@ import { Outlet, createRootRoute, useRouterState } from "@tanstack/react-router"
 import { AppFooter } from "@/components/layout/AppFooter";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { BottomTabBar } from "@/components/layout/BottomTabBar";
+import { PullToRefresh } from "@/components/layout/PullToRefresh";
 import { FavoritesProvider } from "@/contexts/favorites-context";
 import { GameDataProvider } from "@/contexts/game-data-context";
 import { ThemeProvider } from "@/contexts/theme-context";
@@ -24,6 +25,7 @@ function RootLayout() {
             </main>
             {showsFooter(pathname) && <AppFooter />}
           </div>
+          <PullToRefresh />
           <BottomTabBar />
         </FavoritesProvider>
       </GameDataProvider>
