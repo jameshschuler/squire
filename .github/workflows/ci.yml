@@ -77,6 +77,12 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      - name: Pack the data client
+        working-directory: packages/data-client
+        run: pnpm pack --pack-destination "$RUNNER_TEMP"
+      - name: Install the packed data client and use it
+        working-directory: packages/data-client
+        run: node scripts/check-package.mjs "$RUNNER_TEMP"/*.tgz
 
   ci-passed:
     name: CI passed
