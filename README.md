@@ -1,6 +1,6 @@
 # Squire
 
-A WalkScape companion app. Right now it's a recipe book: search any recipe and see its materials, outputs and where to craft it.
+A WalkScape companion app, live at [wssquire.app](https://wssquire.app). Search recipes, materials, food and loot to see what they're made from, where to find them and what their effects do. It installs as an app on your phone and works offline.
 
 | Package                | What it is                                                                                   |
 | ---------------------- | -------------------------------------------------------------------------------------------- |
