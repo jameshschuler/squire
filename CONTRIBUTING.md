@@ -77,6 +77,8 @@ Every change ships with tests. New logic gets unit tests, and a bug fix gets a t
 
 The `*.live.test.ts` files run against the real dev API, but only when `WALKSCAPE_API_KEY` is set in your shell. CI skips them. `packages/data-client/test/contract.live.test.ts` checks real responses from every resource against the API spec, so run it after regenerating the types.
 
+`.github/workflows/api-contract.yml` runs that check every Monday, and also regenerates the types and fails if the spec has changed. It needs the `WALKSCAPE_API_KEY` repository secret. You can also start it by hand from the Actions tab.
+
 ## Updating the data client's types
 
 The data client's types come from the API's OpenAPI spec. When the API changes, run `pnpm --filter @walkscape-community/data-api-client generate`. It rewrites `packages/data-client/src/generated/`; never edit those files by hand. Then run the checks: if a search filter or a field the code uses changed, typecheck shows where.
