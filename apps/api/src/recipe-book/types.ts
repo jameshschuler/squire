@@ -1,4 +1,4 @@
-import type { ItemDetail, ServiceTier } from "@jameshschuler/walkscape-data-client";
+import type { ItemDetail, ServiceTier } from "@walkscape-community/data-api-client";
 
 // Bump whenever the RecipeBook shape changes, so cached copies on devices refresh.
 export const RECIPE_BOOK_SCHEMA = 23;

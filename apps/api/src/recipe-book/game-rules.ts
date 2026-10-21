@@ -3,7 +3,7 @@ import type {
   ServiceRequirement,
   ServiceTier,
   SkillLevelRequirement,
-} from "@jameshschuler/walkscape-data-client";
+} from "@walkscape-community/data-api-client";
 
 export const SERVICE_TIERS = ["basic", "advanced", "expert"] as const satisfies readonly ServiceTier[];
 

@@ -10,7 +10,7 @@ import type {
   ServiceDetail,
   ShopDetail,
   SkillDetail,
-} from "@jameshschuler/walkscape-data-client";
+} from "@walkscape-community/data-api-client";
 
 export interface GameData {
   version: string;

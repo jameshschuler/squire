@@ -10,7 +10,7 @@ if (!tarball) {
   process.exit(1);
 }
 
-const consumer = `import { createClient, type ItemDetail } from "@jameshschuler/walkscape-data-client";
+const consumer = `import { createClient, type ItemDetail } from "@walkscape-community/data-api-client";
 
 const requests: Request[] = [];
 const client = createClient({

@@ -5,5 +5,5 @@ export default defineConfig({
   format: ["esm"],
   target: "node24",
   clean: true,
-  noExternal: ["@jameshschuler/walkscape-data-client"],
+  noExternal: ["@walkscape-community/data-api-client"],
 });

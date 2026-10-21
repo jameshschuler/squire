@@ -12,7 +12,7 @@ import {
   words,
   type GameData,
 } from "../src/recipe-book/index.js";
-import type { ItemDetail, ServiceTier } from "@jameshschuler/walkscape-data-client";
+import type { ItemDetail, ServiceTier } from "@walkscape-community/data-api-client";
 import foodItems from "../../../fixtures/api/foods.json";
 import gearItems from "../../../fixtures/api/gear.json";
 import lootItems from "../../../fixtures/api/loot.json";
