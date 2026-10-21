@@ -4,7 +4,7 @@ A WalkScape companion app, live at [wssquire.app](https://wssquire.app). Search 
 
 | Package                | What it is                                                                                   |
 | ---------------------- | -------------------------------------------------------------------------------------------- |
-| `packages/data-client` | Typed client for the WalkScape Data API, published as `@jameshschuler/walkscape-data-client` |
+| `packages/data-client` | Typed client for the WalkScape Data API, published as `@walkscape-community/data-api-client` |
 | `apps/api`             | Fastify server. Holds the API key, builds and caches the recipe book                         |
 | `apps/web`             | React PWA                                                                                    |
 

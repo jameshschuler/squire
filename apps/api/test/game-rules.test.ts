@@ -3,7 +3,7 @@ import type {
   Requirement,
   ServiceRequirement,
   ServiceTier,
-} from "@jameshschuler/walkscape-data-client";
+} from "@walkscape-community/data-api-client";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import {
   SERVICE_TIERS,

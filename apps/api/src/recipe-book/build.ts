@@ -10,7 +10,7 @@ import type {
   ServiceDetail,
   ServiceRequirement,
   ShopDetail,
-} from "@jameshschuler/walkscape-data-client";
+} from "@walkscape-community/data-api-client";
 import { itemEffects } from "./effects.js";
 import type { GameData } from "./game-data.js";
 import {

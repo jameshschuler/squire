@@ -1,4 +1,4 @@
-import type { Attribute, ItemDetail, Requirement, SkillDetail } from "@jameshschuler/walkscape-data-client";
+import type { Attribute, ItemDetail, Requirement, SkillDetail } from "@walkscape-community/data-api-client";
 import { capitalize, spaced } from "./text.js";
 import {
   QUALITIES,

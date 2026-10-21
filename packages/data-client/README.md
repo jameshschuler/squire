@@ -1,4 +1,4 @@
-# @jameshschuler/walkscape-data-client
+# @walkscape-community/data-api-client
 
 An unofficial TypeScript client for the [WalkScape](https://walkscape.app) Data API. It covers every endpoint, and its types are generated from the API's OpenAPI spec, so each resource, response and search filter is typed. It can also load whole resources in a few requests.
 
@@ -9,7 +9,7 @@ It runs anywhere with a global `fetch`: Node 22+, Deno, Bun, Cloudflare Workers 
 ## Install
 
 ```sh
-npm install @jameshschuler/walkscape-data-client
+npm install @walkscape-community/data-api-client
 ```
 
 You need a Data API key. Keys are handed out in the "Walkscape Data API" thread on the [WalkScape Discord](https://discord.gg/Kk6VecJFEk). Keep the key on a server: don't ship it in browser code.
@@ -17,7 +17,7 @@ You need a Data API key. Keys are handed out in the "Walkscape Data API" thread 
 ## Quick start
 
 ```ts
-import { ENVIRONMENTS, createClient } from "@jameshschuler/walkscape-data-client";
+import { ENVIRONMENTS, createClient } from "@walkscape-community/data-api-client";
 
 const client = createClient({ apiKey: process.env.WALKSCAPE_API_KEY!, baseUrl: ENVIRONMENTS.dev });
 

@@ -79,11 +79,11 @@ The `*.live.test.ts` files run against the real dev API, but only when `WALKSCAP
 
 ## Updating the data client's types
 
-The data client's types come from the API's OpenAPI spec. When the API changes, run `pnpm --filter @jameshschuler/walkscape-data-client generate`. It rewrites `packages/data-client/src/generated/`; never edit those files by hand. Then run the checks: if a search filter or a field the code uses changed, typecheck shows where.
+The data client's types come from the API's OpenAPI spec. When the API changes, run `pnpm --filter @walkscape-community/data-api-client generate`. It rewrites `packages/data-client/src/generated/`; never edit those files by hand. Then run the checks: if a search filter or a field the code uses changed, typecheck shows where.
 
 ## Publishing the data client
 
-`packages/data-client` is published to npm as `@jameshschuler/walkscape-data-client`. Releases go out from CI:
+`packages/data-client` is published to npm as `@walkscape-community/data-api-client`. Releases go out from CI:
 
 1. In a PR, bump `version` in `packages/data-client/package.json` and add a `CHANGELOG.md` entry.
 2. After it merges, tag the PR's merge commit and push the tag: `git fetch origin && git tag data-client-vX.Y.Z <merge-commit> && git push origin data-client-vX.Y.Z`. The merge commit is on the PR page, or run `gh pr view <number> --json mergeCommit -q .mergeCommit.oid`.

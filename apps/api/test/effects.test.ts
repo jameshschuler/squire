@@ -1,4 +1,4 @@
-import type { ItemDetail, SkillDetail } from "@jameshschuler/walkscape-data-client";
+import type { ItemDetail, SkillDetail } from "@walkscape-community/data-api-client";
 import { describe, expect, it } from "vitest";
 import { itemEffects } from "../src/recipe-book/effects.js";
 import foods from "../../../fixtures/api/foods.json";

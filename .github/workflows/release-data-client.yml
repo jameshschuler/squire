@@ -31,21 +31,21 @@ jobs:
           fi
           echo "VERSION=$version" >> "$GITHUB_ENV"
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @jameshschuler/walkscape-data-client typecheck
-      - run: pnpm --filter @jameshschuler/walkscape-data-client test
-      - run: pnpm --filter @jameshschuler/walkscape-data-client build
+      - run: pnpm --filter @walkscape-community/data-api-client typecheck
+      - run: pnpm --filter @walkscape-community/data-api-client test
+      - run: pnpm --filter @walkscape-community/data-api-client build
       - name: Pack
         working-directory: packages/data-client
         run: pnpm pack --pack-destination "$RUNNER_TEMP"
       - name: Install the packed package and use it
         working-directory: packages/data-client
-        run: node scripts/check-package.mjs "$RUNNER_TEMP/jameshschuler-walkscape-data-client-$VERSION.tgz"
+        run: node scripts/check-package.mjs "$RUNNER_TEMP/walkscape-community-data-api-client-$VERSION.tgz"
       - name: Publish to npm, unless this version already is
         run: |
-          if npm view "@jameshschuler/walkscape-data-client@$VERSION" version > /dev/null 2>&1; then
+          if npm view "@walkscape-community/data-api-client@$VERSION" version > /dev/null 2>&1; then
             echo "$VERSION is already on npm"
           else
-            npm publish "$RUNNER_TEMP/jameshschuler-walkscape-data-client-$VERSION.tgz" --access public
+            npm publish "$RUNNER_TEMP/walkscape-community-data-api-client-$VERSION.tgz" --access public
           fi
       - name: Create GitHub Release
         env:

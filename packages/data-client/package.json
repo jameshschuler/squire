@@ -1,5 +1,5 @@
 {
-  "name": "@jameshschuler/walkscape-data-client",
+  "name": "@walkscape-community/data-api-client",
   "version": "0.0.1",
   "description": "Unofficial, fully typed TypeScript client for the WalkScape Data API",
   "keywords": [

@@ -1,4 +1,4 @@
-import { createClient } from "@jameshschuler/walkscape-data-client";
+import { createClient } from "@walkscape-community/data-api-client";
 import { HTTP_STATUS } from "../src/http-status.js";
 import type { GameData } from "../src/recipe-book/index.js";
 import sample from "../../../fixtures/api/gamedata-sample.json";
