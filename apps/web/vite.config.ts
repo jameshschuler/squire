@@ -20,7 +20,7 @@ export default defineConfig({
         id: "/",
         name: "Squire",
         short_name: "Squire",
-        description: "WalkScape recipe book",
+        description: "WalkScape companion app",
         start_url: "/",
         scope: "/",
         display: "standalone",
