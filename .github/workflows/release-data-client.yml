@@ -40,12 +40,12 @@ jobs:
       - name: Install the packed package and use it
         working-directory: packages/data-client
         run: node scripts/check-package.mjs "$RUNNER_TEMP/walkscape-community-data-api-client-$VERSION.tgz"
-      - name: Publish to npm, unless this version already is
+      - name: Stage on npm for approval, unless this version is already published
         run: |
           if npm view "@walkscape-community/data-api-client@$VERSION" version > /dev/null 2>&1; then
             echo "$VERSION is already on npm"
           else
-            npm publish "$RUNNER_TEMP/walkscape-community-data-api-client-$VERSION.tgz" --access public
+            npm stage publish "$RUNNER_TEMP/walkscape-community-data-api-client-$VERSION.tgz" --access public
           fi
       - name: Create GitHub Release
         env:

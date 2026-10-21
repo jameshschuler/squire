@@ -87,7 +87,8 @@ The data client's types come from the API's OpenAPI spec. When the API changes, 
 
 1. In a PR, bump `version` in `packages/data-client/package.json` and add a `CHANGELOG.md` entry.
 2. After it merges, tag the PR's merge commit and push the tag: `git fetch origin && git tag data-client-vX.Y.Z <merge-commit> && git push origin data-client-vX.Y.Z`. The merge commit is on the PR page, or run `gh pr view <number> --json mergeCommit -q .mergeCommit.oid`.
-3. `.github/workflows/release-data-client.yml` checks that the tag matches the version, runs the data client's typecheck, tests and build, packs it and checks the packed copy, then publishes to npm through trusted publishing (no npm token) and creates a GitHub Release.
+3. `.github/workflows/release-data-client.yml` checks that the tag matches the version, runs the data client's typecheck, tests and build, packs it and checks the packed copy, then stages it on npm through trusted publishing (no npm token) and creates a GitHub Release.
+4. Approve the staged version on npmjs.com (the package's **Staged Packages** tab) or with `npm stage approve <stage-id>`. Approval needs your 2FA code, and nothing is installable until then.
 
 In the repo, `exports` points at the TypeScript source. `pnpm pack` swaps in the built `dist/` paths from `publishConfig`, which is why the workflow packs with pnpm before publishing with npm.
 
