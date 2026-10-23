@@ -54,7 +54,7 @@
 - **Use context instead of prop drilling.** When a screen shares state and actions across components (or a component needs more than ~5 state/action props), expose them through a context in `src/contexts/` — a `XProvider` plus `useXContext()` hook. Routes wrap their layout in the provider; components read from the hook and take no state/action props.
 - **Props are fine for small, reusable presentational components** (layout primitives, `ui/` components, charts) whose inputs genuinely vary per use — keep them to a handful.
 - **Type the domain at the source.** Give DB columns and enums precise types in the schema or generated code so server results match client types without casts.
-- **Keep checks green.** Formatting, lint, typecheck, tests and build must all pass locally before pushing (CI runs them).
+- **Keep checks green.** Format, lint and tests must pass locally before committing. CI also runs typecheck and build.
 
 ## Go
 
@@ -112,9 +112,9 @@ I know the domain. The problem is answers buried under qualifiers, shorthand, an
 - `bugfix/short-description` — fixes to known issues
 - `hotfix/short-description` — emergency patches
 
-### Review before committing
+### Checks before committing
 
-Before creating a commit or opening a pull request, run the /code-review skill on the pending changes. Fix any confirmed findings (or tell me about the ones you're leaving) before committing.
+Before creating a commit, run `pnpm format:check`, `pnpm lint` and `pnpm test`, and fix anything that fails. Don't run other checks or reviews unless I ask.
 
 ### Commit messages
 
@@ -132,5 +132,5 @@ There is no PR template. Use a short `## Summary` (what changed and why) and a `
 
 ### Misc
 
-- There are no git hooks. Run the same checks CI runs locally before pushing.
+- There are no git hooks. Run format, lint and tests locally before committing.
 - Security issues/vulnerabilities are never reported in public issue trackers or PRs.
