@@ -1,8 +1,11 @@
 import type { Character } from "@squire/api/character";
 import { RefreshCw } from "lucide-react";
+import { CharacterCollectibles } from "@/components/character/CharacterCollectibles";
 import { RemoveCharacterButton } from "@/components/character/RemoveCharacterButton";
 import { Section } from "@/components/shared/Section";
 import { Button } from "@/components/ui/button";
+import { useGameDataContext } from "@/contexts/game-data-context";
+import { collectionOf, collectionProgress } from "@/lib/collectibles";
 import { formatDateTime, formatNumber, formatTitle } from "@/lib/format";
 
 interface CharacterSummaryProps {
@@ -12,12 +15,17 @@ interface CharacterSummaryProps {
 }
 
 export function CharacterSummary({ character, savedAt, onUpdate }: CharacterSummaryProps) {
+  const gameData = useGameDataContext();
+  const collection = gameData.status === "ready" ? collectionOf(gameData.book.loot, character.collectibles) : null;
   const skills = Object.entries(character.skillLevels).sort(([a], [b]) => a.localeCompare(b));
   const stats = [
-    { label: "Character level", value: character.characterLevel },
-    { label: "Steps walked", value: character.lifetimeSteps },
-    { label: "Collectibles", value: character.collectibles.length },
-    { label: "Achievement points", value: character.achievementPoints },
+    { label: "Character level", value: formatNumber(character.characterLevel) },
+    { label: "Steps walked", value: formatNumber(character.lifetimeSteps) },
+    {
+      label: "Collectibles",
+      value: collection ? collectionProgress(collection) : formatNumber(character.collectibles.length),
+    },
+    { label: "Achievement points", value: formatNumber(character.achievementPoints) },
   ];
   return (
     <article className="space-y-6">
@@ -38,7 +46,7 @@ export function CharacterSummary({ character, savedAt, onUpdate }: CharacterSumm
         {stats.map(({ label, value }) => (
           <div key={label} className="rounded-lg border p-3">
             <dt className="text-xs text-muted-foreground">{label}</dt>
-            <dd className="mt-1 text-xl font-semibold tabular-nums">{formatNumber(value)}</dd>
+            <dd className="mt-1 text-xl font-semibold tabular-nums">{value}</dd>
           </div>
         ))}
       </dl>
@@ -56,6 +64,7 @@ export function CharacterSummary({ character, savedAt, onUpdate }: CharacterSumm
           <span className="tabular-nums">{formatNumber(character.totalSkillLevel)}</span>
         </p>
       </Section>
+      {collection && <CharacterCollectibles collection={collection} />}
     </article>
   );
 }

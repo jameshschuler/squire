@@ -99,7 +99,7 @@ export function buildRecipeBook(data: GameData): RecipeBook {
       .map((i) => ({ ...summary(i.id), effects: itemEffects(i, effectNames) }))
       .sort((a, b) => a.name.localeCompare(b.name));
   const foods = withEffects((i) => i.type === "consumable").filter((found) => found.effects !== null);
-  const loot = withEffects((i) => (i.type === "collectible" || i.type === "loot") && !crafted.has(i.id)).filter(
+  const loot = withEffects((i) => i.type === "collectible" || (i.type === "loot" && !crafted.has(i.id))).filter(
     (found) => found.isCollectible || found.effects !== null,
   );
   const listed = new Set([...foods, ...loot].map((item) => item.id));

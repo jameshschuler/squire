@@ -1,28 +1,70 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, screen } from "@testing-library/react";
+import { RECIPE_BOOK_SCHEMA, type ItemWithEffects } from "@squire/api/recipe-book";
 import exportFixture from "../../../fixtures/character/export.json";
 import { CharacterPage } from "@/components/character/CharacterPage";
 import { CharacterProvider } from "@/contexts/character-context";
+import { GameDataProvider } from "@/contexts/game-data-context";
 import { CHARACTER_STORAGE_KEY, readStoredCharacter, storeCharacter } from "@/lib/character";
 import { renderWithRouter } from "./render-with-router";
 
 const exportText = JSON.stringify(exportFixture);
 const saved = storeCharacter(exportText, new Date("2026-10-24T21:41:00Z"));
 
+const lootItem = (id: string, name: string, isCollectible: boolean): ItemWithEffects => ({
+  id,
+  name,
+  icon: "",
+  quality: "common",
+  isCollectible,
+  keywords: [],
+  effects: null,
+});
+
+const book = {
+  schema: RECIPE_BOOK_SCHEMA,
+  version: "v1",
+  recipes: [],
+  sources: {},
+  foods: [],
+  gear: [],
+  loot: [
+    lootItem("soup_kitchen_badge", "Soup kitchen badge", true),
+    lootItem("ancient_ankh", "Ancient ankh", true),
+    lootItem("lost_timmys_sand_shovel", "Lost Timmy's sand shovel", true),
+    lootItem("absorbing_amulet", "Absorbing amulet", false),
+  ],
+};
+
+const serveGameData = () =>
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => new Response(JSON.stringify(book))),
+  );
+
 const renderPage = () =>
   renderWithRouter(
-    <CharacterProvider>
-      <CharacterPage />
-    </CharacterProvider>,
+    <GameDataProvider>
+      <CharacterProvider>
+        <CharacterPage />
+      </CharacterProvider>
+    </GameDataProvider>,
   );
 
 const paste = (text: string) => fireEvent.change(screen.getByLabelText("Character data"), { target: { value: text } });
 const save = () => fireEvent.click(screen.getByRole("button", { name: "Save character" }));
 
-beforeEach(() => localStorage.clear());
+beforeEach(() => {
+  localStorage.clear();
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => new Promise<Response>(() => {})),
+  );
+});
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   vi.useRealTimers();
 });
 
@@ -145,5 +187,28 @@ describe("Character page", () => {
     paste(exportText);
     save();
     expect(screen.getByRole("heading", { name: "Test Walker" })).toBeDefined();
+  });
+
+  it("shows every collectible, owned or not, once game data loads", async () => {
+    serveGameData();
+    localStorage.setItem(CHARACTER_STORAGE_KEY, saved);
+    await renderPage();
+    const list = await screen.findByRole("list", { name: "Collectibles" });
+    expect(
+      [...list.querySelectorAll("a")].map((link) => [link.getAttribute("aria-label"), link.getAttribute("href")]),
+    ).toEqual([
+      ["Ancient ankh, not found yet", "/items/ancient_ankh"],
+      ["Lost Timmy's sand shovel", "/items/lost_timmys_sand_shovel"],
+      ["Soup kitchen badge", "/items/soup_kitchen_badge"],
+    ]);
+    expect(screen.getByText("Collectibles · 2 of 3")).toBeDefined();
+    expect(screen.getByText("2 of 3")).toBeDefined();
+  });
+
+  it("shows the owned count without the grid until game data loads", async () => {
+    localStorage.setItem(CHARACTER_STORAGE_KEY, saved);
+    await renderPage();
+    expect(screen.getByText("2")).toBeDefined();
+    expect(screen.queryByRole("list", { name: "Collectibles" })).toBeNull();
   });
 });
