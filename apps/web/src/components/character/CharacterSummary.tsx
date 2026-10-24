@@ -1,16 +1,29 @@
 import type { Character } from "@squire/api/character";
 import { RefreshCw } from "lucide-react";
 import { RemoveCharacterButton } from "@/components/character/RemoveCharacterButton";
+import { Section } from "@/components/shared/Section";
 import { Button } from "@/components/ui/button";
-import { formatStepCount, formatTitle } from "@/lib/format";
+import { formatDateTime, formatNumber, formatTitle } from "@/lib/format";
 
-export function CharacterSummary({ character, onUpdate }: { character: Character; onUpdate: () => void }) {
+interface CharacterSummaryProps {
+  character: Character;
+  savedAt: string | null;
+  onUpdate: () => void;
+}
+
+export function CharacterSummary({ character, savedAt, onUpdate }: CharacterSummaryProps) {
   const skills = Object.entries(character.skillLevels).sort(([a], [b]) => a.localeCompare(b));
+  const stats = [
+    { label: "Character level", value: character.characterLevel },
+    { label: "Tool slots", value: character.toolSlots },
+    { label: "Steps walked", value: character.lifetimeSteps },
+    { label: "Achievement points", value: character.achievementPoints },
+  ];
   return (
-    <section className="space-y-4 pt-3">
-      <div>
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="truncate text-lg font-semibold">{character.name}</h2>
+    <article className="space-y-6">
+      <header>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="truncate text-2xl font-semibold">{character.name}</h1>
           <div className="flex shrink-0 gap-1">
             <Button variant="outline" size="sm" onClick={onUpdate}>
               <RefreshCw />
@@ -19,21 +32,26 @@ export function CharacterSummary({ character, onUpdate }: { character: Character
             <RemoveCharacterButton />
           </div>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Character level {character.characterLevel} · {character.toolSlots} tool slots
-        </p>
-        <p className="text-sm text-muted-foreground">
-          {formatStepCount(character.lifetimeSteps)} walked · {character.achievementPoints} achievement points
-        </p>
-      </div>
-      <ul aria-label="Skill levels" className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-3">
-        {skills.map(([skill, level]) => (
-          <li key={skill} className="flex justify-between">
-            <span>{formatTitle(skill)}</span>
-            <span className="text-muted-foreground tabular-nums">{level}</span>
-          </li>
+        {savedAt && <p className="text-sm text-muted-foreground">Imported {formatDateTime(savedAt)}</p>}
+      </header>
+      <dl className="grid grid-cols-2 gap-3">
+        {stats.map(({ label, value }) => (
+          <div key={label} className="rounded-lg border p-3">
+            <dt className="text-xs text-muted-foreground">{label}</dt>
+            <dd className="mt-1 text-xl font-semibold tabular-nums">{formatNumber(value)}</dd>
+          </div>
         ))}
-      </ul>
-    </section>
+      </dl>
+      <Section title="Skills">
+        <ul aria-label="Skill levels" className="grid grid-cols-2 gap-x-8 gap-y-2.5 text-sm sm:grid-cols-3">
+          {skills.map(([skill, level]) => (
+            <li key={skill} className="flex justify-between">
+              <span>{formatTitle(skill)}</span>
+              <span className="text-muted-foreground tabular-nums">{level}</span>
+            </li>
+          ))}
+        </ul>
+      </Section>
+    </article>
   );
 }

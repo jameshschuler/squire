@@ -3,10 +3,11 @@ import { act, cleanup, fireEvent, screen } from "@testing-library/react";
 import exportFixture from "../../../fixtures/character/export.json";
 import { CharacterPage } from "@/components/character/CharacterPage";
 import { CharacterProvider } from "@/contexts/character-context";
-import { CHARACTER_STORAGE_KEY } from "@/lib/character";
+import { CHARACTER_STORAGE_KEY, readStoredCharacter, storeCharacter } from "@/lib/character";
 import { renderWithRouter } from "./render-with-router";
 
 const exportText = JSON.stringify(exportFixture);
+const saved = storeCharacter(exportText, new Date("2026-10-24T21:41:00Z"));
 
 const renderPage = () =>
   renderWithRouter(
@@ -22,6 +23,7 @@ beforeEach(() => localStorage.clear());
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  vi.useRealTimers();
 });
 
 describe("Character page", () => {
@@ -36,10 +38,20 @@ describe("Character page", () => {
     paste(exportText);
     save();
     expect(screen.getByRole("heading", { name: "Test Walker" })).toBeDefined();
-    expect(screen.getByText("Character level 80 · 6 tool slots")).toBeDefined();
-    expect(screen.getByText("9,135,913 steps walked · 231 achievement points")).toBeDefined();
+    const stats = Object.fromEntries(
+      [...document.querySelectorAll("dl > div")].map((stat) => [
+        stat.querySelector("dt")?.textContent,
+        stat.querySelector("dd")?.textContent,
+      ]),
+    );
+    expect(stats).toEqual({
+      "Character level": "80",
+      "Tool slots": "6",
+      "Steps walked": "9,135,913",
+      "Achievement points": "231",
+    });
     expect(screen.getByRole("list", { name: "Skill levels" }).textContent).toContain("Cooking71");
-    expect(localStorage.getItem(CHARACTER_STORAGE_KEY)).toBe(exportText);
+    expect(readStoredCharacter(localStorage.getItem(CHARACTER_STORAGE_KEY))?.character.name).toBe("Test Walker");
   });
 
   it("explains what's wrong with a bad paste and saves nothing", async () => {
@@ -51,14 +63,25 @@ describe("Character page", () => {
     expect(localStorage.getItem(CHARACTER_STORAGE_KEY)).toBeNull();
   });
 
-  it("shows the saved character on a later visit", async () => {
-    localStorage.setItem(CHARACTER_STORAGE_KEY, exportText);
+  it("shows the saved character on a later visit, with when it was imported", async () => {
+    localStorage.setItem(CHARACTER_STORAGE_KEY, saved);
     await renderPage();
     expect(screen.getByRole("heading", { name: "Test Walker" })).toBeDefined();
+    expect(screen.getByText("Imported Oct 24, 2026, 9:41 PM")).toBeDefined();
+  });
+
+  it("records when a pasted export was imported", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-25T08:05:00Z"));
+    await renderPage();
+    paste(exportText);
+    save();
+    expect(screen.getByText("Imported Oct 25, 2026, 8:05 AM")).toBeDefined();
+    expect(readStoredCharacter(localStorage.getItem(CHARACTER_STORAGE_KEY))?.savedAt).toBe("2026-10-25T08:05:00.000Z");
   });
 
   it("replaces the character with a newer export", async () => {
-    localStorage.setItem(CHARACTER_STORAGE_KEY, exportText);
+    localStorage.setItem(CHARACTER_STORAGE_KEY, saved);
     await renderPage();
     fireEvent.click(screen.getByRole("button", { name: "Update" }));
     paste(JSON.stringify({ ...exportFixture, name: "Renamed Walker" }));
@@ -67,7 +90,7 @@ describe("Character page", () => {
   });
 
   it("keeps the character when an update is cancelled", async () => {
-    localStorage.setItem(CHARACTER_STORAGE_KEY, exportText);
+    localStorage.setItem(CHARACTER_STORAGE_KEY, saved);
     await renderPage();
     fireEvent.click(screen.getByRole("button", { name: "Update" }));
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
@@ -75,7 +98,7 @@ describe("Character page", () => {
   });
 
   it("removes the character from the device after confirming", async () => {
-    localStorage.setItem(CHARACTER_STORAGE_KEY, exportText);
+    localStorage.setItem(CHARACTER_STORAGE_KEY, saved);
     await renderPage();
     fireEvent.click(screen.getByRole("button", { name: "Remove character" }));
     fireEvent.click(screen.getByRole("button", { name: "Remove" }));
@@ -86,7 +109,7 @@ describe("Character page", () => {
   it("picks up a character saved in another tab", async () => {
     await renderPage();
     act(() => {
-      localStorage.setItem(CHARACTER_STORAGE_KEY, exportText);
+      localStorage.setItem(CHARACTER_STORAGE_KEY, saved);
       dispatchEvent(new StorageEvent("storage", { key: CHARACTER_STORAGE_KEY }));
     });
     expect(screen.getByRole("heading", { name: "Test Walker" })).toBeDefined();
@@ -104,7 +127,7 @@ describe("Character page", () => {
   });
 
   it("shows the new character after saving, even if the old one was removed mid-update", async () => {
-    localStorage.setItem(CHARACTER_STORAGE_KEY, exportText);
+    localStorage.setItem(CHARACTER_STORAGE_KEY, saved);
     await renderPage();
     fireEvent.click(screen.getByRole("button", { name: "Update" }));
     act(() => {

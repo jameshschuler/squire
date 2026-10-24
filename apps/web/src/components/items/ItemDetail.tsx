@@ -7,7 +7,7 @@ import {
 } from "@squire/api/recipe-book";
 import { BackButton } from "@/components/layout/BackButton";
 import { RecipeList } from "@/components/recipes/RecipeList";
-import { RecipeSection } from "@/components/recipes/RecipeSection";
+import { Section } from "@/components/shared/Section";
 import { CollectibleBadge } from "@/components/shared/CollectibleBadge";
 import { GameIcon } from "@/components/shared/GameIcon";
 import { QualityBadge } from "@/components/shared/QualityBadge";
@@ -41,27 +41,27 @@ export function ItemDetail({ item, book }: ItemDetailProps) {
         )}
       </div>
       {item.keywords.length > 0 && (
-        <RecipeSection title="Keywords">
+        <Section title="Keywords">
           <ItemKeywords keywords={item.keywords} />
-        </RecipeSection>
+        </Section>
       )}
       {item.effects && <ItemEffectsSection key={item.id} effects={item.effects} />}
       {isCrafted && (
-        <RecipeSection title="Made by">
+        <Section title="Made by">
           <RecipeList recipes={madeBy} />
-        </RecipeSection>
+        </Section>
       )}
-      <RecipeSection title="Used in">
+      <Section title="Used in">
         {usedIn.length > 0 ? (
           <RecipeList recipes={usedIn} />
         ) : (
           <p className="text-muted-foreground">No recipe uses this.</p>
         )}
-      </RecipeSection>
+      </Section>
       {(!isCrafted || sources.length > 0) && (
-        <RecipeSection title="Where to get it">
+        <Section title="Where to get it">
           <ItemSources sources={sources} />
-        </RecipeSection>
+        </Section>
       )}
     </article>
   );

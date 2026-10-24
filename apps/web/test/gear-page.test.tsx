@@ -3,7 +3,7 @@ import { cleanup, screen } from "@testing-library/react";
 import exportFixture from "../../../fixtures/character/export.json";
 import { GearPage } from "@/components/gear/GearPage";
 import { CharacterProvider } from "@/contexts/character-context";
-import { CHARACTER_STORAGE_KEY } from "@/lib/character";
+import { CHARACTER_STORAGE_KEY, storeCharacter } from "@/lib/character";
 import { renderWithRouter } from "./render-with-router";
 
 const renderPage = () =>
@@ -30,7 +30,7 @@ describe("Gear page", () => {
   });
 
   it("doesn't ask for a character once one is saved", async () => {
-    localStorage.setItem(CHARACTER_STORAGE_KEY, JSON.stringify(exportFixture));
+    localStorage.setItem(CHARACTER_STORAGE_KEY, storeCharacter(JSON.stringify(exportFixture), new Date()));
     await renderPage();
     expect(screen.queryByRole("link", { name: "Add your character" })).toBeNull();
   });
