@@ -3,8 +3,8 @@ services:
     name: squire-api
     runtime: node
     plan: free
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @squire/api build
-    startCommand: pnpm --filter @squire/api start
+    buildCommand: corepack pnpm install --frozen-lockfile && corepack pnpm --filter @squire/api build
+    startCommand: node apps/api/dist/index.js
     healthCheckPath: /api/health
     buildFilter:
       paths:
@@ -24,7 +24,7 @@ services:
   - type: web
     name: squire-web
     runtime: static
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @squire/web build
+    buildCommand: corepack pnpm install --frozen-lockfile && corepack pnpm --filter @squire/web build
     staticPublishPath: apps/web/dist
     buildFilter:
       paths:
