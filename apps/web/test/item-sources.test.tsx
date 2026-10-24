@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, screen } from "@testing-library/react";
 import type { ActivitySource, ChestSource, ShopSource } from "@squire/api/recipe-book";
 import { ItemSources } from "@/components/items/ItemSources";
+import { renderWithRouter } from "./render-with-router";
 
 afterEach(cleanup);
 
@@ -17,15 +18,20 @@ const source = (overrides: Partial<ActivitySource>): ActivitySource => ({
 });
 
 describe("ItemSources", () => {
-  it("shows each activity with its skill level and locations", () => {
-    render(<ItemSources sources={[source({})]} />);
+  it("shows each activity with its skill level and locations", async () => {
+    await renderWithRouter(<ItemSources sources={[source({})]} />);
     expect(screen.getByText("Bear hunting")).toBeDefined();
     expect(screen.getByText("Hunting lvl. 45")).toBeDefined();
     expect(screen.getByText("Nomad Woods").textContent).toBe("Nomad Woods (Jarvonia)");
   });
 
-  it("shortens long region names", () => {
-    render(
+  it("links an activity to its page", async () => {
+    await renderWithRouter(<ItemSources sources={[source({})]} />);
+    expect(screen.getByRole("link", { name: /Bear hunting/ }).getAttribute("href")).toBe("/activities/bear_hunting");
+  });
+
+  it("shortens long region names", async () => {
+    await renderWithRouter(
       <ItemSources
         sources={[source({ locations: [{ id: "wraithwater", name: "Wraithwater", region: "Empire of Wallisia" }] })]}
       />,
@@ -33,17 +39,19 @@ describe("ItemSources", () => {
     expect(screen.getByText("Wraithwater").textContent).toBe("Wraithwater (Wallisia)");
   });
 
-  it("labels drops that aren't the main loot", () => {
-    render(<ItemSources sources={[source({}), source({ id: "mine", name: "Mining", lootType: "gem" })]} />);
+  it("labels drops that aren't the main loot", async () => {
+    await renderWithRouter(
+      <ItemSources sources={[source({}), source({ id: "mine", name: "Mining", lootType: "gem" })]} />,
+    );
     expect(screen.getAllByText("Gem find")).toHaveLength(1);
   });
 
-  it("says when an activity has no known location", () => {
-    render(<ItemSources sources={[source({ locations: [] })]} />);
+  it("says when an activity has no known location", async () => {
+    await renderWithRouter(<ItemSources sources={[source({ locations: [] })]} />);
     expect(screen.getByText("No known location")).toBeDefined();
   });
 
-  it("shows a chest by its name", () => {
+  it("shows a chest by its name", async () => {
     const chest: ChestSource = {
       kind: "chest",
       id: "woodcutting_chest",
@@ -51,12 +59,12 @@ describe("ItemSources", () => {
       icon: "",
       skills: [{ id: "woodcutting", name: "Woodcutting", level: 1 }],
     };
-    render(<ItemSources sources={[chest]} />);
+    await renderWithRouter(<ItemSources sources={[chest]} />);
     expect(screen.getByText("Woodcutting chest")).toBeDefined();
     expect(screen.getByRole("listitem").textContent).toBe("Woodcutting chest");
   });
 
-  it("shows a shop, with its location when known", () => {
+  it("shows a shop, with its location when known", async () => {
     const shop: ShopSource = {
       kind: "shop",
       id: "granfiddich_tool_stall",
@@ -64,19 +72,19 @@ describe("ItemSources", () => {
       icon: "",
       locations: [{ id: "granfiddich", name: "Granfiddich", region: "Grand Duchy of Trellin-Erdwise" }],
     };
-    render(<ItemSources sources={[shop]} />);
+    await renderWithRouter(<ItemSources sources={[shop]} />);
     expect(screen.getByText("Granfiddich Tool Stall")).toBeDefined();
     expect(screen.getByText("Shop")).toBeDefined();
     expect(screen.getByText("Granfiddich").textContent).toBe("Granfiddich (GDTE)");
   });
 
-  it("says when there's no known source", () => {
-    render(<ItemSources sources={[]} />);
+  it("says when there's no known source", async () => {
+    await renderWithRouter(<ItemSources sources={[]} />);
     expect(screen.getByText("No known source yet.")).toBeDefined();
   });
 
-  it("shows achievements and rewards", () => {
-    render(
+  it("shows achievements and rewards", async () => {
+    await renderWithRouter(
       <ItemSources
         sources={[
           { kind: "achievement", id: "my_back_hurts", name: "My Back Hurts", icon: "" },

@@ -1,7 +1,7 @@
 import type { ItemDetail, ServiceTier } from "@walkscape-community/data-api-client";
 
 // Bump whenever the RecipeBook shape changes, so cached copies on devices refresh.
-export const RECIPE_BOOK_SCHEMA = 24;
+export const RECIPE_BOOK_SCHEMA = 26;
 
 export interface EffectTarget {
   id: string;
@@ -86,6 +86,30 @@ export interface RecipeView {
 
 export type LootType = "main" | "secondary" | "gem" | "birdNest" | "chestTable" | "collectible" | "petEgg";
 
+export interface ActivityNeed {
+  label: string;
+  level: SkillLevel | null;
+  item: ItemSummary | null;
+}
+
+export interface ActivityDrops {
+  lootType: LootType;
+  items: ItemSummary[];
+}
+
+export interface ActivityView {
+  id: string;
+  name: string;
+  icon: string;
+  skills: SkillLevel[];
+  locations: LocationSummary[];
+  needs: ActivityNeed[];
+  uses: ActivityNeed[];
+  drops: ActivityDrops[];
+  workRequired: number | null;
+  maxWorkEfficiency: number | null;
+}
+
 export interface ActivitySource {
   kind: "activity";
   id: string;
@@ -132,6 +156,7 @@ export interface RecipeBook {
   schema: number;
   version: string;
   recipes: RecipeView[];
+  activities: ActivityView[];
   foods: ItemWithEffects[];
   loot: ItemWithEffects[];
   gear: ItemWithEffects[];

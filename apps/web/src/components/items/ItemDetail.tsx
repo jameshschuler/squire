@@ -29,8 +29,8 @@ export function ItemDetail({ item, book }: ItemDetailProps) {
   return (
     <article className="space-y-6 pt-2">
       <BackButton />
-      <div className="flex items-center gap-3">
-        <h1 className="flex items-center gap-3 text-2xl font-semibold">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <h1 className="flex min-w-0 items-center gap-3 text-2xl font-semibold">
           <GameIcon path={item.icon} size={48} />
           {item.name}
         </h1>

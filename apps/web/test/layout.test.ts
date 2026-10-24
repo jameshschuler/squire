@@ -22,6 +22,7 @@ describe("activeTab", () => {
     ["/food", "items"],
     ["/loot", "items"],
     ["/activities", "activities"],
+    ["/activities/mine_gold_ore", "activities"],
     ["/gear", "gear"],
     ["/favorites", "recipes"],
     ["/about", undefined],

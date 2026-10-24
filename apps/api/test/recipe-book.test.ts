@@ -8,6 +8,7 @@ import {
   lowestSkillLevels,
   findRecipesByOutput,
   findRecipesByMaterial,
+  searchActivities,
   searchRecipes,
   words,
   type GameData,
@@ -207,6 +208,194 @@ describe("searchRecipes", () => {
   });
 });
 
+describe("activities", () => {
+  const goldOre = book.activities[0]!;
+  function activitiesWith(edit: (data: GameData) => void) {
+    const data = structuredClone(sample) as unknown as GameData;
+    edit(data);
+    return buildRecipeBook(data).activities;
+  }
+  const needs = (edit: (data: GameData) => void) =>
+    activitiesWith(edit)[0]!.needs.map(({ label, level, item }) => ({ label, level, item: item?.id ?? null }));
+
+  it("lists an activity with its level, locations and steps", () => {
+    expect(goldOre).toMatchObject({
+      id: "mine_gold_ore",
+      name: "Mine gold ore",
+      icon: "assets/icons/items/materials/ores/gold_ore.png",
+      skills: [{ id: "mining", name: "Mining", level: 40 }],
+      locations: [{ id: "crown_of_cinders", name: "Crown of Cinders", region: "Wrentmark" }],
+      workRequired: 68,
+      maxWorkEfficiency: 1.7,
+      uses: [],
+    });
+  });
+
+  it("groups drops by loot type: main loot, then gems, then chests", () => {
+    expect(goldOre.drops.map((d) => [d.lootType, ids(d.items)])).toEqual([
+      ["main", ["gold_ore"]],
+      ["gem", ["rough_wrentmarine", "rough_sun_stone"]],
+      ["chestTable", ["mining_chest"]],
+    ]);
+  });
+
+  it("puts each kind of drop in the same order whatever order the game lists its tables in", () => {
+    const [activity] = activitiesWith((data) => {
+      data.activities[0]!.tables!.reverse();
+    });
+    expect(activity!.drops.map((d) => d.lootType)).toEqual(["main", "gem", "chestTable"]);
+  });
+
+  it("lists an item once per loot type, even when several tables drop it", () => {
+    const [activity] = activitiesWith((data) => {
+      data.activities[0]!.tables![0]!.tables.push("mine_gold_ore");
+    });
+    expect(ids(activity!.drops[0]!.items)).toEqual(["gold_ore"]);
+  });
+
+  it("leaves out activities that drop nothing", () => {
+    const activities = activitiesWith((data) => {
+      data.activities.push({ ...data.activities[0]!, id: "travelling", requirements: null, tables: null });
+      data.activities.push({ ...data.activities[0]!, id: "emergency_escape", tables: [] });
+    });
+    expect(ids(activities)).toEqual(["mine_gold_ore"]);
+  });
+
+  it("sorts activities by level, then name", () => {
+    const activities = activitiesWith((data) => {
+      const [mine] = data.activities;
+      data.activities.push(
+        { ...mine!, id: "pan_for_gold", name: "Pan for gold" },
+        { ...mine!, id: "chip_rocks", name: "Chip rocks", requirements: [] },
+      );
+    });
+    expect(ids(activities)).toEqual(["chip_rocks", "mine_gold_ore", "pan_for_gold"]);
+  });
+
+  it("names the gear an activity needs", () => {
+    expect(
+      needs((data) => {
+        data.activities[0]!.requirements!.push(
+          {
+            type: "keywordWithLevelEquipped",
+            name: "",
+            opposite: false,
+            requirement: { keyword: "light_source", skill: "mining", level: 50 },
+          },
+          {
+            type: "distinctKeywordItemsEquipped",
+            name: null,
+            opposite: false,
+            requirement: { quantity: 3, keywords: ["diving_gear"] },
+          },
+          {
+            type: "distinctKeywordItemsEquipped",
+            name: null,
+            opposite: false,
+            requirement: { quantity: 1, keywords: ["weapon", "shield"] },
+          },
+          { type: "itemEquipped", name: "", opposite: false, requirement: { item: "gold_bar" } },
+          { type: "itemAnywhereWithYou", name: "", opposite: false, requirement: { item: "wheat" } },
+          { type: "achievementPoint", name: null, opposite: false, requirement: { isPercentage: false, value: 20 } },
+          { type: "achievementPoint", name: null, opposite: false, requirement: { isPercentage: true, value: 50 } },
+        );
+      }),
+    ).toEqual([
+      { label: "Pickaxe", level: null, item: null },
+      { label: "Light source", level: { id: "mining", name: "Mining", level: 50 }, item: null },
+      { label: "3 different diving gear items", level: null, item: null },
+      { label: "Weapon or shield", level: null, item: null },
+      { label: "Gold bar", level: null, item: "gold_bar" },
+      { label: "Wheat with you", level: null, item: "wheat" },
+      { label: "20 achievement points", level: null, item: null },
+      { label: "50% of achievement points", level: null, item: null },
+    ]);
+  });
+
+  it("skips requirements a player can't act on: hidden ones, opposites and game history", () => {
+    expect(
+      needs((data) => {
+        data.activities[0]!.requirements = [
+          { type: "keywordEquipped", name: "", opposite: true, requirement: { keyword: "light_source" } },
+          {
+            type: "historyData",
+            name: "requirements.singulars.uniques.wraithwaterBankRebuild",
+            opposite: false,
+            requirement: { category: "actionCompleted", data: "repair_the_bank", value: 1, distinct: false },
+          },
+        ];
+      }),
+    ).toEqual([]);
+  });
+
+  it("lists the items an activity uses up, with the level a keyword input needs", () => {
+    const [activity] = activitiesWith((data) => {
+      data.activities[0]!.options = [
+        {
+          type: "inputActivity",
+          inputs: [
+            { type: "specific", item: "salt_crystal", quantity: 50, quality: null, isOptional: false },
+            {
+              type: "keyword",
+              keyword: "arrows",
+              requirements: [
+                {
+                  type: "inputKeywordWithLevel",
+                  name: "",
+                  opposite: false,
+                  requirement: { skill: "hunting", level: 30 },
+                },
+              ],
+            },
+            { type: "keyword", keyword: "hunting_trap" },
+          ],
+        },
+        { type: "limitedActivity", maxCompletions: 1 },
+      ];
+    });
+    expect(activity!.uses.map(({ label, level, item }) => ({ label, level, item: item?.id ?? null }))).toEqual([
+      { label: "50 × Salt crystal", level: null, item: "salt_crystal" },
+      { label: "Arrows", level: { id: "hunting", name: "Hunting", level: 30 }, item: null },
+      { label: "Hunting trap", level: null, item: null },
+    ]);
+  });
+});
+
+describe("searchActivities", () => {
+  const activities = buildRecipeBook(
+    (() => {
+      const data = structuredClone(sample) as unknown as GameData;
+      const [mine] = data.activities;
+      data.activities.push({
+        ...mine!,
+        id: "gold_panning",
+        name: "Gold panning",
+        relatedSkillsList: ["fishing"],
+        requirements: [],
+        tables: [{ isPrimary: true, type: [], rollAmount: 1, tables: ["wrentmark_gem_table"] }],
+      });
+      return data;
+    })(),
+  ).activities;
+
+  it.each([
+    ["activity name", "mine gold", ["mine_gold_ore"]],
+    ["name prefix", "pann", ["gold_panning"]],
+    ["drop", "wrentmarine", ["gold_panning", "mine_gold_ore"]],
+    ["name before drop", "gold", ["gold_panning", "mine_gold_ore"]],
+  ])("matches by %s", (_, query, expected) => {
+    expect(ids(searchActivities(activities, query))).toEqual(expected);
+  });
+
+  it("returns nothing when a word doesn't match", () => {
+    expect(searchActivities(activities, "gold nonsense")).toEqual([]);
+  });
+
+  it("returns everything for an empty query, filtered by skill", () => {
+    expect(ids(searchActivities(activities, "", { skill: "mining" }))).toEqual(["mine_gold_ore"]);
+  });
+});
+
 describe("findRecipesByOutput / findRecipesByMaterial", () => {
   it("finds recipes that make or use an item", () => {
     expect(ids(findRecipesByOutput(recipes, "gold_bar"))).toEqual(["smelt_a_gold_bar"]);
@@ -216,10 +405,11 @@ describe("findRecipesByOutput / findRecipesByMaterial", () => {
 });
 
 describe("recipeBookIcons", () => {
-  it("lists every recipe, material, output and source icon once", () => {
+  it("lists every recipe, material, output, activity, drop and source icon once", () => {
     const icons = recipeBookIcons(book);
     const expected = [
       ...recipes.flatMap((r) => [r.icon, ...r.outputs.map((o) => o.icon), ...r.materials.flat().map((m) => m.icon)]),
+      ...book.activities.flatMap((a) => [a.icon, ...a.drops.flatMap((d) => d.items.map((i) => i.icon))]),
       ...Object.values(book.sources)
         .flat()
         .map((s) => s.icon),
@@ -229,6 +419,19 @@ describe("recipeBookIcons", () => {
     expect(icons).toContain(book.sources.gold_ore![0]!.icon);
   });
 
+  it("includes the icons of items an activity needs or uses", () => {
+    const data = structuredClone(sample) as unknown as GameData;
+    const wheat = data.items.find((i) => i.id === "wheat")!;
+    wheat.icon = "assets/icons/wheat-only-needed.png";
+    data.activities[0]!.requirements!.push({
+      type: "itemEquipped",
+      name: "",
+      opposite: false,
+      requirement: { item: "wheat" },
+    });
+    expect(recipeBookIcons(buildRecipeBook(data))).toContain("assets/icons/wheat-only-needed.png");
+  });
+
   it("skips items without an icon", () => {
     const [recipe] = recipes;
     expect(
@@ -236,6 +439,7 @@ describe("recipeBookIcons", () => {
         schema: RECIPE_BOOK_SCHEMA,
         version: "v",
         recipes: [{ ...recipe!, icon: "", outputs: [], materials: [] }],
+        activities: [],
         foods: [],
         loot: [],
         gear: [],
@@ -270,8 +474,15 @@ describe("sources", () => {
     expect(book.sources.salt_crystal).toBeUndefined();
   });
 
-  it("only covers items used as recipe materials", () => {
-    expect(book.sources.rough_sun_stone).toBeUndefined();
+  it("covers items only an activity drops", () => {
+    expect(book.sources.rough_sun_stone?.map((s) => s.id)).toEqual(["mine_gold_ore"]);
+  });
+
+  it("leaves out items nothing in the book links to", () => {
+    const sources = withActivity((data) => {
+      data.activities = [];
+    });
+    expect(sources.rough_sun_stone).toBeUndefined();
   });
 
   it("labels drops from special tables and secondary rolls, main loot first", () => {
@@ -282,8 +493,8 @@ describe("sources", () => {
     });
     expect(sources.gold_ore?.map((s) => (s.kind === "activity" ? s.lootType : s.kind))).toEqual([
       "main",
-      "gem",
       "secondary",
+      "gem",
     ]);
   });
 
@@ -385,6 +596,13 @@ describe("findItem", () => {
       keywords: expect.any(Array),
       effects: null,
     });
+  });
+
+  it.each([
+    ["an activity drop", "rough_sun_stone", "Rough sun stone"],
+    ["a chest an activity drops", "mining_chest", "Mining chest"],
+  ])("finds %s no recipe or list mentions", (_, id, name) => {
+    expect(findItem(book, id)).toMatchObject({ id, name, effects: null });
   });
 
   it("returns undefined for an item that isn't in any recipe or the food list", () => {

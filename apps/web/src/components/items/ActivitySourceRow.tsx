@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import type { ActivitySource } from "@squire/api/recipe-book";
 import { Badge } from "@/components/ui/badge";
 import { GameIcon } from "@/components/shared/GameIcon";
@@ -8,7 +9,7 @@ export function ActivitySourceRow({ source }: { source: ActivitySource }) {
   const label = lootTypeLabel(source.lootType);
   return (
     <>
-      <div className="flex items-center gap-3">
+      <Link to="/activities/$activityId" params={{ activityId: source.id }} className="flex items-center gap-3">
         <GameIcon path={source.icon} />
         <div className="min-w-0 flex-1">
           <p className="font-medium">{source.name}</p>
@@ -19,7 +20,7 @@ export function ActivitySourceRow({ source }: { source: ActivitySource }) {
             {label}
           </Badge>
         )}
-      </div>
+      </Link>
       {source.locations.length > 0 ? (
         <SourceLocations locations={source.locations} />
       ) : (

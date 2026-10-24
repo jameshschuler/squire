@@ -1,29 +1,29 @@
-import { byLevel } from "./order.js";
-import type { RecipeView } from "./types.js";
+import { byActivityLevel, byLevel } from "./order.js";
+import type { ActivityView, RecipeView, SkillLevel } from "./types.js";
 
-export interface RecipeSearchOptions {
+export interface SkillSearchOptions {
   skill?: string;
 }
 
-interface SearchWords {
-  name: string[];
-  outputs: string[];
-  materials: string[];
+const searchWordsCache = new WeakMap<object, string[][]>();
+
+export function searchRecipes(recipes: RecipeView[], query: string, options: SkillSearchOptions = {}): RecipeView[] {
+  return search(recipes, query, options, byLevel, (recipe) => [
+    words(recipe.name),
+    recipe.outputs.flatMap((o) => words(o.name)),
+    recipe.materials.flat().flatMap((m) => words(m.name)),
+  ]);
 }
 
-const searchWordsCache = new WeakMap<RecipeView, SearchWords>();
-
-export function searchRecipes(recipes: RecipeView[], query: string, options: RecipeSearchOptions = {}): RecipeView[] {
-  const pool = options.skill ? recipes.filter((r) => r.skills.some((s) => s.id === options.skill)) : recipes;
-  const terms = words(query);
-  if (terms.length === 0) {
-    return pool;
-  }
-  return pool
-    .map((recipe) => ({ recipe, score: searchScore(recipe, terms) }))
-    .filter((s) => s.score > 0)
-    .sort((a, b) => b.score - a.score || byLevel(a.recipe, b.recipe))
-    .map((s) => s.recipe);
+export function searchActivities(
+  activities: ActivityView[],
+  query: string,
+  options: SkillSearchOptions = {},
+): ActivityView[] {
+  return search(activities, query, options, byActivityLevel, (activity) => [
+    words(activity.name),
+    activity.drops.flatMap((d) => d.items.flatMap((i) => words(i.name))),
+  ]);
 }
 
 export function words(text: string): string[] {
@@ -35,32 +35,42 @@ export function words(text: string): string[] {
     .filter(Boolean);
 }
 
-function searchWords(recipe: RecipeView): SearchWords {
-  let cached = searchWordsCache.get(recipe);
+function search<T extends { skills: SkillLevel[] }>(
+  entries: T[],
+  query: string,
+  { skill }: SkillSearchOptions,
+  order: (a: T, b: T) => number,
+  wordGroups: (entry: T) => string[][],
+): T[] {
+  const pool = skill ? entries.filter((e) => e.skills.some((s) => s.id === skill)) : entries;
+  const terms = words(query);
+  if (terms.length === 0) {
+    return pool;
+  }
+  return pool
+    .map((entry) => ({ entry, score: searchScore(cachedWordGroups(entry, wordGroups), terms) }))
+    .filter((s) => s.score > 0)
+    .sort((a, b) => b.score - a.score || order(a.entry, b.entry))
+    .map((s) => s.entry);
+}
+
+function cachedWordGroups<T extends object>(entry: T, wordGroups: (entry: T) => string[][]): string[][] {
+  let cached = searchWordsCache.get(entry);
   if (!cached) {
-    cached = {
-      name: words(recipe.name),
-      outputs: recipe.outputs.flatMap((o) => words(o.name)),
-      materials: recipe.materials.flat().flatMap((m) => words(m.name)),
-    };
-    searchWordsCache.set(recipe, cached);
+    cached = wordGroups(entry);
+    searchWordsCache.set(entry, cached);
   }
   return cached;
 }
 
-function searchScore(recipe: RecipeView, terms: string[]): number {
-  const { name, outputs, materials } = searchWords(recipe);
+function searchScore(groups: string[][], terms: string[]): number {
   let score = 0;
   for (const term of terms) {
-    const termScore = hits(name, term) ? 3 : hits(outputs, term) ? 2 : hits(materials, term) ? 1 : 0;
-    if (termScore === 0) {
+    const index = groups.findIndex((group) => group.some((w) => w.startsWith(term)));
+    if (index === -1) {
       return 0;
     }
-    score += termScore;
+    score += groups.length - index;
   }
-  return name.join(" ").startsWith(terms.join(" ")) ? score + 1 : score;
-}
-
-function hits(haystack: string[], term: string): boolean {
-  return haystack.some((w) => w.startsWith(term));
+  return (groups[0] ?? []).join(" ").startsWith(terms.join(" ")) ? score + 1 : score;
 }

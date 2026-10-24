@@ -1,4 +1,13 @@
-import type { ItemSource, ItemWithEffects, RecipeBook, RecipeView, SkillLevel } from "./types.js";
+import { isSkillLevelRequirement } from "./game-rules.js";
+import type {
+  ActivityView,
+  ItemSource,
+  ItemSummary,
+  ItemWithEffects,
+  RecipeBook,
+  RecipeView,
+  SkillLevel,
+} from "./types.js";
 
 export function findItem(book: RecipeBook, itemId: string): ItemWithEffects | undefined {
   const listed =
@@ -8,14 +17,22 @@ export function findItem(book: RecipeBook, itemId: string): ItemWithEffects | un
   if (listed) {
     return listed;
   }
-  for (const recipe of book.recipes) {
-    const found = [...recipe.outputs, ...recipe.materials.flat()].find((i) => i.id === itemId);
-    if (found) {
-      const { amount: _amount, ...item } = found;
-      return { ...item, effects: null };
-    }
+  const found = [...recipeItems(book.recipes), ...activityItems(book.activities)].find((i) => i.id === itemId);
+  if (!found) {
+    return undefined;
   }
-  return undefined;
+  return { ...found, effects: null };
+}
+
+export function activityItems(activities: ActivityView[]): ItemSummary[] {
+  return activities.flatMap((a) => [
+    ...a.drops.flatMap((d) => d.items),
+    ...[...a.needs, ...a.uses].flatMap((n) => (n.item ? [n.item] : [])),
+  ]);
+}
+
+function recipeItems(recipes: RecipeView[]): ItemSummary[] {
+  return recipes.flatMap((r) => [...r.outputs, ...r.materials.flat()]).map(({ amount: _amount, ...item }) => item);
 }
 
 export function findRecipesByOutput(recipes: RecipeView[], itemId: string): RecipeView[] {
@@ -27,11 +44,14 @@ export function findRecipesByMaterial(recipes: RecipeView[], itemId: string): Re
 }
 
 export function recipeBookIcons(book: RecipeBook): string[] {
-  const recipeIcons = book.recipes.flatMap((r) => [r, ...r.outputs, ...r.materials.flat()]);
+  const recipeIcons = [...book.recipes, ...recipeItems(book.recipes)];
+  const activityIcons = [...book.activities, ...activityItems(book.activities)];
   const sourceIcons = Object.values(book.sources).flat();
   return [
     ...new Set(
-      [...recipeIcons, ...book.foods, ...book.loot, ...book.gear, ...sourceIcons].map((i) => i.icon).filter(Boolean),
+      [...recipeIcons, ...activityIcons, ...book.foods, ...book.loot, ...book.gear, ...sourceIcons]
+        .map((i) => i.icon)
+        .filter(Boolean),
     ),
   ];
 }
@@ -49,4 +69,15 @@ export function lowestSkillLevels(skills: SkillLevel[]): SkillLevel[] {
     }
   }
   return [...lowest.values()].sort((a, b) => (a.level ?? 0) - (b.level ?? 0));
+}
+
+export function skillLevels(
+  skillIds: string[],
+  requirements: { type: string }[],
+  skillName: (id: string) => string,
+): SkillLevel[] {
+  const levels = new Map(
+    requirements.filter(isSkillLevelRequirement).map((r) => [r.requirement.skill, r.requirement.level]),
+  );
+  return skillIds.map((id) => ({ id, name: skillName(id), level: levels.get(id) ?? null }));
 }
