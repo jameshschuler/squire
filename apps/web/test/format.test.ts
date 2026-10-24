@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  formatDuration,
+  formatStepCount,
   formatEffect,
   formatKeyword,
   formatPercent,
@@ -41,13 +41,13 @@ describe("formatEffect", () => {
   });
 });
 
-describe("formatDuration", () => {
+describe("formatStepCount", () => {
   it.each([
     [500, "500 steps"],
     [1000, "1,000 steps"],
     [10000, "10,000 steps"],
   ])("formats %s steps as %s", (steps, expected) => {
-    expect(formatDuration(steps)).toBe(expected);
+    expect(formatStepCount(steps)).toBe(expected);
   });
 });
 

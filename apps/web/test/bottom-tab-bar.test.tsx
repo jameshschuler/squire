@@ -15,6 +15,7 @@ describe("BottomTabBar", () => {
     expect(tab("Materials").getAttribute("href")).toBe("/materials");
     expect(tab("Food").getAttribute("href")).toBe("/food");
     expect(tab("Loot").getAttribute("href")).toBe("/loot");
+    expect(tab("Gear").getAttribute("href")).toBe("/gear");
     expect(tab("Recipes").getAttribute("aria-current")).toBe("page");
     expect(tab("Loot").getAttribute("aria-current")).toBeNull();
   });

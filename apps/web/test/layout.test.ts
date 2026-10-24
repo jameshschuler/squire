@@ -18,6 +18,7 @@ describe("activeTab", () => {
     ["/materials", "/materials"],
     ["/food", "/food"],
     ["/loot", "/loot"],
+    ["/gear", "/gear"],
     ["/favorites", "/"],
   ])("on %s: %s", (pathname, expected) => {
     expect(activeTab(pathname, "/loot")).toBe(expected);

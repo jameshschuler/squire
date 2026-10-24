@@ -1,0 +1,43 @@
+{
+  "name": "Test Walker",
+  "game_version": "0.3.0 (+720)",
+  "steps": 9135913,
+  "achievement_points": 231,
+  "coins": 1000,
+  "skills": {
+    "agility": 3468249,
+    "cooking": 820485,
+    "fishing": 0,
+    "mining": 13034431
+  },
+  "gear": {
+    "head": "pincushion_beret",
+    "hands": "journeyman_handwear_epic",
+    "ring_1": "gold_ethernite_ring_epic",
+    "ring_2": "gold_ethernite_ring_uncommon",
+    "tool_1": "recipe_book"
+  },
+  "pets": {},
+  "available_pets": [],
+  "available_eggs": [],
+  "consumables": {},
+  "inventory": {
+    "ectoplasm_fish_fine": 27,
+    "oven_mittens": 1
+  },
+  "chests": {},
+  "collectibles": [
+    "lost_timmys_sand_shovel",
+    "soup_kitchen_badge"
+  ],
+  "currencies": {},
+  "lore": {},
+  "bank": {
+    "iron_pickaxe_epic": 1,
+    "iron_pickaxe_common": 1,
+    "recipe_book": 1,
+    "coal": 3102,
+    "coal_fine": 89
+  },
+  "reputation": {}
+}
