@@ -38,6 +38,12 @@ describe("Character page", () => {
     paste(exportText);
     save();
     expect(screen.getByRole("heading", { name: "Test Walker" })).toBeDefined();
+    expect([...document.querySelectorAll("dl dt")].map((label) => label.textContent)).toEqual([
+      "Character level",
+      "Steps walked",
+      "Collectibles",
+      "Achievement points",
+    ]);
     const stats = Object.fromEntries(
       [...document.querySelectorAll("dl > div")].map((stat) => [
         stat.querySelector("dt")?.textContent,

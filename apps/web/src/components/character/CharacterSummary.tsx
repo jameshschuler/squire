@@ -15,8 +15,8 @@ export function CharacterSummary({ character, savedAt, onUpdate }: CharacterSumm
   const skills = Object.entries(character.skillLevels).sort(([a], [b]) => a.localeCompare(b));
   const stats = [
     { label: "Character level", value: character.characterLevel },
-    { label: "Collectibles", value: character.collectibles.length },
     { label: "Steps walked", value: character.lifetimeSteps },
+    { label: "Collectibles", value: character.collectibles.length },
     { label: "Achievement points", value: character.achievementPoints },
   ];
   return (
