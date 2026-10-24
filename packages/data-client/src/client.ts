@@ -67,12 +67,33 @@ export interface SearchableResourceClient<R extends SearchableResource> extends 
   search(filters: SearchFilters<R>, options: { detailed: true }): Promise<Detail<R>[]>;
 }
 
+/** `client.items`: the item endpoints, plus converting item ids. */
+export interface ItemsClient extends SearchableResourceClient<"items"> {
+  /**
+   * Converts item ids between the API's ids (`oven_mittens`) and the game's internal ids
+   * (`item-oven_mittens-de8dce30-…`, or a bare UUID for many items), keyed by the ids you sent. Gear-set
+   * codes from the game use internal ids. Either kind of id is accepted, and ids the API doesn't know
+   * come back unchanged. Every item fits in one request.
+   *
+   * This endpoint isn't in the API's OpenAPI spec yet.
+   *
+   * @example
+   * await client.items.ids(["oven_mittens"], "game"); // { oven_mittens: "item-oven_mittens-de8dce30-…" }
+   * await client.items.ids(["8fad2ba1-7fc1-4762-a3a2-fbd431691671"], "api"); // { "8fad2ba1-…": "journeyman_handwear" }
+   */
+  ids(ids: string[], to: "game" | "api"): Promise<Record<string, string>>;
+}
+
 /**
  * One property per resource, in camelCase: `client.items`, `client.lootTables`, `client.routePaths`.
  * Only resources with search filters have `search`.
  */
 export type ResourceClients = {
-  [R in ResourceName]: R extends SearchableResource ? SearchableResourceClient<R> : ResourceClient<R>;
+  [R in ResourceName]: R extends "items"
+    ? ItemsClient
+    : R extends SearchableResource
+      ? SearchableResourceClient<R>
+      : ResourceClient<R>;
 };
 
 /**
@@ -169,6 +190,15 @@ export function createClient(options: ClientOptions): WalkScapeClient {
     return body;
   }
 
+  async function postJson<T>(path: string, body: unknown): Promise<T> {
+    const res = await send(path, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: { "Content-Type": "application/json" },
+    });
+    return (await res.json()) as T;
+  }
+
   const endpoints: Endpoints = {
     list: (resource) => getJson(`/${resource}/`),
     get: (resource, id) => getJson(`/${resource}/id/${encodeURIComponent(id)}`),
@@ -194,6 +224,10 @@ export function createClient(options: ClientOptions): WalkScapeClient {
       search: (filters: object, { detailed = false } = {}) =>
         endpoints.search(resource as ApiResourceOf<SearchableResource>, filters, detailed),
     }),
+    ...(resource === "items" && {
+      ids: (ids: string[], to: "game" | "api") =>
+        postJson("/items/ids", to === "game" ? { ids, target: "base" } : { ids }),
+    }),
   });
   const resources = Object.fromEntries(RESOURCES.map((resource) => [resourceKey(resource), resourceClient(resource)]));
 
@@ -204,14 +238,7 @@ export function createClient(options: ClientOptions): WalkScapeClient {
     maps: () => getJson("/maps"),
     map: (name) => send(`/maps/${encodeURIComponent(name)}`),
     icon: (path) => send(`/icons/${path.split("/").map(encodeURIComponent).join("/")}`),
-    icons: async (paths) => {
-      const res = await send("/icons/batch", {
-        method: "POST",
-        body: JSON.stringify({ iconPaths: paths }),
-        headers: { "Content-Type": "application/json" },
-      });
-      return (await res.json()) as Record<string, string | null>;
-    },
+    icons: (paths) => postJson("/icons/batch", { iconPaths: paths }),
   };
 }
 

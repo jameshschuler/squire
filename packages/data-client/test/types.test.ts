@@ -26,6 +26,11 @@ describe("types", () => {
     expectTypeOf<WalkScapeClient["lootTables"]["get"]>().returns.resolves.toEqualTypeOf<LootTableDetail>();
   });
 
+  it("only gives ids to items", () => {
+    expectTypeOf<WalkScapeClient["items"]["ids"]>().returns.resolves.toEqualTypeOf<Record<string, string>>();
+    expectTypeOf<WalkScapeClient["recipes"]>().not.toHaveProperty("ids");
+  });
+
   it("names resources in camelCase, as the client does", () => {
     expectTypeOf<"lootTables">().toExtend<ResourceName>();
     expectTypeOf<"loot_tables">().not.toExtend<ResourceName>();

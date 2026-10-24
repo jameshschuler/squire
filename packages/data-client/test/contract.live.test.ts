@@ -90,3 +90,17 @@ describe.skipIf(!apiKey)("live dev API matches its OpenAPI spec", () => {
     expect(mismatches).toEqual([]);
   });
 });
+
+describe.skipIf(!apiKey)("live dev API converts item ids", () => {
+  it("maps API ids to game ids and back", async () => {
+    const client = createClient({ apiKey: apiKey!, baseUrl: ENVIRONMENTS.dev });
+    const game = await client.items.ids(["journeyman_handwear", "not_an_item"], "game");
+    expect(game).toEqual({
+      journeyman_handwear: "8fad2ba1-7fc1-4762-a3a2-fbd431691671",
+      not_an_item: "not_an_item",
+    });
+    await expect(client.items.ids([game.journeyman_handwear!], "api")).resolves.toEqual({
+      [game.journeyman_handwear!]: "journeyman_handwear",
+    });
+  });
+});

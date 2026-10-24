@@ -50,6 +50,8 @@ The client itself also has:
 | `maps()` / `map(name)`        | The map images available, and one map image as a `Response`.                    |
 | `icon(path)` / `icons(paths)` | One icon image as a `Response`, or up to 200 icons in one request as data URIs. |
 
+`client.items` also has `ids(ids, to)`, which converts item ids to the game's internal ids (`"game"`, as used in gear-set codes) or back to the API's ids (`"api"`). Ids the API doesn't know come back unchanged. This endpoint isn't in the API's spec yet.
+
 Search filters are typed per resource with the values the API accepts, so `client.items.search({ type: "materal" })` is a type error. True/false filters take booleans. A few resources have no filters (`pets`, `jobBoards`, `routePaths` and others), so they have no `search`.
 
 Options: `apiKey` (required), `baseUrl` (defaults to `ENVIRONMENTS.prod`), `locale` (translated strings, falls back to English), `fetch` and `maxRetries` (defaults to 3).

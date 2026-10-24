@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `client.items.ids(ids, to)` converts item ids to the game's internal ids (used in gear-set codes) and back, through `POST /items/ids`. The endpoint isn't in the API's OpenAPI spec yet, so its types are written by hand.
+
 ## 0.0.1
 
 First release.
