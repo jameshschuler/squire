@@ -5,7 +5,7 @@ import { RemoveCharacterButton } from "@/components/character/RemoveCharacterBut
 import { Section } from "@/components/shared/Section";
 import { Button } from "@/components/ui/button";
 import { useGameDataContext } from "@/contexts/game-data-context";
-import { collectionOf, collectionProgress } from "@/lib/collectibles";
+import { collectionOf } from "@/lib/collectibles";
 import { formatDateTime, formatNumber, formatTitle } from "@/lib/format";
 
 interface CharacterSummaryProps {
@@ -23,7 +23,7 @@ export function CharacterSummary({ character, savedAt, onUpdate }: CharacterSumm
     { label: "Steps walked", value: formatNumber(character.lifetimeSteps) },
     {
       label: "Collectibles",
-      value: collection ? collectionProgress(collection) : formatNumber(character.collectibles.length),
+      value: formatNumber(character.collectibles.length),
     },
     { label: "Achievement points", value: formatNumber(character.achievementPoints) },
   ];

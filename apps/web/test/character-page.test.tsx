@@ -202,10 +202,11 @@ describe("Character page", () => {
       ["Soup kitchen badge", "/items/soup_kitchen_badge"],
     ]);
     expect(screen.getByText("Collectibles · 2 of 3")).toBeDefined();
-    expect(screen.getByText("2 of 3")).toBeDefined();
+    expect(screen.queryByText("2 of 3")).toBeNull();
+    expect(screen.getByText("2")).toBeDefined();
   });
 
-  it("shows the owned count without the grid until game data loads", async () => {
+  it("shows the owned count on the card, and no grid until game data loads", async () => {
     localStorage.setItem(CHARACTER_STORAGE_KEY, saved);
     await renderPage();
     expect(screen.getByText("2")).toBeDefined();
