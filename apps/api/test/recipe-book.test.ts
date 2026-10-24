@@ -533,6 +533,13 @@ describe("loot", () => {
     expect(buildRecipeBook(withCollectible).loot.find((l) => l.id === "ancient_ankh")?.isCollectible).toBe(true);
   });
 
+  it("keeps a collectible with the loot even when a recipe makes it", () => {
+    const crafted = structuredClone(data);
+    crafted.items.push(...(gearItems as unknown as ItemDetail[]));
+    crafted.recipes[0]!.itemRewards = { ancient_ankh: 1 };
+    expect(buildRecipeBook(crafted).loot.map((l) => l.id)).toContain("ancient_ankh");
+  });
+
   it("finds a loot item no recipe mentions", () => {
     expect(findItem(withLoot, "adjustable_wrench")?.name).toBe("Adjustable wrench");
   });
