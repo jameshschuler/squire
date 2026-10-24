@@ -21,4 +21,14 @@ describe("AppHeader", () => {
     expect(home.getAttribute("href")).toBe("/");
     expect(home.textContent).toBe("Squire");
   });
+
+  it("links to the About page", async () => {
+    vi.stubGlobal("matchMedia", () => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
+    await renderWithRouter(
+      <ThemeProvider>
+        <AppHeader />
+      </ThemeProvider>,
+    );
+    expect(screen.getByRole("link", { name: "About Squire" }).getAttribute("href")).toBe("/about");
+  });
 });

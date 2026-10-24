@@ -26,7 +26,7 @@ The repo has three parts:
 - The limit is 120 requests a minute per IP. The API server caches game data and only checks `/version` every few minutes. Don't add code that calls the WalkScape API per user request.
 - Never commit your key or paste it into an issue, PR or log.
 - The API terms allow community tools, but not redistributing the raw dataset. Serve only what the app needs, and keep test fixtures small.
-- Keep the WalkScape credit and links in the app footer.
+- Keep the WalkScape credit and links on the About page.
 
 ## Making a change
 

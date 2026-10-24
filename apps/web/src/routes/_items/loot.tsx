@@ -1,18 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { MaterialSearch } from "@/components/materials/MaterialSearch";
+import { EffectItemSearch } from "@/components/effects/EffectItemSearch";
 import { validateListSearch } from "@/lib/list-search";
 
-export const Route = createFileRoute("/materials")({
+export const Route = createFileRoute("/_items/loot")({
   validateSearch: validateListSearch,
-  component: MaterialsPage,
+  component: LootPage,
 });
 
-function MaterialsPage() {
+function LootPage() {
   const { q = "", skill } = Route.useSearch();
   const navigate = Route.useNavigate();
 
   return (
-    <MaterialSearch
+    <EffectItemSearch
+      kind="loot"
+      noun="loot"
       query={q}
       skill={skill}
       onQueryChange={(value) => navigate({ search: (prev) => ({ ...prev, q: value || undefined }), replace: true })}

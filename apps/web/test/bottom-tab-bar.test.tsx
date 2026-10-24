@@ -8,43 +8,62 @@ afterEach(cleanup);
 
 const tab = (name: string) => screen.getByRole("link", { name });
 
+const renderWithLinks = () =>
+  renderWithRouter(
+    <>
+      <BottomTabBar />
+      <Link to="/food">Food page</Link>
+      <Link to="/items/$itemId" params={{ itemId: "bread" }}>
+        Bread
+      </Link>
+      <Link to="/about">About page</Link>
+    </>,
+  );
+
 describe("BottomTabBar", () => {
-  it("links to each tab, with recipes active on the home page", async () => {
+  it("has Recipes, Items and Gear tabs, with recipes active on the home page", async () => {
     await renderWithRouter(<BottomTabBar />);
+    expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual(["Recipes", "Items", "Gear"]);
     expect(tab("Recipes").getAttribute("href")).toBe("/");
-    expect(tab("Materials").getAttribute("href")).toBe("/materials");
-    expect(tab("Food").getAttribute("href")).toBe("/food");
-    expect(tab("Loot").getAttribute("href")).toBe("/loot");
+    expect(tab("Items").getAttribute("href")).toBe("/materials");
     expect(tab("Gear").getAttribute("href")).toBe("/gear");
     expect(tab("Recipes").getAttribute("aria-current")).toBe("page");
-    expect(tab("Loot").getAttribute("aria-current")).toBeNull();
   });
 
-  it("marks materials active after navigating there", async () => {
-    await renderWithRouter(<BottomTabBar />);
-    fireEvent.click(tab("Materials"));
-    await waitFor(() => expect(tab("Materials").getAttribute("aria-current")).toBe("page"));
+  it("marks items active on any item page and reopens the last one", async () => {
+    await renderWithLinks();
+    fireEvent.click(tab("Food page"));
+    await waitFor(() => expect(tab("Items").getAttribute("aria-current")).toBe("page"));
+    expect(tab("Items").getAttribute("href")).toBe("/food");
   });
 
-  it("has no favorites tab", async () => {
-    await renderWithRouter(<BottomTabBar />);
-    expect(screen.queryByRole("link", { name: "Favorites" })).toBeNull();
-  });
-
-  it("keeps materials active on an item opened from the materials tab", async () => {
-    await renderWithRouter(
-      <>
-        <BottomTabBar />
-        <Link to="/items/$itemId" params={{ itemId: "bones" }}>
-          Bones
-        </Link>
-      </>,
-    );
-    fireEvent.click(tab("Materials"));
-    await waitFor(() => expect(tab("Materials").getAttribute("aria-current")).toBe("page"));
-    fireEvent.click(screen.getByRole("link", { name: "Bones" }));
-    await waitFor(() => expect(screen.getByRole("link", { name: "Bones" }).getAttribute("aria-current")).toBe("page"));
-    expect(tab("Materials").getAttribute("aria-current")).toBe("page");
+  it("keeps items active on an item opened from an item page", async () => {
+    await renderWithLinks();
+    fireEvent.click(tab("Food page"));
+    await waitFor(() => expect(tab("Items").getAttribute("aria-current")).toBe("page"));
+    fireEvent.click(tab("Bread"));
+    await waitFor(() => expect(tab("Bread").getAttribute("aria-current")).toBe("page"));
+    expect(tab("Items").getAttribute("aria-current")).toBe("page");
     expect(tab("Recipes").getAttribute("aria-current")).toBeNull();
+  });
+
+  it("reopens the last item page after leaving the Items tab", async () => {
+    await renderWithLinks();
+    fireEvent.click(tab("Food page"));
+    await waitFor(() => expect(tab("Items").getAttribute("aria-current")).toBe("page"));
+    fireEvent.click(tab("Gear"));
+    await waitFor(() => expect(tab("Gear").getAttribute("aria-current")).toBe("page"));
+    expect(tab("Items").getAttribute("href")).toBe("/food");
+  });
+
+  it("marks no tab current on the About page, then picks up where it left off", async () => {
+    await renderWithLinks();
+    fireEvent.click(tab("Gear"));
+    await waitFor(() => expect(tab("Gear").getAttribute("aria-current")).toBe("page"));
+    fireEvent.click(tab("About page"));
+    await waitFor(() => expect(tab("About page").getAttribute("aria-current")).toBe("page"));
+    expect(screen.getByRole("navigation", { name: "Main" }).querySelector('[aria-current="page"]')).toBeNull();
+    fireEvent.click(tab("Bread"));
+    await waitFor(() => expect(tab("Gear").getAttribute("aria-current")).toBe("page"));
   });
 });

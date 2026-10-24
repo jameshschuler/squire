@@ -1,4 +1,6 @@
 import { Link } from "@tanstack/react-router";
+import { Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
 
 export function AppHeader() {
@@ -7,7 +9,14 @@ export function AppHeader() {
       <Link to="/" className="text-lg font-semibold">
         Squire
       </Link>
-      <ThemeToggle />
+      <div className="flex items-center">
+        <Button variant="ghost" size="icon" asChild>
+          <Link to="/about" aria-label="About Squire" title="About">
+            <Info className="size-5" />
+          </Link>
+        </Button>
+        <ThemeToggle />
+      </div>
     </header>
   );
 }

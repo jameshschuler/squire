@@ -10,11 +10,13 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ItemsRouteImport } from './routes/_items'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as FavoritesRouteImport } from './routes/favorites'
-import { Route as FoodRouteImport } from './routes/food'
 import { Route as GearRouteImport } from './routes/gear'
-import { Route as LootRouteImport } from './routes/loot'
-import { Route as MaterialsRouteImport } from './routes/materials'
+import { Route as ItemsFoodRouteImport } from './routes/_items/food'
+import { Route as ItemsLootRouteImport } from './routes/_items/loot'
+import { Route as ItemsMaterialsRouteImport } from './routes/_items/materials'
 import { Route as ItemsItemIdRouteImport } from './routes/items.$itemId'
 import { Route as RecipesRecipeIdRouteImport } from './routes/recipes.$recipeId'
 
@@ -23,14 +25,18 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ItemsRoute = ItemsRouteImport.update({
+  id: '/_items',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FavoritesRoute = FavoritesRouteImport.update({
   id: '/favorites',
   path: '/favorites',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FoodRoute = FoodRouteImport.update({
-  id: '/food',
-  path: '/food',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GearRoute = GearRouteImport.update({
@@ -38,15 +44,20 @@ const GearRoute = GearRouteImport.update({
   path: '/gear',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LootRoute = LootRouteImport.update({
+const ItemsFoodRoute = ItemsFoodRouteImport.update({
+  id: '/food',
+  path: '/food',
+  getParentRoute: () => ItemsRoute,
+} as any)
+const ItemsLootRoute = ItemsLootRouteImport.update({
   id: '/loot',
   path: '/loot',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => ItemsRoute,
 } as any)
-const MaterialsRoute = MaterialsRouteImport.update({
+const ItemsMaterialsRoute = ItemsMaterialsRouteImport.update({
   id: '/materials',
   path: '/materials',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => ItemsRoute,
 } as any)
 const ItemsItemIdRoute = ItemsItemIdRouteImport.update({
   id: '/items/$itemId',
@@ -61,32 +72,36 @@ const RecipesRecipeIdRoute = RecipesRecipeIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/favorites': typeof FavoritesRoute
-  '/food': typeof FoodRoute
   '/gear': typeof GearRoute
-  '/loot': typeof LootRoute
-  '/materials': typeof MaterialsRoute
+  '/food': typeof ItemsFoodRoute
+  '/loot': typeof ItemsLootRoute
+  '/materials': typeof ItemsMaterialsRoute
   '/items/$itemId': typeof ItemsItemIdRoute
   '/recipes/$recipeId': typeof RecipesRecipeIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/favorites': typeof FavoritesRoute
-  '/food': typeof FoodRoute
   '/gear': typeof GearRoute
-  '/loot': typeof LootRoute
-  '/materials': typeof MaterialsRoute
+  '/food': typeof ItemsFoodRoute
+  '/loot': typeof ItemsLootRoute
+  '/materials': typeof ItemsMaterialsRoute
   '/items/$itemId': typeof ItemsItemIdRoute
   '/recipes/$recipeId': typeof RecipesRecipeIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_items': typeof ItemsRouteWithChildren
+  '/about': typeof AboutRoute
   '/favorites': typeof FavoritesRoute
-  '/food': typeof FoodRoute
   '/gear': typeof GearRoute
-  '/loot': typeof LootRoute
-  '/materials': typeof MaterialsRoute
+  '/_items/food': typeof ItemsFoodRoute
+  '/_items/loot': typeof ItemsLootRoute
+  '/_items/materials': typeof ItemsMaterialsRoute
   '/items/$itemId': typeof ItemsItemIdRoute
   '/recipes/$recipeId': typeof RecipesRecipeIdRoute
 }
@@ -94,9 +109,10 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/favorites'
-    | '/food'
     | '/gear'
+    | '/food'
     | '/loot'
     | '/materials'
     | '/items/$itemId'
@@ -104,9 +120,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/favorites'
-    | '/food'
     | '/gear'
+    | '/food'
     | '/loot'
     | '/materials'
     | '/items/$itemId'
@@ -114,22 +131,23 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/_items'
+    | '/about'
     | '/favorites'
-    | '/food'
     | '/gear'
-    | '/loot'
-    | '/materials'
+    | '/_items/food'
+    | '/_items/loot'
+    | '/_items/materials'
     | '/items/$itemId'
     | '/recipes/$recipeId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ItemsRoute: typeof ItemsRouteWithChildren
+  AboutRoute: typeof AboutRoute
   FavoritesRoute: typeof FavoritesRoute
-  FoodRoute: typeof FoodRoute
   GearRoute: typeof GearRoute
-  LootRoute: typeof LootRoute
-  MaterialsRoute: typeof MaterialsRoute
   ItemsItemIdRoute: typeof ItemsItemIdRoute
   RecipesRecipeIdRoute: typeof RecipesRecipeIdRoute
 }
@@ -143,18 +161,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_items': {
+      id: '/_items'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ItemsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/favorites': {
       id: '/favorites'
       path: '/favorites'
       fullPath: '/favorites'
       preLoaderRoute: typeof FavoritesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/food': {
-      id: '/food'
-      path: '/food'
-      fullPath: '/food'
-      preLoaderRoute: typeof FoodRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gear': {
@@ -164,19 +189,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GearRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/loot': {
-      id: '/loot'
+    '/_items/food': {
+      id: '/_items/food'
+      path: '/food'
+      fullPath: '/food'
+      preLoaderRoute: typeof ItemsFoodRouteImport
+      parentRoute: typeof ItemsRoute
+    }
+    '/_items/loot': {
+      id: '/_items/loot'
       path: '/loot'
       fullPath: '/loot'
-      preLoaderRoute: typeof LootRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof ItemsLootRouteImport
+      parentRoute: typeof ItemsRoute
     }
-    '/materials': {
-      id: '/materials'
+    '/_items/materials': {
+      id: '/_items/materials'
       path: '/materials'
       fullPath: '/materials'
-      preLoaderRoute: typeof MaterialsRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof ItemsMaterialsRouteImport
+      parentRoute: typeof ItemsRoute
     }
     '/items/$itemId': {
       id: '/items/$itemId'
@@ -195,13 +227,26 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ItemsRouteChildren {
+  ItemsFoodRoute: typeof ItemsFoodRoute
+  ItemsLootRoute: typeof ItemsLootRoute
+  ItemsMaterialsRoute: typeof ItemsMaterialsRoute
+}
+
+const ItemsRouteChildren: ItemsRouteChildren = {
+  ItemsFoodRoute: ItemsFoodRoute,
+  ItemsLootRoute: ItemsLootRoute,
+  ItemsMaterialsRoute: ItemsMaterialsRoute,
+}
+
+const ItemsRouteWithChildren = ItemsRoute._addFileChildren(ItemsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ItemsRoute: ItemsRouteWithChildren,
+  AboutRoute: AboutRoute,
   FavoritesRoute: FavoritesRoute,
-  FoodRoute: FoodRoute,
   GearRoute: GearRoute,
-  LootRoute: LootRoute,
-  MaterialsRoute: MaterialsRoute,
   ItemsItemIdRoute: ItemsItemIdRoute,
   RecipesRecipeIdRoute: RecipesRecipeIdRoute,
 }

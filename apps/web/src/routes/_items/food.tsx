@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { EffectItemSearch } from "@/components/effects/EffectItemSearch";
 import { validateListSearch } from "@/lib/list-search";
 
-export const Route = createFileRoute("/food")({
+export const Route = createFileRoute("/_items/food")({
   validateSearch: validateListSearch,
   component: FoodPage,
 });
