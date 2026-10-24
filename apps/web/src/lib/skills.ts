@@ -1,5 +1,3 @@
-import type { RecipeView } from "@squire/api/recipe-book";
-
 export interface SkillOption {
   id: string;
   name: string;
@@ -14,6 +12,6 @@ export function knownOption(options: SkillOption[], selected: string | undefined
   return options.some((o) => o.id === selected) ? selected : undefined;
 }
 
-export function recipeSkills(recipes: RecipeView[]): SkillOption[] {
-  return uniqueSkills(recipes.flatMap((r) => r.skills));
+export function skillOptions(entries: { skills: SkillOption[] }[]): SkillOption[] {
+  return uniqueSkills(entries.flatMap((e) => e.skills));
 }

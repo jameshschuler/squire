@@ -7,6 +7,7 @@ const ok = () => Promise.resolve(new Response(null, { status: 200 }));
 const book: RecipeBook = {
   schema: 2,
   version: "v1",
+  activities: [],
   foods: [],
   loot: [],
   gear: [],

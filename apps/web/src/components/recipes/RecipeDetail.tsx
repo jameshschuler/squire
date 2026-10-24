@@ -2,10 +2,11 @@ import type { RecipeView } from "@squire/api/recipe-book";
 import { BackButton } from "@/components/layout/BackButton";
 import { Badge } from "@/components/ui/badge";
 import { GameIcon } from "@/components/shared/GameIcon";
-import { formatPercent, formatSkillLevel, formatSteps } from "@/lib/format";
+import { formatSkillLevel } from "@/lib/format";
 import { FavoriteButton } from "./FavoriteButton";
 import { RecipeItemRow } from "./RecipeItemRow";
 import { Section } from "@/components/shared/Section";
+import { WorkBadges } from "@/components/shared/WorkBadges";
 import { ServiceLocations } from "./ServiceLocations";
 
 export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
@@ -27,12 +28,7 @@ export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
             </Badge>
           ))}
           {recipe.service && <Badge variant="outline">{recipe.service.label}</Badge>}
-          {recipe.workRequired !== null && (
-            <Badge variant="outline">{formatSteps(recipe.workRequired, recipe.maxWorkEfficiency)}</Badge>
-          )}
-          {recipe.maxWorkEfficiency !== null && (
-            <Badge variant="outline">Max efficiency {formatPercent(recipe.maxWorkEfficiency)}</Badge>
-          )}
+          <WorkBadges workRequired={recipe.workRequired} maxWorkEfficiency={recipe.maxWorkEfficiency} />
         </div>
       </header>
 

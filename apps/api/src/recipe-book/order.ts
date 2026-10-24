@@ -1,4 +1,4 @@
-import type { RecipeView, SkillLevel } from "./types.js";
+import type { ActivityView, RecipeView, SkillLevel } from "./types.js";
 
 export function minLevel(skills: SkillLevel[]): number {
   return skills.length > 0 ? Math.min(...skills.map((s) => s.level ?? 0)) : Number.POSITIVE_INFINITY;
@@ -12,4 +12,8 @@ export function byLevel(a: RecipeView, b: RecipeView): number {
 
 function sortName(recipe: RecipeView): string {
   return recipe.outputs[0]?.name ?? recipe.name;
+}
+
+export function byActivityLevel(a: ActivityView, b: ActivityView): number {
+  return minLevel(a.skills) - minLevel(b.skills) || a.name.localeCompare(b.name);
 }

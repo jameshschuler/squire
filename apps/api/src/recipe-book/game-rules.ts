@@ -1,9 +1,11 @@
 import type {
+  LootTable,
   LootTableDetail,
   ServiceRequirement,
   ServiceTier,
   SkillLevelRequirement,
 } from "@walkscape-community/data-api-client";
+import type { LootType } from "./types.js";
 
 export const SERVICE_TIERS = ["basic", "advanced", "expert"] as const satisfies readonly ServiceTier[];
 
@@ -30,4 +32,15 @@ export function meetsServiceTier(serviceTier: ServiceTier, requiredTier: string)
 export function getLootTableItemIds(table: LootTableDetail): string[] {
   const rows = [...(table.tableRows ?? []), ...(table.subTables ?? []).flatMap((sub) => sub.tableRows ?? [])];
   return rows.flatMap((row) => (row.rowItemID ? [row.rowItemID] : []));
+}
+
+export function itemsIn(ref: LootTable, tables: Map<string, LootTableDetail>): string[] {
+  return ref.tables.flatMap((id) => {
+    const table = tables.get(id);
+    return table ? getLootTableItemIds(table) : [];
+  });
+}
+
+export function lootTypeOf(ref: LootTable): LootType {
+  return (ref.isPrimary ? "main" : (ref.type[0] ?? "secondary")) as LootType;
 }
