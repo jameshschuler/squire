@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./character": "./src/character/index.ts",
     "./recipe-book": "./src/recipe-book/index.ts"
   },
   "scripts": {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { BookOpen, Gem, Pickaxe, Utensils } from "lucide-react";
+import { BookOpen, Gem, Pickaxe, Shield, Utensils } from "lucide-react";
 import { activeTab as tabFor, type Tab } from "@/lib/layout";
 import { cn } from "@/lib/utils";
 
@@ -9,6 +9,7 @@ const TABS = [
   { to: "/materials", label: "Materials", Icon: Pickaxe },
   { to: "/food", label: "Food", Icon: Utensils },
   { to: "/loot", label: "Loot", Icon: Gem },
+  { to: "/gear", label: "Gear", Icon: Shield },
 ] as const;
 
 export function BottomTabBar() {

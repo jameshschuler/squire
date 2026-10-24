@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as FoodRouteImport } from './routes/food'
+import { Route as GearRouteImport } from './routes/gear'
 import { Route as LootRouteImport } from './routes/loot'
 import { Route as MaterialsRouteImport } from './routes/materials'
 import { Route as ItemsItemIdRouteImport } from './routes/items.$itemId'
@@ -30,6 +31,11 @@ const FavoritesRoute = FavoritesRouteImport.update({
 const FoodRoute = FoodRouteImport.update({
   id: '/food',
   path: '/food',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GearRoute = GearRouteImport.update({
+  id: '/gear',
+  path: '/gear',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LootRoute = LootRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/favorites': typeof FavoritesRoute
   '/food': typeof FoodRoute
+  '/gear': typeof GearRoute
   '/loot': typeof LootRoute
   '/materials': typeof MaterialsRoute
   '/items/$itemId': typeof ItemsItemIdRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/favorites': typeof FavoritesRoute
   '/food': typeof FoodRoute
+  '/gear': typeof GearRoute
   '/loot': typeof LootRoute
   '/materials': typeof MaterialsRoute
   '/items/$itemId': typeof ItemsItemIdRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/favorites': typeof FavoritesRoute
   '/food': typeof FoodRoute
+  '/gear': typeof GearRoute
   '/loot': typeof LootRoute
   '/materials': typeof MaterialsRoute
   '/items/$itemId': typeof ItemsItemIdRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/favorites'
     | '/food'
+    | '/gear'
     | '/loot'
     | '/materials'
     | '/items/$itemId'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/favorites'
     | '/food'
+    | '/gear'
     | '/loot'
     | '/materials'
     | '/items/$itemId'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/favorites'
     | '/food'
+    | '/gear'
     | '/loot'
     | '/materials'
     | '/items/$itemId'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FavoritesRoute: typeof FavoritesRoute
   FoodRoute: typeof FoodRoute
+  GearRoute: typeof GearRoute
   LootRoute: typeof LootRoute
   MaterialsRoute: typeof MaterialsRoute
   ItemsItemIdRoute: typeof ItemsItemIdRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/food'
       fullPath: '/food'
       preLoaderRoute: typeof FoodRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gear': {
+      id: '/gear'
+      path: '/gear'
+      fullPath: '/gear'
+      preLoaderRoute: typeof GearRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/loot': {
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FavoritesRoute: FavoritesRoute,
   FoodRoute: FoodRoute,
+  GearRoute: GearRoute,
   LootRoute: LootRoute,
   MaterialsRoute: MaterialsRoute,
   ItemsItemIdRoute: ItemsItemIdRoute,

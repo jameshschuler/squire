@@ -30,6 +30,7 @@ services:
       paths:
         - apps/web/**
         - apps/api/src/recipe-book/**
+        - apps/api/src/character/**
         - apps/api/package.json
         - packages/data-client/**
         - pnpm-lock.yaml
