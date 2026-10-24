@@ -136,6 +136,28 @@ describe("createClient", () => {
     );
   });
 
+  it.each([
+    { to: "game" as const, body: { ids: ["oven_mittens"], target: "base" } },
+    { to: "api" as const, body: { ids: ["oven_mittens"] } },
+  ])("posts item ids to convert them to $to ids", async ({ to, body }) => {
+    const { fetch, requests } = fakeFetch([json({ oven_mittens: "item-oven_mittens-de8dce30" })]);
+    const ids = await createClient({ apiKey: "k", fetch }).items.ids(["oven_mittens"], to);
+    expect(ids).toEqual({ oven_mittens: "item-oven_mittens-de8dce30" });
+    expect(requests[0]?.url).toBe(`${ENVIRONMENTS.prod}/items/ids`);
+    expect(requests[0]?.headers["Content-Type"]).toBe("application/json");
+    expect(fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ method: "POST", body: JSON.stringify(body) }),
+    );
+  });
+
+  it("throws the API's error when item ids are rejected", async () => {
+    const { fetch } = fakeFetch([json({ error: "ids must be an array" }, 400)]);
+    await expect(createClient({ apiKey: "k", fetch }).items.ids([], "game")).rejects.toThrow(
+      "400 /items/ids: ids must be an array",
+    );
+  });
+
   it("rejects a search with no filters", async () => {
     const { fetch } = fakeFetch([]);
     await expect(createClient({ apiKey: "k", fetch }).recipes.search({})).rejects.toThrow("needs at least one filter");
@@ -155,7 +177,7 @@ describe("createClient", () => {
     expect(requests[0]?.url).toBe(`${ENVIRONMENTS.prod}/items/search?canBeSold=false&type=material`);
   });
 
-  it("has a camelCase namespace for every resource, with search only where the API has filters", () => {
+  it("has a camelCase namespace for every resource, with search only where the API has filters and ids only on items", () => {
     const client = createClient({ apiKey: "k", fetch: fakeFetch([]).fetch }) as unknown as Record<
       string,
       Record<string, unknown>
@@ -169,7 +191,9 @@ describe("createClient", () => {
     expect(namespaces).toHaveLength(RESOURCES.length);
     for (const key of namespaces) {
       const methods = unsearchable.includes(key) ? ["get", "list", "loadAll"] : ["get", "list", "loadAll", "search"];
-      expect(Object.keys(client[key] ?? {}).sort(), key).toEqual(methods);
+      expect(Object.keys(client[key] ?? {}).sort(), key).toEqual(
+        key === "items" ? [...methods, "ids"].sort() : methods,
+      );
     }
   });
 
