@@ -67,6 +67,7 @@ describe("parseCharacterExport", () => {
     expect(character).toMatchObject({
       name: "Test Walker",
       skillLevels: { agility: 85, cooking: 71, fishing: 1, mining: 99 },
+      totalSkillLevel: 256,
       lifetimeSteps: 9_135_913,
       characterLevel: 80,
       toolSlots: 6,

@@ -15,7 +15,7 @@ export function CharacterSummary({ character, savedAt, onUpdate }: CharacterSumm
   const skills = Object.entries(character.skillLevels).sort(([a], [b]) => a.localeCompare(b));
   const stats = [
     { label: "Character level", value: character.characterLevel },
-    { label: "Tool slots", value: character.toolSlots },
+    { label: "Collectibles", value: character.collectibles.length },
     { label: "Steps walked", value: character.lifetimeSteps },
     { label: "Achievement points", value: character.achievementPoints },
   ];
@@ -51,6 +51,10 @@ export function CharacterSummary({ character, savedAt, onUpdate }: CharacterSumm
             </li>
           ))}
         </ul>
+        <p className="mt-3 flex justify-between border-t pt-3 text-sm font-medium">
+          <span>Total skill level</span>
+          <span className="tabular-nums">{formatNumber(character.totalSkillLevel)}</span>
+        </p>
       </Section>
     </article>
   );
