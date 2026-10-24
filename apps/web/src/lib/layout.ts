@@ -8,7 +8,7 @@ export const ITEM_PAGES = [
 
 export type ItemPage = (typeof ITEM_PAGES)[number]["path"];
 
-export type Tab = "recipes" | "items" | "gear";
+export type Tab = "recipes" | "items" | "activities" | "gear";
 
 const isAt = (pathname: string, path: string) => pathname === path || pathname.startsWith(`${path}/`);
 
@@ -25,6 +25,9 @@ export function activeTab(pathname: string, previousTab: Tab): Tab | undefined {
   }
   if (itemPage(pathname)) {
     return "items";
+  }
+  if (isAt(pathname, "/activities")) {
+    return "activities";
   }
   if (isAt(pathname, "/gear")) {
     return "gear";

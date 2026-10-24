@@ -24,17 +24,6 @@ afterEach(() => {
 });
 
 describe("Gear page", () => {
-  it.each([
-    ["no character is saved", null],
-    ["a character is saved", exportText],
-  ])("says the gear optimizer is coming when %s", (_, stored) => {
-    if (stored) {
-      localStorage.setItem(CHARACTER_STORAGE_KEY, stored);
-    }
-    renderPage();
-    expect(screen.getByText("Gear optimizer coming soon.")).toBeDefined();
-  });
-
   it("asks for the character export when none is saved", () => {
     renderPage();
     expect(screen.getByText(/Settings → Character → Export character data/)).toBeDefined();

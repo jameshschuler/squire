@@ -21,11 +21,17 @@ const renderWithLinks = () =>
   );
 
 describe("BottomTabBar", () => {
-  it("has Recipes, Items and Gear tabs, with recipes active on the home page", async () => {
+  it("has Recipes, Items, Activities and Gear tabs, with recipes active on the home page", async () => {
     await renderWithRouter(<BottomTabBar />);
-    expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual(["Recipes", "Items", "Gear"]);
+    expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual([
+      "Recipes",
+      "Items",
+      "Activities",
+      "Gear",
+    ]);
     expect(tab("Recipes").getAttribute("href")).toBe("/");
     expect(tab("Items").getAttribute("href")).toBe("/materials");
+    expect(tab("Activities").getAttribute("href")).toBe("/activities");
     expect(tab("Gear").getAttribute("href")).toBe("/gear");
     expect(tab("Recipes").getAttribute("aria-current")).toBe("page");
   });

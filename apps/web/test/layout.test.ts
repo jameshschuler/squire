@@ -21,6 +21,7 @@ describe("activeTab", () => {
     ["/materials", "items"],
     ["/food", "items"],
     ["/loot", "items"],
+    ["/activities", "activities"],
     ["/gear", "gear"],
     ["/favorites", "recipes"],
     ["/about", undefined],

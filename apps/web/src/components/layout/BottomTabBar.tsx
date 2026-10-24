@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { BookOpen, Gem, Shield } from "lucide-react";
+import { BookOpen, Footprints, Gem, Shield } from "lucide-react";
 import { activeTab as tabFor, itemPage, type ItemPage, type Tab } from "@/lib/layout";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { tab: "recipes", to: "/", label: "Recipes", Icon: BookOpen },
   { tab: "items", to: "/materials", label: "Items", Icon: Gem },
+  { tab: "activities", to: "/activities", label: "Activities", Icon: Footprints },
   { tab: "gear", to: "/gear", label: "Gear", Icon: Shield },
 ] as const;
 
