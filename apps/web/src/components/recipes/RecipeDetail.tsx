@@ -5,7 +5,7 @@ import { GameIcon } from "@/components/shared/GameIcon";
 import { formatPercent, formatSkillLevel, formatSteps } from "@/lib/format";
 import { FavoriteButton } from "./FavoriteButton";
 import { RecipeItemRow } from "./RecipeItemRow";
-import { RecipeSection } from "./RecipeSection";
+import { Section } from "@/components/shared/Section";
 import { ServiceLocations } from "./ServiceLocations";
 
 export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
@@ -36,7 +36,7 @@ export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
         </div>
       </header>
 
-      <RecipeSection title="Materials">
+      <Section title="Materials">
         {recipe.materials.map((options, i) => (
           <div key={i} className="border-b last:border-b-0">
             {options.map((item, j) => (
@@ -47,18 +47,18 @@ export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
             ))}
           </div>
         ))}
-      </RecipeSection>
+      </Section>
 
-      <RecipeSection title="Makes">
+      <Section title="Makes">
         {recipe.outputs.map((item) => (
           <RecipeItemRow key={item.id} item={item} />
         ))}
-      </RecipeSection>
+      </Section>
 
       {recipe.service && (
-        <RecipeSection title="Where to craft">
+        <Section title="Where to craft">
           <ServiceLocations service={recipe.service} />
-        </RecipeSection>
+        </Section>
       )}
     </article>
   );

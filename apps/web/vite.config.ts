@@ -81,5 +81,5 @@ export default defineConfig({
   ],
   resolve: { alias: { "@": path.resolve(import.meta.dirname, "src") } },
   server: { proxy: { "/api": "http://localhost:3000" } },
-  test: { environment: "jsdom" },
+  test: { environment: "jsdom", env: { TZ: "UTC" } },
 });

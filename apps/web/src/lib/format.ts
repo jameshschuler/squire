@@ -50,8 +50,12 @@ export function formatRegion(region: string): string {
   return REGION_SHORT_NAMES[region] ?? region;
 }
 
+export function formatNumber(value: number): string {
+  return value.toLocaleString("en-US");
+}
+
 export function formatStepCount(steps: number): string {
-  return `${steps.toLocaleString("en-US")} steps`;
+  return `${formatNumber(steps)} steps`;
 }
 
 export function formatKeyword(keyword: string): string {
@@ -60,4 +64,10 @@ export function formatKeyword(keyword: string): string {
 
 export function formatEffect(effect: { normal: string; stat: string }): string {
   return `${effect.normal} ${effect.stat.charAt(0).toLowerCase()}${effect.stat.slice(1)}`;
+}
+
+const DATE_TIME = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" });
+
+export function formatDateTime(iso: string): string {
+  return DATE_TIME.format(new Date(iso));
 }

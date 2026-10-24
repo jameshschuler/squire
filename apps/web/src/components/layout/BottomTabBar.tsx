@@ -1,23 +1,27 @@
 import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { BookOpen, Gem, Pickaxe, Shield, Utensils } from "lucide-react";
-import { activeTab as tabFor, type Tab } from "@/lib/layout";
+import { BookOpen, Footprints, Gem, Sparkles } from "lucide-react";
+import { activeTab as tabFor, itemPage, type ItemPage, type Tab } from "@/lib/layout";
 import { cn } from "@/lib/utils";
 
 const TABS = [
-  { to: "/", label: "Recipes", Icon: BookOpen },
-  { to: "/materials", label: "Materials", Icon: Pickaxe },
-  { to: "/food", label: "Food", Icon: Utensils },
-  { to: "/loot", label: "Loot", Icon: Gem },
-  { to: "/gear", label: "Gear", Icon: Shield },
+  { tab: "recipes", to: "/", label: "Recipes", Icon: BookOpen },
+  { tab: "items", to: "/materials", label: "Items", Icon: Gem },
+  { tab: "activities", to: "/activities", label: "Activities", Icon: Footprints },
+  { tab: "gear", to: "/gear", label: "Gear", Icon: Sparkles },
 ] as const;
 
 export function BottomTabBar() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const [lastTab, setLastTab] = useState<Tab>("/");
+  const [lastTab, setLastTab] = useState<Tab>("recipes");
+  const [lastItemPage, setLastItemPage] = useState<ItemPage>("/materials");
   const activeTab = tabFor(pathname, lastTab);
-  if (activeTab !== lastTab) {
+  const currentItemPage = itemPage(pathname);
+  if (activeTab && activeTab !== lastTab) {
     setLastTab(activeTab);
+  }
+  if (currentItemPage && currentItemPage !== lastItemPage) {
+    setLastItemPage(currentItemPage);
   }
 
   return (
@@ -26,14 +30,14 @@ export function BottomTabBar() {
       className="fixed inset-x-0 bottom-0 z-10 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
       <div className="mx-auto flex max-w-xl">
-        {TABS.map(({ to, label, Icon }) => (
+        {TABS.map(({ tab, to, label, Icon }) => (
           <Link
-            key={to}
-            to={to}
-            aria-current={activeTab === to ? "page" : undefined}
+            key={tab}
+            to={tab === "items" ? lastItemPage : to}
+            aria-current={activeTab === tab ? "page" : undefined}
             className={cn(
               "flex flex-1 flex-col items-center gap-0.5 py-2 text-xs text-muted-foreground",
-              activeTab === to && "text-foreground",
+              activeTab === tab && "text-foreground",
             )}
           >
             <Icon className="size-5" />

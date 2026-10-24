@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatDateTime,
+  formatNumber,
   formatStepCount,
   formatEffect,
   formatKeyword,
@@ -107,5 +109,24 @@ describe("formatTitle", () => {
     ["Tutorial cabin", "Tutorial Cabin"],
   ])("formats %j as %j", (text, expected) => {
     expect(formatTitle(text)).toBe(expected);
+  });
+});
+
+describe("formatDateTime", () => {
+  it.each([
+    ["2026-10-24T21:41:00Z", "Oct 24, 2026, 9:41 PM"],
+    ["2026-01-05T00:00:00Z", "Jan 5, 2026, 12:00 AM"],
+  ])("formats %s as %s", (iso, expected) => {
+    expect(formatDateTime(iso)).toBe(expected);
+  });
+});
+
+describe("formatNumber", () => {
+  it.each([
+    [0, "0"],
+    [999, "999"],
+    [8_041_266, "8,041,266"],
+  ])("formats %i as %s", (value, expected) => {
+    expect(formatNumber(value)).toBe(expected);
   });
 });

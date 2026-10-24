@@ -1,35 +1,40 @@
 import { describe, expect, it } from "vitest";
-import { activeTab, showsFooter } from "@/lib/layout";
+import { activeTab, itemPage } from "@/lib/layout";
 
-describe("showsFooter", () => {
+describe("itemPage", () => {
   it.each([
-    ["/", true],
-    ["/loot", true],
-    ["/recipes/bake_bread", false],
-    ["/items/gold_bar", false],
+    ["/materials", "/materials"],
+    ["/food", "/food"],
+    ["/loot", "/loot"],
+    ["/", undefined],
+    ["/items/bones", undefined],
+    ["/foods", undefined],
+    ["/lootbox", undefined],
   ])("on %s: %s", (pathname, expected) => {
-    expect(showsFooter(pathname)).toBe(expected);
+    expect(itemPage(pathname)).toBe(expected);
   });
 });
 
 describe("activeTab", () => {
   it.each([
-    ["/", "/"],
-    ["/materials", "/materials"],
-    ["/food", "/food"],
-    ["/loot", "/loot"],
-    ["/gear", "/gear"],
-    ["/favorites", "/"],
+    ["/", "recipes"],
+    ["/materials", "items"],
+    ["/food", "items"],
+    ["/loot", "items"],
+    ["/activities", "activities"],
+    ["/gear", "gear"],
+    ["/favorites", "recipes"],
+    ["/about", undefined],
+    ["/character", undefined],
   ])("on %s: %s", (pathname, expected) => {
-    expect(activeTab(pathname, "/loot")).toBe(expected);
+    expect(activeTab(pathname, "gear")).toBe(expected);
   });
 
   it.each([
-    ["/items/bones", "/materials", "/materials"],
-    ["/items/birch_skis", "/loot", "/loot"],
-    ["/recipes/bake_bread", "/food", "/food"],
-    ["/recipes/bake_bread", "/", "/"],
-  ] as const)("keeps the tab you came from on a detail page: %s from %s", (pathname, previous, expected) => {
-    expect(activeTab(pathname, previous)).toBe(expected);
+    ["/items/bones", "items"],
+    ["/recipes/bake_bread", "recipes"],
+    ["/items/bread", "recipes"],
+  ] as const)("keeps the tab you came from on %s (from %s)", (pathname, previous) => {
+    expect(activeTab(pathname, previous)).toBe(previous);
   });
 });

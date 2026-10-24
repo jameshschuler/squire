@@ -3,7 +3,13 @@ import { Button } from "@/components/ui/button";
 import { useCharacterContext } from "@/contexts/character-context";
 import { cn } from "@/lib/utils";
 
-export function CharacterImport({ onSaved, onCancel }: { onSaved?: () => void; onCancel?: () => void }) {
+interface CharacterImportProps {
+  title: string;
+  onSaved: () => void;
+  onCancel?: () => void;
+}
+
+export function CharacterImport({ title, onSaved, onCancel }: CharacterImportProps) {
   const { saveCharacter } = useCharacterContext();
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -13,14 +19,15 @@ export function CharacterImport({ onSaved, onCancel }: { onSaved?: () => void; o
   const save = () => {
     try {
       saveCharacter(text);
-      onSaved?.();
+      onSaved();
     } catch (err) {
       setError((err as Error).message);
     }
   };
 
   return (
-    <section className="space-y-3 pt-3">
+    <section className="space-y-4">
+      <h1 className="text-2xl font-semibold">{title}</h1>
       <p className="text-sm text-muted-foreground">
         In WalkScape, open Settings → Character → Export character data. That copies your character, so paste it here.
         It's saved on this device only.

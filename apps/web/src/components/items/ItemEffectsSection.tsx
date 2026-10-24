@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ItemEffects, ItemQuality } from "@squire/api/recipe-book";
-import { RecipeSection } from "@/components/recipes/RecipeSection";
+import { Section } from "@/components/shared/Section";
 import { groupByCondition } from "@/lib/effects";
 import { formatStepCount } from "@/lib/format";
 import { QualityTierPicker } from "./QualityTierPicker";
@@ -11,7 +11,7 @@ export function ItemEffectsSection({ effects }: { effects: ItemEffects }) {
   const shown = effects.tiers.find((tier) => tier.quality === quality)?.effects ?? effects.effects;
   const hasFine = shown.some((effect) => effect.fine !== null);
   return (
-    <RecipeSection title={title}>
+    <Section title={title}>
       {effects.tiers.length > 0 && (
         <QualityTierPicker
           tiers={["common", ...effects.tiers.map((tier) => tier.quality)]}
@@ -47,6 +47,6 @@ export function ItemEffectsSection({ effects }: { effects: ItemEffects }) {
           </tbody>
         ))}
       </table>
-    </RecipeSection>
+    </Section>
   );
 }
