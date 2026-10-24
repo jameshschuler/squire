@@ -31,6 +31,7 @@ export interface OwnedItem {
 export interface Character {
   name: string;
   skillLevels: Record<string, number>;
+  totalSkillLevel: number;
   lifetimeSteps: number;
   characterLevel: number;
   toolSlots: number;
@@ -93,6 +94,7 @@ export function parseCharacterExport(text: string): Character {
     throw new Error("That isn't a WalkScape character export.");
   }
   const level = characterLevel(data.steps);
+  const skillLevels = Object.fromEntries(Object.entries(data.skills).map(([skill, xp]) => [skill, skillLevel(xp)]));
   const equippedIds = EQUIPMENT_SLOTS.flatMap((slot) => (data.gear[slot] ? [[slot, data.gear[slot]] as const] : []));
   const ownedIds = new Set([
     ...equippedIds.map(([, id]) => id),
@@ -101,7 +103,8 @@ export function parseCharacterExport(text: string): Character {
   ]);
   return {
     name: data.name,
-    skillLevels: Object.fromEntries(Object.entries(data.skills).map(([skill, xp]) => [skill, skillLevel(xp)])),
+    skillLevels,
+    totalSkillLevel: Object.values(skillLevels).reduce((total, level) => total + level, 0),
     lifetimeSteps: data.steps,
     characterLevel: level,
     toolSlots: toolSlots(level),

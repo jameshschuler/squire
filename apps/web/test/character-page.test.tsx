@@ -38,6 +38,12 @@ describe("Character page", () => {
     paste(exportText);
     save();
     expect(screen.getByRole("heading", { name: "Test Walker" })).toBeDefined();
+    expect([...document.querySelectorAll("dl dt")].map((label) => label.textContent)).toEqual([
+      "Character level",
+      "Steps walked",
+      "Collectibles",
+      "Achievement points",
+    ]);
     const stats = Object.fromEntries(
       [...document.querySelectorAll("dl > div")].map((stat) => [
         stat.querySelector("dt")?.textContent,
@@ -46,10 +52,11 @@ describe("Character page", () => {
     );
     expect(stats).toEqual({
       "Character level": "80",
-      "Tool slots": "6",
+      Collectibles: "2",
       "Steps walked": "9,135,913",
       "Achievement points": "231",
     });
+    expect(screen.getByText("Total skill level").nextElementSibling?.textContent).toBe("256");
     expect(screen.getByRole("list", { name: "Skill levels" }).textContent).toContain("Cooking71");
     expect(readStoredCharacter(localStorage.getItem(CHARACTER_STORAGE_KEY))?.character.name).toBe("Test Walker");
   });
