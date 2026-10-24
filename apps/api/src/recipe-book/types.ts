@@ -1,7 +1,7 @@
 import type { ItemDetail, ServiceTier } from "@walkscape-community/data-api-client";
 
 // Bump whenever the RecipeBook shape changes, so cached copies on devices refresh.
-export const RECIPE_BOOK_SCHEMA = 25;
+export const RECIPE_BOOK_SCHEMA = 26;
 
 export interface EffectTarget {
   id: string;

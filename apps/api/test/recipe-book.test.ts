@@ -303,7 +303,7 @@ describe("activities", () => {
     ).toEqual([
       { label: "Pickaxe", level: null, item: null },
       { label: "Light source", level: { id: "mining", name: "Mining", level: 50 }, item: null },
-      { label: "Diving gear (3 different)", level: null, item: null },
+      { label: "3 different diving gear items", level: null, item: null },
       { label: "Weapon or shield", level: null, item: null },
       { label: "Gold bar", level: null, item: "gold_bar" },
       { label: "Wheat with you", level: null, item: "wheat" },
@@ -474,8 +474,15 @@ describe("sources", () => {
     expect(book.sources.salt_crystal).toBeUndefined();
   });
 
-  it("only covers items used as recipe materials", () => {
-    expect(book.sources.rough_sun_stone).toBeUndefined();
+  it("covers items only an activity drops", () => {
+    expect(book.sources.rough_sun_stone?.map((s) => s.id)).toEqual(["mine_gold_ore"]);
+  });
+
+  it("leaves out items nothing in the book links to", () => {
+    const sources = withActivity((data) => {
+      data.activities = [];
+    });
+    expect(sources.rough_sun_stone).toBeUndefined();
   });
 
   it("labels drops from special tables and secondary rolls, main loot first", () => {
@@ -589,6 +596,13 @@ describe("findItem", () => {
       keywords: expect.any(Array),
       effects: null,
     });
+  });
+
+  it.each([
+    ["an activity drop", "rough_sun_stone", "Rough sun stone"],
+    ["a chest an activity drops", "mining_chest", "Mining chest"],
+  ])("finds %s no recipe or list mentions", (_, id, name) => {
+    expect(findItem(book, id)).toMatchObject({ id, name, effects: null });
   });
 
   it("returns undefined for an item that isn't in any recipe or the food list", () => {

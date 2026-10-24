@@ -8,7 +8,7 @@ import type {
 import { itemsIn, lootTypeOf } from "./game-rules.js";
 import { skillLevels } from "./lookup.js";
 import { byActivityLevel } from "./order.js";
-import { humanize } from "./text.js";
+import { humanize, spaced } from "./text.js";
 import type {
   ActivityDrops,
   ActivityNeed,
@@ -72,8 +72,8 @@ function needOf(requirement: ActivitiesRequirement, { summary, skillName }: Acti
     }
     case "distinctKeywordItemsEquipped": {
       const { quantity, keywords } = requirement.requirement;
-      const kinds = humanize(keywords.join(" or "));
-      return [need(quantity > 1 ? `${kinds} (${quantity} different)` : kinds)];
+      const kinds = keywords.join(" or ");
+      return [need(quantity > 1 ? `${quantity} different ${spaced(kinds)} items` : humanize(kinds))];
     }
     case "itemEquipped": {
       const item = summary(requirement.requirement.item);

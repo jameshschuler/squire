@@ -13,7 +13,7 @@ import { activityViews } from "./activities.js";
 import { itemEffects } from "./effects.js";
 import type { GameData } from "./game-data.js";
 import { getServiceKeywords, isServiceRequirement, itemsIn, meetsServiceTier } from "./game-rules.js";
-import { lowestSkillLevels, skillLevels, sourceKey } from "./lookup.js";
+import { activityItems, lowestSkillLevels, skillLevels, sourceKey } from "./lookup.js";
 import { humanize } from "./text.js";
 import { byLevel, minLevel } from "./order.js";
 import {
@@ -104,6 +104,7 @@ export function buildRecipeBook(data: GameData): RecipeBook {
     ...recipes.flatMap((r) => r.materials.flat().map((m) => m.id)),
     ...listed,
     ...gear.map((g) => g.id),
+    ...activityItems(activities).map((i) => i.id),
   ]);
   return {
     schema: RECIPE_BOOK_SCHEMA,
