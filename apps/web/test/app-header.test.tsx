@@ -22,13 +22,14 @@ describe("AppHeader", () => {
     expect(home.textContent).toBe("Squire");
   });
 
-  it("links to the About page", async () => {
+  it("links to the character and About pages", async () => {
     vi.stubGlobal("matchMedia", () => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
     await renderWithRouter(
       <ThemeProvider>
         <AppHeader />
       </ThemeProvider>,
     );
-    expect(screen.getByRole("link", { name: "About Squire" }).getAttribute("href")).toBe("/about");
+    expect(screen.getByRole("link", { name: "About" }).getAttribute("href")).toBe("/about");
+    expect(screen.getByRole("link", { name: "Character" }).getAttribute("href")).toBe("/character");
   });
 });

@@ -25,6 +25,7 @@ describe("activeTab", () => {
     ["/gear", "gear"],
     ["/favorites", "recipes"],
     ["/about", undefined],
+    ["/character", undefined],
   ])("on %s: %s", (pathname, expected) => {
     expect(activeTab(pathname, "gear")).toBe(expected);
   });

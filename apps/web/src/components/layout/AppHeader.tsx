@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Info } from "lucide-react";
+import { Info, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -11,7 +11,12 @@ export function AppHeader() {
       </Link>
       <div className="flex items-center">
         <Button variant="ghost" size="icon" asChild>
-          <Link to="/about" aria-label="About Squire" title="About">
+          <Link to="/character" aria-label="Character" title="Character" activeProps={{ className: "bg-accent" }}>
+            <UserRound className="size-5" />
+          </Link>
+        </Button>
+        <Button variant="ghost" size="icon" asChild>
+          <Link to="/about" aria-label="About" title="About" activeProps={{ className: "bg-accent" }}>
             <Info className="size-5" />
           </Link>
         </Button>

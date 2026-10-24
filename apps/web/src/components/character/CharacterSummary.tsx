@@ -1,6 +1,6 @@
 import type { Character } from "@squire/api/character";
 import { RefreshCw } from "lucide-react";
-import { RemoveCharacterButton } from "@/components/gear/RemoveCharacterButton";
+import { RemoveCharacterButton } from "@/components/character/RemoveCharacterButton";
 import { Button } from "@/components/ui/button";
 import { formatStepCount, formatTitle } from "@/lib/format";
 

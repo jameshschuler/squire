@@ -20,7 +20,7 @@ export function activeTab(pathname: string, previousTab: Tab): Tab | undefined {
   if (DETAIL_PAGE.test(pathname)) {
     return previousTab;
   }
-  if (isAt(pathname, "/about")) {
+  if (isAt(pathname, "/about") || isAt(pathname, "/character")) {
     return undefined;
   }
   if (itemPage(pathname)) {
