@@ -24,6 +24,17 @@ afterEach(() => {
 });
 
 describe("Gear page", () => {
+  it.each([
+    ["no character is saved", null],
+    ["a character is saved", exportText],
+  ])("says the gear optimizer is coming when %s", (_, stored) => {
+    if (stored) {
+      localStorage.setItem(CHARACTER_STORAGE_KEY, stored);
+    }
+    renderPage();
+    expect(screen.getByText("Gear optimizer coming soon.")).toBeDefined();
+  });
+
   it("asks for the character export when none is saved", () => {
     renderPage();
     expect(screen.getByText(/Settings → Character → Export character data/)).toBeDefined();
@@ -36,6 +47,7 @@ describe("Gear page", () => {
     save();
     expect(screen.getByRole("heading", { name: "Test Walker" })).toBeDefined();
     expect(screen.getByText("Character level 80 · 6 tool slots")).toBeDefined();
+    expect(screen.getByText("9,135,913 steps walked · 231 achievement points")).toBeDefined();
     expect(screen.getByRole("list", { name: "Skill levels" }).textContent).toContain("Cooking71");
     expect(localStorage.getItem(CHARACTER_STORAGE_KEY)).toBe(exportText);
   });
@@ -75,7 +87,7 @@ describe("Gear page", () => {
   it("removes the character from the device after confirming", () => {
     localStorage.setItem(CHARACTER_STORAGE_KEY, exportText);
     renderPage();
-    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove character" }));
     fireEvent.click(screen.getByRole("button", { name: "Remove" }));
     expect(screen.getByLabelText("Character data")).toBeDefined();
     expect(localStorage.getItem(CHARACTER_STORAGE_KEY)).toBeNull();

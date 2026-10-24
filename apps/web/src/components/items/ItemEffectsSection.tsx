@@ -2,11 +2,11 @@ import { useState } from "react";
 import type { ItemEffects, ItemQuality } from "@squire/api/recipe-book";
 import { RecipeSection } from "@/components/recipes/RecipeSection";
 import { groupByCondition } from "@/lib/effects";
-import { formatDuration } from "@/lib/format";
+import { formatStepCount } from "@/lib/format";
 import { QualityTierPicker } from "./QualityTierPicker";
 
 export function ItemEffectsSection({ effects }: { effects: ItemEffects }) {
-  const title = effects.steps === null ? "Effects" : `Effects · ${formatDuration(effects.steps)}`;
+  const title = effects.steps === null ? "Effects" : `Effects · ${formatStepCount(effects.steps)}`;
   const [quality, setQuality] = useState<ItemQuality>("common");
   const shown = effects.tiers.find((tier) => tier.quality === quality)?.effects ?? effects.effects;
   const hasFine = shown.some((effect) => effect.fine !== null);

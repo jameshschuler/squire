@@ -50,7 +50,7 @@ export function formatRegion(region: string): string {
   return REGION_SHORT_NAMES[region] ?? region;
 }
 
-export function formatDuration(steps: number): string {
+export function formatStepCount(steps: number): string {
   return `${steps.toLocaleString("en-US")} steps`;
 }
 

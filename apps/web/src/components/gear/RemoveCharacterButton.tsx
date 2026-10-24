@@ -18,9 +18,8 @@ export function RemoveCharacterButton() {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="text-muted-foreground">
+        <Button variant="ghost" size="icon-sm" className="text-muted-foreground" aria-label="Remove character">
           <Trash2 />
-          Remove
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>

@@ -31,6 +31,7 @@ export interface OwnedItem {
 export interface Character {
   name: string;
   skillLevels: Record<string, number>;
+  lifetimeSteps: number;
   characterLevel: number;
   toolSlots: number;
   achievementPoints: number;
@@ -101,6 +102,7 @@ export function parseCharacterExport(text: string): Character {
   return {
     name: data.name,
     skillLevels: Object.fromEntries(Object.entries(data.skills).map(([skill, xp]) => [skill, skillLevel(xp)])),
+    lifetimeSteps: data.steps,
     characterLevel: level,
     toolSlots: toolSlots(level),
     achievementPoints: data.achievement_points,
