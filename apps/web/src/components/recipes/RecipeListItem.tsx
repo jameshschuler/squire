@@ -1,10 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import type { RecipeView } from "@squire/api/recipe-book";
 import { GameIcon } from "@/components/shared/GameIcon";
-import { formatSkillLevel } from "@/lib/format";
+import { formatSkillLevels } from "@/lib/format";
 
 export function RecipeListItem({ recipe }: { recipe: RecipeView }) {
-  const details = [recipe.skills.map(formatSkillLevel).join(", "), recipe.service?.label].filter(Boolean).join(" · ");
+  const details = [formatSkillLevels(recipe.skills), recipe.service?.label].filter(Boolean).join(" · ");
   return (
     <li>
       <Link to="/recipes/$recipeId" params={{ recipeId: recipe.id }} className="flex items-center gap-3 py-2.5">

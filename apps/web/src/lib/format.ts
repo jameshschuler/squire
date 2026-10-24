@@ -16,6 +16,10 @@ export function formatSkillLevel(skill: { name: string; level: number | null }):
   return skill.level === null ? skill.name : `${skill.name} lvl. ${skill.level}`;
 }
 
+export function formatSkillLevels(skills: { name: string; level: number | null }[]): string {
+  return skills.map(formatSkillLevel).join(", ");
+}
+
 const LOOT_TYPE_LABELS: Record<LootType, string | null> = {
   main: null,
   secondary: "Extra roll",

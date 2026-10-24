@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import type { ActivitySource } from "@squire/api/recipe-book";
 import { Badge } from "@/components/ui/badge";
 import { GameIcon } from "@/components/shared/GameIcon";
-import { formatSkillLevel, lootTypeLabel } from "@/lib/format";
+import { formatSkillLevels, lootTypeLabel } from "@/lib/format";
 import { SourceLocations } from "./SourceLocations";
 
 export function ActivitySourceRow({ source }: { source: ActivitySource }) {
@@ -13,7 +13,7 @@ export function ActivitySourceRow({ source }: { source: ActivitySource }) {
         <GameIcon path={source.icon} />
         <div className="min-w-0 flex-1">
           <p className="font-medium">{source.name}</p>
-          <p className="text-sm text-muted-foreground">{source.skills.map(formatSkillLevel).join(", ")}</p>
+          <p className="text-sm text-muted-foreground">{formatSkillLevels(source.skills)}</p>
         </div>
         {label && (
           <Badge variant="outline" className="font-normal text-muted-foreground">

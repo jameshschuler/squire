@@ -8,6 +8,7 @@ import {
   formatPercent,
   formatRegion,
   formatSkillLevel,
+  formatSkillLevels,
   formatSteps,
   formatTitle,
   lootTypeLabel,
@@ -62,6 +63,22 @@ describe("formatSteps", () => {
     [80, null, "80 base steps"],
   ])("formats %s work with a %s cap as %s", (work, cap, expected) => {
     expect(formatSteps(work, cap)).toBe(expected);
+  });
+});
+
+describe("formatSkillLevels", () => {
+  it.each([
+    [[], ""],
+    [[{ name: "Agility", level: 30 }], "Agility lvl. 30"],
+    [
+      [
+        { name: "Fishing", level: 10 },
+        { name: "Cooking", level: null },
+      ],
+      "Fishing lvl. 10, Cooking",
+    ],
+  ])("formats %j as %j", (skills, expected) => {
+    expect(formatSkillLevels(skills)).toBe(expected);
   });
 });
 
