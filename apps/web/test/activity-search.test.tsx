@@ -27,11 +27,17 @@ async function renderSearch(query: string, skill?: string) {
 }
 
 describe("ActivitySearch", () => {
-  it("lists activities with their level and the gear they need, linking to each", async () => {
+  it("lists activities with their skill level, linking to each", async () => {
     await renderSearch("");
     const link = await screen.findByRole("link", { name: /Mine gold ore/ });
     expect(link.getAttribute("href")).toBe("/activities/mine_gold_ore");
-    expect(link.textContent).toContain("Mining lvl. 40 · Pickaxe");
+    expect(link.textContent).toContain("Mining lvl. 40");
+  });
+
+  it("leaves the gear an activity needs off the list", async () => {
+    await renderSearch("");
+    const link = await screen.findByRole("link", { name: /Mine gold ore/ });
+    expect(link.textContent).not.toContain("Pickaxe");
   });
 
   it("finds an activity by what it drops", async () => {
