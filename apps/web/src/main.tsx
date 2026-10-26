@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { registerAppUpdates } from "./app-updates";
 import { routeTree } from "./routeTree.gen";
 import "./index.css";
 
@@ -11,6 +12,8 @@ declare module "@tanstack/react-router" {
     router: typeof router;
   }
 }
+
+registerAppUpdates();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
