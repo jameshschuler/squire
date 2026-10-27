@@ -1,5 +1,5 @@
 import type { Attribute, GearType, ItemDetail, StatType } from "@walkscape-community/data-api-client";
-import type { ItemQuality, ItemSummary } from "../recipe-book/types.js";
+import { QUALITIES, type ItemQuality, type ItemSummary } from "../recipe-book/types.js";
 import type { GearCondition, GearItem, GearStat } from "./types.js";
 
 type GearDetail = Extract<ItemDetail, { gearType: GearType }>;
@@ -13,6 +13,11 @@ export function gearItems(
     .filter(isGear)
     .map((item) => gearItem(item, gameIds, summary))
     .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function stackedStats(item: GearItem, quality: ItemQuality | null): GearStat[] {
+  const tiers = quality ? QUALITIES.slice(0, QUALITIES.indexOf(quality) + 1) : [];
+  return [...item.stats, ...tiers.flatMap((tier) => item.tierStats[tier] ?? [])];
 }
 
 export function isGear(item: ItemDetail): item is GearDetail {

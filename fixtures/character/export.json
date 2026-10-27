@@ -17,8 +17,31 @@
     "ring_2": "gold_ethernite_ring_uncommon",
     "tool_1": "recipe_book"
   },
-  "pets": {},
-  "available_pets": [],
+  "pets": {
+    "pet": {
+      "name": "Pet One",
+      "species": "tortoise",
+      "level": 4,
+      "xp": 0,
+      "stage": "adult"
+    }
+  },
+  "available_pets": [
+    {
+      "name": "Pet Two",
+      "species": "silky_mummy",
+      "level": 2,
+      "xp": 42500,
+      "stage": "juvenile"
+    },
+    {
+      "name": "Pet Three",
+      "species": "camel",
+      "level": 1,
+      "xp": 6635,
+      "stage": "juvenile"
+    }
+  ],
   "available_eggs": [],
   "consumables": {},
   "inventory": {
