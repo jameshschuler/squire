@@ -998,5 +998,367 @@
     }
    ]
   }
- ]
+ ],
+ "pets": [
+  {
+   "id": "mummy",
+   "name": "Mummy",
+   "desc": "An unruffled mummy, may look dressed in rags, but knows all best ways to make them last.",
+   "rareId": "silky_mummy",
+   "rareName": "Silky Mummy",
+   "rareDesc": "This mummy is adorned in some fine <c>silk</c>! It seems to be extremely fashionable for its age.",
+   "egg": {
+    "name": "Mummy egg",
+    "desc": "A mummy's egg. It may be covered in bandages, but you should still try to keep it warm. Wonder where the mother is?",
+    "sprite": "assets/icons/pets/mummy/mummy_egg_static.png",
+    "sheet": "assets/icons/pets/mummy/mummy_egg_idle_sheet.png"
+   },
+   "looks": [
+    {
+     "id": "2b8926a8-e23f-4d7e-a5ff-1744672f40c2",
+     "sprites": [
+      {
+       "sprite": "assets/icons/pets/mummy/baby_basic_mummy_static.png",
+       "sheet": "assets/icons/pets/mummy/baby_basic_mummy_idle_sheet.png",
+       "stage": "juvenile"
+      },
+      {
+       "sprite": "assets/icons/pets/mummy/adult_basic_mummy_static.png",
+       "sheet": "assets/icons/pets/mummy/adult_basic_mummy_idle_sheet.png",
+       "stage": "adult"
+      }
+     ]
+    },
+    {
+     "id": "c81dadb2-1f02-4d29-a12a-48b248225070",
+     "sprites": [
+      {
+       "sprite": "assets/icons/pets/mummy/baby_basicB_mummy_static.png",
+       "sheet": "assets/icons/pets/mummy/baby_basicB_mummy_idle_sheet.png",
+       "stage": "juvenile"
+      },
+      {
+       "sprite": "assets/icons/pets/mummy/adult_basicB_mummy_static.png",
+       "sheet": "assets/icons/pets/mummy/adult_basicB_mummy_idle_sheet.png",
+       "stage": "adult"
+      }
+     ]
+    },
+    {
+     "id": "22a6af9d-e331-4a9f-9f75-7d96f873d4a0",
+     "sprites": [
+      {
+       "sprite": "assets/icons/pets/mummy/baby_basicC_mummy_static.png",
+       "sheet": "assets/icons/pets/mummy/baby_basicC_mummy_idle_sheet.png",
+       "stage": "juvenile"
+      },
+      {
+       "sprite": "assets/icons/pets/mummy/adult_basicC_mummy_static.png",
+       "sheet": "assets/icons/pets/mummy/adult_basicC_mummy_idle_sheet.png",
+       "stage": "adult"
+      }
+     ]
+    }
+   ],
+   "rareLooks": [
+    {
+     "id": "30adde91-a09a-46d9-ad1e-a0ea66c2a30c",
+     "sprites": [
+      {
+       "sprite": "assets/icons/pets/mummy/baby_shiny_mummy_static.png",
+       "sheet": "assets/icons/pets/mummy/baby_shiny_mummy_idle_sheet.png",
+       "stage": "juvenile"
+      },
+      {
+       "sprite": "assets/icons/pets/mummy/adult_shiny_mummy_static.png",
+       "sheet": "assets/icons/pets/mummy/adult_shiny_mummy_idle_sheet.png",
+       "stage": "adult"
+      }
+     ]
+    }
+   ],
+   "hatchingRequirements": null,
+   "xpRequirements": [
+    {
+     "type": "mainSkill",
+     "name": "",
+     "opposite": false,
+     "requirement": {
+      "skill": "tailoring"
+     }
+    }
+   ],
+   "levels": [
+    {
+     "level": 1,
+     "xp": 35000,
+     "stage": "juvenile",
+     "attributes": [
+      {
+       "id": "49066332-6941-4fd7-a512-b0bb928fdec4",
+       "customIcon": null,
+       "customTextLocalizationKey": "",
+       "customText": "",
+       "textLocalizationKey": "",
+       "text": "",
+       "statText": "Chest finding",
+       "skillText": "Tailoring",
+       "tables": null,
+       "requirements": [
+        {
+         "type": "mainSkill",
+         "name": "",
+         "opposite": false,
+         "requirement": {
+          "skill": "tailoring"
+         }
+        }
+       ],
+       "stats": [
+        {
+         "stat": "chest_finding",
+         "name": "Chest finding",
+         "type": "chestFind",
+         "isPercent": true,
+         "value": 0.02,
+         "isNegative": false,
+         "isMultiplicative": true
+        }
+       ]
+      },
+      {
+       "id": "64eb5ecc-96f4-4e20-9ac4-c1a2bf6941fb",
+       "customIcon": null,
+       "customTextLocalizationKey": "",
+       "customText": "",
+       "textLocalizationKey": "",
+       "text": "",
+       "statText": "Work efficiency",
+       "skillText": "Tailoring",
+       "tables": null,
+       "requirements": [
+        {
+         "type": "mainSkill",
+         "name": "",
+         "opposite": false,
+         "requirement": {
+          "skill": "tailoring"
+         }
+        }
+       ],
+       "stats": [
+        {
+         "stat": "work_efficiency",
+         "name": "Work efficiency",
+         "type": "workEfficiency",
+         "isPercent": true,
+         "value": 0.02,
+         "isNegative": false,
+         "isMultiplicative": true
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "level": 4,
+     "xp": 100000,
+     "stage": "adult",
+     "attributes": [
+      {
+       "id": "8de11217-73bd-40a3-955a-d9d93f89923a",
+       "customIcon": null,
+       "customTextLocalizationKey": "",
+       "customText": "",
+       "textLocalizationKey": "",
+       "text": "",
+       "statText": "Chest finding",
+       "skillText": "Tailoring",
+       "tables": null,
+       "requirements": [
+        {
+         "type": "mainSkill",
+         "name": "",
+         "opposite": false,
+         "requirement": {
+          "skill": "tailoring"
+         }
+        }
+       ],
+       "stats": [
+        {
+         "stat": "chest_finding",
+         "name": "Chest finding",
+         "type": "chestFind",
+         "isPercent": true,
+         "value": 0.07,
+         "isNegative": false,
+         "isMultiplicative": true
+        }
+       ]
+      },
+      {
+       "id": "75307db1-9c26-428b-ab56-218d5dcfbc51",
+       "customIcon": null,
+       "customTextLocalizationKey": "",
+       "customText": "",
+       "textLocalizationKey": "",
+       "text": "",
+       "statText": "Work efficiency",
+       "skillText": "Tailoring",
+       "tables": null,
+       "requirements": [
+        {
+         "type": "mainSkill",
+         "name": "",
+         "opposite": false,
+         "requirement": {
+          "skill": "tailoring"
+         }
+        }
+       ],
+       "stats": [
+        {
+         "stat": "work_efficiency",
+         "name": "Work efficiency",
+         "type": "workEfficiency",
+         "isPercent": true,
+         "value": 0.12,
+         "isNegative": false,
+         "isMultiplicative": true
+        }
+       ]
+      },
+      {
+       "id": "8edaad5b-c5fe-472c-86ea-0829be3eb84a",
+       "customIcon": null,
+       "customTextLocalizationKey": "",
+       "customText": "",
+       "textLocalizationKey": "",
+       "text": "",
+       "statText": "Bonus experience",
+       "skillText": "Tailoring",
+       "tables": null,
+       "requirements": [
+        {
+         "type": "mainSkill",
+         "name": "",
+         "opposite": false,
+         "requirement": {
+          "skill": "tailoring"
+         }
+        }
+       ],
+       "stats": [
+        {
+         "stat": "bonus_experience",
+         "name": "Bonus experience",
+         "type": "bonusExperience",
+         "isPercent": true,
+         "value": 0.06,
+         "isNegative": false,
+         "isMultiplicative": true
+        }
+       ]
+      },
+      {
+       "id": "0f51f45e-1470-4323-a901-424620aa00bd",
+       "customIcon": null,
+       "customTextLocalizationKey": "",
+       "customText": "",
+       "textLocalizationKey": "",
+       "text": "",
+       "statText": "Find collectibles",
+       "skillText": "",
+       "tables": null,
+       "requirements": [],
+       "stats": [
+        {
+         "stat": "find_collectibles",
+         "name": "Find collectibles",
+         "type": "findCollectibles",
+         "isPercent": true,
+         "value": 0.05,
+         "isNegative": false,
+         "isMultiplicative": true
+        }
+       ]
+      },
+      {
+       "id": "03d34fc5-e8d2-410c-84f6-0d760404a3b5",
+       "customIcon": null,
+       "customTextLocalizationKey": "",
+       "customText": "",
+       "textLocalizationKey": "",
+       "text": "",
+       "statText": "Steps required",
+       "skillText": "Tailoring",
+       "tables": null,
+       "requirements": [
+        {
+         "type": "mainSkill",
+         "name": "",
+         "opposite": false,
+         "requirement": {
+          "skill": "tailoring"
+         }
+        }
+       ],
+       "stats": [
+        {
+         "stat": "steps_required",
+         "name": "Steps required",
+         "type": "stepsRequired",
+         "isPercent": false,
+         "value": -3,
+         "isNegative": false,
+         "isMultiplicative": true
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "abilities": [
+    {
+     "unlockLevel": 4,
+     "ability": "thats_a_wrap"
+    }
+   ]
+  }
+ ],
+ "keywords": [
+  {
+   "id": "fishing_rod",
+   "name": "Fishing rod",
+   "bannedKeywords": [
+    "fishing_net",
+    "fishing_rod",
+    "fishing_spear",
+    "fishing_cage"
+   ],
+   "requirementText": "Requires an equipped <object id=\"fishing_rod\" />.",
+   "types": [],
+   "icon": "assets/icons/keywords/fishing_rod.png"
+  },
+  {
+   "id": "hatchet",
+   "name": "Hatchet",
+   "bannedKeywords": [
+    "hatchet"
+   ],
+   "requirementText": "Requires an equipped <object id=\"hatchet\" />.",
+   "types": [],
+   "icon": "assets/icons/keywords/hatchet.png"
+  },
+  {
+   "id": "tool",
+   "name": "Tool",
+   "bannedKeywords": [],
+   "requirementText": "Requires an equipped <object id=\"tool\" />.",
+   "types": [],
+   "icon": "assets/icons/keywords/tools.png"
+  }
+ ],
+ "gameIds": {}
 }

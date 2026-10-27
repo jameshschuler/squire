@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./character": "./src/character/index.ts",
+    "./gear-data": "./src/gear-data/index.ts",
     "./recipe-book": "./src/recipe-book/index.ts"
   },
   "scripts": {

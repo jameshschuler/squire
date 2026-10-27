@@ -1,6 +1,7 @@
 import { brotliDecompressSync, gunzipSync } from "node:zlib";
 import { WalkScapeApiError } from "@walkscape-community/data-api-client";
 import { describe, expect, it } from "vitest";
+import { GEAR_DATA_SCHEMA, type GearData } from "../src/gear-data/index.js";
 import { RECIPE_BOOK_SCHEMA, type RecipeBook } from "../src/recipe-book/index.js";
 import { buildApp } from "../src/app.js";
 import { fakeClient } from "./fake-client.js";
@@ -33,6 +34,33 @@ describe("GET /api/recipes", () => {
     };
     const res = await app(client).inject("/api/recipes");
     expect(res.statusCode).toBe(502);
+  });
+});
+
+describe("GET /api/gear", () => {
+  it("returns the gear data with its own schema and the data version as ETag", async () => {
+    const res = await app().inject("/api/gear");
+    expect(res.statusCode).toBe(200);
+    expect(res.headers.etag).toBe(`"${GEAR_DATA_SCHEMA}-v1"`);
+    expect(res.json<GearData>().pets.map((p) => p.id)).toEqual(["mummy"]);
+  });
+
+  it("answers 304 when the client already has this version", async () => {
+    const res = await app().inject({ url: "/api/gear", headers: { "if-none-match": `"${GEAR_DATA_SCHEMA}-v1"` } });
+    expect(res.statusCode).toBe(304);
+  });
+
+  it("shares one game data load with the recipe book", async () => {
+    const { client, calls } = fakeClient();
+    const server = app(client);
+    await server.inject("/api/recipes");
+    await server.inject("/api/gear");
+    expect(calls.paths.filter((path) => path === "/items/")).toHaveLength(1);
+  });
+
+  it("leaves gear data out of the recipe book", async () => {
+    const res = await app().inject("/api/recipes");
+    expect(Object.keys(res.json<RecipeBook>())).not.toContain("pets");
   });
 });
 
@@ -80,6 +108,13 @@ describe("GET /api/icons/*", () => {
     const res = await server.inject("/api/icons/assets/icons/items/materials/food/bagel.png");
     expect(res.statusCode).toBe(200);
     expect(res.headers["cache-control"]).toBe("public, max-age=604800");
+  });
+
+  it("serves a pet icon from the gear data", async () => {
+    const server = app();
+    await server.inject("/api/gear");
+    const res = await server.inject("/api/icons/assets/icons/pets/mummy/adult_basic_mummy_static.png");
+    expect(res.statusCode).toBe(200);
   });
 
   it("answers 404 for an icon the recipe book doesn't use, without asking WalkScape", async () => {

@@ -11,12 +11,12 @@ import type {
 } from "@walkscape-community/data-api-client";
 import { activityViews } from "./activities.js";
 import { itemEffects } from "./effects.js";
-import { gearItems } from "./gear-items.js";
 import type { GameData } from "./game-data.js";
 import { getServiceKeywords, isServiceRequirement, itemsIn, meetsServiceTier } from "./game-rules.js";
 import { activityItems, lowestSkillLevels, skillLevels, sourceKey } from "./lookup.js";
 import { humanize } from "./text.js";
 import { byLevel, minLevel } from "./order.js";
+import { itemSummaries, locationSummary, regionNames } from "./summaries.js";
 import {
   RECIPE_BOOK_SCHEMA,
   type AchievementSource,
@@ -25,7 +25,6 @@ import {
   type ChestSource,
   type ItemWithEffects,
   type ItemSource,
-  type ItemSummary,
   type LocationSummary,
   type RecipeBook,
   type RecipeItem,
@@ -50,20 +49,9 @@ export function buildRecipeBook(data: GameData): RecipeBook {
   const items = new Map(data.items.map((i) => [i.id, i]));
   const skillNames = new Map(data.skills.map((s) => [s.id, s.name]));
   const skillName = (id: string) => skillNames.get(id) ?? humanize(id);
-  const regions = new Map(data.factions.map((f) => [f.id, f.name]));
+  const regions = regionNames(data.factions);
   const effectNames = { skills: data.skills, regions, items };
-  const summary = (id: string): ItemSummary => {
-    const found = items.get(id);
-    const keywords = [...new Set(found?.keywords ?? [])];
-    return {
-      id,
-      name: found?.name ?? humanize(id),
-      icon: found?.icon ?? "",
-      quality: found?.quality ?? null,
-      isCollectible: found?.type === "collectible",
-      keywords,
-    };
-  };
+  const summary = itemSummaries(items);
   const item = (id: string, amount: number): RecipeItem => ({ ...summary(id), amount });
   const locationsByService = indexLocations(data.locations, regions, (l) => l.serviceList);
   const locationsByActivity = indexLocations(data.locations, regions, (l) => l.activityList);
@@ -115,15 +103,6 @@ export function buildRecipeBook(data: GameData): RecipeBook {
     foods,
     loot,
     gear,
-    gearItems: gearItems(data.items, summary),
-    skills: data.skills.map(({ id, name, type }) => ({ id, name, type })).sort((a, b) => a.name.localeCompare(b.name)),
-    locations: data.locations
-      .map((location) => ({
-        ...locationSummary(location, regions),
-        realms: [location.faction, ...(location.subFactions ?? [])],
-        keywords: location.keywords ?? [],
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name)),
     sources: itemSources(data, activities, sourcedIds, { locationsByBuilding, tables }),
   };
 }
@@ -288,8 +267,4 @@ function indexLocations(
     }
   }
   return index;
-}
-
-function locationSummary(location: LocationDetail, regions: Map<string, string>): LocationSummary {
-  return { id: location.id, name: location.name, region: regions.get(location.faction) ?? humanize(location.faction) };
 }

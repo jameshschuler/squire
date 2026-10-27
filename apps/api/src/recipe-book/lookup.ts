@@ -49,7 +49,7 @@ export function recipeBookIcons(book: RecipeBook): string[] {
   const sourceIcons = Object.values(book.sources).flat();
   return [
     ...new Set(
-      [...recipeIcons, ...activityIcons, ...book.foods, ...book.loot, ...book.gear, ...book.gearItems, ...sourceIcons]
+      [...recipeIcons, ...activityIcons, ...book.foods, ...book.loot, ...book.gear, ...sourceIcons]
         .map((i) => i.icon)
         .filter(Boolean),
     ),
