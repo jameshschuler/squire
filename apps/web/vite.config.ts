@@ -67,6 +67,15 @@ export default defineConfig({
             },
           },
           {
+            urlPattern: ({ url }) => url.pathname === "/api/gear",
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "gear-data",
+              expiration: { maxEntries: 1 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+          {
             urlPattern: ({ url }) => url.pathname.startsWith("/api/icons/"),
             handler: "CacheFirst",
             options: {
