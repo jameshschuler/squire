@@ -1,7 +1,7 @@
-import type { ItemDetail, ServiceTier } from "@walkscape-community/data-api-client";
+import type { GearType, ItemDetail, Requirement, ServiceTier, StatType } from "@walkscape-community/data-api-client";
 
 // Bump whenever the RecipeBook shape changes, so cached copies on devices refresh.
-export const RECIPE_BOOK_SCHEMA = 26;
+export const RECIPE_BOOK_SCHEMA = 27;
 
 export interface EffectTarget {
   id: string;
@@ -152,6 +152,35 @@ export interface RewardSource {
 
 export type ItemSource = ActivitySource | ChestSource | ShopSource | AchievementSource | RewardSource;
 
+type WithoutName<T> = T extends unknown ? Omit<T, "name"> : never;
+
+export type GearCondition = WithoutName<Requirement>;
+
+export interface GearStat {
+  stat: StatType;
+  value: number;
+  isPercent: boolean;
+  conditions: GearCondition[];
+}
+
+export interface GearItem extends ItemSummary {
+  slot: GearType;
+  requirements: GearCondition[];
+  stats: GearStat[];
+  tierStats: Partial<Record<ItemQuality, GearStat[]>>;
+}
+
+export interface SkillView {
+  id: string;
+  name: string;
+  type: string;
+}
+
+export interface LocationView extends LocationSummary {
+  realms: string[];
+  keywords: string[];
+}
+
 export interface RecipeBook {
   schema: number;
   version: string;
@@ -160,5 +189,8 @@ export interface RecipeBook {
   foods: ItemWithEffects[];
   loot: ItemWithEffects[];
   gear: ItemWithEffects[];
+  gearItems: GearItem[];
+  skills: SkillView[];
+  locations: LocationView[];
   sources: Record<string, ItemSource[]>;
 }

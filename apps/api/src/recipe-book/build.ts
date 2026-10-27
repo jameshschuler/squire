@@ -11,6 +11,7 @@ import type {
 } from "@walkscape-community/data-api-client";
 import { activityViews } from "./activities.js";
 import { itemEffects } from "./effects.js";
+import { gearItems } from "./gear-items.js";
 import type { GameData } from "./game-data.js";
 import { getServiceKeywords, isServiceRequirement, itemsIn, meetsServiceTier } from "./game-rules.js";
 import { activityItems, lowestSkillLevels, skillLevels, sourceKey } from "./lookup.js";
@@ -114,6 +115,15 @@ export function buildRecipeBook(data: GameData): RecipeBook {
     foods,
     loot,
     gear,
+    gearItems: gearItems(data.items, summary),
+    skills: data.skills.map(({ id, name, type }) => ({ id, name, type })).sort((a, b) => a.name.localeCompare(b.name)),
+    locations: data.locations
+      .map((location) => ({
+        ...locationSummary(location, regions),
+        realms: [location.faction, ...(location.subFactions ?? [])],
+        keywords: location.keywords ?? [],
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
     sources: itemSources(data, activities, sourcedIds, { locationsByBuilding, tables }),
   };
 }
@@ -267,11 +277,7 @@ function indexLocations(
 ): Map<string, LocationSummary[]> {
   const index = new Map<string, LocationSummary[]>();
   for (const location of [...locations].sort((a, b) => a.name.localeCompare(b.name))) {
-    const summary = {
-      id: location.id,
-      name: location.name,
-      region: regions.get(location.faction) ?? humanize(location.faction),
-    };
+    const summary = locationSummary(location, regions);
     for (const key of keysOf(location) ?? []) {
       const list = index.get(key);
       if (list) {
@@ -282,4 +288,8 @@ function indexLocations(
     }
   }
   return index;
+}
+
+function locationSummary(location: LocationDetail, regions: Map<string, string>): LocationSummary {
+  return { id: location.id, name: location.name, region: regions.get(location.faction) ?? humanize(location.faction) };
 }

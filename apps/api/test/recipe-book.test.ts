@@ -8,6 +8,7 @@ import {
   lowestSkillLevels,
   findRecipesByOutput,
   findRecipesByMaterial,
+  gearStatsAt,
   searchActivities,
   searchRecipes,
   words,
@@ -432,6 +433,16 @@ describe("recipeBookIcons", () => {
     expect(recipeBookIcons(buildRecipeBook(data))).toContain("assets/icons/wheat-only-needed.png");
   });
 
+  it("includes icons of gear with no effects", () => {
+    const data = structuredClone(sample) as unknown as GameData;
+    data.items.push(...(gearItems as unknown as ItemDetail[]));
+    const hatchet = data.items.find((i) => i.id === "steel_hatchet")!;
+    Object.assign(hatchet, { icon: "assets/icons/plain-hatchet.png", itemAttrs: [], itemQualityAttrs: [] });
+    const withGear = buildRecipeBook(data);
+    expect(withGear.gear).toEqual([]);
+    expect(recipeBookIcons(withGear)).toContain("assets/icons/plain-hatchet.png");
+  });
+
   it("skips items without an icon", () => {
     const [recipe] = recipes;
     expect(
@@ -440,6 +451,9 @@ describe("recipeBookIcons", () => {
         version: "v",
         recipes: [{ ...recipe!, icon: "", outputs: [], materials: [] }],
         activities: [],
+        gearItems: [],
+        skills: [],
+        locations: [],
         foods: [],
         loot: [],
         gear: [],
@@ -760,6 +774,108 @@ describe("loot", () => {
 
   it("finds a loot item no recipe mentions", () => {
     expect(findItem(withLoot, "adjustable_wrench")?.name).toBe("Adjustable wrench");
+  });
+});
+
+describe("gear items", () => {
+  const data = structuredClone(sample) as unknown as GameData;
+  data.items.push(...(gearItems as unknown as ItemDetail[]), ...(lootItems as unknown as ItemDetail[]));
+  const book = buildRecipeBook(data);
+  const hatchet = book.gearItems.find((g) => g.id === "steel_hatchet")!;
+
+  it("lists every item that can be worn or held, and nothing else", () => {
+    const expected = data.items.filter((i) => "gearType" in i && i.gearType).map((i) => i.id);
+    expect(book.gearItems.map((g) => g.id).sort()).toEqual(expected.sort());
+    expect(book.gearItems.map((g) => g.id)).not.toContain("gold_ore");
+  });
+
+  it("gives each its slot, keywords and equip requirements", () => {
+    expect(hatchet).toMatchObject({
+      name: "Steel hatchet",
+      slot: "tool",
+      keywords: ["tool", "woodcutting_tool", "hatchet", "woodcutting"],
+      requirements: [{ type: "skillLevel", opposite: false, requirement: { level: 30, skill: "woodcutting" } }],
+    });
+  });
+
+  it("keeps each effect as a number with its conditions", () => {
+    expect(hatchet.stats).toEqual([
+      {
+        stat: "workEfficiency",
+        value: 0.09,
+        isPercent: true,
+        conditions: [{ type: "mainSkill", opposite: false, requirement: { skill: "woodcutting" } }],
+      },
+    ]);
+  });
+
+  it("keeps what each quality tier adds on top", () => {
+    expect(Object.keys(hatchet.tierStats).sort()).toEqual(["epic", "ethereal", "legendary", "rare", "uncommon"]);
+    expect(hatchet.tierStats.ethereal?.find((s) => s.stat === "doubleAction")?.value).toBe(0.07);
+  });
+
+  it.each([
+    ["no quality", null, [0.09]],
+    ["common", "common", [0.09]],
+    ["uncommon", "uncommon", [0.09, 0.02]],
+    ["rare, stacking the uncommon bonus", "rare", [0.09, 0.02, 0.03]],
+  ] as const)("adds up the work efficiency at %s", (_, quality, expected) => {
+    const efficiency = gearStatsAt(hatchet, quality).filter((s) => s.stat === "workEfficiency");
+    expect(efficiency.map((s) => s.value)).toEqual(expected);
+  });
+
+  it("gives untiered gear no tier stats", () => {
+    expect(book.gearItems.find((g) => g.id === "adjustable_wrench")?.tierStats).toEqual({});
+  });
+
+  it("skips effects with no stat", () => {
+    const withBlank = structuredClone(data);
+    const item = withBlank.items.find((i) => i.id === "steel_hatchet")!;
+    item.itemAttrs = [{ ...item.itemAttrs![0]!, stats: [] }];
+    expect(buildRecipeBook(withBlank).gearItems.find((g) => g.id === "steel_hatchet")?.stats).toEqual([]);
+  });
+});
+
+describe("skills and locations", () => {
+  it("lists each skill with its type", () => {
+    expect(book.skills).toEqual([
+      { id: "cooking", name: "Cooking", type: "artisan" },
+      { id: "smithing", name: "Smithing", type: "artisan" },
+    ]);
+  });
+
+  it("sorts skills A–Z whatever order the game lists them in", () => {
+    const data = structuredClone(sample) as unknown as GameData;
+    data.skills.reverse();
+    expect(buildRecipeBook(data).skills.map((s) => s.id)).toEqual(["cooking", "smithing"]);
+  });
+
+  it("lists each location with its regions and keywords, A–Z", () => {
+    expect(book.locations.map((l) => l.id)).toEqual([
+      "azurazera",
+      "bilgemont_port",
+      "blackspell_harbour",
+      "crown_of_cinders",
+    ]);
+    expect(book.locations[0]).toEqual({
+      id: "azurazera",
+      name: "Azurazera",
+      region: "Jarvonia",
+      realms: ["jarvonia"],
+      keywords: ["snowy"],
+    });
+  });
+
+  it("puts a location's sub-regions after its region", () => {
+    const data = structuredClone(sample) as unknown as GameData;
+    data.locations[0]!.subFactions = ["herberts_guiding_grounds"];
+    expect(buildRecipeBook(data).locations[0]?.realms).toEqual(["jarvonia", "herberts_guiding_grounds"]);
+  });
+
+  it("gives a location without keywords an empty list", () => {
+    const data = structuredClone(sample) as unknown as GameData;
+    delete (data.locations[0] as { keywords?: string[] }).keywords;
+    expect(buildRecipeBook(data).locations[0]?.keywords).toEqual([]);
   });
 });
 
