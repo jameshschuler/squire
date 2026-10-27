@@ -3,8 +3,10 @@ import type {
   ActivityDetail,
   FactionDetail,
   ItemDetail,
+  KeywordDetail,
   LocationDetail,
   LootTableDetail,
+  PetDetail,
   RecipeDetail,
   RewardDetail,
   ServiceDetail,
@@ -25,4 +27,7 @@ export interface GameData {
   shops: ShopDetail[];
   achievements: AchievementDetail[];
   rewards: RewardDetail[];
+  pets: PetDetail[];
+  keywords: KeywordDetail[];
+  gameIds: Record<string, string>;
 }

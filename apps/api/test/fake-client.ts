@@ -3,14 +3,16 @@ import { HTTP_STATUS } from "../src/http-status.js";
 import type { GameData } from "../src/recipe-book/index.js";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
+const GAME_IDS: Record<string, string> = { steel_hatchet: "a1b2c3d4-0000-4000-8000-000000000002" };
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 
-export function fakeClient(version = "v1") {
+export function fakeClient(version = "v1", extraItems: Record<string, unknown>[] = []) {
   const data = sample as unknown as GameData;
   const resources: Record<string, Record<string, unknown>[]> = {
     skills: data.skills,
-    items: data.items,
+    items: [...data.items, ...extraItems],
     services: data.services,
     recipes: data.recipes,
     locations: data.locations,
@@ -20,8 +22,17 @@ export function fakeClient(version = "v1") {
     shops: data.shops,
     achievements: data.achievements,
     rewards: data.rewards,
+    pets: data.pets,
+    keywords: data.keywords,
   };
-  const calls = { version: 0, lists: 0, icon: 0, iconBatches: [] as number[], paths: [] as string[] };
+  const calls = {
+    version: 0,
+    lists: 0,
+    icon: 0,
+    iconBatches: [] as number[],
+    idRequests: [] as string[][],
+    paths: [] as string[],
+  };
   const state = { version };
 
   const fetch: typeof globalThis.fetch = async (input, init) => {
@@ -49,6 +60,11 @@ export function fakeClient(version = "v1") {
         return json({ error: "Not found" }, HTTP_STATUS.NOT_FOUND);
       }
       return new Response(new Uint8Array([1, 2, 3]), { headers: { "Content-Type": "image/png" } });
+    }
+    if (url.pathname === "/items/ids") {
+      const { ids } = JSON.parse(String(init?.body)) as { ids: string[] };
+      calls.idRequests.push(ids);
+      return json(Object.fromEntries(ids.map((id) => [id, GAME_IDS[id] ?? id])));
     }
     const [, resource = "", endpoint, id] = url.pathname.split("/");
     const entries = resources[resource];
