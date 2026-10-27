@@ -102,6 +102,27 @@ describe("parseCharacterExport", () => {
     expect(owned.some((item) => item.id.endsWith("_fine"))).toBe(false);
   });
 
+  it("reads the pet out with you and the rest of your pets, with their levels", () => {
+    expect(parseCharacterExport(fixtureText).pets).toEqual([
+      { species: "tortoise", level: 4 },
+      { species: "silky_mummy", level: 2 },
+      { species: "camel", level: 1 },
+    ]);
+  });
+
+  it("reads an export with no pet out", () => {
+    const text = JSON.stringify({ ...exportFixture, pets: { pet: null } });
+    expect(parseCharacterExport(text).pets).toEqual([
+      { species: "silky_mummy", level: 2 },
+      { species: "camel", level: 1 },
+    ]);
+  });
+
+  it("has no pets when the export lists none", () => {
+    const { pets: _pets, available_pets: _available, ...withoutPets } = exportFixture;
+    expect(parseCharacterExport(JSON.stringify(withoutPets)).pets).toEqual([]);
+  });
+
   it("rejects text that isn't JSON", () => {
     expect(() => parseCharacterExport("{ name: ")).toThrow("That isn't valid JSON.");
   });
@@ -112,6 +133,8 @@ describe("parseCharacterExport", () => {
     ["missing skills", { ...exportFixture, skills: undefined }],
     ["gear that isn't item ids", { ...exportFixture, gear: { head: 7 } }],
     ["collectibles that aren't ids", { ...exportFixture, collectibles: [1] }],
+    ["pets without a level", { ...exportFixture, available_pets: [{ species: "camel" }] }],
+    ["an out pet without a species", { ...exportFixture, pets: { pet: { level: 2 } } }],
   ])("rejects %s", (_, data) => {
     expect(() => parseCharacterExport(JSON.stringify(data))).toThrow("That isn't a WalkScape character export.");
   });

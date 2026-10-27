@@ -28,6 +28,11 @@ export interface OwnedItem {
   quality: ItemQuality | null;
 }
 
+export interface OwnedPet {
+  species: string;
+  level: number;
+}
+
 export interface Character {
   name: string;
   skillLevels: Record<string, number>;
@@ -39,6 +44,7 @@ export interface Character {
   collectibles: string[];
   equipped: Partial<Record<EquipmentSlot, OwnedItem>>;
   owned: OwnedItem[];
+  pets: OwnedPet[];
 }
 
 interface CharacterExport {
@@ -50,9 +56,11 @@ interface CharacterExport {
   bank: Record<string, number>;
   inventory: Record<string, number>;
   collectibles: string[];
+  pets?: { pet?: OwnedPet | null };
+  available_pets?: OwnedPet[];
 }
 
-const MAX_LEVEL = 99;
+export const MAX_LEVEL = 99;
 const CHARACTER_STEPS_PER_XP = 4.6;
 const BASE_TOOL_SLOTS = 3;
 const TOOL_SLOTS_BY_LEVEL = [
@@ -112,6 +120,10 @@ export function parseCharacterExport(text: string): Character {
     collectibles: data.collectibles,
     equipped: Object.fromEntries(equippedIds.map(([slot, id]) => [slot, ownedItem(id)])),
     owned: [...ownedIds].filter((id) => !id.endsWith(FINE_SUFFIX)).map(ownedItem),
+    pets: [...(data.pets?.pet ? [data.pets.pet] : []), ...(data.available_pets ?? [])].map(({ species, level }) => ({
+      species,
+      level,
+    })),
   };
 }
 
@@ -136,8 +148,14 @@ function isCharacterExport(data: unknown): data is CharacterExport {
     isRecordOf(data.bank, "number") &&
     isRecordOf(data.inventory, "number") &&
     Array.isArray(data.collectibles) &&
-    data.collectibles.every((id) => typeof id === "string")
+    data.collectibles.every((id) => typeof id === "string") &&
+    (data.available_pets === undefined || (Array.isArray(data.available_pets) && data.available_pets.every(isPet))) &&
+    (data.pets === undefined || (isRecord(data.pets) && (data.pets.pet == null || isPet(data.pets.pet))))
   );
+}
+
+function isPet(value: unknown): boolean {
+  return isRecord(value) && typeof value.species === "string" && typeof value.level === "number";
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
