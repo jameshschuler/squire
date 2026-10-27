@@ -1,7 +1,7 @@
 import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useCharacterContext } from "@/contexts/character-context";
-import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
 
 interface CharacterImportProps {
   title: string;
@@ -35,7 +35,7 @@ export function CharacterImport({ title, onSaved, onCancel }: CharacterImportPro
       <label htmlFor={fieldId} className="text-sm font-medium">
         Character data
       </label>
-      <textarea
+      <Textarea
         id={fieldId}
         value={text}
         onChange={(event) => {
@@ -45,11 +45,7 @@ export function CharacterImport({ title, onSaved, onCancel }: CharacterImportPro
         rows={6}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
-        className={cn(
-          "w-full rounded-md border border-input bg-transparent px-3 py-2 font-mono text-xs shadow-xs outline-none dark:bg-input/30",
-          "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
-          "aria-invalid:border-destructive",
-        )}
+        className="field-sizing-fixed font-mono md:text-xs"
       />
       {error && (
         <p id={errorId} className="text-sm text-destructive">
