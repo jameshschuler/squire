@@ -53,8 +53,6 @@ describe("answerNotes", () => {
 describe("formatStepsResult", () => {
   it("shows the average only when double action lowers it", () => {
     expect(formatStepsResult(steps(35))).toBe("35 steps per action");
-    expect(formatStepsResult({ efficiency: 1, steps: 35, averageSteps: 24.64 })).toBe(
-      "35 steps per action · 24.6 on average",
-    );
+    expect(formatStepsResult({ efficiency: 1, steps: 35, averageSteps: 24.64 })).toBe("35 steps per action (24.6 avg)");
   });
 });

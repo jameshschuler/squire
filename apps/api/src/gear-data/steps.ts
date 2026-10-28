@@ -34,12 +34,15 @@ const MAX_BONUS_LEVELS = 20;
 const MIN_EFFICIENCY = 0.01;
 const MIN_STEPS = 10;
 export const MAX_DOUBLE_ACTION = 1;
+export const SAME_STEPS = 1e-9;
 const ROUNDING_SLACK = 1e-9;
 
 export function stepsPerAction(target: WorkTarget, skillLevel: number, totals: StatTotals): StepsResult {
-  const levelsOver = Math.min(Math.max(skillLevel - target.level, 0), MAX_BONUS_LEVELS);
   const cap = efficiencyCap(target);
-  const efficiency = Math.max(1 + Math.min(levelsOver * LEVEL_BONUS + totals.workEfficiency, cap), MIN_EFFICIENCY);
+  const efficiency = Math.max(
+    1 + Math.min(levelBonus(target, skillLevel) + totals.workEfficiency, cap),
+    MIN_EFFICIENCY,
+  );
   const raw = (target.workRequired / efficiency) * (1 + totals.stepsPercent) + totals.stepsFlat;
   const steps = Math.ceil(Math.max(raw, MIN_STEPS) - ROUNDING_SLACK);
   return { efficiency, steps, averageSteps: steps / (1 + Math.min(totals.doubleAction, MAX_DOUBLE_ACTION)) };
@@ -47,4 +50,8 @@ export function stepsPerAction(target: WorkTarget, skillLevel: number, totals: S
 
 export function efficiencyCap(target: WorkTarget): number {
   return target.maxWorkEfficiency === null ? Number.POSITIVE_INFINITY : target.maxWorkEfficiency - 1;
+}
+
+export function levelBonus(target: WorkTarget, skillLevel: number): number {
+  return Math.min(Math.max(skillLevel - target.level, 0), MAX_BONUS_LEVELS) * LEVEL_BONUS;
 }

@@ -1,8 +1,9 @@
 import type { GearType } from "@walkscape-community/data-api-client";
 import type { ItemQuality } from "../recipe-book/types.js";
-import { playerConditionHolds, type OwnedPetView, type PlayerProfile } from "./profile.js";
+import { ownedKey } from "./items.js";
+import { playerConditionHolds, type OwnedGear, type OwnedPetView, type PlayerProfile } from "./profile.js";
 import { NO_STATS, addStats, type StatTotals, type WorkTarget } from "./steps.js";
-import type { GearCondition, GearItem, GearStat, LocationView } from "./types.js";
+import type { GearCondition, GearData, GearItem, GearStat, LocationView } from "./types.js";
 
 export interface GearPick {
   slot: GearType;
@@ -36,6 +37,34 @@ export interface Situation {
 }
 
 type CandidateBase = Omit<Candidate, "totals" | "setBonuses" | "best">;
+
+export function situationFor(
+  gear: GearData,
+  profile: PlayerProfile,
+  target: WorkTarget,
+  location: LocationView | null,
+): Situation {
+  const skillType = gear.skills.find((s) => s.id === target.skill)?.type ?? "";
+  return { target, skillType, location, profile };
+}
+
+export function gearCandidate(situation: Situation, owned: OwnedGear): Candidate {
+  return toCandidate(
+    situation,
+    {
+      id: ownedKey({ id: owned.item.id, quality: owned.quality }),
+      slot: owned.item.slot,
+      keywords: owned.item.keywords,
+      pick: { slot: owned.item.slot, item: owned.item, quality: owned.quality },
+      pet: null,
+    },
+    owned.stats,
+  );
+}
+
+export function petCandidate(situation: Situation, pet: OwnedPetView): Candidate {
+  return toCandidate(situation, { id: `pet:${pet.pet.id}`, slot: "pet", keywords: [], pick: null, pet }, pet.stats);
+}
 
 export function toCandidate(situation: Situation, base: CandidateBase, stats: GearStat[]): Candidate {
   let totals = NO_STATS;
@@ -87,7 +116,7 @@ function statTotals(stat: GearStat): StatTotals {
   }
 }
 
-function conditionHolds(situation: Situation, condition: GearCondition): boolean {
+export function conditionHolds(situation: Situation, condition: GearCondition): boolean {
   const holds = situationHolds(situation, condition) ?? playerConditionHolds(situation.profile, condition);
   return (holds ?? false) !== condition.opposite;
 }

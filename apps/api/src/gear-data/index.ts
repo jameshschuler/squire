@@ -3,5 +3,7 @@ export { gearDataIcons } from "./icons.js";
 export { ownedKey } from "./items.js";
 export * from "./types.js";
 export * from "./optimizer.js";
-export { BEST_IN_GAME, skillLevelOf, type PlayerProfile } from "./profile.js";
+export { BEST_IN_GAME, skillLevelOf, toolSlotsOf, type OwnedPetView, type PlayerProfile } from "./profile.js";
 export * from "./steps.js";
+export { setStats, type StatLine } from "./set-stats.js";
+export { keptGear, wornSteps } from "./worn.js";

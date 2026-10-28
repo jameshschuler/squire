@@ -1,58 +1,37 @@
-import { ownedKey, type GearSuggestion, type StepsResult } from "@squire/api/gear-data";
-import { GameIcon } from "@/components/shared/GameIcon";
-import { formatStepsResult } from "@/lib/gear-answer";
+import { formatStepsResult, type GearAnswerView } from "@/lib/gear-answer";
 import { formatRegion } from "@/lib/format";
 import { ChatMessage } from "./ChatMessage";
 import { CopyGearSetButton } from "./CopyGearSetButton";
-import { GearPickRow } from "./GearPickRow";
+import { GearGrid } from "./GearGrid";
+import { GearStats } from "./GearStats";
 
-interface GearAnswerProps {
-  suggestion: GearSuggestion;
-  notes: string[];
-  showLocation: boolean;
-  before: StepsResult | null;
-  equipped: Set<string> | null;
-}
+type GearAnswerProps = GearAnswerView & { showLocation: boolean };
 
-export function GearAnswer({ suggestion, notes, showLocation, before, equipped }: GearAnswerProps) {
+export function GearAnswer(props: GearAnswerProps) {
+  const { suggestion, notes, showLocation, before, equipped, kept, efficiency, stats, toolSlots } = props;
   const { picks, pet, location, result } = suggestion;
+  const context = [
+    before && `Now ${formatStepsResult(before)}`,
+    showLocation && location && `at ${location.name} (${formatRegion(location.region)})`,
+  ].filter(Boolean);
   return (
     <ChatMessage>
       <div>
         <p className="font-semibold">{formatStepsResult(result)}</p>
-        {before && <p className="text-sm text-muted-foreground">Now: {formatStepsResult(before)}</p>}
-        {showLocation && location && (
-          <p className="text-sm text-muted-foreground">
-            Best at {location.name} ({formatRegion(location.region)})
-          </p>
-        )}
+        {context.length > 0 && <p className="text-xs text-muted-foreground">{context.join(" · ")}</p>}
       </div>
-      {notes.map((note) => (
-        <p key={note} className="text-sm">
-          {note}
-        </p>
-      ))}
-      {(picks.length > 0 || pet) && (
-        <ul className="divide-y">
-          {picks.map((pick) => (
-            <GearPickRow
-              key={`${pick.slot}:${pick.item.id}:${pick.quality ?? ""}`}
-              pick={pick}
-              equipped={equipped?.has(ownedKey({ id: pick.item.id, quality: pick.quality })) ?? false}
-            />
+      {notes.length > 0 && (
+        <div className="space-y-0.5 text-xs text-muted-foreground">
+          {notes.map((note) => (
+            <p key={note}>{note}</p>
           ))}
-          {pet && (
-            <li className="flex items-center gap-3 py-2">
-              <GameIcon path={pet.pet.icon} />
-              <span>
-                <span className="block font-medium">{pet.pet.name}</span>
-                <span className="block text-sm text-muted-foreground">Pet · level {pet.level}</span>
-              </span>
-            </li>
-          )}
-        </ul>
+        </div>
       )}
-      {picks.length > 0 && <CopyGearSetButton picks={picks} />}
+      {(picks.length > 0 || pet || kept.length > 0) && (
+        <GearGrid picks={picks} kept={kept} pet={pet} toolSlots={toolSlots} equipped={equipped} />
+      )}
+      {(picks.length > 0 || pet || kept.length > 0) && <GearStats efficiency={efficiency} rows={stats} />}
+      {(picks.length > 0 || kept.length > 0) && <CopyGearSetButton picks={[...picks, ...kept]} />}
     </ChatMessage>
   );
 }
