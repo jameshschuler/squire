@@ -1,6 +1,7 @@
 import {
   GOALS,
   efficiencyCap,
+  goalStats,
   levelBonus,
   ownedKey,
   SAME_STEPS,
@@ -15,23 +16,13 @@ import {
   type StepsResult,
 } from "@squire/api/gear-data";
 import { formatNumber } from "./format";
-import {
-  efficiencyRow,
-  efficiencyStatus,
-  formatStatValue,
-  statGroups,
-  statLabel,
-  type EfficiencyRow,
-  type StatGroups,
-  type StatRow,
-} from "./gear-stats";
+import { efficiencyStatus, formatStatValue, statGroups, statLabel, type StatGroups, type StatRow } from "./gear-stats";
 import type { GearTarget } from "./gear-targets";
 
 export interface GearAnswerView {
   suggestion: GearSuggestion;
   before: StepsResult | null;
   equipped: Set<string> | null;
-  efficiency: EfficiencyRow;
   efficiencyStatus: string;
   priorities: StatRow[];
   steps: string | null;
@@ -72,11 +63,10 @@ export function gearAnswer(
     suggestion,
     before,
     equipped: character && new Set(Object.values(character.equipped).map(ownedKey)),
-    efficiency: efficiencyRow(parts),
     efficiencyStatus: efficiencyStatus(parts),
     priorities,
     steps: suggestion.goals.includes("steps") ? null : formatStepsResult(suggestion.result),
-    stats: statGroups(lines),
+    stats: statGroups(lines, parts, goalStats(suggestion.goals)),
     notes: answerNotes(suggestion, target, before, character ? level : null),
     toolSlots: toolSlotsOf(profile),
   };

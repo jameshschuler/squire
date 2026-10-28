@@ -173,14 +173,14 @@ describe("Gear page", () => {
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     const stats = await screen.findByRole("region", { name: "Set stats" });
     expect(stats.textContent).toContain("Work efficiency");
-    expect(stats.textContent).toContain("of 70% max");
-    expect(stats.textContent).toContain("Steps required−5 steps");
+    expect(stats.textContent).toContain("Work efficiency of 70% max");
+    expect(stats.textContent).toContain("−5Steps per action");
   });
 
-  it("shows the game's gear layout, with empty slots saying nothing helps", async () => {
+  it("shows the game's gear layout, with empty slots left to the player", async () => {
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     expect(await screen.findByRole("link", { name: /Hands.*journeyman handwear/ })).toBeDefined();
-    expect(screen.getAllByText("Nothing helps").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Player's choice").length).toBeGreaterThan(0);
     expect(screen.getByText("Tool 6")).toBeDefined();
   });
 

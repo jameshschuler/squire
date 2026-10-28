@@ -21,7 +21,7 @@ export function GearSlotCell({ label, name, icon, itemId, equipped = false }: Ge
           <span className="line-clamp-2 text-[11px] leading-tight text-muted-foreground">{name}</span>
         </>
       ) : (
-        <span className="flex h-9 items-center text-[11px] text-muted-foreground">Nothing helps</span>
+        <span className="flex h-9 items-center text-[11px] text-muted-foreground">{"Player's choice"}</span>
       )}
       {equipped && <Check aria-label="Equipped" className="absolute top-1 right-1 size-3.5 text-muted-foreground" />}
     </>

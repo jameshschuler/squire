@@ -8,9 +8,16 @@ export interface StatRow {
   value: string;
 }
 
+export interface StatTile {
+  key: string;
+  value: string;
+  label: string;
+  highlight: boolean;
+}
+
 export interface StatGroups {
-  steps: StatRow[];
-  other: StatRow[];
+  steps: StatTile[];
+  other: StatTile[];
 }
 
 export interface EfficiencyParts {
@@ -18,11 +25,6 @@ export interface EfficiencyParts {
   cap: number;
   gear: number;
   level: number;
-}
-
-export interface EfficiencyRow {
-  value: string;
-  detail: string;
 }
 
 const STAT_LABELS: Partial<Record<StatType, string>> = {
@@ -33,7 +35,7 @@ const STAT_LABELS: Partial<Record<StatType, string>> = {
   qualityOutcome: "Quality outcome",
   chestFind: "Chest finding",
   fineMaterialFind: "Fine material finding",
-  bonusExperience: "Bonus experience",
+  bonusExperience: "Bonus XP",
   inventorySpace: "Inventory space",
   findGems: "Gem finding",
   findBirdNests: "Bird nest finding",
@@ -42,55 +44,84 @@ const STAT_LABELS: Partial<Record<StatType, string>> = {
 };
 const STEP_STATS: StatType[] = ["stepsRequired", "doubleAction"];
 
-export function statGroups(lines: StatLine[]): StatGroups {
-  const stats = [...new Set(lines.map((line) => line.stat))].filter((stat) => STAT_LABELS[stat]);
-  const row = (stat: StatType): StatRow => ({
-    label: STAT_LABELS[stat]!,
-    value: lines
-      .filter((line) => line.stat === stat)
-      .sort((a, b) => Number(a.isPercent) - Number(b.isPercent))
-      .map(formatStatValue)
-      .join(", "),
+const TILE_LABELS: Partial<Record<`${StatType}:${boolean}`, string>> = {
+  "stepsRequired:false": "Steps per action",
+  "stepsRequired:true": "Steps required",
+  "bonusExperience:false": "Bonus XP per action",
+  "bonusExperience:true": "Bonus XP",
+};
+
+export function statGroups(lines: StatLine[], efficiency: EfficiencyParts, highlighted: StatType[]): StatGroups {
+  const tile = (line: StatLine): StatTile => ({
+    key: `${line.stat}:${line.isPercent}`,
+    value: formatStatValue(line),
+    label: TILE_LABELS[`${line.stat}:${line.isPercent}`] ?? STAT_LABELS[line.stat]!,
+    highlight: highlighted.includes(line.stat),
   });
+  const rank = (tile: StatTile) => {
+    const index = highlighted.findIndex((stat) => tile.key.startsWith(`${stat}:`));
+    return index === -1 ? highlighted.length : index;
+  };
+  const shown = lines
+    .filter((line) => STAT_LABELS[line.stat])
+    .sort((a, b) => Number(a.isPercent) - Number(b.isPercent));
   return {
-    steps: STEP_STATS.filter((stat) => stats.includes(stat)).map(row),
-    other: stats
-      .filter((stat) => !STEP_STATS.includes(stat))
-      .map(row)
-      .sort((a, b) => a.label.localeCompare(b.label)),
+    steps: [
+      efficiencyTile(efficiency),
+      ...STEP_STATS.flatMap((stat) => shown.filter((line) => line.stat === stat).map(tile)),
+    ],
+    other: shown
+      .filter((line) => !STEP_STATS.includes(line.stat))
+      .map(tile)
+      .sort((a, b) => rank(a) - rank(b) || a.label.localeCompare(b.label)),
   };
 }
 
-export function formatStatValue({ stat, value, isPercent }: StatLine): string {
+function efficiencyTile(parts: EfficiencyParts): StatTile {
+  const { used, cap } = parts;
+  const label = !Number.isFinite(cap)
+    ? "Work efficiency"
+    : efficiencyOver(parts) >= 0
+      ? "Work efficiency, maxed"
+      : `Work efficiency of ${formatPercent(cap, 1)} max`;
+  return {
+    key: "workEfficiency",
+    value: formatStatValue({ isPercent: true, value: used }),
+    label,
+    highlight: false,
+  };
+}
+
+export function formatStatValue({ value, isPercent }: Pick<StatLine, "value" | "isPercent">): string {
   const sign = value < 0 ? "−" : "+";
   const amount = Math.abs(value);
   if (isPercent) {
     return `${sign}${formatPercent(amount, 1)}`;
   }
-  return `${sign}${Number(amount.toFixed(2))}${stat === "stepsRequired" ? " steps" : ""}`;
-}
-
-export function efficiencyRow({ used, cap, gear, level }: EfficiencyParts): EfficiencyRow {
-  const signed = (value: number) => formatStatValue({ stat: "workEfficiency", isPercent: true, value });
-  return {
-    value: Number.isFinite(cap) ? `${signed(used)} of ${formatPercent(cap, 1)} max` : signed(used),
-    detail: `Gear ${signed(gear)} · level ${signed(level)}`,
-  };
+  return `${sign}${Number(amount.toFixed(2))}`;
 }
 
 export function statLabel(stat: StatType): string {
   return STAT_LABELS[stat] ?? stat;
 }
 
-export function efficiencyStatus({ used, cap, gear, level }: EfficiencyParts): string {
+export function efficiencyStatus(parts: EfficiencyParts): string {
+  const { used, cap, gear, level } = parts;
+  const sources = `gear ${formatStatValue({ isPercent: true, value: gear })}, level ${formatStatValue({ isPercent: true, value: level })}`;
   if (!Number.isFinite(cap)) {
-    return `Work efficiency ${formatPercent(used, 1)}, no max`;
+    return `Work efficiency ${formatPercent(used, 1)}, no max (${sources})`;
   }
+  const over = efficiencyOver(parts);
+  if (over > 0) {
+    return `Max work efficiency reached, ${formatPercent(over, 1)} over (${sources})`;
+  }
+  if (over === 0) {
+    return `Max work efficiency reached (${sources})`;
+  }
+  return `Work efficiency ${formatPercent(used, 1)} of ${formatPercent(cap, 1)} max, ${formatPercent(-over, 1)} short (${sources})`;
+}
+
+function efficiencyOver({ cap, gear, level }: EfficiencyParts): number {
   const over = gear + level - cap;
-  if (over > -1e-9) {
-    return over > 1e-9
-      ? `Max work efficiency reached, ${formatPercent(over, 1)} over (wasted)`
-      : "Max work efficiency reached";
-  }
-  return `Work efficiency ${formatPercent(used, 1)} of ${formatPercent(cap, 1)} max, ${formatPercent(-over, 1)} short`;
+  return Math.abs(over) < 1e-9 ? 0 : over;
 }
