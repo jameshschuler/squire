@@ -49,6 +49,7 @@ export function prune(choices: Candidate[], capacity: number, rules: KeywordRule
       a.totals.stepsPercent <= b.best.stepsPercent &&
       a.totals.stepsFlat <= b.best.stepsFlat &&
       Math.min(a.totals.doubleAction, MAX_DOUBLE_ACTION) >= Math.min(b.best.doubleAction, MAX_DOUBLE_ACTION) &&
+      b.best.goalStats.every((value, i) => (a.totals.goalStats[i] ?? 0) >= value) &&
       aKeys.ban.every((k) => bKeys.ban.includes(k)) &&
       [...bKeys.set].every((k) => aKeys.set.has(k))
     );
@@ -62,6 +63,7 @@ function helps(totals: StatTotals, useful: number): boolean {
     (totals.workEfficiency > 0 && useful > 0) ||
     totals.stepsPercent < 0 ||
     totals.stepsFlat < 0 ||
-    totals.doubleAction > 0
+    totals.doubleAction > 0 ||
+    totals.goalStats.some((value) => value > 0)
   );
 }

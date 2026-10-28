@@ -7,3 +7,4 @@ export { BEST_IN_GAME, skillLevelOf, toolSlotsOf, type OwnedPetView, type Player
 export * from "./steps.js";
 export { setStats, type StatLine } from "./set-stats.js";
 export { wornSteps } from "./worn.js";
+export { GOALS, compareScores, goalScorer, type Goal, type GoalId, type Score } from "./goals.js";

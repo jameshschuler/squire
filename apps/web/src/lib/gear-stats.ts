@@ -77,3 +77,20 @@ export function efficiencyRow({ used, cap, gear, level }: EfficiencyParts): Effi
     detail: `Gear ${signed(gear)} · level ${signed(level)}`,
   };
 }
+
+export function statLabel(stat: StatType): string {
+  return STAT_LABELS[stat] ?? stat;
+}
+
+export function efficiencyStatus({ used, cap, gear, level }: EfficiencyParts): string {
+  if (!Number.isFinite(cap)) {
+    return `Work efficiency ${formatPercent(used, 1)}, no max`;
+  }
+  const over = gear + level - cap;
+  if (over > -1e-9) {
+    return over > 1e-9
+      ? `Max work efficiency reached, ${formatPercent(over, 1)} over (wasted)`
+      : "Max work efficiency reached";
+  }
+  return `Work efficiency ${formatPercent(used, 1)} of ${formatPercent(cap, 1)} max, ${formatPercent(-over, 1)} short`;
+}

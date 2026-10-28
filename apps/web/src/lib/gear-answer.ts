@@ -1,4 +1,5 @@
 import {
+  GOALS,
   efficiencyCap,
   levelBonus,
   ownedKey,
@@ -14,7 +15,16 @@ import {
   type StepsResult,
 } from "@squire/api/gear-data";
 import { formatNumber } from "./format";
-import { efficiencyRow, statGroups, type EfficiencyRow, type StatGroups } from "./gear-stats";
+import {
+  efficiencyRow,
+  efficiencyStatus,
+  formatStatValue,
+  statGroups,
+  statLabel,
+  type EfficiencyRow,
+  type StatGroups,
+  type StatRow,
+} from "./gear-stats";
 import type { GearTarget } from "./gear-targets";
 
 export interface GearAnswerView {
@@ -22,6 +32,9 @@ export interface GearAnswerView {
   before: StepsResult | null;
   equipped: Set<string> | null;
   efficiency: EfficiencyRow;
+  efficiencyStatus: string;
+  priorities: StatRow[];
+  steps: string | null;
   stats: StatGroups;
   notes: string[];
   toolSlots: number;
@@ -38,17 +51,31 @@ export function gearAnswer(
   const before = character ? wornSteps(gear, character, optimize, suggestion.location) : null;
   const lines = setStats(gear, profile, optimize, suggestion);
   const level = skillLevelOf(profile, optimize.skill);
-  const efficiency = efficiencyRow({
+  const parts = {
     used: suggestion.result.efficiency - 1,
     cap: efficiencyCap(optimize),
     gear: lines.find((l) => l.stat === "workEfficiency" && l.isPercent)?.value ?? 0,
     level: levelBonus(optimize, level),
+  };
+  const priorities = suggestion.goals.map((id): StatRow => {
+    const goal = GOALS.find((g) => g.id === id)!;
+    if (!goal.stat) {
+      return { label: goal.label, value: formatStepsResult(suggestion.result) };
+    }
+    const line = lines.find((l) => l.stat === goal.stat && l.isPercent);
+    return {
+      label: goal.label,
+      value: `${statLabel(goal.stat)} ${line ? formatStatValue(line) : "+0%"}`,
+    };
   });
   return {
     suggestion,
     before,
     equipped: character && new Set(Object.values(character.equipped).map(ownedKey)),
-    efficiency,
+    efficiency: efficiencyRow(parts),
+    efficiencyStatus: efficiencyStatus(parts),
+    priorities,
+    steps: suggestion.goals.includes("steps") ? null : formatStepsResult(suggestion.result),
     stats: statGroups(lines),
     notes: answerNotes(suggestion, target, before, character ? level : null),
     toolSlots: toolSlotsOf(profile),

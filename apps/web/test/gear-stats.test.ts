@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { efficiencyRow, formatStatValue, statGroups } from "@/lib/gear-stats";
+import { efficiencyRow, efficiencyStatus, formatStatValue, statGroups } from "@/lib/gear-stats";
 
 describe("statGroups", () => {
   const groups = statGroups([
@@ -56,5 +56,16 @@ describe("efficiencyRow", () => {
 
   it("leaves out the max when the activity has none", () => {
     expect(efficiencyRow({ used: 0.3, cap: Number.POSITIVE_INFINITY, gear: 0.3, level: 0 }).value).toBe("+30%");
+  });
+});
+
+describe("efficiencyStatus", () => {
+  it.each([
+    [{ used: 0.3, cap: 0.5, gear: 0.05, level: 0.25 }, "Work efficiency 30% of 50% max, 20% short"],
+    [{ used: 0.5, cap: 0.5, gear: 0.25, level: 0.25 }, "Max work efficiency reached"],
+    [{ used: 0.5, cap: 0.5, gear: 0.58, level: 0.25 }, "Max work efficiency reached, 33% over (wasted)"],
+    [{ used: 0.4, cap: Number.POSITIVE_INFINITY, gear: 0.4, level: 0 }, "Work efficiency 40%, no max"],
+  ])("describes %j", (parts, expected) => {
+    expect(efficiencyStatus(parts)).toBe(expected);
   });
 });

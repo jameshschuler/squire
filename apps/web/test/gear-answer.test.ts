@@ -11,6 +11,7 @@ const target: GearTarget = {
   workRequired: 100,
   maxWorkEfficiency: 1.5,
   locations: [],
+  lootTypes: [],
 };
 const steps = (averageSteps: number): StepsResult => ({ efficiency: 1, steps: Math.ceil(averageSteps), averageSteps });
 const suggestion = (averageSteps: number, picks = 1): GearSuggestion =>

@@ -1,5 +1,5 @@
-import { words, type LocationSummary, type RecipeBook, type SkillLevel } from "@squire/api/recipe-book";
-import type { OptimizeTarget } from "@squire/api/gear-data";
+import { words, type LocationSummary, type LootType, type RecipeBook, type SkillLevel } from "@squire/api/recipe-book";
+import { GOALS, type Goal, type OptimizeTarget } from "@squire/api/gear-data";
 import { matchesWords } from "./match";
 
 export interface GearTarget {
@@ -10,6 +10,7 @@ export interface GearTarget {
   workRequired: number;
   maxWorkEfficiency: number | null;
   locations: LocationSummary[];
+  lootTypes: LootType[];
 }
 
 export const BEST_LOCATION = "best";
@@ -17,15 +18,22 @@ export const BEST_LOCATION = "best";
 const SUGGESTION_LIMIT = 8;
 
 export function gearTargets(book: RecipeBook): GearTarget[] {
-  const activities = book.activities.map((activity) => ({ ...activity, key: `activity:${activity.id}` }));
+  const activities = book.activities.map((activity) => ({
+    ...activity,
+    key: `activity:${activity.id}`,
+    lootTypes: activity.drops.map((d) => d.lootType),
+  }));
   const recipes = book.recipes.map((recipe) => ({
     ...recipe,
     key: `recipe:${recipe.id}`,
     locations: recipe.service?.locations ?? [],
+    lootTypes: [],
   }));
   return [...activities, ...recipes]
-    .flatMap(({ key, name, icon, skills: [skill], workRequired, maxWorkEfficiency, locations }) =>
-      skill && workRequired !== null ? [{ key, name, icon, skill, workRequired, maxWorkEfficiency, locations }] : [],
+    .flatMap(({ key, name, icon, skills: [skill], workRequired, maxWorkEfficiency, locations, lootTypes }) =>
+      skill && workRequired !== null
+        ? [{ key, name, icon, skill, workRequired, maxWorkEfficiency, locations, lootTypes }]
+        : [],
     )
     .sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -47,4 +55,11 @@ export function optimizeTarget(target: GearTarget, location: string | undefined)
     maxWorkEfficiency: target.maxWorkEfficiency,
     locationIds: (pinned ? [pinned] : target.locations).map((l) => l.id),
   };
+}
+
+export function goalsFor(target: GearTarget): Goal[] {
+  const isActivity = target.key.startsWith("activity:");
+  return GOALS.filter(
+    (goal) => (goal.id !== "fine" || isActivity) && (!goal.lootType || target.lootTypes.includes(goal.lootType)),
+  );
 }

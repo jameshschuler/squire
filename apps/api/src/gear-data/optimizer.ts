@@ -2,6 +2,7 @@ import type { GearType } from "@walkscape-community/data-api-client";
 import { MAX_LEVEL, toolSlots } from "../character/character.js";
 import {
   gearCandidate,
+  type Candidate,
   petCandidate,
   situationFor,
   withSetBonuses,
@@ -9,6 +10,7 @@ import {
   type Situation,
 } from "./candidates.js";
 import { ownedGear, ownedPets, skillLevelOf, toolSlotsOf, type OwnedPetView, type PlayerProfile } from "./profile.js";
+import { GOALS, compareScores, goalScorer, goalStats, type GoalId, type Score } from "./goals.js";
 import { keywordRules, prune } from "./pruning.js";
 import { bestSet, type SlotGroup } from "./search.js";
 import {
@@ -33,6 +35,8 @@ export interface GearSuggestion {
   pet: OwnedPetView | null;
   totals: StatTotals;
   result: StepsResult;
+  goals: GoalId[];
+  score: Score;
 }
 
 export const GEAR_SLOTS: { slot: GearType; capacity: number }[] = [
@@ -50,19 +54,27 @@ export const GEAR_SLOTS: { slot: GearType; capacity: number }[] = [
   { slot: "tool", capacity: toolSlots(MAX_LEVEL) },
 ];
 
-export function optimizeGear(gear: GearData, profile: PlayerProfile, target: OptimizeTarget): GearSuggestion {
+const SEARCH_STATES = 300;
+
+export function optimizeGear(
+  gear: GearData,
+  profile: PlayerProfile,
+  target: OptimizeTarget,
+  goals: GoalId[] = ["steps"],
+): GearSuggestion {
   const locations = gear.locations.filter((l) => target.locationIds.includes(l.id));
   return distinctLocations(gear, locations)
-    .map((location) => optimizeAt(gear, situationFor(gear, profile, target, location)))
-    .reduce((best, next) => (next.result.averageSteps < best.result.averageSteps ? next : best));
+    .map((location) => optimizeAt(gear, situationFor(gear, profile, target, location, goalStats(goals)), goals))
+    .reduce((best, next) => (compareScores(next.score, best.score) > 0 ? next : best));
 }
 
-function optimizeAt(gear: GearData, situation: Situation): GearSuggestion {
+function optimizeAt(gear: GearData, situation: Situation, goals: GoalId[]): GearSuggestion {
   const { profile, target } = situation;
   const items = ownedGear(profile, gear.items).map((owned) => gearCandidate(situation, owned));
   const pets = ownedPets(profile, gear.pets).map((pet) => petCandidate(situation, pet));
   const level = skillLevelOf(profile, target.skill);
-  const averageSteps = (totals: StatTotals) => stepsPerAction(target, level, totals).averageSteps;
+  const goalScore = goalScorer(goals);
+  const score = (totals: StatTotals) => goalScore(stepsPerAction(target, level, totals), totals);
   const useful = usefulEfficiency(target, level);
   const rules = keywordRules(gear.bannedKeywords, [...items, ...pets]);
   const groups: SlotGroup[] = GEAR_SLOTS.map(({ slot, capacity }) => ({
@@ -72,11 +84,22 @@ function optimizeAt(gear: GearData, situation: Situation): GearSuggestion {
     .concat({ capacity: 1, choices: pets })
     .map(({ capacity, choices }) => ({
       capacity,
-      choices: prune(choices, capacity, rules, useful).sort((a, b) => averageSteps(a.best) - averageSteps(b.best)),
+      choices: prune(choices, capacity, rules, useful).sort((a, b) => compareScores(score(b.best), score(a.best))),
     }))
     .filter((group) => group.choices.length > 0);
 
-  const chosen = bestSet(groups, rules, useful, averageSteps);
+  const primaryIsSteps = !GOALS.find((g) => g.id === goals[0])?.stat;
+  const chosen = goals.reduce<Candidate[]>(
+    (seed, _, i) =>
+      bestSet(groups, rules, useful, (totals) => score(totals).slice(0, i + 1), {
+        seed,
+        maxStates: i === 0 && primaryIsSteps ? Number.POSITIVE_INFINITY : SEARCH_STATES,
+        goalDims: goalStats(goals.slice(0, i + 1)).length,
+        statFirst: primaryIsSteps ? null : 0,
+        repair: i === goals.length - 1,
+      }),
+    [],
+  );
   const totals = withSetBonuses(chosen);
   return {
     location: situation.location,
@@ -84,6 +107,8 @@ function optimizeAt(gear: GearData, situation: Situation): GearSuggestion {
     pet: chosen.find((c) => c.pet)?.pet ?? null,
     totals,
     result: stepsPerAction(target, level, totals),
+    goals,
+    score: score(totals),
   };
 }
 

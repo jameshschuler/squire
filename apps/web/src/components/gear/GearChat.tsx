@@ -5,11 +5,12 @@ import type { RecipeBook } from "@squire/api/recipe-book";
 import { BEST_IN_GAME, type GearData, type PlayerProfile } from "@squire/api/gear-data";
 import { Button } from "@/components/ui/button";
 import { useCharacterContext } from "@/contexts/character-context";
-import { BEST_LOCATION, gearTargets, optimizeTarget } from "@/lib/gear-targets";
-import type { GearSearch, GearSource } from "@/lib/gear-search";
+import { BEST_LOCATION, gearTargets, goalsFor, optimizeTarget } from "@/lib/gear-targets";
+import { MAX_GOALS, parseGoals, type GearSearch, type GearSource } from "@/lib/gear-search";
 import { ChatAnswer } from "./ChatAnswer";
 import { ChatMessage } from "./ChatMessage";
 import { ChoiceButtons } from "./ChoiceButtons";
+import { PriorityQuestion } from "./PriorityQuestion";
 import { GearResult } from "./GearResult";
 import { TargetQuestion } from "./TargetQuestion";
 
@@ -19,11 +20,6 @@ interface GearChatProps {
   search: GearSearch;
   onSearchChange: (search: GearSearch) => void;
 }
-
-const SOURCES: { value: GearSource; label: string }[] = [
-  { value: "mine", label: "My gear" },
-  { value: "best", label: "Best in game" },
-];
 
 export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) {
   const { character } = useCharacterContext();
@@ -35,14 +31,23 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
       ? search.location
       : undefined;
   const locationAnswered = !askLocation || location !== undefined;
-  const source = character ? search.gear : "best";
+  const source: GearSource = character ? (search.gear ?? "mine") : "best";
+  const allowedGoals = useMemo(() => (target ? goalsFor(target) : []), [target]);
+  const goals = useMemo(
+    () =>
+      parseGoals(
+        search.goals,
+        allowedGoals.map((g) => g.id),
+      ),
+    [search.goals, allowedGoals],
+  );
   const profile = useMemo<PlayerProfile>(
     () => (source === "mine" && character ? { kind: "character", character } : BEST_IN_GAME),
     [source, character],
   );
   const optimize = useMemo(
-    () => (target && locationAnswered && source ? optimizeTarget(target, location) : null),
-    [target, locationAnswered, source, location],
+    () => (target && locationAnswered && goals.length > 0 ? optimizeTarget(target, location) : null),
+    [target, locationAnswered, goals.length, location],
   );
   const update = (answers: GearSearch) => onSearchChange({ ...search, ...answers });
   const locationLabel = target?.locations.find((l) => l.id === location)?.name ?? "Best location";
@@ -58,12 +63,20 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
         </div>
       )}
       <ChatMessage>
-        <p>What do you want to do? I'll find the gear that needs the fewest steps.</p>
+        <p>What do you want to do?</p>
         {!target && (
-          <TargetQuestion targets={targets} onChoose={(key) => update({ target: key, location: undefined })} />
+          <TargetQuestion
+            targets={targets}
+            onChoose={(key) => update({ target: key, location: undefined, goals: undefined })}
+          />
         )}
       </ChatMessage>
-      {target && <ChatAnswer label={target.name} onChange={() => update({ target: undefined, location: undefined })} />}
+      {target && (
+        <ChatAnswer
+          label={target.name}
+          onChange={() => update({ target: undefined, location: undefined, goals: undefined })}
+        />
+      )}
 
       {target && askLocation && (
         <>
@@ -85,24 +98,24 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
         </>
       )}
 
-      {target && locationAnswered && character && (
+      {target && locationAnswered && (
         <>
           <ChatMessage>
-            <p>Whose gear?</p>
-            {!search.gear && (
-              <ChoiceButtons choices={SOURCES} onChoose={(gear) => update({ gear: gear as GearSource })} />
+            <p>What matters most? Pick up to {MAX_GOALS}, in order.</p>
+            {goals.length === 0 && (
+              <PriorityQuestion goals={allowedGoals} onChoose={(picked) => update({ goals: picked.join(",") })} />
             )}
           </ChatMessage>
-          {search.gear && (
+          {goals.length > 0 && (
             <ChatAnswer
-              label={SOURCES.find((s) => s.value === search.gear)!.label}
-              onChange={() => update({ gear: undefined })}
+              label={goals.map((id, i) => `${i + 1}. ${allowedGoals.find((g) => g.id === id)!.label}`).join("  ")}
+              onChange={() => update({ goals: undefined })}
             />
           )}
         </>
       )}
 
-      {target && locationAnswered && !character && (
+      {target && optimize && !character && (
         <ChatMessage>
           <p className="text-sm">
             No character added, so I'll use the best gear in the game.{" "}
@@ -120,7 +133,16 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
           profile={profile}
           target={target}
           optimize={optimize}
+          goals={goals}
           showLocation={askLocation && location === BEST_LOCATION}
+          compare={
+            character
+              ? {
+                  label: source === "mine" ? "Compare with best in game" : "Use my gear",
+                  onClick: () => update({ gear: source === "mine" ? "best" : undefined }),
+                }
+              : null
+          }
         />
       )}
     </div>

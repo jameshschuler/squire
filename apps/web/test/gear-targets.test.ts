@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildRecipeBook, type GameData } from "@squire/api/recipe-book";
-import { gearTargets, optimizeTarget, searchGearTargets } from "@/lib/gear-targets";
+import { gearTargets, goalsFor, optimizeTarget, searchGearTargets } from "@/lib/gear-targets";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
 const book = buildRecipeBook(sample as unknown as GameData);
@@ -57,5 +57,19 @@ describe("optimizeTarget", () => {
   it("pins a chosen location, and tries them all for any other answer", () => {
     expect(optimizeTarget(gold, "crown_of_cinders").locationIds).toEqual(["crown_of_cinders"]);
     expect(optimizeTarget(gold, "best").locationIds).toEqual(["crown_of_cinders"]);
+  });
+});
+
+describe("goalsFor", () => {
+  it("offers loot goals only when the activity drops that kind of loot, and fine materials only for activities", () => {
+    expect(goalsFor(byKey("activity:mine_gold_ore")).map((g) => g.id)).toEqual([
+      "steps",
+      "items",
+      "xp",
+      "chests",
+      "fine",
+      "gems",
+    ]);
+    expect(goalsFor(byKey("recipe:bake_a_bagel")).map((g) => g.id)).toEqual(["steps", "items", "xp"]);
   });
 });

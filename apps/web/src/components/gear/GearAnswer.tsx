@@ -4,22 +4,29 @@ import { ChatMessage } from "./ChatMessage";
 import { CopyGearSetButton } from "./CopyGearSetButton";
 import { GearGrid } from "./GearGrid";
 import { GearStats } from "./GearStats";
+import { GearSummary } from "./GearSummary";
 
-type GearAnswerProps = GearAnswerView & { showLocation: boolean };
+type GearAnswerProps = GearAnswerView & {
+  showLocation: boolean;
+  compare: { label: string; onClick: () => void } | null;
+};
 
 export function GearAnswer(props: GearAnswerProps) {
-  const { suggestion, notes, showLocation, before, equipped, efficiency, stats, toolSlots } = props;
-  const { picks, pet, location, result } = suggestion;
+  const { suggestion, notes, showLocation, before, equipped, efficiency, stats, toolSlots, compare } = props;
+  const { picks, pet, location } = suggestion;
   const context = [
-    before && `Now ${formatStepsResult(before)}`,
-    showLocation && location && `at ${location.name} (${formatRegion(location.region)})`,
-  ].filter(Boolean);
+    ...(before ? [`Now ${formatStepsResult(before)}`] : []),
+    ...(showLocation && location ? [`at ${location.name} (${formatRegion(location.region)})`] : []),
+  ];
   return (
     <ChatMessage>
-      <div>
-        <p className="font-semibold">{formatStepsResult(result)}</p>
-        {context.length > 0 && <p className="text-xs text-muted-foreground">{context.join(" · ")}</p>}
-      </div>
+      <GearSummary
+        priorities={props.priorities}
+        efficiencyStatus={props.efficiencyStatus}
+        steps={props.steps}
+        context={context}
+        compare={compare}
+      />
       {notes.length > 0 && (
         <div className="space-y-0.5 text-xs text-muted-foreground">
           {notes.map((note) => (

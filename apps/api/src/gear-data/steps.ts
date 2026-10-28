@@ -10,6 +10,7 @@ export interface StatTotals {
   stepsPercent: number;
   stepsFlat: number;
   doubleAction: number;
+  goalStats: number[];
 }
 
 export interface StepsResult {
@@ -18,7 +19,13 @@ export interface StepsResult {
   averageSteps: number;
 }
 
-export const NO_STATS: StatTotals = { workEfficiency: 0, stepsPercent: 0, stepsFlat: 0, doubleAction: 0 };
+export const NO_STATS: StatTotals = {
+  workEfficiency: 0,
+  stepsPercent: 0,
+  stepsFlat: 0,
+  doubleAction: 0,
+  goalStats: [],
+};
 
 export function addStats(a: StatTotals, b: StatTotals): StatTotals {
   return {
@@ -26,6 +33,10 @@ export function addStats(a: StatTotals, b: StatTotals): StatTotals {
     stepsPercent: a.stepsPercent + b.stepsPercent,
     stepsFlat: a.stepsFlat + b.stepsFlat,
     doubleAction: a.doubleAction + b.doubleAction,
+    goalStats: Array.from(
+      { length: Math.max(a.goalStats.length, b.goalStats.length) },
+      (_, i) => (a.goalStats[i] ?? 0) + (b.goalStats[i] ?? 0),
+    ),
   };
 }
 

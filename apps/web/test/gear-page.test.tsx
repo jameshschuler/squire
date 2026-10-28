@@ -99,6 +99,8 @@ describe("Gear page", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: /Mine gold ore/ }));
     expect(screen.queryByText("Where?")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Fewest steps" }));
+    fireEvent.click(screen.getByRole("button", { name: "Find gear" }));
     expect(screen.getByRole("link", { name: "Add your character" }).getAttribute("href")).toBe("/character");
     expect(await screen.findByText("journeyman handwear")).toBeDefined();
     expect(screen.getByText(/steps per action/)).toBeDefined();
@@ -114,22 +116,61 @@ describe("Gear page", () => {
   });
 
   it("says when no gear helps", async () => {
-    await renderPage({ target: "recipe:bake_a_bagel", location: "best" });
+    await renderPage({ target: "recipe:bake_a_bagel", location: "best", goals: "steps" });
     expect(await screen.findByText("No gear helps with this.")).toBeDefined();
     expect(screen.queryByRole("button", { name: /Copy for WalkScape/ })).toBeNull();
   });
 
-  it("asks whose gear once a character is added, and compares with what they wear now", async () => {
+  it("uses the character's gear without asking, and compares with what they wear now", async () => {
     addCharacter();
-    await renderPage({ target: "activity:mine_gold_ore" });
-    fireEvent.click(await screen.findByRole("button", { name: "My gear" }));
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     expect(await screen.findByText(/^Now \d+ steps per action/)).toBeDefined();
+    expect(screen.queryByText("Whose gear?")).toBeNull();
     expect(screen.getByRole("link", { name: /journeyman handwear.*Equipped/ })).toBeDefined();
     expect(screen.getByRole("link", { name: /iron pickaxe/ }).textContent).not.toContain("Equipped");
   });
 
-  it("shows the set's stats, with work efficiency against the activity's max", async () => {
+  it("switches between the character's gear and the best in the game", async () => {
+    addCharacter();
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
+    fireEvent.click(await screen.findByRole("button", { name: "Compare with best in game" }));
+    expect(await screen.findByRole("button", { name: "Use my gear" })).toBeDefined();
+    expect(screen.queryByText(/^Now /)).toBeNull();
+  });
+
+  it("asks for priorities in order, up to three, offering only goals the activity can give", async () => {
     await renderPage({ target: "activity:mine_gold_ore" });
+    expect(await screen.findByText("What matters most? Pick up to 3, in order.")).toBeDefined();
+    expect(screen.getByRole("button", { name: "Most chests" })).toBeDefined();
+    expect(screen.queryByRole("button", { name: "Most bird nests" })).toBeNull();
+    expect((screen.getByRole("button", { name: "Find gear" }) as HTMLButtonElement).disabled).toBe(true);
+    for (const goal of ["Most chests", "Fewest steps", "Most XP", "Most items"]) {
+      fireEvent.click(screen.getByRole("button", { name: new RegExp(goal) }));
+    }
+    expect(screen.getByRole("button", { name: /^1\s*Most chests$/ }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: "Most items" }).getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(screen.getByRole("button", { name: "Find gear" }));
+    expect(
+      screen.getByRole("button", { name: /Change answer: 1\. Most chests\s+2\. Fewest steps\s+3\. Most XP/ }),
+    ).toBeDefined();
+  });
+
+  it("shows steps per action even when fewest steps isn't a priority", async () => {
+    await renderPage({ target: "activity:mine_gold_ore", goals: "chests" });
+    const summary = await screen.findByRole("region", { name: "Summary" });
+    expect(summary.textContent).toMatch(/\d+ steps per action/);
+  });
+
+  it("sums up each priority and how close the set is to max work efficiency", async () => {
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps,chests" });
+    const summary = await screen.findByRole("region", { name: "Summary" });
+    expect(summary.textContent).toContain("1. Fewest steps");
+    expect(summary.textContent).toContain("2. Most chestsChest finding +0%");
+    expect(summary.textContent).toMatch(/Work efficiency [\d.]+% of 70% max, [\d.]+% short/);
+  });
+
+  it("shows the set's stats, with work efficiency against the activity's max", async () => {
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     const stats = await screen.findByRole("region", { name: "Set stats" });
     expect(stats.textContent).toContain("Work efficiency");
     expect(stats.textContent).toContain("of 70% max");
@@ -137,7 +178,7 @@ describe("Gear page", () => {
   });
 
   it("shows the game's gear layout, with empty slots saying nothing helps", async () => {
-    await renderPage({ target: "activity:mine_gold_ore" });
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     expect(await screen.findByRole("link", { name: /Hands.*journeyman handwear/ })).toBeDefined();
     expect(screen.getAllByText("Nothing helps").length).toBeGreaterThan(0);
     expect(screen.getByText("Tool 6")).toBeDefined();
@@ -146,20 +187,20 @@ describe("Gear page", () => {
   it("says when the character already wears the best set", async () => {
     addCharacter();
     gear = withGear([miningGear("journeyman_handwear", "hands", -3)]);
-    await renderPage({ target: "activity:mine_gold_ore", gear: "mine" });
+    await renderPage({ target: "activity:mine_gold_ore", gear: "mine", goals: "steps" });
     expect(await screen.findByText("You're already wearing the best set for this.")).toBeDefined();
   });
 
   it("says when the character's level is too low, and still shows the set", async () => {
     addCharacter();
-    await renderPage({ target: "recipe:smelt_a_gold_bar", gear: "mine" });
+    await renderPage({ target: "recipe:smelt_a_gold_bar", gear: "mine", goals: "steps" });
     expect(
       await screen.findByText("You need Smithing level 15 for this. Here's the set for when you get there."),
     ).toBeDefined();
   });
 
   it("starts over from the first question", async () => {
-    await renderPage({ target: "recipe:bake_a_bagel", location: "best" });
+    await renderPage({ target: "recipe:bake_a_bagel", location: "best", goals: "steps" });
     fireEvent.click(await screen.findByRole("button", { name: "Start over" }));
     expect(screen.getByPlaceholderText("Search activities and recipes…")).toBeDefined();
     expect(screen.queryByText("Where?")).toBeNull();
@@ -167,7 +208,7 @@ describe("Gear page", () => {
   });
 
   it("goes back to the question when you tap an answer", async () => {
-    await renderPage({ target: "activity:mine_gold_ore" });
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     fireEvent.click(await screen.findByRole("button", { name: "Change answer: Mine gold ore" }));
     expect(screen.getByPlaceholderText("Search activities and recipes…")).toBeDefined();
     expect(screen.queryByText(/steps per action/)).toBeNull();
@@ -176,7 +217,7 @@ describe("Gear page", () => {
   it("copies the gear set for WalkScape", async () => {
     const writeText = vi.fn(async () => {});
     vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
-    await renderPage({ target: "activity:mine_gold_ore" });
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     await clickCopy();
     expect(await screen.findByText("Copied")).toBeDefined();
     expect(writeText).toHaveBeenCalledWith("GEAR-SET-CODE");
@@ -184,7 +225,7 @@ describe("Gear page", () => {
 
   it("says when the browser has no clipboard", async () => {
     vi.stubGlobal("navigator", { ...navigator, clipboard: undefined });
-    await renderPage({ target: "activity:mine_gold_ore" });
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     await clickCopy();
     expect(await screen.findByText(/Couldn't copy/)).toBeDefined();
   });
@@ -194,7 +235,7 @@ describe("Gear page", () => {
       ...navigator,
       clipboard: { writeText: vi.fn(async () => Promise.reject(new Error("denied"))) },
     });
-    await renderPage({ target: "activity:mine_gold_ore" });
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     await clickCopy();
     expect(await screen.findByText(/Couldn't copy/)).toBeDefined();
   });
@@ -214,7 +255,7 @@ describe("Gear page", () => {
 
   it("says so when this browser can't build the code", async () => {
     vi.mocked(gearSetCode).mockRejectedValueOnce(new Error("CompressionStream is not defined"));
-    await renderPage({ target: "activity:mine_gold_ore" });
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     expect(await screen.findByText("This browser can't build a gear-set code.")).toBeDefined();
     expect((screen.getByRole("button", { name: /Copy for WalkScape/ }) as HTMLButtonElement).disabled).toBe(true);
   });

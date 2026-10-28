@@ -11,6 +11,10 @@ import {
   type GearStat,
   type OptimizeTarget,
   type PlayerProfile,
+  type GoalId,
+  type Score,
+  compareScores,
+  goalScorer,
   setStats,
   wornSteps,
 } from "../src/gear-data/index.js";
@@ -352,6 +356,29 @@ describe("optimizeGear", () => {
     expect(picked(gear, character(["pickaxe", "spare_pickaxe"], { skillLevels: { mining: 70 } }))).toHaveLength(1);
   });
 
+  it("fills slots that don't change steps with the second priority once efficiency is maxed", () => {
+    const gear = gearData([
+      item("pickaxe", "tool", [efficiency(0.25)]),
+      item("lucky_hat", "head", [stat("chestFind", 0.3, true)]),
+    ]);
+    const walker = character(["pickaxe", "lucky_hat"], { skillLevels: { mining: 70 } });
+    expect(picked(gear, walker)).toEqual(["pickaxe"]);
+    expect(
+      optimizeGear(gear, walker, mining, ["steps", "chests"])
+        .picks.map((p) => p.item.id)
+        .sort(),
+    ).toEqual(["lucky_hat", "pickaxe"]);
+  });
+
+  it("trades steps for the first priority when it comes first", () => {
+    const gear = gearData([
+      item("fast_hat", "head", [flatSteps(-20)]),
+      item("lucky_hat", "head", [stat("chestFind", 0.5, true)]),
+    ]);
+    expect(optimizeGear(gear, BEST_IN_GAME, mining, ["chests"]).picks.map((p) => p.item.id)).toEqual(["lucky_hat"]);
+    expect(optimizeGear(gear, BEST_IN_GAME, mining, ["steps"]).picks.map((p) => p.item.id)).toEqual(["fast_hat"]);
+  });
+
   it("suggests nothing when no gear helps", () => {
     const suggestion = optimizeGear(gearData([item("hat", "head", [])]), BEST_IN_GAME, mining);
     expect(suggestion).toMatchObject({ picks: [], pet: null, location: null });
@@ -464,6 +491,7 @@ describe("optimizeGear against every possible set", () => {
         flatSteps(-Math.round(next() * 6)),
         stat("stepsRequired", -Math.round(next() * 10) / 100, true),
         doubleAction(Math.round(next() * 20) / 100),
+        stat("chestFind", Math.round(next() * 40) / 100, true),
       ].filter(() => next() < 0.5);
       const inSet = next() < 0.6;
       if (inSet && next() < 0.7) {
@@ -476,6 +504,7 @@ describe("optimizeGear against every possible set", () => {
           flatSteps(-3 - Math.round(next() * 7), condition),
           efficiency(Math.round(next() * 30) / 100, condition),
           stat("doubleAction", Math.round(next() * 30) / 100, true, condition),
+          stat("chestFind", Math.round(next() * 30) / 100, true, condition),
         ];
         stats.push(bonuses[Math.floor(next() * bonuses.length)]!);
       }
@@ -484,7 +513,7 @@ describe("optimizeGear against every possible set", () => {
     });
   }
 
-  function bruteForce(gear: GearData, target: OptimizeTarget, level: number): number {
+  function bruteForce(gear: GearData, target: OptimizeTarget, level: number, goals: GoalId[]): Score {
     const bySlot = (slot: GearType) => gear.items.filter((i) => i.slot === slot);
     const subsets = (items: GearItem[], max: number): GearItem[][] =>
       items.reduce<GearItem[][]>(
@@ -500,33 +529,35 @@ describe("optimizeGear against every possible set", () => {
       (acc, choices) => acc.flatMap((set) => choices.map((choice) => [...set, ...choice])),
       [[]],
     );
-    return Math.min(
-      ...combos
-        .filter((set) => set.filter((it) => it.keywords.includes("hatchet")).length <= 1)
-        .map((set) => {
-          const setCount = set.filter((it) => it.keywords.includes("set")).length;
-          const totals = set
-            .flatMap((it) => it.stats)
-            .filter((s) =>
-              s.conditions.every(
-                (c) => c.type !== "distinctKeywordItemsEquipped" || setCount >= c.requirement.quantity,
-              ),
-            )
-            .reduce(
-              (sum, s) => ({
-                workEfficiency: sum.workEfficiency + (s.stat === "workEfficiency" ? s.value : 0),
-                stepsPercent: sum.stepsPercent + (s.stat === "stepsRequired" && s.isPercent ? s.value : 0),
-                stepsFlat: sum.stepsFlat + (s.stat === "stepsRequired" && !s.isPercent ? s.value : 0),
-                doubleAction: sum.doubleAction + (s.stat === "doubleAction" ? s.value : 0),
-              }),
-              { workEfficiency: 0, stepsPercent: 0, stepsFlat: 0, doubleAction: 0 },
-            );
-          return stepsPerAction(target, level, totals).averageSteps;
-        }),
-    );
+    return combos
+      .filter((set) => set.filter((it) => it.keywords.includes("hatchet")).length <= 1)
+      .map((set) => {
+        const setCount = set.filter((it) => it.keywords.includes("set")).length;
+        const totals = set
+          .flatMap((it) => it.stats)
+          .filter((s) =>
+            s.conditions.every((c) => c.type !== "distinctKeywordItemsEquipped" || setCount >= c.requirement.quantity),
+          )
+          .reduce(
+            (sum, s) => ({
+              workEfficiency: sum.workEfficiency + (s.stat === "workEfficiency" ? s.value : 0),
+              stepsPercent: sum.stepsPercent + (s.stat === "stepsRequired" && s.isPercent ? s.value : 0),
+              stepsFlat: sum.stepsFlat + (s.stat === "stepsRequired" && !s.isPercent ? s.value : 0),
+              doubleAction: sum.doubleAction + (s.stat === "doubleAction" ? s.value : 0),
+              goalStats: [sum.goalStats[0]! + (s.stat === "chestFind" ? s.value : 0)],
+            }),
+            { workEfficiency: 0, stepsPercent: 0, stepsFlat: 0, doubleAction: 0, goalStats: [0] },
+          );
+        return goalScorer(goals)(stepsPerAction(target, level, totals), totals);
+      })
+      .reduce((best, next) => (compareScores(next, best) > 0 ? next : best));
   }
 
-  it("finds a set as good as the best one on 300 random gear pools", () => {
+  it.each([
+    ["fewest steps", ["steps"]],
+    ["fewest steps, then most chests", ["steps", "chests"]],
+    ["most chests, then fewest steps", ["chests", "steps"]],
+  ] as [string, GoalId[]][])("finds a set as good as the best one for %s on 300 random gear pools", (_, goals) => {
     const next = random(42);
     for (let run = 0; run < 300; run++) {
       const items = randomGear(next);
@@ -537,10 +568,8 @@ describe("optimizeGear against every possible set", () => {
         items.map((i) => i.id),
         { skillLevels: { mining: level } },
       );
-      expect(optimizeGear(gear, profile, target).result.averageSteps, `run ${run}`).toBeCloseTo(
-        bruteForce(gear, target, level),
-        9,
-      );
+      const found = optimizeGear(gear, profile, target, goals).score;
+      expect(compareScores(found, bruteForce(gear, target, level, goals)), `run ${run}`).toBe(0);
     }
   });
 });

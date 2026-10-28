@@ -1,4 +1,4 @@
-import type { GearType } from "@walkscape-community/data-api-client";
+import type { GearType, StatType } from "@walkscape-community/data-api-client";
 import type { ItemQuality } from "../recipe-book/types.js";
 import { ownedKey } from "./items.js";
 import { playerConditionHolds, type OwnedGear, type OwnedPetView, type PlayerProfile } from "./profile.js";
@@ -34,6 +34,7 @@ export interface Situation {
   skillType: string;
   location: LocationView | null;
   profile: PlayerProfile;
+  goalStats: StatType[];
 }
 
 type CandidateBase = Omit<Candidate, "totals" | "setBonuses" | "best">;
@@ -43,9 +44,10 @@ export function situationFor(
   profile: PlayerProfile,
   target: WorkTarget,
   location: LocationView | null,
+  goalStats: StatType[] = [],
 ): Situation {
   const skillType = gear.skills.find((s) => s.id === target.skill)?.type ?? "";
-  return { target, skillType, location, profile };
+  return { target, skillType, location, profile, goalStats };
 }
 
 export function gearCandidate(situation: Situation, owned: OwnedGear): Candidate {
@@ -70,7 +72,7 @@ export function toCandidate(situation: Situation, base: CandidateBase, stats: Ge
   let totals = NO_STATS;
   const setBonuses: SetBonus[] = [];
   for (const stat of stats) {
-    const contribution = statTotals(stat);
+    const contribution = statTotals(stat, situation.goalStats);
     const setConditions = stat.conditions.filter((c): c is SetCondition => c.type === "distinctKeywordItemsEquipped");
     const others = stat.conditions.filter((c) => c.type !== "distinctKeywordItemsEquipped");
     if (contribution === NO_STATS || !others.every((condition) => conditionHolds(situation, condition))) {
@@ -103,7 +105,11 @@ export function withSetBonuses(chosen: Candidate[]): StatTotals {
   }, NO_STATS);
 }
 
-function statTotals(stat: GearStat): StatTotals {
+function statTotals(stat: GearStat, goalStats: StatType[]): StatTotals {
+  const goal = goalStats.indexOf(stat.stat);
+  if (goal >= 0 && stat.isPercent) {
+    return { ...NO_STATS, goalStats: goalStats.map((_, i) => (i === goal ? stat.value : 0)) };
+  }
   switch (stat.stat) {
     case "workEfficiency":
       return { ...NO_STATS, workEfficiency: stat.value };
@@ -144,5 +150,6 @@ function gains(totals: StatTotals): StatTotals {
     stepsPercent: Math.min(totals.stepsPercent, 0),
     stepsFlat: Math.min(totals.stepsFlat, 0),
     doubleAction: Math.max(totals.doubleAction, 0),
+    goalStats: totals.goalStats.map((value) => Math.max(value, 0)),
   };
 }
