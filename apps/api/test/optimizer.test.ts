@@ -11,6 +11,7 @@ import {
   type GearStat,
   type OptimizeTarget,
   type PlayerProfile,
+  wornSteps,
 } from "../src/gear-data/index.js";
 
 const stat = (stat: GearStat["stat"], value: number, isPercent: boolean, ...conditions: GearCondition[]): GearStat => ({
@@ -76,6 +77,7 @@ function character(owned: string[], extra: Partial<Character> = {}): PlayerProfi
         return { id, quality: (quality as GearItem["quality"]) ?? null };
       }),
       pets: [],
+      petOut: null,
       ...extra,
     },
   };
@@ -353,6 +355,49 @@ describe("optimizeGear", () => {
     const suggestion = optimizeGear(gearData([item("hat", "head", [])]), BEST_IN_GAME, mining);
     expect(suggestion).toMatchObject({ picks: [], pet: null, location: null });
     expect(suggestion.result.steps).toBe(80);
+  });
+});
+
+describe("wornSteps", () => {
+  const gear = gearData(
+    [
+      item("gloves", "hands", [flatSteps(-5)]),
+      item("snow_boots", "feet", [
+        flatSteps(-3, { type: "locationHasKeywords", opposite: false, requirement: { keywords: ["snowy"] } }),
+      ]),
+    ],
+    {
+      pets: [
+        {
+          id: "camel",
+          name: "Camel",
+          rareId: "two_hump_camel",
+          icon: "",
+          levels: [{ level: 1, stats: [flatSteps(-2)] }],
+        },
+      ],
+    },
+  );
+  const peak = { id: "peak", name: "Peak", region: "Jarvonia", realms: ["jarvonia"], keywords: ["snowy"] };
+  const wearing = (extra: Partial<Character>) => (character([], extra) as { character: Character }).character;
+
+  it("counts the gear the character is wearing and the pet out", () => {
+    const walker = wearing({
+      equipped: { hands: { id: "gloves", quality: null } },
+      petOut: { species: "two_hump_camel", level: 1 },
+    });
+    expect(wornSteps(gear, walker, mining, null).steps).toBe(93);
+  });
+
+  it("counts location bonuses only at a matching location", () => {
+    const walker = wearing({ equipped: { feet: { id: "snow_boots", quality: null } } });
+    expect(wornSteps(gear, walker, mining, null).steps).toBe(100);
+    expect(wornSteps(gear, walker, mining, peak).steps).toBe(97);
+  });
+
+  it("ignores equipped items the gear data doesn't know", () => {
+    const walker = wearing({ equipped: { head: { id: "mystery_hat", quality: null } } });
+    expect(wornSteps(gear, walker, mining, null).steps).toBe(100);
   });
 });
 

@@ -45,6 +45,7 @@ export interface Character {
   equipped: Partial<Record<EquipmentSlot, OwnedItem>>;
   owned: OwnedItem[];
   pets: OwnedPet[];
+  petOut: OwnedPet | null;
 }
 
 interface CharacterExport {
@@ -120,11 +121,13 @@ export function parseCharacterExport(text: string): Character {
     collectibles: data.collectibles,
     equipped: Object.fromEntries(equippedIds.map(([slot, id]) => [slot, ownedItem(id)])),
     owned: [...ownedIds].filter((id) => !id.endsWith(FINE_SUFFIX)).map(ownedItem),
-    pets: [...(data.pets?.pet ? [data.pets.pet] : []), ...(data.available_pets ?? [])].map(({ species, level }) => ({
-      species,
-      level,
-    })),
+    pets: [...(data.pets?.pet ? [data.pets.pet] : []), ...(data.available_pets ?? [])].map(ownedPet),
+    petOut: data.pets?.pet ? ownedPet(data.pets.pet) : null,
   };
+}
+
+function ownedPet({ species, level }: OwnedPet): OwnedPet {
+  return { species, level };
 }
 
 function parseJson(text: string): unknown {

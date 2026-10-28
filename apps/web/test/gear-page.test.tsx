@@ -1,31 +1,80 @@
+import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, screen, waitFor } from "@testing-library/react";
-import { GEAR_DATA_SCHEMA, buildGearData } from "@squire/api/gear-data";
-import type { GameData } from "@squire/api/recipe-book";
+import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import { buildGearData, type GearItem } from "@squire/api/gear-data";
+import { RECIPE_BOOK_SCHEMA, buildRecipeBook, type GameData } from "@squire/api/recipe-book";
 import exportFixture from "../../../fixtures/character/export.json";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 import { GearPage } from "@/components/gear/GearPage";
 import { CharacterProvider } from "@/contexts/character-context";
+import { GameDataProvider } from "@/contexts/game-data-context";
 import { GearDataProvider } from "@/contexts/gear-data-context";
 import { CHARACTER_STORAGE_KEY, storeCharacter } from "@/lib/character";
+import { gearSetCode } from "@/lib/gear-set-code";
+import type { GearSearch } from "@/lib/gear-search";
 import { renderWithRouter } from "./render-with-router";
 
-const renderPage = () =>
-  renderWithRouter(
-    <CharacterProvider>
-      <GearDataProvider>
-        <GearPage />
-      </GearDataProvider>
-    </CharacterProvider>,
-  );
+vi.mock("@/lib/gear-set-code", () => ({ gearSetCode: vi.fn(async () => "GEAR-SET-CODE") }));
 
-const gear = buildGearData(sample as unknown as GameData);
-const fetchMock = vi.fn(async () => new Response(JSON.stringify(gear)));
+const data = sample as unknown as GameData;
+const book = { ...buildRecipeBook(data), schema: RECIPE_BOOK_SCHEMA };
+const miningGear = (id: string, slot: GearItem["slot"], steps: number): GearItem => ({
+  id,
+  name: id.replace(/_/g, " "),
+  icon: "",
+  quality: null,
+  isCollectible: false,
+  keywords: [],
+  gameId: `game-${id}`,
+  slot,
+  requirements: [],
+  stats: [
+    {
+      stat: "stepsRequired",
+      value: steps,
+      isPercent: false,
+      conditions: [{ type: "mainSkill", opposite: false, requirement: { skill: "mining" } }],
+    },
+  ],
+  tierStats: {},
+});
+const baseGear = buildGearData(data);
+const withGear = (items: GearItem[]) => ({ ...baseGear, items, bannedKeywords: { pickaxe: ["pickaxe"] } });
+const pickaxe = { ...miningGear("iron_pickaxe", "tool", -2), keywords: ["pickaxe"] };
+let gear = withGear([miningGear("journeyman_handwear", "hands", -3), pickaxe]);
+
+function Harness({ initial }: { initial: GearSearch }) {
+  const [search, setSearch] = useState(initial);
+  return <GearPage search={search} onSearchChange={setSearch} />;
+}
+
+const serveData = async (url: string) => new Response(JSON.stringify(url.includes("/api/gear") ? gear : book));
+
+async function renderPage(initial: GearSearch = {}, fetchData = serveData) {
+  vi.stubGlobal("fetch", vi.fn(fetchData));
+  await renderWithRouter(
+    <GameDataProvider>
+      <CharacterProvider>
+        <GearDataProvider>
+          <Harness initial={initial} />
+        </GearDataProvider>
+      </CharacterProvider>
+    </GameDataProvider>,
+  );
+}
+
+async function clickCopy() {
+  const button = await screen.findByRole("button", { name: /Copy for WalkScape/ });
+  await waitFor(() => expect((button as HTMLButtonElement).disabled).toBe(false));
+  fireEvent.click(button);
+}
+
+const addCharacter = () =>
+  localStorage.setItem(CHARACTER_STORAGE_KEY, storeCharacter(JSON.stringify(exportFixture), new Date()));
 
 beforeEach(() => {
   localStorage.clear();
-  fetchMock.mockClear();
-  vi.stubGlobal("fetch", fetchMock);
+  gear = withGear([miningGear("journeyman_handwear", "hands", -3), pickaxe]);
 });
 
 afterEach(() => {
@@ -34,41 +83,109 @@ afterEach(() => {
 });
 
 describe("Gear page", () => {
-  it("shows the gear chat as coming soon", async () => {
+  it("asks what to do and suggests activities and recipes as you type", async () => {
     await renderPage();
-    expect(screen.getByText("Gear optimizer coming soon.")).toBeDefined();
-    expect(screen.getByRole("textbox", { name: "Ask about gear" }).hasAttribute("disabled")).toBe(true);
-    expect(screen.getByRole("button", { name: "Send" }).hasAttribute("disabled")).toBe(true);
+    fireEvent.change(await screen.findByPlaceholderText("Search activities and recipes…"), {
+      target: { value: "gold" },
+    });
+    expect(screen.getByRole("button", { name: /Mine gold ore/ })).toBeDefined();
+    expect(screen.getByRole("button", { name: /Smelt a gold bar/ })).toBeDefined();
   });
 
-  it("points to the character page when no character is saved", async () => {
+  it("uses the best gear in the game without a character, and says so", async () => {
     await renderPage();
+    fireEvent.change(await screen.findByPlaceholderText("Search activities and recipes…"), {
+      target: { value: "mine" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Mine gold ore/ }));
+    expect(screen.queryByText("Where?")).toBeNull();
     expect(screen.getByRole("link", { name: "Add your character" }).getAttribute("href")).toBe("/character");
+    expect(await screen.findByText("journeyman handwear")).toBeDefined();
+    expect(screen.getByText(/steps per action/)).toBeDefined();
+    expect(screen.getByRole("button", { name: /Copy for WalkScape/ })).toBeDefined();
   });
 
-  it("doesn't ask for a character once one is saved", async () => {
-    localStorage.setItem(CHARACTER_STORAGE_KEY, storeCharacter(JSON.stringify(exportFixture), new Date()));
-    await renderPage();
-    expect(screen.queryByRole("link", { name: "Add your character" })).toBeNull();
+  it("asks where when the activity has several locations, with a best-location choice", async () => {
+    await renderPage({ target: "recipe:bake_a_bagel" });
+    expect(await screen.findByText("Where?")).toBeDefined();
+    expect(screen.getByRole("button", { name: "Best location" })).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: "Blackspell Harbour" }));
+    expect(screen.getByRole("button", { name: "Change answer: Blackspell Harbour" })).toBeDefined();
   });
 
-  it("shows a loading line while the gear data downloads", async () => {
-    fetchMock.mockImplementationOnce(() => new Promise<Response>(() => {}));
-    await renderPage();
-    expect(await screen.findByText("Loading gear data…")).toBeDefined();
+  it("says when no gear helps", async () => {
+    await renderPage({ target: "recipe:bake_a_bagel", location: "best" });
+    expect(await screen.findByText("No gear helps with this.")).toBeDefined();
+    expect(screen.queryByRole("button", { name: /Copy for WalkScape/ })).toBeNull();
   });
 
-  it("loads the gear data when the page opens", async () => {
-    await renderPage();
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringMatching(new RegExp(`/api/gear\\?schema=${GEAR_DATA_SCHEMA}$`)),
+  it("asks whose gear once a character is added, and compares with what they wear now", async () => {
+    addCharacter();
+    await renderPage({ target: "activity:mine_gold_ore" });
+    fireEvent.click(await screen.findByRole("button", { name: "My gear" }));
+    expect(await screen.findByText(/^Now:/)).toBeDefined();
+    expect(screen.getByRole("link", { name: /journeyman handwear.*Equipped/ })).toBeDefined();
+    expect(screen.getByRole("link", { name: /iron pickaxe/ }).textContent).not.toContain("Equipped");
+  });
+
+  it("says when the character already wears the best set", async () => {
+    addCharacter();
+    gear = withGear([miningGear("journeyman_handwear", "hands", -3)]);
+    await renderPage({ target: "activity:mine_gold_ore", gear: "mine" });
+    expect(await screen.findByText("You're already wearing the best set for this.")).toBeDefined();
+  });
+
+  it("says when the character's level is too low, and still shows the set", async () => {
+    addCharacter();
+    await renderPage({ target: "recipe:smelt_a_gold_bar", gear: "mine" });
+    expect(
+      await screen.findByText("You need Smithing level 15 for this. Here's the set for when you get there."),
+    ).toBeDefined();
+  });
+
+  it("goes back to the question when you tap an answer", async () => {
+    await renderPage({ target: "activity:mine_gold_ore" });
+    fireEvent.click(await screen.findByRole("button", { name: "Change answer: Mine gold ore" }));
+    expect(screen.getByPlaceholderText("Search activities and recipes…")).toBeDefined();
+    expect(screen.queryByText(/steps per action/)).toBeNull();
+  });
+
+  it("copies the gear set for WalkScape", async () => {
+    const writeText = vi.fn(async () => {});
+    vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
+    await renderPage({ target: "activity:mine_gold_ore" });
+    await clickCopy();
+    expect(await screen.findByText("Copied")).toBeDefined();
+    expect(writeText).toHaveBeenCalledWith("GEAR-SET-CODE");
+  });
+
+  it("says when copying fails", async () => {
+    vi.stubGlobal("navigator", {
+      ...navigator,
+      clipboard: { writeText: vi.fn(async () => Promise.reject(new Error("denied"))) },
+    });
+    await renderPage({ target: "activity:mine_gold_ore" });
+    await clickCopy();
+    expect(await screen.findByText(/Couldn't copy/)).toBeDefined();
+  });
+
+  it("shows the gear data error", async () => {
+    await renderPage({}, async (url) =>
+      url.includes("/api/gear") ? new Response("", { status: 503 }) : serveData(url),
     );
-    await waitFor(() => expect(screen.queryByText("Loading gear data…")).toBeNull());
+    expect(await screen.findByText("Failed to load gear data (503)")).toBeDefined();
   });
 
-  it("says when the gear data fails to load", async () => {
-    fetchMock.mockImplementationOnce(async () => new Response("", { status: 503 }));
-    await renderPage();
-    expect(await screen.findByText("Failed to load gear data (503)")).toBeDefined();
+  it("asks where again when the location in the link isn't one of the activity's", async () => {
+    await renderPage({ target: "recipe:bake_a_bagel", location: "somewhere_else" });
+    expect(await screen.findByRole("button", { name: "Best location" })).toBeDefined();
+    expect(screen.queryByText(/steps per action/)).toBeNull();
+  });
+
+  it("says so when this browser can't build the code", async () => {
+    vi.mocked(gearSetCode).mockRejectedValueOnce(new Error("CompressionStream is not defined"));
+    await renderPage({ target: "activity:mine_gold_ore" });
+    expect(await screen.findByText("This browser can't build a gear-set code.")).toBeDefined();
+    expect((screen.getByRole("button", { name: /Copy for WalkScape/ }) as HTMLButtonElement).disabled).toBe(true);
   });
 });

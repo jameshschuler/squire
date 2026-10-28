@@ -1,4 +1,4 @@
-import { MAX_LEVEL, toolSlots, type Character } from "../character/character.js";
+import { MAX_LEVEL, toolSlots, type Character, type OwnedPet } from "../character/character.js";
 import { QUALITIES, type ItemQuality } from "../recipe-book/types.js";
 import { stackedStats } from "./items.js";
 import type { GearCondition, GearItem, GearStat, PetView } from "./types.js";
@@ -50,11 +50,13 @@ export function ownedPets(profile: PlayerProfile, pets: PetView[]): OwnedPetView
       return top ? [{ pet, level: top.level, stats: top.stats }] : [];
     });
   }
-  return profile.character.pets.flatMap(({ species, level }) => {
-    const pet = pets.find((p) => p.id === species || p.rareId === species);
-    const reached = pet?.levels.filter((l) => l.level <= level).at(-1);
-    return pet && reached ? [{ pet, level: reached.level, stats: reached.stats }] : [];
-  });
+  return profile.character.pets.flatMap((owned) => petAt(pets, owned) ?? []);
+}
+
+export function petAt(pets: PetView[], { species, level }: OwnedPet): OwnedPetView | undefined {
+  const pet = pets.find((p) => p.id === species || p.rareId === species);
+  const reached = pet?.levels.filter((l) => l.level <= level).at(-1);
+  return pet && reached ? { pet, level: reached.level, stats: reached.stats } : undefined;
 }
 
 export function playerConditionHolds(profile: PlayerProfile, condition: GearCondition): boolean | undefined {

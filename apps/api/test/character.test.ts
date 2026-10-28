@@ -110,8 +110,13 @@ describe("parseCharacterExport", () => {
     ]);
   });
 
+  it("knows which pet is out", () => {
+    expect(parseCharacterExport(fixtureText).petOut).toEqual({ species: "tortoise", level: 4 });
+  });
+
   it("reads an export with no pet out", () => {
     const text = JSON.stringify({ ...exportFixture, pets: { pet: null } });
+    expect(parseCharacterExport(text).petOut).toBeNull();
     expect(parseCharacterExport(text).pets).toEqual([
       { species: "silky_mummy", level: 2 },
       { species: "camel", level: 1 },
