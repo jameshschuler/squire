@@ -1,5 +1,5 @@
 import type { StatType } from "@walkscape-community/data-api-client";
-import { conditionHolds, situationFor, type GearPick } from "./candidates.js";
+import { conditionHolds, situationFor } from "./candidates.js";
 import { stackedStats } from "./items.js";
 import type { GearSuggestion } from "./optimizer.js";
 import type { PlayerProfile } from "./profile.js";
@@ -23,11 +23,14 @@ export function setStats(
   profile: PlayerProfile,
   target: WorkTarget,
   suggestion: GearSuggestion,
-  picks: GearPick[],
 ): StatLine[] {
   const situation = situationFor(gear, profile, target, suggestion.location);
   const pieces: WornPiece[] = [
-    ...picks.map((p) => ({ id: p.item.id, keywords: p.item.keywords, stats: stackedStats(p.item, p.quality) })),
+    ...suggestion.picks.map((p) => ({
+      id: p.item.id,
+      keywords: p.item.keywords,
+      stats: stackedStats(p.item, p.quality),
+    })),
     ...(suggestion.pet ? [{ id: `pet:${suggestion.pet.pet.id}`, keywords: [], stats: suggestion.pet.stats }] : []),
   ];
   const count = (keywords: string[]) =>

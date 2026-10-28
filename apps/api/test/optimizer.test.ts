@@ -11,7 +11,6 @@ import {
   type GearStat,
   type OptimizeTarget,
   type PlayerProfile,
-  keptGear,
   setStats,
   wornSteps,
 } from "../src/gear-data/index.js";
@@ -403,56 +402,6 @@ describe("wornSteps", () => {
   });
 });
 
-describe("keptGear", () => {
-  const hat = item("plain_hat", "head", []);
-  const heavyHat = item("heavy_hat", "head", [flatSteps(5)]);
-  const gloves = item("gloves", "hands", [flatSteps(-5)]);
-  const oldHatchet = item("old_hatchet", "tool", [], { keywords: ["hatchet"] });
-  const newHatchet = item("new_hatchet", "tool", [flatSteps(-3)], { keywords: ["hatchet"] });
-  const gear = gearData([hat, heavyHat, gloves, oldHatchet, newHatchet], { bannedKeywords: { hatchet: ["hatchet"] } });
-  const wearing = (equipped: Character["equipped"], extra: Partial<Character> = {}) => {
-    const profile = character(
-      Object.values(equipped).map((e) => e.id),
-      { equipped, ...extra },
-    );
-    return (profile as { character: Character }).character;
-  };
-  const kept = (walker: Character) => {
-    const suggestion = optimizeGear(gear, { kind: "character", character: walker }, mining);
-    return keptGear(gear, walker, mining, suggestion).map((p) => p.item.id);
-  };
-
-  it("keeps a worn item in a slot where nothing helps", () => {
-    expect(kept(wearing({ head: { id: "plain_hat", quality: null }, hands: { id: "gloves", quality: null } }))).toEqual(
-      ["plain_hat"],
-    );
-  });
-
-  it("doesn't keep a worn item that adds steps", () => {
-    expect(kept(wearing({ head: { id: "heavy_hat", quality: null } }))).toEqual([]);
-  });
-
-  it("doesn't keep a worn tool that a suggested tool bans", () => {
-    const walker = wearing({ tool_1: { id: "old_hatchet", quality: null } });
-    walker.owned.push({ id: "new_hatchet", quality: null });
-    expect(kept(walker)).toEqual([]);
-  });
-
-  it("keeps two copies of the same worn ring", () => {
-    const ringGear = gearData([item("plain_ring", "ring", [])]);
-    const walker = wearing({
-      ring_1: { id: "plain_ring", quality: null },
-      ring_2: { id: "plain_ring", quality: null },
-    });
-    const suggestion = optimizeGear(ringGear, { kind: "character", character: walker }, mining);
-    expect(keptGear(ringGear, walker, mining, suggestion).map((p) => p.item.id)).toEqual(["plain_ring", "plain_ring"]);
-  });
-
-  it("doesn't repeat an item the suggestion already uses", () => {
-    expect(kept(wearing({ hands: { id: "gloves", quality: null } }))).toEqual([]);
-  });
-});
-
 describe("setStats", () => {
   const chest = stat("chestFind", 0.1, true);
   const gear = gearData([
@@ -476,7 +425,7 @@ describe("setStats", () => {
   const stats = (ids: string[]) => {
     const suggestion = optimizeGear(gear, BEST_IN_GAME, mining);
     const picks = gear.items.filter((i) => ids.includes(i.id)).map((i) => ({ slot: i.slot, item: i, quality: null }));
-    return setStats(gear, BEST_IN_GAME, mining, suggestion, picks);
+    return setStats(gear, BEST_IN_GAME, mining, { ...suggestion, picks });
   };
 
   it("totals each stat the set gives, percent and flat apart, including ones that don't change steps", () => {

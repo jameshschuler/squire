@@ -1,7 +1,9 @@
 import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
+import { RotateCcw } from "lucide-react";
 import type { RecipeBook } from "@squire/api/recipe-book";
 import { BEST_IN_GAME, type GearData, type PlayerProfile } from "@squire/api/gear-data";
+import { Button } from "@/components/ui/button";
 import { useCharacterContext } from "@/contexts/character-context";
 import { BEST_LOCATION, gearTargets, optimizeTarget } from "@/lib/gear-targets";
 import type { GearSearch, GearSource } from "@/lib/gear-search";
@@ -47,6 +49,14 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
 
   return (
     <div className="space-y-3">
+      {target && (
+        <div className="flex justify-end">
+          <Button variant="ghost" size="sm" onClick={() => onSearchChange({})}>
+            <RotateCcw />
+            Start over
+          </Button>
+        </div>
+      )}
       <ChatMessage>
         <p>What do you want to do? I'll find the gear that needs the fewest steps.</p>
         {!target && (

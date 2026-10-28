@@ -4,9 +4,13 @@ import { formatPercent } from "./format";
 type StatType = StatLine["stat"];
 
 export interface StatRow {
-  key: string;
   label: string;
   value: string;
+}
+
+export interface StatGroups {
+  steps: StatRow[];
+  other: StatRow[];
 }
 
 export interface EfficiencyParts {
@@ -16,8 +20,12 @@ export interface EfficiencyParts {
   level: number;
 }
 
+export interface EfficiencyRow {
+  value: string;
+  detail: string;
+}
+
 const STAT_LABELS: Partial<Record<StatType, string>> = {
-  workEfficiency: "Work efficiency",
   stepsRequired: "Steps required",
   doubleAction: "Double action",
   doubleRewards: "Double rewards",
@@ -34,26 +42,38 @@ const STAT_LABELS: Partial<Record<StatType, string>> = {
 };
 const STEP_STATS: StatType[] = ["stepsRequired", "doubleAction"];
 
-export function statRows(lines: StatLine[]): StatRow[] {
-  const rank = (line: StatLine) => (STEP_STATS.includes(line.stat) ? STEP_STATS.indexOf(line.stat) : STEP_STATS.length);
-  return lines
-    .filter((line) => line.stat !== "workEfficiency" && STAT_LABELS[line.stat])
-    .sort((a, b) => rank(a) - rank(b) || STAT_LABELS[a.stat]!.localeCompare(STAT_LABELS[b.stat]!))
-    .map((line) => ({
-      key: `${line.stat}:${line.isPercent}`,
-      label: STAT_LABELS[line.stat]!,
-      value: formatStatValue(line),
-    }));
+export function statGroups(lines: StatLine[]): StatGroups {
+  const stats = [...new Set(lines.map((line) => line.stat))].filter((stat) => STAT_LABELS[stat]);
+  const row = (stat: StatType): StatRow => ({
+    label: STAT_LABELS[stat]!,
+    value: lines
+      .filter((line) => line.stat === stat)
+      .sort((a, b) => Number(a.isPercent) - Number(b.isPercent))
+      .map(formatStatValue)
+      .join(", "),
+  });
+  return {
+    steps: STEP_STATS.filter((stat) => stats.includes(stat)).map(row),
+    other: stats
+      .filter((stat) => !STEP_STATS.includes(stat))
+      .map(row)
+      .sort((a, b) => a.label.localeCompare(b.label)),
+  };
 }
 
-export function formatStatValue({ value, isPercent }: StatLine): string {
+export function formatStatValue({ stat, value, isPercent }: StatLine): string {
   const sign = value < 0 ? "−" : "+";
   const amount = Math.abs(value);
-  return isPercent ? `${sign}${formatPercent(amount, 1)}` : `${sign}${Number(amount.toFixed(2))}`;
+  if (isPercent) {
+    return `${sign}${formatPercent(amount, 1)}`;
+  }
+  return `${sign}${Number(amount.toFixed(2))}${stat === "stepsRequired" ? " steps" : ""}`;
 }
 
-export function efficiencySummary({ used, cap, gear, level }: EfficiencyParts): string {
-  const signed = formatStatValue({ stat: "workEfficiency", isPercent: true, value: used });
-  const max = Number.isFinite(cap) ? `/${formatPercent(cap, 1)}` : "";
-  return `${signed}${max} (gear ${formatPercent(gear, 1)}, level ${formatPercent(level, 1)})`;
+export function efficiencyRow({ used, cap, gear, level }: EfficiencyParts): EfficiencyRow {
+  const signed = (value: number) => formatStatValue({ stat: "workEfficiency", isPercent: true, value });
+  return {
+    value: Number.isFinite(cap) ? `${signed(used)} of ${formatPercent(cap, 1)} max` : signed(used),
+    detail: `Gear ${signed(gear)} · level ${signed(level)}`,
+  };
 }

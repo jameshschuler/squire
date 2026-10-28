@@ -128,29 +128,12 @@ describe("Gear page", () => {
     expect(screen.getByRole("link", { name: /iron pickaxe/ }).textContent).not.toContain("Equipped");
   });
 
-  it("keeps worn items in slots nothing helps, and copies them too", async () => {
-    addCharacter();
-    const beret = { ...miningGear("pincushion_beret", "head", 0), stats: [] };
-    gear = withGear([miningGear("journeyman_handwear", "hands", -3), pickaxe, beret]);
-    vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText: vi.fn(async () => {}) } });
-    await renderPage({ target: "activity:mine_gold_ore", gear: "mine" });
-    expect(await screen.findByText("Faded items are what you wear now. They don't change the steps.")).toBeDefined();
-    expect(screen.getByRole("link", { name: /Head.*pincushion beret/ }).className).toContain("opacity-50");
-    await clickCopy();
-    expect(
-      vi
-        .mocked(gearSetCode)
-        .mock.calls.at(-1)?.[0]
-        .map((p) => p.item.id),
-    ).toContain("pincushion_beret");
-  });
-
   it("shows the set's stats, with work efficiency against the activity's max", async () => {
     await renderPage({ target: "activity:mine_gold_ore" });
     const stats = await screen.findByRole("region", { name: "Set stats" });
     expect(stats.textContent).toContain("Work efficiency");
-    expect(stats.textContent).toContain("/70%");
-    expect(stats.textContent).toContain("Steps required −5");
+    expect(stats.textContent).toContain("of 70% max");
+    expect(stats.textContent).toContain("Steps required−5 steps");
   });
 
   it("shows the game's gear layout, with empty slots saying nothing helps", async () => {
@@ -158,15 +141,6 @@ describe("Gear page", () => {
     expect(await screen.findByRole("link", { name: /Hands.*journeyman handwear/ })).toBeDefined();
     expect(screen.getAllByText("Nothing helps").length).toBeGreaterThan(0);
     expect(screen.getByText("Tool 6")).toBeDefined();
-  });
-
-  it("still shows what to keep when no gear helps", async () => {
-    addCharacter();
-    const beret = { ...miningGear("pincushion_beret", "head", 0), stats: [] };
-    gear = withGear([beret]);
-    await renderPage({ target: "activity:mine_gold_ore", gear: "mine" });
-    expect(await screen.findByRole("link", { name: /Head.*pincushion beret/ })).toBeDefined();
-    expect(screen.getByRole("button", { name: /Copy for WalkScape/ })).toBeDefined();
   });
 
   it("says when the character already wears the best set", async () => {
@@ -182,6 +156,14 @@ describe("Gear page", () => {
     expect(
       await screen.findByText("You need Smithing level 15 for this. Here's the set for when you get there."),
     ).toBeDefined();
+  });
+
+  it("starts over from the first question", async () => {
+    await renderPage({ target: "recipe:bake_a_bagel", location: "best" });
+    fireEvent.click(await screen.findByRole("button", { name: "Start over" }));
+    expect(screen.getByPlaceholderText("Search activities and recipes…")).toBeDefined();
+    expect(screen.queryByText("Where?")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Start over" })).toBeNull();
   });
 
   it("goes back to the question when you tap an answer", async () => {

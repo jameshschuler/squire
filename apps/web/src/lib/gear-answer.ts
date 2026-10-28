@@ -1,6 +1,5 @@
 import {
   efficiencyCap,
-  keptGear,
   levelBonus,
   ownedKey,
   SAME_STEPS,
@@ -9,23 +8,21 @@ import {
   toolSlotsOf,
   wornSteps,
   type GearData,
-  type GearPick,
   type GearSuggestion,
   type OptimizeTarget,
   type PlayerProfile,
   type StepsResult,
 } from "@squire/api/gear-data";
 import { formatNumber } from "./format";
-import { efficiencySummary, statRows, type StatRow } from "./gear-stats";
+import { efficiencyRow, statGroups, type EfficiencyRow, type StatGroups } from "./gear-stats";
 import type { GearTarget } from "./gear-targets";
 
 export interface GearAnswerView {
   suggestion: GearSuggestion;
   before: StepsResult | null;
   equipped: Set<string> | null;
-  kept: GearPick[];
-  efficiency: string;
-  stats: StatRow[];
+  efficiency: EfficiencyRow;
+  stats: StatGroups;
   notes: string[];
   toolSlots: number;
 }
@@ -39,11 +36,9 @@ export function gearAnswer(
 ): GearAnswerView {
   const character = profile.kind === "character" ? profile.character : null;
   const before = character ? wornSteps(gear, character, optimize, suggestion.location) : null;
-  const kept = character ? keptGear(gear, character, optimize, suggestion) : [];
-  const worn = [...suggestion.picks, ...kept];
-  const lines = setStats(gear, profile, optimize, suggestion, worn);
+  const lines = setStats(gear, profile, optimize, suggestion);
   const level = skillLevelOf(profile, optimize.skill);
-  const efficiency = efficiencySummary({
+  const efficiency = efficiencyRow({
     used: suggestion.result.efficiency - 1,
     cap: efficiencyCap(optimize),
     gear: lines.find((l) => l.stat === "workEfficiency" && l.isPercent)?.value ?? 0,
@@ -53,9 +48,8 @@ export function gearAnswer(
     suggestion,
     before,
     equipped: character && new Set(Object.values(character.equipped).map(ownedKey)),
-    kept,
     efficiency,
-    stats: statRows(lines),
+    stats: statGroups(lines),
     notes: answerNotes(suggestion, target, before, character ? level : null),
     toolSlots: toolSlotsOf(profile),
   };

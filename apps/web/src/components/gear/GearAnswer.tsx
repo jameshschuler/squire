@@ -8,7 +8,7 @@ import { GearStats } from "./GearStats";
 type GearAnswerProps = GearAnswerView & { showLocation: boolean };
 
 export function GearAnswer(props: GearAnswerProps) {
-  const { suggestion, notes, showLocation, before, equipped, kept, efficiency, stats, toolSlots } = props;
+  const { suggestion, notes, showLocation, before, equipped, efficiency, stats, toolSlots } = props;
   const { picks, pet, location, result } = suggestion;
   const context = [
     before && `Now ${formatStepsResult(before)}`,
@@ -27,11 +27,9 @@ export function GearAnswer(props: GearAnswerProps) {
           ))}
         </div>
       )}
-      {(picks.length > 0 || pet || kept.length > 0) && (
-        <GearGrid picks={picks} kept={kept} pet={pet} toolSlots={toolSlots} equipped={equipped} />
-      )}
-      {(picks.length > 0 || pet || kept.length > 0) && <GearStats efficiency={efficiency} rows={stats} />}
-      {(picks.length > 0 || kept.length > 0) && <CopyGearSetButton picks={[...picks, ...kept]} />}
+      {(picks.length > 0 || pet) && <GearGrid picks={picks} pet={pet} toolSlots={toolSlots} equipped={equipped} />}
+      {(picks.length > 0 || pet) && <GearStats efficiency={efficiency} groups={stats} />}
+      {picks.length > 0 && <CopyGearSetButton picks={picks} />}
     </ChatMessage>
   );
 }
