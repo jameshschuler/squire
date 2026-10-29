@@ -184,6 +184,16 @@ describe("Gear page", () => {
     expect(screen.getByText("Tool 6")).toBeDefined();
   });
 
+  it("marks only as many copies of a ring as the character wears", async () => {
+    const twoRings = { ...exportFixture, bank: { ...exportFixture.bank, gold_ethernite_ring_epic: 1 } };
+    localStorage.setItem(CHARACTER_STORAGE_KEY, storeCharacter(JSON.stringify(twoRings), new Date()));
+    gear = withGear([miningGear("gold_ethernite_ring", "ring", -3)]);
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
+    const ring1 = await screen.findByRole("link", { name: /Ring 1.*gold ethernite ring/ });
+    const ring2 = screen.getByRole("link", { name: /Ring 2.*gold ethernite ring/ });
+    expect([ring1, ring2].filter((cell) => cell.querySelector('[aria-label="Equipped"]')).length).toBe(1);
+  });
+
   it("says when the character already wears the best set", async () => {
     addCharacter();
     gear = withGear([miningGear("journeyman_handwear", "hands", -3)]);

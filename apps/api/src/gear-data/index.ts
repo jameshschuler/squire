@@ -8,3 +8,4 @@ export * from "./steps.js";
 export { setStats, type StatLine } from "./set-stats.js";
 export { wornSteps } from "./worn.js";
 export { GOALS, compareScores, goalScorer, goalStats, type Goal, type GoalId, type Score } from "./goals.js";
+export { GEAR_SLOTS } from "./slots.js";

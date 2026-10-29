@@ -1,5 +1,3 @@
-import type { GearType } from "@walkscape-community/data-api-client";
-import { MAX_LEVEL, toolSlots } from "../character/character.js";
 import {
   gearCandidate,
   type Candidate,
@@ -12,6 +10,7 @@ import {
 import { ownedGear, ownedPets, skillLevelOf, toolSlotsOf, type OwnedPetView, type PlayerProfile } from "./profile.js";
 import { GOALS, compareScores, goalScorer, goalStats, type GoalId, type Score } from "./goals.js";
 import { keywordRules, prune } from "./pruning.js";
+import { GEAR_SLOTS } from "./slots.js";
 import { bestSet, type SlotGroup } from "./search.js";
 import {
   NO_STATS,
@@ -38,21 +37,6 @@ export interface GearSuggestion {
   goals: GoalId[];
   score: Score;
 }
-
-export const GEAR_SLOTS: { slot: GearType; capacity: number }[] = [
-  { slot: "head", capacity: 1 },
-  { slot: "cape", capacity: 1 },
-  { slot: "back", capacity: 1 },
-  { slot: "chest", capacity: 1 },
-  { slot: "primary", capacity: 1 },
-  { slot: "secondary", capacity: 1 },
-  { slot: "hands", capacity: 1 },
-  { slot: "legs", capacity: 1 },
-  { slot: "neck", capacity: 1 },
-  { slot: "feet", capacity: 1 },
-  { slot: "ring", capacity: 2 },
-  { slot: "tool", capacity: toolSlots(MAX_LEVEL) },
-];
 
 const SEARCH_STATES = 300;
 

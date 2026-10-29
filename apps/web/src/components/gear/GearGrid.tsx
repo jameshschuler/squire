@@ -6,11 +6,17 @@ interface GearGridProps {
   picks: GearPick[];
   pet: OwnedPetView | null;
   toolSlots: number;
-  equipped: Set<string> | null;
+  equipped: Map<string, number> | null;
 }
 
 export function GearGrid({ picks, pet, toolSlots, equipped }: GearGridProps) {
-  const isEquipped = (pick: GearPick) => equipped?.has(ownedKey({ id: pick.item.id, quality: pick.quality })) ?? false;
+  const unclaimed = new Map(equipped ?? []);
+  const isEquipped = (pick: GearPick) => {
+    const key = ownedKey({ id: pick.item.id, quality: pick.quality });
+    const left = unclaimed.get(key) ?? 0;
+    unclaimed.set(key, left - 1);
+    return left > 0;
+  };
   const render = (cell: GearCell) => (
     <GearSlotCell
       key={cell.label}

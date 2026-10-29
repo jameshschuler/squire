@@ -1,6 +1,7 @@
 import { MAX_LEVEL, toolSlots, type Character, type OwnedPet } from "../character/character.js";
 import { QUALITIES, type ItemQuality } from "../recipe-book/types.js";
 import { stackedStats } from "./items.js";
+import { copiesAllowed } from "./slots.js";
 import type { GearCondition, GearItem, GearStat, PetView } from "./types.js";
 
 export type PlayerProfile = { kind: "best" } | { kind: "character"; character: Character };
@@ -29,18 +30,22 @@ export function toolSlotsOf(profile: PlayerProfile): number {
 
 export function ownedGear(profile: PlayerProfile, items: GearItem[]): OwnedGear[] {
   if (profile.kind === "best") {
-    return items.map((item) => {
+    return items.flatMap((item) => {
       const quality = bestQuality(item);
-      return { item, quality, stats: stackedStats(item, quality) };
+      return copies({ item, quality, stats: stackedStats(item, quality) }, Number.POSITIVE_INFINITY);
     });
   }
   const byId = new Map(items.map((item) => [item.id, item]));
-  return profile.character.owned.flatMap(({ id, quality }) => {
+  return profile.character.owned.flatMap(({ id, quality, count }) => {
     const item = byId.get(id);
     return item && meetsRequirements(profile.character, item.requirements)
-      ? [{ item, quality, stats: stackedStats(item, quality) }]
+      ? copies({ item, quality, stats: stackedStats(item, quality) }, count)
       : [];
   });
+}
+
+function copies(owned: OwnedGear, count: number): OwnedGear[] {
+  return Array.from({ length: Math.min(count, copiesAllowed(owned.item.slot)) }, () => owned);
 }
 
 export function ownedPets(profile: PlayerProfile, pets: PetView[]): OwnedPetView[] {

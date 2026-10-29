@@ -33,6 +33,10 @@ export interface OwnedPet {
   level: number;
 }
 
+export interface OwnedStack extends OwnedItem {
+  count: number;
+}
+
 export interface Character {
   name: string;
   skillLevels: Record<string, number>;
@@ -43,7 +47,7 @@ export interface Character {
   achievementPoints: number;
   collectibles: string[];
   equipped: Partial<Record<EquipmentSlot, OwnedItem>>;
-  owned: OwnedItem[];
+  owned: OwnedStack[];
   pets: OwnedPet[];
   petOut: OwnedPet | null;
 }
@@ -105,11 +109,14 @@ export function parseCharacterExport(text: string): Character {
   const level = characterLevel(data.steps);
   const skillLevels = Object.fromEntries(Object.entries(data.skills).map(([skill, xp]) => [skill, skillLevel(xp)]));
   const equippedIds = EQUIPMENT_SLOTS.flatMap((slot) => (data.gear[slot] ? [[slot, data.gear[slot]] as const] : []));
-  const ownedIds = new Set([
-    ...equippedIds.map(([, id]) => id),
-    ...Object.keys(data.bank),
-    ...Object.keys(data.inventory),
-  ]);
+  const counts = new Map<string, number>();
+  for (const [id, count] of [
+    ...equippedIds.map(([, id]) => [id, 1] as const),
+    ...Object.entries(data.bank),
+    ...Object.entries(data.inventory),
+  ]) {
+    counts.set(id, (counts.get(id) ?? 0) + count);
+  }
   return {
     name: data.name,
     skillLevels,
@@ -120,7 +127,9 @@ export function parseCharacterExport(text: string): Character {
     achievementPoints: data.achievement_points,
     collectibles: data.collectibles,
     equipped: Object.fromEntries(equippedIds.map(([slot, id]) => [slot, ownedItem(id)])),
-    owned: [...ownedIds].filter((id) => !id.endsWith(FINE_SUFFIX)).map(ownedItem),
+    owned: [...counts]
+      .filter(([id, count]) => count > 0 && !id.endsWith(FINE_SUFFIX))
+      .map(([id, count]) => ({ ...ownedItem(id), count })),
     pets: [...(data.pets?.pet ? [data.pets.pet] : []), ...(data.available_pets ?? [])].map(ownedPet),
     petOut: data.pets?.pet ? ownedPet(data.pets.pet) : null,
   };

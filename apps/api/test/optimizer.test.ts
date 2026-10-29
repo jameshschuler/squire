@@ -78,8 +78,9 @@ function character(owned: string[], extra: Partial<Character> = {}): PlayerProfi
       collectibles: [],
       equipped: {},
       owned: owned.map((entry) => {
-        const [id = "", quality] = entry.split("@");
-        return { id, quality: (quality as GearItem["quality"]) ?? null };
+        const [item = "", count = "1"] = entry.split("*");
+        const [id = "", quality] = item.split("@");
+        return { id, quality: (quality as GearItem["quality"]) ?? null, count: Number(count) };
       }),
       pets: [],
       petOut: null,
@@ -153,7 +154,7 @@ describe("optimizeGear", () => {
 
   it("wears two rings", () => {
     const rings = [1, 2, 3].map((n) => item(`ring_${n}`, "ring", [flatSteps(-n)]));
-    expect(picked(gearData(rings), BEST_IN_GAME)).toEqual(["ring_2", "ring_3"]);
+    expect(picked(gearData(rings), character(rings.map((r) => r.id)))).toEqual(["ring_2", "ring_3"]);
   });
 
   it("uses only gear the character owns, at the quality they own it", () => {
@@ -184,6 +185,34 @@ describe("optimizeGear", () => {
     });
     expect(picked(gearData([locked]), character(["locked_boots"]))).toEqual([]);
     expect(picked(gearData([locked]), BEST_IN_GAME)).toEqual(["locked_boots"]);
+  });
+
+  it("wears two copies of a ring the character owns twice", () => {
+    const rings = [item("good_ring", "ring", [flatSteps(-5)]), item("weak_ring", "ring", [flatSteps(-1)])];
+    expect(picked(gearData(rings), character(["good_ring*2", "weak_ring"]))).toEqual(["good_ring", "good_ring"]);
+  });
+
+  it("wears at most two copies of a ring, however many the character owns", () => {
+    expect(picked(gearData([item("good_ring", "ring", [flatSteps(-5)])]), character(["good_ring*5"]))).toEqual([
+      "good_ring",
+      "good_ring",
+    ]);
+  });
+
+  it("wears one copy of a ring the character owns once", () => {
+    const rings = [item("good_ring", "ring", [flatSteps(-5)]), item("weak_ring", "ring", [flatSteps(-1)])];
+    expect(picked(gearData(rings), character(["good_ring", "weak_ring"]))).toEqual(["good_ring", "weak_ring"]);
+  });
+
+  it("assumes two of every ring with no character", () => {
+    expect(picked(gearData([item("good_ring", "ring", [flatSteps(-5)])]), BEST_IN_GAME)).toEqual([
+      "good_ring",
+      "good_ring",
+    ]);
+  });
+
+  it("never wears two copies of a tool", () => {
+    expect(picked(gearData([item("watch", "tool", [flatSteps(-5)])]), character(["watch*3"]))).toEqual(["watch"]);
   });
 
   it("picks the location where location bonuses apply, and says which", () => {
@@ -291,7 +320,7 @@ describe("optimizeGear", () => {
         }),
       ]),
     ]);
-    expect(picked(gear, BEST_IN_GAME)).toEqual(["quest_ring"]);
+    expect(picked(gear, BEST_IN_GAME)).toEqual(["quest_ring", "quest_ring"]);
     expect(picked(gear, character(["quest_ring"]))).toEqual([]);
   });
 

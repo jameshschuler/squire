@@ -22,7 +22,7 @@ import type { GearTarget } from "./gear-targets";
 export interface GearAnswerView {
   suggestion: GearSuggestion;
   before: StepsResult | null;
-  equipped: Set<string> | null;
+  equipped: Map<string, number> | null;
   efficiencyStatus: string;
   priorities: StatRow[];
   steps: string | null;
@@ -62,7 +62,7 @@ export function gearAnswer(
   return {
     suggestion,
     before,
-    equipped: character && new Set(Object.values(character.equipped).map(ownedKey)),
+    equipped: character && wornCounts(Object.values(character.equipped).map(ownedKey)),
     efficiencyStatus: efficiencyStatus(parts),
     priorities,
     steps: suggestion.goals.includes("steps") ? null : formatStepsResult(suggestion.result),
@@ -95,4 +95,8 @@ export function answerNotes(
 export function formatStepsResult({ steps, averageSteps }: StepsResult): string {
   const perAction = `${formatNumber(steps)} steps per action`;
   return averageSteps < steps ? `${perAction} (${formatNumber(Number(averageSteps.toFixed(1)))} avg)` : perAction;
+}
+
+function wornCounts(keys: string[]): Map<string, number> {
+  return keys.reduce((counts, key) => counts.set(key, (counts.get(key) ?? 0) + 1), new Map<string, number>());
 }
