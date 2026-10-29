@@ -7,6 +7,7 @@ export interface StatTile {
   key: string;
   value: string;
   label: string;
+  details: string[];
   highlight: boolean;
 }
 
@@ -40,8 +41,7 @@ const STAT_LABELS: Partial<Record<StatType, string>> = {
 const STEP_STATS: StatType[] = ["stepsRequired", "doubleAction"];
 
 const TILE_LABELS: Partial<Record<`${StatType}:${boolean}`, string>> = {
-  "stepsRequired:false": "Steps per action",
-  "stepsRequired:true": "Steps required",
+  "stepsRequired:false": "Steps required (flat)",
   "bonusExperience:false": "Bonus XP per action",
   "bonusExperience:true": "Bonus XP",
 };
@@ -57,6 +57,7 @@ export function statGroups(
     key: `${line.stat}:${line.isPercent}`,
     value: formatStatValue(line),
     label: TILE_LABELS[`${line.stat}:${line.isPercent}`] ?? STAT_LABELS[line.stat]!,
+    details: [],
     highlight: highlightKeys.includes(`${line.stat}:${line.isPercent}`),
   });
   const rank = (tile: StatTile) => {
@@ -85,15 +86,16 @@ export function statGroups(
 function efficiencyTile(parts: EfficiencyParts): StatTile {
   const { used, cap, gear, level } = parts;
   const limit = !Number.isFinite(cap)
-    ? "Work efficiency"
-    : efficiencyOver(parts) >= 0
-      ? "Work efficiency, maxed"
-      : `Work efficiency of ${formatPercent(cap, 1)} max`;
-  const label = `${limit} · gear ${formatStatValue({ isPercent: true, value: gear })}, level ${formatStatValue({ isPercent: true, value: level })}`;
+    ? []
+    : [efficiencyOver(parts) >= 0 ? `Maxed at ${formatPercent(cap, 1)}` : `Max is ${formatPercent(cap, 1)}`];
   return {
     key: "workEfficiency",
     value: formatStatValue({ isPercent: true, value: used }),
-    label,
+    label: "Work efficiency",
+    details: [
+      ...limit,
+      `Gear ${formatStatValue({ isPercent: true, value: gear })}, level ${formatStatValue({ isPercent: true, value: level })}`,
+    ],
     highlight: false,
   };
 }

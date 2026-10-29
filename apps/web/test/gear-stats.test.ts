@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { formatStatValue, statGroups } from "@/lib/gear-stats";
+import { formatStatValue, statGroups, type StatTile } from "@/lib/gear-stats";
 
 describe("statGroups", () => {
   const capped = { used: 0.2, cap: 0.2, gear: 0.95, level: 0.25 };
-  const steps = { key: "steps", value: "35", label: "Steps", highlight: true };
+  const steps = { key: "steps", value: "35", label: "Steps", details: [], highlight: true };
   const lines = [
     { stat: "chestFind", isPercent: true, value: 0.69 },
     { stat: "workEfficiency", isPercent: true, value: 0.95 },
@@ -15,13 +15,13 @@ describe("statGroups", () => {
     { stat: "inventorySpace", isPercent: false, value: 3 },
   ] as const;
   const groups = statGroups([...lines], capped, [{ stat: "chestFind", isPercent: true }], steps);
-  const shown = (tiles: { label: string; value: string }[]) => tiles.map((t) => `${t.label} ${t.value}`);
+  const shown = (tiles: StatTile[]) => tiles.map((t) => [`${t.label} ${t.value}`, ...t.details].join(" · "));
 
   it("starts the steps tiles with steps, then work efficiency, then one number per tile", () => {
     expect(shown(groups.steps)).toEqual([
       "Steps 35",
-      "Work efficiency, maxed · gear +95%, level +25% +20%",
-      "Steps per action −6",
+      "Work efficiency +20% · Maxed at 20% · Gear +95%, level +25%",
+      "Steps required (flat) −6",
       "Steps required −2%",
       "Double action +23.5%",
     ]);
@@ -37,9 +37,9 @@ describe("statGroups", () => {
     expect(groups.other.filter((t) => t.highlight).map((t) => t.label)).toEqual(["Chest finding"]);
   });
 
-  it("says how far work efficiency is from the max when it isn't maxed", () => {
+  it("says what the work efficiency max is when it isn't maxed", () => {
     const short = statGroups([], { used: 0.3, cap: 0.5, gear: 0.05, level: 0.25 }, [], steps);
-    expect(shown(short.steps)).toEqual(["Steps 35", "Work efficiency of 50% max · gear +5%, level +25% +30%"]);
+    expect(shown(short.steps)).toEqual(["Steps 35", "Work efficiency +30% · Max is 50% · Gear +5%, level +25%"]);
   });
 
   it("highlights only the exact stat a priority uses, not its flat or percent twin", () => {
@@ -64,8 +64,8 @@ describe("statGroups", () => {
   });
 
   it.each([
-    [{ used: 0.3, cap: Number.POSITIVE_INFINITY, gear: 0.3, level: 0 }, "Work efficiency · gear +30%, level +0% +30%"],
-    [{ used: -0.1, cap: 0.7, gear: -0.1, level: 0 }, "Work efficiency of 70% max · gear −10%, level +0% −10%"],
+    [{ used: 0.3, cap: Number.POSITIVE_INFINITY, gear: 0.3, level: 0 }, "Work efficiency +30% · Gear +30%, level +0%"],
+    [{ used: -0.1, cap: 0.7, gear: -0.1, level: 0 }, "Work efficiency −10% · Max is 70% · Gear −10%, level +0%"],
   ])("labels the work efficiency tile for %j", (parts, expected) => {
     expect(shown(statGroups([], parts, [], steps).steps)).toEqual(["Steps 35", expected]);
   });

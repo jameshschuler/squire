@@ -79,19 +79,19 @@ function wornCounts(keys: string[]): Map<string, number> {
 export function stepsTile({ result, goals }: GearSuggestion, before: StepsResult | null): StatTile {
   const average = Math.round(result.averageSteps);
   const change = before ? average - Math.round(before.averageSteps) : null;
-  const notes = [
-    "Steps",
-    ...(average < result.steps ? [`${formatNumber(average)} avg`] : []),
+  const details = [
+    ...(average < result.steps ? [`${formatNumber(average)} on average with double action`] : []),
     ...(change === null
       ? []
       : change === 0
-        ? ["same as now"]
-        : [`${change < 0 ? "−" : "+"}${formatNumber(Math.abs(change))} vs now`]),
+        ? ["Same as your gear now"]
+        : [`${formatNumber(Math.abs(change))} ${change < 0 ? "fewer" : "more"} than your gear now`]),
   ];
   return {
     key: "steps",
     value: formatNumber(result.steps),
-    label: notes.join(" · "),
+    label: "Steps per action",
+    details,
     highlight: goals.includes("steps"),
   };
 }

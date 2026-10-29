@@ -130,7 +130,7 @@ describe("Gear page", () => {
   it("uses the character's gear without asking, and compares with what they wear now", async () => {
     addCharacter();
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
-    expect(await screen.findByText(/vs now/)).toBeDefined();
+    expect(await screen.findByText(/than your gear now/)).toBeDefined();
     expect(screen.queryByText("Whose gear?")).toBeNull();
     expect(screen.getByRole("link", { name: /journeyman handwear.*Equipped/ })).toBeDefined();
     expect(screen.getByRole("link", { name: /iron pickaxe/ }).textContent).not.toContain("Equipped");
@@ -191,8 +191,8 @@ describe("Gear page", () => {
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     const stats = await screen.findByRole("region", { name: "Set stats" });
     expect(stats.textContent).toContain("Work efficiency");
-    expect(stats.textContent).toContain("Work efficiency of 70% max");
-    expect(stats.textContent).toContain("−5Steps per action");
+    expect(stats.textContent).toContain("Work efficiencyMax is 70%");
+    expect(stats.textContent).toContain("−5Steps required (flat)");
   });
 
   it("shows the game's gear layout, with empty slots left to the player", async () => {
@@ -217,7 +217,7 @@ describe("Gear page", () => {
     gear = withGear([miningGear("journeyman_handwear", "hands", -3)]);
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     expect(await screen.findByText("You're already wearing the best set for this.")).toBeDefined();
-    expect(screen.getByRole("region", { name: "Set stats" }).textContent).toContain("same as now");
+    expect(screen.getByRole("region", { name: "Set stats" }).textContent).toContain("Same as your gear now");
   });
 
   it("says when the character's level is too low, and still shows the set", async () => {

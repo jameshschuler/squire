@@ -15,7 +15,12 @@ export function StatTiles({ title, tiles }: { title?: string; tiles: StatTile[] 
               {tile.value}
               {tile.highlight && <span className="sr-only"> (priority)</span>}
             </p>
-            <p className="text-[11px] leading-tight text-muted-foreground">{tile.label}</p>
+            <p className="text-xs leading-tight font-medium">{tile.label}</p>
+            {tile.details.map((detail) => (
+              <p key={detail} className="mt-0.5 text-[11px] leading-tight text-muted-foreground">
+                {detail}
+              </p>
+            ))}
           </li>
         ))}
       </ul>

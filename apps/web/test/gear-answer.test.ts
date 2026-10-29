@@ -65,16 +65,25 @@ describe("stepsTile", () => {
   });
 
   it.each([
-    [null, "Steps · 32 avg"],
-    [{ efficiency: 1, steps: 40, averageSteps: 40 }, "Steps · 32 avg · −8 vs now"],
-    [{ efficiency: 1, steps: 30, averageSteps: 32.2 }, "Steps · 32 avg · same as now"],
-    [{ efficiency: 1, steps: 30, averageSteps: 30 }, "Steps · 32 avg · +2 vs now"],
-  ])("compares average steps with what's worn now (%j)", (before, label) => {
-    expect(stepsTile(withGoals(["steps"]), before)).toMatchObject({ key: "steps", value: "40", label });
+    [null, ["32 on average with double action"]],
+    [
+      { efficiency: 1, steps: 40, averageSteps: 40 },
+      ["32 on average with double action", "8 fewer than your gear now"],
+    ],
+    [{ efficiency: 1, steps: 30, averageSteps: 32.2 }, ["32 on average with double action", "Same as your gear now"]],
+    [{ efficiency: 1, steps: 30, averageSteps: 30 }, ["32 on average with double action", "2 more than your gear now"]],
+  ])("compares average steps with what's worn now (%j)", (before, details) => {
+    expect(stepsTile(withGoals(["steps"]), before)).toEqual({
+      key: "steps",
+      value: "40",
+      label: "Steps per action",
+      details,
+      highlight: true,
+    });
   });
 
   it("leaves out the average when there's no double action", () => {
     const plain = { result: { efficiency: 1, steps: 40, averageSteps: 40 }, goals: [] } as unknown as GearSuggestion;
-    expect(stepsTile(plain, null).label).toBe("Steps");
+    expect(stepsTile(plain, null).details).toEqual([]);
   });
 });
