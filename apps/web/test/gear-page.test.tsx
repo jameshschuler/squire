@@ -132,7 +132,10 @@ describe("Gear page", () => {
   });
 
   it("says when the gear search fails instead of working forever", async () => {
-    vi.mocked(solveInBackground).mockReturnValueOnce({ result: Promise.reject(new Error("boom")), cancel: () => {} });
+    vi.mocked(solveInBackground).mockImplementationOnce(() => ({
+      result: Promise.reject(new Error("boom")),
+      cancel: () => {},
+    }));
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     expect((await screen.findByRole("alert")).textContent).toContain("Couldn't work out a gear set");
   });
