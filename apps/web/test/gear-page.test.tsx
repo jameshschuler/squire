@@ -64,7 +64,7 @@ async function renderPage(initial: GearSearch = {}, fetchData = serveData) {
 }
 
 async function clickCopy() {
-  const button = await screen.findByRole("button", { name: /Copy for WalkScape/ });
+  const button = await screen.findByRole("button", { name: /Copy gear set for WalkScape/ });
   await waitFor(() => expect((button as HTMLButtonElement).disabled).toBe(false));
   fireEvent.click(button);
 }
@@ -103,8 +103,8 @@ describe("Gear page", () => {
     fireEvent.click(screen.getByRole("button", { name: "Find gear" }));
     expect(screen.getByRole("link", { name: "Add your character" }).getAttribute("href")).toBe("/character");
     expect(await screen.findByText("journeyman handwear")).toBeDefined();
-    expect((await screen.findByRole("region", { name: "Summary" })).textContent).toMatch(/[\d,]+Steps/);
-    expect(screen.getByRole("button", { name: /Copy for WalkScape/ })).toBeDefined();
+    expect((await screen.findByRole("region", { name: "Set stats" })).textContent).toMatch(/[\d,]+Steps/);
+    expect(screen.getByRole("button", { name: /Copy gear set for WalkScape/ })).toBeDefined();
   });
 
   it("asks where when the activity has several locations, with a best-location choice", async () => {
@@ -118,7 +118,8 @@ describe("Gear page", () => {
   it("says when no gear helps", async () => {
     await renderPage({ target: "recipe:bake_a_bagel", location: "best", goals: "steps" });
     expect(await screen.findByText("No gear helps with this.")).toBeDefined();
-    expect(screen.queryByRole("button", { name: /Copy for WalkScape/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Copy gear set for WalkScape/ })).toBeNull();
+    expect(screen.getByRole("region", { name: "Set stats" }).textContent).toMatch(/\d+ \(priority\)Steps/);
   });
 
   it("uses the character's gear without asking, and compares with what they wear now", async () => {
@@ -128,14 +129,6 @@ describe("Gear page", () => {
     expect(screen.queryByText("Whose gear?")).toBeNull();
     expect(screen.getByRole("link", { name: /journeyman handwear.*Equipped/ })).toBeDefined();
     expect(screen.getByRole("link", { name: /iron pickaxe/ }).textContent).not.toContain("Equipped");
-  });
-
-  it("switches between the character's gear and the best in the game", async () => {
-    addCharacter();
-    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
-    fireEvent.click(await screen.findByRole("button", { name: "Compare with best in game" }));
-    expect(await screen.findByRole("button", { name: "Use my gear" })).toBeDefined();
-    expect(screen.queryByText(/vs now/)).toBeNull();
   });
 
   it("asks for priorities in order, up to three, offering only goals the activity can give", async () => {
@@ -177,15 +170,16 @@ describe("Gear page", () => {
 
   it("shows steps per action even when fewest steps isn't a priority", async () => {
     await renderPage({ target: "activity:mine_gold_ore", goals: "chests" });
-    const summary = await screen.findByRole("region", { name: "Summary" });
-    expect(summary.textContent).toMatch(/\d+Steps/);
+    const stats = await screen.findByRole("region", { name: "Set stats" });
+    expect(stats.textContent).toMatch(/\d+Steps/);
   });
 
-  it("sums up each priority and how close the set is to max work efficiency", async () => {
+  it("puts steps first in the stats and highlights the priority stats", async () => {
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps,chests" });
-    const summary = await screen.findByRole("region", { name: "Summary" });
-    expect(summary.textContent).toMatch(/^[\d,]+Steps.*\+0%Chest finding/);
-    expect(summary.textContent).toMatch(/Work efficiency [\d.]+% of 70% max/);
+    const stats = await screen.findByRole("region", { name: "Set stats" });
+    expect(stats.textContent).toMatch(/^Steps[\d,]+ \(priority\)Steps/);
+    expect(stats.textContent).toMatch(/\+[\d.]+% \(priority\)Chest finding/);
+    expect(screen.queryByRole("region", { name: "Summary" })).toBeNull();
   });
 
   it("shows the set's stats, with work efficiency against the activity's max", async () => {
@@ -216,14 +210,14 @@ describe("Gear page", () => {
   it("says when the character already wears the best set", async () => {
     addCharacter();
     gear = withGear([miningGear("journeyman_handwear", "hands", -3)]);
-    await renderPage({ target: "activity:mine_gold_ore", gear: "mine", goals: "steps" });
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     expect(await screen.findByText("You're already wearing the best set for this.")).toBeDefined();
-    expect(screen.getByRole("region", { name: "Summary" }).textContent).toContain("same as now");
+    expect(screen.getByRole("region", { name: "Set stats" }).textContent).toContain("same as now");
   });
 
   it("says when the character's level is too low, and still shows the set", async () => {
     addCharacter();
-    await renderPage({ target: "recipe:smelt_a_gold_bar", gear: "mine", goals: "steps" });
+    await renderPage({ target: "recipe:smelt_a_gold_bar", goals: "steps" });
     expect(
       await screen.findByText("You need Smithing level 15 for this. Here's the set for when you get there."),
     ).toBeDefined();
@@ -249,7 +243,8 @@ describe("Gear page", () => {
     vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     await clickCopy();
-    expect(await screen.findByText("Copied")).toBeDefined();
+    expect((await screen.findByRole("status")).textContent).toBe("Copied");
+    expect(screen.getByRole("button", { name: /Copied gear set for WalkScape/ })).toBeDefined();
     expect(writeText).toHaveBeenCalledWith("GEAR-SET-CODE");
   });
 
@@ -306,6 +301,8 @@ describe("Gear page", () => {
     vi.mocked(gearSetCode).mockRejectedValueOnce(new Error("CompressionStream is not defined"));
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     expect(await screen.findByText("This browser can't build a gear-set code.")).toBeDefined();
-    expect((screen.getByRole("button", { name: /Copy for WalkScape/ }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole("button", { name: /Copy gear set for WalkScape/ }) as HTMLButtonElement).disabled).toBe(
+      true,
+    );
   });
 });

@@ -13,11 +13,9 @@ interface GearResultProps {
   target: GearTarget;
   optimize: OptimizeTarget;
   goals: GoalId[];
-  showLocation: boolean;
-  compare: { label: string; onClick: () => void } | null;
 }
 
-export function GearResult({ gear, profile, target, optimize, goals, showLocation, compare }: GearResultProps) {
+export function GearResult({ gear, profile, target, optimize, goals }: GearResultProps) {
   const suggestion = useGearSuggestion(gear, profile, optimize, goals);
   const answer = useMemo(
     () => suggestion && gearAnswer(gear, profile, target, optimize, suggestion),
@@ -33,5 +31,5 @@ export function GearResult({ gear, profile, target, optimize, goals, showLocatio
       </ChatMessage>
     );
   }
-  return <GearAnswer {...answer} showLocation={showLocation} compare={compare} />;
+  return <GearAnswer {...answer} />;
 }

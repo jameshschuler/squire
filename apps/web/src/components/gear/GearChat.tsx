@@ -6,7 +6,7 @@ import { BEST_IN_GAME, type GearData, type PlayerProfile } from "@squire/api/gea
 import { Button } from "@/components/ui/button";
 import { useCharacterContext } from "@/contexts/character-context";
 import { BEST_LOCATION, gearTargets, goalsFor, optimizeTarget, recommendedGoals } from "@/lib/gear-targets";
-import { MAX_GOALS, parseGoals, type GearSearch, type GearSource } from "@/lib/gear-search";
+import { MAX_GOALS, parseGoals, type GearSearch } from "@/lib/gear-search";
 import { ChatAnswer } from "./ChatAnswer";
 import { ChatMessage } from "./ChatMessage";
 import { ChoiceButtons } from "./ChoiceButtons";
@@ -31,7 +31,6 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
       ? search.location
       : undefined;
   const locationAnswered = !askLocation || location !== undefined;
-  const source: GearSource = character ? (search.gear ?? "mine") : "best";
   const allowedGoals = useMemo(() => (target ? goalsFor(target) : []), [target]);
   const goals = useMemo(
     () =>
@@ -42,8 +41,8 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
     [search.goals, allowedGoals],
   );
   const profile = useMemo<PlayerProfile>(
-    () => (source === "mine" && character ? { kind: "character", character } : BEST_IN_GAME),
-    [source, character],
+    () => (character ? { kind: "character", character } : BEST_IN_GAME),
+    [character],
   );
   const optimize = useMemo(
     () => (target && locationAnswered && goals.length > 0 ? optimizeTarget(target, location) : null),
@@ -132,22 +131,7 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
       )}
 
       {target && optimize && (
-        <GearResult
-          gear={gear}
-          profile={profile}
-          target={target}
-          optimize={optimize}
-          goals={goals}
-          showLocation={askLocation && location === BEST_LOCATION}
-          compare={
-            character
-              ? {
-                  label: source === "mine" ? "Compare with best in game" : "Use my gear",
-                  onClick: () => update({ gear: source === "mine" ? "best" : undefined }),
-                }
-              : null
-          }
-        />
+        <GearResult gear={gear} profile={profile} target={target} optimize={optimize} goals={goals} />
       )}
     </div>
   );

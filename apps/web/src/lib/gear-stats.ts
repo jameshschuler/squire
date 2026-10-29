@@ -1,4 +1,4 @@
-import type { GoalStat, StatLine } from "@squire/api/gear-data";
+import { sameStat, type GoalStat, type StatLine } from "@squire/api/gear-data";
 import { formatPercent } from "./format";
 
 type StatType = StatLine["stat"];
@@ -46,7 +46,12 @@ const TILE_LABELS: Partial<Record<`${StatType}:${boolean}`, string>> = {
   "bonusExperience:true": "Bonus XP",
 };
 
-export function statGroups(lines: StatLine[], efficiency: EfficiencyParts, highlighted: GoalStat[]): StatGroups {
+export function statGroups(
+  lines: StatLine[],
+  efficiency: EfficiencyParts,
+  highlighted: GoalStat[],
+  steps: StatTile,
+): StatGroups {
   const highlightKeys = highlighted.map(({ stat, isPercent }) => `${stat}:${isPercent}`);
   const tile = (line: StatLine): StatTile => ({
     key: `${line.stat}:${line.isPercent}`,
@@ -58,11 +63,15 @@ export function statGroups(lines: StatLine[], efficiency: EfficiencyParts, highl
     const index = highlightKeys.indexOf(tile.key);
     return index === -1 ? highlightKeys.length : index;
   };
-  const shown = lines
+  const missing = highlighted
+    .filter((goal) => !lines.some((line) => sameStat(line, goal)))
+    .map((goal) => ({ ...goal, value: 0 }));
+  const shown = [...lines, ...missing]
     .filter((line) => STAT_LABELS[line.stat])
     .sort((a, b) => Number(a.isPercent) - Number(b.isPercent));
   return {
     steps: [
+      steps,
       efficiencyTile(efficiency),
       ...STEP_STATS.flatMap((stat) => shown.filter((line) => line.stat === stat).map(tile)),
     ],
@@ -96,24 +105,6 @@ export function formatStatValue({ value, isPercent }: Pick<StatLine, "value" | "
     return `${sign}${formatPercent(amount, 1)}`;
   }
   return `${sign}${Number(amount.toFixed(2))}`;
-}
-
-export function statLabel(stat: StatType): string {
-  return STAT_LABELS[stat] ?? stat;
-}
-
-export function efficiencyStatus(parts: EfficiencyParts): string {
-  const { used, cap } = parts;
-  if (!Number.isFinite(cap)) {
-    return `Work efficiency ${formatPercent(used, 1)}, no max`;
-  }
-  const over = efficiencyOver(parts);
-  if (over > 0) {
-    return `Work efficiency maxed, ${formatPercent(over, 1)} over`;
-  }
-  return over === 0
-    ? "Work efficiency maxed"
-    : `Work efficiency ${formatPercent(used, 1)} of ${formatPercent(cap, 1)} max, ${formatPercent(-over, 1)} short`;
 }
 
 function efficiencyOver({ cap, gear, level }: EfficiencyParts): number {

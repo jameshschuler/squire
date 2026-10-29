@@ -8,11 +8,6 @@ type CopyState = "ready" | "copied" | "copy-failed";
 type Code = { picks: GearPick[]; code: string | null };
 
 const RESET_MS = 2000;
-const MESSAGES: Record<CopyState, string> = {
-  ready: "Paste it into a gear set in WalkScape.",
-  copied: "Paste it into a gear set in WalkScape.",
-  "copy-failed": "Couldn't copy. Check that this page can use the clipboard.",
-};
 
 export function CopyGearSetButton({ picks }: { picks: GearPick[] }) {
   const [built, setBuilt] = useState<Code | null>(null);
@@ -49,12 +44,21 @@ export function CopyGearSetButton({ picks }: { picks: GearPick[] }) {
 
   return (
     <div className="space-y-1">
-      <Button size="sm" onClick={() => code && copy(code)} disabled={!code} className="w-full">
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => code && copy(code)}
+        disabled={!code}
+        className="w-full bg-background"
+      >
         {state === "copied" ? <Check /> : <Copy />}
-        {state === "copied" ? "Copied" : "Copy for WalkScape"}
+        {state === "copied" ? "Copied" : "Copy"}
+        <span className="sr-only"> gear set for WalkScape</span>
       </Button>
-      <p className="text-xs text-muted-foreground" role="status">
-        {code === null ? "This browser can't build a gear-set code." : MESSAGES[state]}
+      <p className="text-xs text-destructive empty:hidden" role="status">
+        {state === "copied" && <span className="sr-only">Copied</span>}
+        {code === null && "This browser can't build a gear-set code."}
+        {state === "copy-failed" && "Couldn't copy. Check that this page can use the clipboard."}
       </p>
     </div>
   );

@@ -1,8 +1,6 @@
 import {
   efficiencyCap,
-  goalOf,
   goalStats,
-  sameStat,
   levelBonus,
   ownedKey,
   SAME_STEPS,
@@ -17,14 +15,12 @@ import {
   type StepsResult,
 } from "@squire/api/gear-data";
 import { formatNumber } from "./format";
-import { efficiencyStatus, formatStatValue, statGroups, statLabel, type StatGroups, type StatTile } from "./gear-stats";
+import { statGroups, type StatGroups, type StatTile } from "./gear-stats";
 import type { GearTarget } from "./gear-targets";
 
 export interface GearAnswerView {
   suggestion: GearSuggestion;
   equipped: Map<string, number> | null;
-  efficiencyStatus: string;
-  results: StatTile[];
   stats: StatGroups;
   notes: string[];
   toolSlots: number;
@@ -47,26 +43,10 @@ export function gearAnswer(
     gear: lines.find((l) => l.stat === "workEfficiency" && l.isPercent)?.value ?? 0,
     level: levelBonus(optimize, level),
   };
-  const stepsTile = stepsResultTile(suggestion.result, before);
-  const results = suggestion.goals.map((id): StatTile => {
-    const { stat } = goalOf(id);
-    if (!stat) {
-      return stepsTile;
-    }
-    const line = lines.find((l) => sameStat(l, stat));
-    return {
-      key: stat.stat,
-      value: formatStatValue(line ?? { value: 0, isPercent: stat.isPercent }),
-      label: statLabel(stat.stat),
-      highlight: false,
-    };
-  });
   return {
     suggestion,
     equipped: character && wornCounts(Object.values(character.equipped).map(ownedKey)),
-    efficiencyStatus: efficiencyStatus(parts),
-    results: suggestion.goals.includes("steps") ? results : [...results, stepsTile],
-    stats: statGroups(lines, parts, goalStats(suggestion.goals)),
+    stats: statGroups(lines, parts, goalStats(suggestion.goals), stepsTile(suggestion, before)),
     notes: answerNotes(suggestion, target, before, character ? level : null),
     toolSlots: toolSlotsOf(profile),
   };
@@ -96,7 +76,7 @@ function wornCounts(keys: string[]): Map<string, number> {
   return keys.reduce((counts, key) => counts.set(key, (counts.get(key) ?? 0) + 1), new Map<string, number>());
 }
 
-function stepsResultTile(result: StepsResult, before: StepsResult | null): StatTile {
+export function stepsTile({ result, goals }: GearSuggestion, before: StepsResult | null): StatTile {
   const average = Math.round(result.averageSteps);
   const change = before ? average - Math.round(before.averageSteps) : null;
   const notes = [
@@ -108,5 +88,10 @@ function stepsResultTile(result: StepsResult, before: StepsResult | null): StatT
         ? ["same as now"]
         : [`${change < 0 ? "−" : "+"}${formatNumber(Math.abs(change))} vs now`]),
   ];
-  return { key: "steps", value: formatNumber(result.steps), label: notes.join(" · "), highlight: false };
+  return {
+    key: "steps",
+    value: formatNumber(result.steps),
+    label: notes.join(" · "),
+    highlight: goals.includes("steps"),
+  };
 }

@@ -9,7 +9,7 @@ export function StatTiles({ title, tiles }: { title?: string; tiles: StatTile[] 
         {tiles.map((tile) => (
           <li
             key={tile.key}
-            className={cn("rounded-lg border bg-background px-2 py-1.5", tile.highlight && "border-foreground")}
+            className={cn("rounded-lg border bg-background px-2 py-1.5", tile.highlight && "border-foreground/40")}
           >
             <p className="text-base font-semibold">
               {tile.value}

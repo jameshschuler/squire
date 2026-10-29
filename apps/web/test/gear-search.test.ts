@@ -3,20 +3,18 @@ import { parseGoals, validateGearSearch } from "@/lib/gear-search";
 
 describe("validateGearSearch", () => {
   it("keeps the answers it understands", () => {
-    expect(validateGearSearch({ target: "activity:mine", location: "best", goals: "steps", gear: "mine" })).toEqual({
+    expect(validateGearSearch({ target: "activity:mine", location: "best", goals: "steps" })).toEqual({
       target: "activity:mine",
       location: "best",
       goals: "steps",
-      gear: "mine",
     });
   });
 
   it("drops answers of the wrong shape", () => {
-    expect(validateGearSearch({ target: 4, location: ["x"], goals: 2, gear: "theirs" })).toEqual({
+    expect(validateGearSearch({ target: 4, location: ["x"], goals: 2 })).toEqual({
       target: undefined,
       location: undefined,
       goals: undefined,
-      gear: undefined,
     });
   });
 });

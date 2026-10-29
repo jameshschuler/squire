@@ -41,7 +41,7 @@ export function PriorityQuestion({ goals, recommended, onChoose }: PriorityQuest
                 onClick={() => toggle(goal.id)}
                 className={cn(
                   "flex w-full items-center gap-2 rounded-lg border bg-background px-2.5 py-1.5 text-left",
-                  rank > 0 && "border-foreground",
+                  rank > 0 && "border-foreground/40",
                 )}
               >
                 <span

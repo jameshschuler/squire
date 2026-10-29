@@ -1,12 +1,9 @@
 import { GOALS, type GoalId } from "@squire/api/gear-data";
 
-export type GearSource = "mine" | "best";
-
 export interface GearSearch {
   target?: string;
   location?: string;
   goals?: string;
-  gear?: GearSource;
 }
 
 export const MAX_GOALS = 3;
@@ -16,7 +13,6 @@ export function validateGearSearch(search: Record<string, unknown>): GearSearch 
     target: typeof search.target === "string" ? search.target : undefined,
     location: typeof search.location === "string" ? search.location : undefined,
     goals: typeof search.goals === "string" ? search.goals : undefined,
-    gear: search.gear === "mine" || search.gear === "best" ? search.gear : undefined,
   };
 }
 

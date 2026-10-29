@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { GearSuggestion, StepsResult } from "@squire/api/gear-data";
-import { answerNotes } from "@/lib/gear-answer";
+import { answerNotes, stepsTile } from "@/lib/gear-answer";
 import type { GearTarget } from "@/lib/gear-targets";
 
 const target: GearTarget = {
@@ -50,5 +50,31 @@ describe("answerNotes", () => {
 
   it("says when no gear helps", () => {
     expect(answerNotes(suggestion(80, 0), target, null, null)).toEqual(["No gear helps with this."]);
+  });
+});
+
+describe("stepsTile", () => {
+  const result: StepsResult = { efficiency: 1.5, steps: 40, averageSteps: 32 };
+  const withGoals = (goals: string[]) => ({ result, goals }) as unknown as GearSuggestion;
+
+  it.each([
+    [["steps", "chests"], true],
+    [["chests"], false],
+  ])("highlights the steps tile for goals %j: %s", (goals, highlight) => {
+    expect(stepsTile(withGoals(goals), null).highlight).toBe(highlight);
+  });
+
+  it.each([
+    [null, "Steps · 32 avg"],
+    [{ efficiency: 1, steps: 40, averageSteps: 40 }, "Steps · 32 avg · −8 vs now"],
+    [{ efficiency: 1, steps: 30, averageSteps: 32.2 }, "Steps · 32 avg · same as now"],
+    [{ efficiency: 1, steps: 30, averageSteps: 30 }, "Steps · 32 avg · +2 vs now"],
+  ])("compares average steps with what's worn now (%j)", (before, label) => {
+    expect(stepsTile(withGoals(["steps"]), before)).toMatchObject({ key: "steps", value: "40", label });
+  });
+
+  it("leaves out the average when there's no double action", () => {
+    const plain = { result: { efficiency: 1, steps: 40, averageSteps: 40 }, goals: [] } as unknown as GearSuggestion;
+    expect(stepsTile(plain, null).label).toBe("Steps");
   });
 });
