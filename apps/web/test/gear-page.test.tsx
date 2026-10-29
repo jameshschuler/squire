@@ -250,6 +250,25 @@ describe("Gear page", () => {
     expect(await screen.findByText(/Couldn't copy/)).toBeDefined();
   });
 
+  it("shows a single loading line until both the game data and gear data arrive", async () => {
+    await renderPage({}, async (url) => (url.includes("/api/gear") ? new Promise<Response>(() => {}) : serveData(url)));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.getByText("Loading game data…")).toBeDefined();
+    expect(screen.getAllByRole("paragraph").filter((p) => p.textContent?.includes("Loading"))).toHaveLength(1);
+    expect(screen.queryByPlaceholderText("Search activities and recipes…")).toBeNull();
+  });
+
+  it.each([
+    ["game data", "/api/recipes", "Failed to load game data (503)"],
+    ["gear data", "/api/gear", "Failed to load gear data (503)"],
+  ])("shows the %s error while the other is still loading", async (_, failing, message) => {
+    await renderPage({}, async (url) =>
+      url.includes(failing) ? new Response("", { status: 503 }) : new Promise<Response>(() => {}),
+    );
+    expect(await screen.findByText(message)).toBeDefined();
+    expect(screen.queryByText("Loading game data…")).toBeNull();
+  });
+
   it("shows the gear data error", async () => {
     await renderPage({}, async (url) =>
       url.includes("/api/gear") ? new Response("", { status: 503 }) : serveData(url),

@@ -1,4 +1,3 @@
-import { Loader2 } from "lucide-react";
 import { GameDataStatus } from "@/components/shared/GameDataStatus";
 import { useGameDataContext } from "@/contexts/game-data-context";
 import { useGearDataContext } from "@/contexts/gear-data-context";
@@ -13,19 +12,18 @@ interface GearPageProps {
 export function GearPage({ search, onSearchChange }: GearPageProps) {
   const book = useGameDataContext();
   const gear = useGearDataContext();
-  return (
-    <section className="space-y-3 pt-3">
-      {book.status !== "ready" && <GameDataStatus state={book} />}
-      {gear.status === "loading" && (
-        <p className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" />
-          Loading gear data…
-        </p>
-      )}
-      {gear.status === "error" && <p className="text-sm text-destructive">{gear.message}</p>}
-      {book.status === "ready" && gear.status === "ready" && (
+  if (book.status === "ready" && gear.status === "ready") {
+    return (
+      <section className="pt-3">
         <GearChat book={book.book} gear={gear.gear} search={search} onSearchChange={onSearchChange} />
-      )}
-    </section>
-  );
+      </section>
+    );
+  }
+  if (book.status === "error") {
+    return <GameDataStatus state={book} />;
+  }
+  if (gear.status === "error") {
+    return <GameDataStatus state={gear} />;
+  }
+  return <GameDataStatus state={{ status: "loading" }} />;
 }
