@@ -408,6 +408,26 @@ describe("optimizeGear", () => {
     expect(optimizeGear(gear, BEST_IN_GAME, mining, ["steps"]).picks.map((p) => p.item.id)).toEqual(["fast_hat"]);
   });
 
+  it("saves materials first when asked, trading steps for it", () => {
+    const gear = gearData([
+      item("fast_gloves", "hands", [flatSteps(-20)]),
+      item("thrifty_gloves", "hands", [stat("noMaterialsConsumed", 0.1, true)]),
+    ]);
+    expect(optimizeGear(gear, BEST_IN_GAME, mining, ["materials"]).picks.map((p) => p.item.id)).toEqual([
+      "thrifty_gloves",
+    ]);
+  });
+
+  it("counts quality outcome, a flat stat, for the best quality goal", () => {
+    const gear = gearData([
+      item("plain_apron", "chest", [stat("qualityOutcome", 10, false)]),
+      item("fine_apron", "chest", [stat("qualityOutcome", 25, false)]),
+    ]);
+    const suggestion = optimizeGear(gear, BEST_IN_GAME, mining, ["quality", "steps"]);
+    expect(suggestion.picks.map((p) => p.item.id)).toEqual(["fine_apron"]);
+    expect(suggestion.score[0]).toBe(25);
+  });
+
   it("suggests nothing when no gear helps", () => {
     const suggestion = optimizeGear(gearData([item("hat", "head", [])]), BEST_IN_GAME, mining);
     expect(suggestion).toMatchObject({ picks: [], pet: null, location: null });

@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { buildRecipeBook, type GameData } from "@squire/api/recipe-book";
-import { gearTargets, goalsFor, optimizeTarget, searchGearTargets } from "@/lib/gear-targets";
+import { gearTargets, goalsFor, optimizeTarget, recommendedGoals, searchGearTargets } from "@/lib/gear-targets";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
 const book = buildRecipeBook(sample as unknown as GameData);
 const targets = gearTargets(book);
 const byKey = (key: string) => targets.find((t) => t.key === key)!;
+const findGold = () => ({ ...book.recipes.find((r) => r.id === "smelt_a_gold_bar")!.outputs[0]!, effects: null });
 
 describe("gearTargets", () => {
   it("offers activities and recipes with steps, A–Z", () => {
@@ -61,7 +62,7 @@ describe("optimizeTarget", () => {
 });
 
 describe("goalsFor", () => {
-  it("offers loot goals only when the activity drops that kind of loot, and fine materials only for activities", () => {
+  it("offers loot goals only when the activity drops that loot, and crafting goals only for recipes", () => {
     expect(goalsFor(byKey("activity:mine_gold_ore")).map((g) => g.id)).toEqual([
       "steps",
       "items",
@@ -70,6 +71,39 @@ describe("goalsFor", () => {
       "fine",
       "gems",
     ]);
-    expect(goalsFor(byKey("recipe:bake_a_bagel")).map((g) => g.id)).toEqual(["steps", "items", "xp"]);
+    expect(goalsFor(byKey("recipe:bake_a_bagel")).map((g) => g.id)).toEqual(["steps", "items", "xp", "materials"]);
+  });
+});
+
+describe("recommendedGoals", () => {
+  it("recommends speed, items and chests for an activity with chests", () => {
+    expect(recommendedGoals(byKey("activity:mine_gold_ore"))).toEqual(["steps", "items", "chests"]);
+  });
+
+  it("recommends XP instead of chests when the activity has none", () => {
+    const noChests = { ...byKey("activity:mine_gold_ore"), lootTypes: [] };
+    expect(recommendedGoals(noChests)).toEqual(["steps", "items", "xp"]);
+  });
+
+  it("recommends speed, saving materials and XP for a recipe that makes no tiered gear", () => {
+    expect(recommendedGoals(byKey("recipe:bake_a_bagel"))).toEqual(["steps", "materials", "xp"]);
+  });
+
+  it("offers and recommends best quality for a recipe that makes tiered gear", () => {
+    const tiered = { ...byKey("recipe:smelt_a_gold_bar"), makesTieredGear: true };
+    expect(goalsFor(tiered).map((g) => g.id)).toContain("quality");
+    expect(recommendedGoals(tiered)).toEqual(["steps", "materials", "quality"]);
+  });
+
+  it("knows which recipes make tiered gear", () => {
+    const withGear = {
+      ...book,
+      gear: [
+        { ...findGold(), effects: { steps: null, effects: [], tiers: [{ quality: "rare" as const, effects: [] }] } },
+      ],
+    };
+    const smelt = gearTargets(withGear).find((t) => t.key === "recipe:smelt_a_gold_bar")!;
+    expect(smelt.makesTieredGear).toBe(true);
+    expect(byKey("recipe:smelt_a_gold_bar").makesTieredGear).toBe(false);
   });
 });

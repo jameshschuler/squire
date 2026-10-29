@@ -99,7 +99,7 @@ describe("Gear page", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: /Mine gold ore/ }));
     expect(screen.queryByText("Where?")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Fewest steps" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Fastest/ }));
     fireEvent.click(screen.getByRole("button", { name: "Find gear" }));
     expect(screen.getByRole("link", { name: "Add your character" }).getAttribute("href")).toBe("/character");
     expect(await screen.findByText("journeyman handwear")).toBeDefined();
@@ -141,16 +141,38 @@ describe("Gear page", () => {
   it("asks for priorities in order, up to three, offering only goals the activity can give", async () => {
     await renderPage({ target: "activity:mine_gold_ore" });
     expect(await screen.findByText("What matters most? Pick up to 3, in order.")).toBeDefined();
-    expect(screen.getByRole("button", { name: "Most chests" })).toBeDefined();
-    expect(screen.queryByRole("button", { name: "Most bird nests" })).toBeNull();
+    expect(screen.getByRole("button", { name: /^Most chests/ })).toBeDefined();
+    expect(screen.queryByRole("button", { name: /^Most bird nests/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Save materials/ })).toBeNull();
     expect((screen.getByRole("button", { name: "Find gear" }) as HTMLButtonElement).disabled).toBe(true);
-    for (const goal of ["Most chests", "Fewest steps", "Most XP", "Most items"]) {
-      fireEvent.click(screen.getByRole("button", { name: new RegExp(goal) }));
+    for (const goal of ["Most chests", "Fastest", "Most XP", "Most items"]) {
+      fireEvent.click(screen.getByRole("button", { name: new RegExp(`^${goal}`) }));
     }
-    expect(screen.getByRole("button", { name: /^1\s*Most chests$/ }).getAttribute("aria-pressed")).toBe("true");
-    expect(screen.getByRole("button", { name: "Most items" }).getAttribute("aria-pressed")).toBe("false");
+    expect(screen.getByRole("button", { name: /^1\s*Most chests/ }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: /^Most items/ }).getAttribute("aria-pressed")).toBe("false");
     fireEvent.click(screen.getByRole("button", { name: "Find gear" }));
-    expect(screen.getByRole("button", { name: "Change answer: Most chests › Fewest steps › Most XP" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Change answer: Most chests › Fastest › Most XP" })).toBeDefined();
+  });
+
+  it("explains each goal, including that Fastest counts double action", async () => {
+    await renderPage({ target: "activity:mine_gold_ore" });
+    expect((await screen.findByRole("button", { name: /^Fastest/ })).textContent).toContain("double action");
+  });
+
+  it("offers a recommended set of priorities in one tap", async () => {
+    await renderPage({ target: "activity:mine_gold_ore" });
+    fireEvent.click(await screen.findByRole("button", { name: /Use recommended/ }));
+    expect(screen.getByRole("button", { name: "Change answer: Fastest › Most items › Most chests" })).toBeDefined();
+  });
+
+  it("offers crafting goals for recipes", async () => {
+    await renderPage({ target: "recipe:smelt_a_gold_bar" });
+    expect(await screen.findByRole("button", { name: /^Save materials/ })).toBeDefined();
+    expect(screen.queryByRole("button", { name: /^Best quality/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Most chests/ })).toBeNull();
+    expect(screen.getByRole("button", { name: /Use recommended/ }).textContent).toContain(
+      "Fastest › Save materials › Most XP",
+    );
   });
 
   it("shows steps per action even when fewest steps isn't a priority", async () => {

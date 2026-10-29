@@ -1,7 +1,8 @@
 import {
-  GOALS,
   efficiencyCap,
+  goalOf,
   goalStats,
+  sameStat,
   levelBonus,
   ownedKey,
   SAME_STEPS,
@@ -48,15 +49,15 @@ export function gearAnswer(
   };
   const stepsTile = stepsResultTile(suggestion.result, before);
   const results = suggestion.goals.map((id): StatTile => {
-    const stat = GOALS.find((g) => g.id === id)!.stat;
+    const { stat } = goalOf(id);
     if (!stat) {
       return stepsTile;
     }
-    const line = lines.find((l) => l.stat === stat && l.isPercent);
+    const line = lines.find((l) => sameStat(l, stat));
     return {
-      key: stat,
-      value: formatStatValue(line ?? { value: 0, isPercent: true }),
-      label: statLabel(stat),
+      key: stat.stat,
+      value: formatStatValue(line ?? { value: 0, isPercent: stat.isPercent }),
+      label: statLabel(stat.stat),
       highlight: false,
     };
   });

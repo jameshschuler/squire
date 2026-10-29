@@ -20,6 +20,13 @@ describe("goalScorer", () => {
   });
 });
 
+describe("crafting goals", () => {
+  it("score saving materials and quality by the stat itself, not per step", () => {
+    const totals = { ...NO_STATS, goalStats: [0.1, 40] };
+    expect(goalScorer(["materials", "quality"])(result(30), totals)).toEqual([0.1, 40]);
+  });
+});
+
 describe("compareScores", () => {
   it("decides by the first goal, then the next", () => {
     expect(compareScores([-30, 0.1], [-31, 0.9])).toBeGreaterThan(0);
@@ -39,7 +46,8 @@ describe("compareScores", () => {
 });
 
 describe("GOALS", () => {
-  it("has fewest steps first", () => {
-    expect(GOALS[0]?.id).toBe("steps");
+  it("has Fastest first, explaining that it counts double action", () => {
+    expect(GOALS[0]).toMatchObject({ id: "steps", label: "Fastest" });
+    expect(GOALS[0]?.description).toContain("double action");
   });
 });

@@ -5,7 +5,7 @@ import type { RecipeBook } from "@squire/api/recipe-book";
 import { BEST_IN_GAME, type GearData, type PlayerProfile } from "@squire/api/gear-data";
 import { Button } from "@/components/ui/button";
 import { useCharacterContext } from "@/contexts/character-context";
-import { BEST_LOCATION, gearTargets, goalsFor, optimizeTarget } from "@/lib/gear-targets";
+import { BEST_LOCATION, gearTargets, goalsFor, optimizeTarget, recommendedGoals } from "@/lib/gear-targets";
 import { MAX_GOALS, parseGoals, type GearSearch, type GearSource } from "@/lib/gear-search";
 import { ChatAnswer } from "./ChatAnswer";
 import { ChatMessage } from "./ChatMessage";
@@ -103,7 +103,11 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
           <ChatMessage>
             <p>What matters most? Pick up to {MAX_GOALS}, in order.</p>
             {goals.length === 0 && (
-              <PriorityQuestion goals={allowedGoals} onChoose={(picked) => update({ goals: picked.join(",") })} />
+              <PriorityQuestion
+                goals={allowedGoals}
+                recommended={recommendedGoals(target)}
+                onChoose={(picked) => update({ goals: picked.join(",") })}
+              />
             )}
           </ChatMessage>
           {goals.length > 0 && (

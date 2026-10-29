@@ -1,4 +1,5 @@
-import type { GearType, StatType } from "@walkscape-community/data-api-client";
+import type { GearType } from "@walkscape-community/data-api-client";
+import { sameStat, type GoalStat } from "./goals.js";
 import type { ItemQuality } from "../recipe-book/types.js";
 import { ownedKey } from "./items.js";
 import { playerConditionHolds, type OwnedGear, type OwnedPetView, type PlayerProfile } from "./profile.js";
@@ -34,7 +35,7 @@ export interface Situation {
   skillType: string;
   location: LocationView | null;
   profile: PlayerProfile;
-  goalStats: StatType[];
+  goalStats: GoalStat[];
 }
 
 type CandidateBase = Omit<Candidate, "totals" | "setBonuses" | "best">;
@@ -44,7 +45,7 @@ export function situationFor(
   profile: PlayerProfile,
   target: WorkTarget,
   location: LocationView | null,
-  goalStats: StatType[] = [],
+  goalStats: GoalStat[] = [],
 ): Situation {
   const skillType = gear.skills.find((s) => s.id === target.skill)?.type ?? "";
   return { target, skillType, location, profile, goalStats };
@@ -105,9 +106,9 @@ export function withSetBonuses(chosen: Candidate[]): StatTotals {
   }, NO_STATS);
 }
 
-function statTotals(stat: GearStat, goalStats: StatType[]): StatTotals {
-  const goal = goalStats.indexOf(stat.stat);
-  if (goal >= 0 && stat.isPercent) {
+function statTotals(stat: GearStat, goalStats: GoalStat[]): StatTotals {
+  const goal = goalStats.findIndex((g) => sameStat(g, stat));
+  if (goal >= 0) {
     return { ...NO_STATS, goalStats: goalStats.map((_, i) => (i === goal ? stat.value : 0)) };
   }
   switch (stat.stat) {

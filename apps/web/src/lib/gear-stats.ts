@@ -1,4 +1,4 @@
-import type { StatLine } from "@squire/api/gear-data";
+import type { GoalStat, StatLine } from "@squire/api/gear-data";
 import { formatPercent } from "./format";
 
 type StatType = StatLine["stat"];
@@ -46,16 +46,17 @@ const TILE_LABELS: Partial<Record<`${StatType}:${boolean}`, string>> = {
   "bonusExperience:true": "Bonus XP",
 };
 
-export function statGroups(lines: StatLine[], efficiency: EfficiencyParts, highlighted: StatType[]): StatGroups {
+export function statGroups(lines: StatLine[], efficiency: EfficiencyParts, highlighted: GoalStat[]): StatGroups {
+  const highlightKeys = highlighted.map(({ stat, isPercent }) => `${stat}:${isPercent}`);
   const tile = (line: StatLine): StatTile => ({
     key: `${line.stat}:${line.isPercent}`,
     value: formatStatValue(line),
     label: TILE_LABELS[`${line.stat}:${line.isPercent}`] ?? STAT_LABELS[line.stat]!,
-    highlight: highlighted.includes(line.stat),
+    highlight: highlightKeys.includes(`${line.stat}:${line.isPercent}`),
   });
   const rank = (tile: StatTile) => {
-    const index = highlighted.findIndex((stat) => tile.key.startsWith(`${stat}:`));
-    return index === -1 ? highlighted.length : index;
+    const index = highlightKeys.indexOf(tile.key);
+    return index === -1 ? highlightKeys.length : index;
   };
   const shown = lines
     .filter((line) => STAT_LABELS[line.stat])

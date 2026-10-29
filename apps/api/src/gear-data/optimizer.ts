@@ -8,7 +8,7 @@ import {
   type Situation,
 } from "./candidates.js";
 import { ownedGear, ownedPets, skillLevelOf, toolSlotsOf, type OwnedPetView, type PlayerProfile } from "./profile.js";
-import { GOALS, compareScores, goalScorer, goalStats, type GoalId, type Score } from "./goals.js";
+import { compareScores, goalOf, goalScorer, goalStats, type GoalId, type Score } from "./goals.js";
 import { keywordRules, prune } from "./pruning.js";
 import { GEAR_SLOTS } from "./slots.js";
 import { bestSet, type SlotGroup } from "./search.js";
@@ -72,7 +72,7 @@ function optimizeAt(gear: GearData, situation: Situation, goals: GoalId[]): Gear
     }))
     .filter((group) => group.choices.length > 0);
 
-  const primaryIsSteps = !GOALS.find((g) => g.id === goals[0])?.stat;
+  const primaryIsSteps = goals[0] === undefined || goalOf(goals[0]).stat === null;
   const chosen = goals.reduce<Candidate[]>(
     (seed, _, i) =>
       bestSet(groups, rules, useful, (totals) => score(totals).slice(0, i + 1), {

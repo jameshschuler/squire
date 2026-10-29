@@ -13,7 +13,7 @@ describe("statGroups", () => {
     { stat: "bonusExperience", isPercent: false, value: 4 },
     { stat: "inventorySpace", isPercent: false, value: 3 },
   ] as const;
-  const groups = statGroups([...lines], capped, ["chestFind"]);
+  const groups = statGroups([...lines], capped, [{ stat: "chestFind", isPercent: true }]);
   const shown = (tiles: { label: string; value: string }[]) => tiles.map((t) => `${t.label} ${t.value}`);
 
   it("starts the steps tiles with work efficiency, then one number per tile", () => {
@@ -40,6 +40,11 @@ describe("statGroups", () => {
     expect(shown(short.steps)).toEqual(["Work efficiency of 50% max · gear +5%, level +25% +30%"]);
   });
 
+  it("highlights only the exact stat a priority uses, not its flat or percent twin", () => {
+    const xp = statGroups([...lines], capped, [{ stat: "bonusExperience", isPercent: true }]);
+    expect(xp.other.filter((t) => t.highlight).map((t) => t.label)).toEqual(["Bonus XP"]);
+  });
+
   it("lists highlighted stats in priority order, not A–Z", () => {
     const ranked = statGroups(
       [
@@ -47,7 +52,10 @@ describe("statGroups", () => {
         { stat: "findGems", isPercent: true, value: 0.2 },
       ],
       capped,
-      ["findGems", "chestFind"],
+      [
+        { stat: "findGems", isPercent: true },
+        { stat: "chestFind", isPercent: true },
+      ],
     );
     expect(ranked.other.map((t) => t.label)).toEqual(["Gem finding", "Chest finding"]);
   });
