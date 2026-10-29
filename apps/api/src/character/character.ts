@@ -49,7 +49,6 @@ export interface Character {
   equipped: Partial<Record<EquipmentSlot, OwnedItem>>;
   owned: OwnedStack[];
   pets: OwnedPet[];
-  petOut: OwnedPet | null;
 }
 
 interface CharacterExport {
@@ -131,7 +130,6 @@ export function parseCharacterExport(text: string): Character {
       .filter(([id, count]) => count > 0 && !id.endsWith(FINE_SUFFIX))
       .map(([id, count]) => ({ ...ownedItem(id), count })),
     pets: [...(data.pets?.pet ? [data.pets.pet] : []), ...(data.available_pets ?? [])].map(ownedPet),
-    petOut: data.pets?.pet ? ownedPet(data.pets.pet) : null,
   };
 }
 

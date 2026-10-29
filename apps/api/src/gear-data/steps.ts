@@ -45,7 +45,6 @@ const MAX_BONUS_LEVELS = 20;
 const MIN_EFFICIENCY = 0.01;
 const MIN_STEPS = 10;
 export const MAX_DOUBLE_ACTION = 1;
-export const SAME_STEPS = 1e-9;
 const ROUNDING_SLACK = 1e-9;
 
 export function stepsPerAction(target: WorkTarget, skillLevel: number, totals: StatTotals): StepsResult {

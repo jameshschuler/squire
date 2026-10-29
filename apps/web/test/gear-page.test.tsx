@@ -127,13 +127,11 @@ describe("Gear page", () => {
     expect(screen.getByRole("region", { name: "Set stats" }).textContent).toMatch(/\d+ \(priority\)Steps/);
   });
 
-  it("uses the character's gear without asking, and compares with what they wear now", async () => {
+  it("uses the character's gear without asking, and compares with no gear", async () => {
     addCharacter();
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
-    expect(await screen.findByText(/than your gear now/)).toBeDefined();
+    expect(await screen.findByText(/fewer than with no gear/)).toBeDefined();
     expect(screen.queryByText("Whose gear?")).toBeNull();
-    expect(screen.getByRole("link", { name: /journeyman handwear.*Equipped/ })).toBeDefined();
-    expect(screen.getByRole("link", { name: /iron pickaxe/ }).textContent).not.toContain("Equipped");
   });
 
   it("asks for priorities in order, up to three, offering only goals the activity can give", async () => {
@@ -200,24 +198,6 @@ describe("Gear page", () => {
     expect(await screen.findByRole("link", { name: /Hands.*journeyman handwear/ })).toBeDefined();
     expect(screen.getAllByText("Player's choice").length).toBeGreaterThan(0);
     expect(screen.getByText("Tool 6")).toBeDefined();
-  });
-
-  it("marks only as many copies of a ring as the character wears", async () => {
-    const twoRings = { ...exportFixture, bank: { ...exportFixture.bank, gold_ethernite_ring_epic: 1 } };
-    localStorage.setItem(CHARACTER_STORAGE_KEY, storeCharacter(JSON.stringify(twoRings), new Date()));
-    gear = withGear([miningGear("gold_ethernite_ring", "ring", -3)]);
-    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
-    const ring1 = await screen.findByRole("link", { name: /Ring 1.*gold ethernite ring/ });
-    const ring2 = screen.getByRole("link", { name: /Ring 2.*gold ethernite ring/ });
-    expect([ring1, ring2].filter((cell) => cell.querySelector('[aria-label="Equipped"]')).length).toBe(1);
-  });
-
-  it("says when the character already wears the best set", async () => {
-    addCharacter();
-    gear = withGear([miningGear("journeyman_handwear", "hands", -3)]);
-    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
-    expect(await screen.findByText("You're already wearing the best set for this.")).toBeDefined();
-    expect(screen.getByRole("region", { name: "Set stats" }).textContent).toContain("Same as your gear now");
   });
 
   it("says when the character's level is too low, and still shows the set", async () => {

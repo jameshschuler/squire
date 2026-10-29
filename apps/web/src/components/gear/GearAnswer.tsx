@@ -5,7 +5,7 @@ import { GearGrid } from "./GearGrid";
 import { GearStats } from "./GearStats";
 
 export function GearAnswer(props: GearAnswerView) {
-  const { suggestion, notes, equipped, stats, toolSlots } = props;
+  const { suggestion, notes, stats, toolSlots } = props;
   const { picks, pet } = suggestion;
   return (
     <ChatMessage wide>
@@ -16,7 +16,7 @@ export function GearAnswer(props: GearAnswerView) {
           ))}
         </div>
       )}
-      {(picks.length > 0 || pet) && <GearGrid picks={picks} pet={pet} toolSlots={toolSlots} equipped={equipped} />}
+      {(picks.length > 0 || pet) && <GearGrid picks={picks} pet={pet} toolSlots={toolSlots} />}
       <GearStats groups={stats} />
       {picks.length > 0 && <CopyGearSetButton picks={picks} />}
     </ChatMessage>

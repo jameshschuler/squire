@@ -2,12 +2,11 @@ import {
   efficiencyCap,
   goalStats,
   levelBonus,
-  ownedKey,
-  SAME_STEPS,
+  NO_STATS,
   setStats,
   skillLevelOf,
+  stepsPerAction,
   toolSlotsOf,
-  wornSteps,
   type GearData,
   type GearSuggestion,
   type OptimizeTarget,
@@ -20,7 +19,6 @@ import type { GearTarget } from "./gear-targets";
 
 export interface GearAnswerView {
   suggestion: GearSuggestion;
-  equipped: Map<string, number> | null;
   stats: StatGroups;
   notes: string[];
   toolSlots: number;
@@ -33,8 +31,6 @@ export function gearAnswer(
   optimize: OptimizeTarget,
   suggestion: GearSuggestion,
 ): GearAnswerView {
-  const character = profile.kind === "character" ? profile.character : null;
-  const before = character ? wornSteps(gear, character, optimize, suggestion.location) : null;
   const lines = setStats(gear, profile, optimize, suggestion);
   const level = skillLevelOf(profile, optimize.skill);
   const parts = {
@@ -43,49 +39,33 @@ export function gearAnswer(
     gear: lines.find((l) => l.stat === "workEfficiency" && l.isPercent)?.value ?? 0,
     level: levelBonus(optimize, level),
   };
+  const noGear = stepsPerAction(optimize, level, NO_STATS);
   return {
     suggestion,
-    equipped: character && wornCounts(Object.values(character.equipped).map(ownedKey)),
-    stats: statGroups(lines, parts, goalStats(suggestion.goals), stepsTile(suggestion, before)),
-    notes: answerNotes(suggestion, target, before, character ? level : null),
+    stats: statGroups(lines, parts, goalStats(suggestion.goals), stepsTile(suggestion, noGear)),
+    notes: answerNotes(suggestion, target, profile.kind === "character" ? level : null),
     toolSlots: toolSlotsOf(profile),
   };
 }
 
-export function answerNotes(
-  suggestion: GearSuggestion,
-  target: GearTarget,
-  before: StepsResult | null,
-  skillLevel: number | null,
-): string[] {
+export function answerNotes(suggestion: GearSuggestion, target: GearTarget, skillLevel: number | null): string[] {
   const required = target.skill.level ?? 1;
   const tooLow =
     skillLevel !== null && skillLevel < required
       ? [`You need ${target.skill.name} level ${required} for this. Here's the set for when you get there.`]
       : [];
-  if (before && before.averageSteps <= suggestion.result.averageSteps + SAME_STEPS) {
-    return [...tooLow, "You're already wearing the best set for this."];
-  }
   if (suggestion.picks.length === 0 && !suggestion.pet) {
     return [...tooLow, "No gear helps with this."];
   }
   return tooLow;
 }
 
-function wornCounts(keys: string[]): Map<string, number> {
-  return keys.reduce((counts, key) => counts.set(key, (counts.get(key) ?? 0) + 1), new Map<string, number>());
-}
-
-export function stepsTile({ result, goals }: GearSuggestion, before: StepsResult | null): StatTile {
+export function stepsTile({ result, goals }: GearSuggestion, noGear: StepsResult): StatTile {
   const average = Math.round(result.averageSteps);
-  const change = before ? average - Math.round(before.averageSteps) : null;
+  const saved = noGear.steps - result.steps;
   const details = [
     ...(average < result.steps ? [`${formatNumber(average)} on average with double action`] : []),
-    ...(change === null
-      ? []
-      : change === 0
-        ? ["Same as your gear now"]
-        : [`${formatNumber(Math.abs(change))} ${change < 0 ? "fewer" : "more"} than your gear now`]),
+    ...(saved > 0 ? [`${formatNumber(saved)} fewer than with no gear`] : []),
   ];
   return {
     key: "steps",

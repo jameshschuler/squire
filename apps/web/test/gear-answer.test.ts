@@ -26,30 +26,25 @@ const suggestion = (averageSteps: number, picks = 1): GearSuggestion =>
   }) as unknown as GearSuggestion;
 
 describe("answerNotes", () => {
-  it("says nothing when the set is an improvement and the level is fine", () => {
-    expect(answerNotes(suggestion(30), target, steps(40), 50)).toEqual([]);
+  it("says nothing when gear helps and the level is fine", () => {
+    expect(answerNotes(suggestion(30), target, 50)).toEqual([]);
   });
 
   it("says when the character's level is too low", () => {
-    expect(answerNotes(suggestion(30), target, null, 20)).toEqual([
+    expect(answerNotes(suggestion(30), target, 20)).toEqual([
       "You need Mining level 40 for this. Here's the set for when you get there.",
     ]);
   });
 
-  it("says when the character already wears the best set, allowing for rounding", () => {
-    expect(answerNotes(suggestion(30), target, steps(30 + 1e-12), 50)).toEqual([
-      "You're already wearing the best set for this.",
-    ]);
-  });
-
-  it("says the current gear is best when it beats the suggestion", () => {
-    expect(answerNotes(suggestion(30, 0), target, steps(25), 50)).toEqual([
-      "You're already wearing the best set for this.",
-    ]);
-  });
-
   it("says when no gear helps", () => {
-    expect(answerNotes(suggestion(80, 0), target, null, null)).toEqual(["No gear helps with this."]);
+    expect(answerNotes(suggestion(80, 0), target, null)).toEqual(["No gear helps with this."]);
+  });
+
+  it("says both when the level is too low and no gear helps", () => {
+    expect(answerNotes(suggestion(80, 0), target, 20)).toEqual([
+      "You need Mining level 40 for this. Here's the set for when you get there.",
+      "No gear helps with this.",
+    ]);
   });
 });
 
@@ -61,19 +56,14 @@ describe("stepsTile", () => {
     [["steps", "chests"], true],
     [["chests"], false],
   ])("highlights the steps tile for goals %j: %s", (goals, highlight) => {
-    expect(stepsTile(withGoals(goals), null).highlight).toBe(highlight);
+    expect(stepsTile(withGoals(goals), result).highlight).toBe(highlight);
   });
 
   it.each([
-    [null, ["32 on average with double action"]],
-    [
-      { efficiency: 1, steps: 40, averageSteps: 40 },
-      ["32 on average with double action", "8 fewer than your gear now"],
-    ],
-    [{ efficiency: 1, steps: 30, averageSteps: 32.2 }, ["32 on average with double action", "Same as your gear now"]],
-    [{ efficiency: 1, steps: 30, averageSteps: 30 }, ["32 on average with double action", "2 more than your gear now"]],
-  ])("compares average steps with what's worn now (%j)", (before, details) => {
-    expect(stepsTile(withGoals(["steps"]), before)).toEqual({
+    [{ efficiency: 1, steps: 48, averageSteps: 48 }, ["32 on average with double action", "8 fewer than with no gear"]],
+    [{ efficiency: 1, steps: 40, averageSteps: 40 }, ["32 on average with double action"]],
+  ])("compares steps with no gear (%j)", (noGear, details) => {
+    expect(stepsTile(withGoals(["steps"]), noGear)).toEqual({
       key: "steps",
       value: "40",
       label: "Steps per action",
@@ -84,6 +74,6 @@ describe("stepsTile", () => {
 
   it("leaves out the average when there's no double action", () => {
     const plain = { result: { efficiency: 1, steps: 40, averageSteps: 40 }, goals: [] } as unknown as GearSuggestion;
-    expect(stepsTile(plain, null).details).toEqual([]);
+    expect(stepsTile(plain, plain.result).details).toEqual([]);
   });
 });

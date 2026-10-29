@@ -1,12 +1,10 @@
 export * from "./build.js";
 export { gearDataIcons } from "./icons.js";
-export { ownedKey } from "./items.js";
 export * from "./types.js";
 export * from "./optimizer.js";
 export { BEST_IN_GAME, skillLevelOf, toolSlotsOf, type OwnedPetView, type PlayerProfile } from "./profile.js";
 export * from "./steps.js";
 export { setStats, type StatLine } from "./set-stats.js";
-export { wornSteps } from "./worn.js";
 export {
   GOALS,
   compareScores,
