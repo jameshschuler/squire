@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { Loader2 } from "lucide-react";
-import type { GearData, GoalId, OptimizeTarget, PlayerProfile } from "@squire/api/gear-data";
-import { useGearSuggestion } from "@/hooks/useGearSuggestion";
+import type { GearData, GearSuggestion, OptimizeTarget, PlayerProfile } from "@squire/api/gear-data";
 import { gearAnswer } from "@/lib/gear-answer";
 import type { GearTarget } from "@/lib/gear-targets";
 import { ChatMessage } from "./ChatMessage";
@@ -12,11 +11,10 @@ interface GearResultProps {
   profile: PlayerProfile;
   target: GearTarget;
   optimize: OptimizeTarget;
-  goals: GoalId[];
+  suggestion: GearSuggestion | null;
 }
 
-export function GearResult({ gear, profile, target, optimize, goals }: GearResultProps) {
-  const suggestion = useGearSuggestion(gear, profile, optimize, goals);
+export function GearResult({ gear, profile, target, optimize, suggestion }: GearResultProps) {
   const answer = useMemo(
     () => suggestion && gearAnswer(gear, profile, target, optimize, suggestion),
     [gear, profile, target, optimize, suggestion],

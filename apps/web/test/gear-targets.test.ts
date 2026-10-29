@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { buildRecipeBook, type GameData } from "@squire/api/recipe-book";
-import { gearTargets, goalsFor, optimizeTarget, recommendedGoals, searchGearTargets } from "@/lib/gear-targets";
+import { buildRecipeBook, type GameData, type LocationSummary } from "@squire/api/recipe-book";
+import {
+  gearTargets,
+  goalsFor,
+  locationLabel,
+  optimizeTarget,
+  recommendedGoals,
+  searchGearTargets,
+  type GearTarget,
+} from "@/lib/gear-targets";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
 const book = buildRecipeBook(sample as unknown as GameData);
@@ -105,5 +113,19 @@ describe("recommendedGoals", () => {
     const smelt = gearTargets(withGear).find((t) => t.key === "recipe:smelt_a_gold_bar")!;
     expect(smelt.makesTieredGear).toBe(true);
     expect(byKey("recipe:smelt_a_gold_bar").makesTieredGear).toBe(false);
+  });
+});
+
+describe("locationLabel", () => {
+  const harbour: LocationSummary = { id: "harbour", name: "Blackspell Harbour", region: "Jarvonia" };
+  const vastalume: LocationSummary = { id: "vastalume", name: "Vastalume", region: "Syrenthia" };
+  const target = { locations: [harbour, vastalume] } as GearTarget;
+
+  it.each([
+    ["harbour", vastalume, "Blackspell Harbour"],
+    ["best", vastalume, "Best location: Vastalume"],
+    ["best", null, "Best location"],
+  ] as const)("labels %s with best-at %j as %s", (location, bestAt, expected) => {
+    expect(locationLabel(target, location, bestAt)).toBe(expected);
   });
 });

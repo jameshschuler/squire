@@ -68,6 +68,14 @@ export function searchGearTargets(targets: GearTarget[], query: string): GearTar
   return targets.filter((target) => matchesWords(terms, [target.name])).slice(0, SUGGESTION_LIMIT);
 }
 
+export function locationLabel(target: GearTarget, location: string, bestAt: LocationSummary | null): string {
+  const chosen = target.locations.find((l) => l.id === location);
+  if (chosen) {
+    return chosen.name;
+  }
+  return bestAt ? `Best location: ${bestAt.name}` : "Best location";
+}
+
 export function optimizeTarget(target: GearTarget, location: string | undefined): OptimizeTarget {
   const pinned = target.locations.find((l) => l.id === location);
   return {

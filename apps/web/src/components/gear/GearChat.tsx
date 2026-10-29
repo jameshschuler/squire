@@ -5,7 +5,15 @@ import type { RecipeBook } from "@squire/api/recipe-book";
 import { BEST_IN_GAME, type GearData, type PlayerProfile } from "@squire/api/gear-data";
 import { Button } from "@/components/ui/button";
 import { useCharacterContext } from "@/contexts/character-context";
-import { BEST_LOCATION, gearTargets, goalsFor, optimizeTarget, recommendedGoals } from "@/lib/gear-targets";
+import { useGearSuggestion } from "@/hooks/useGearSuggestion";
+import {
+  BEST_LOCATION,
+  gearTargets,
+  goalsFor,
+  locationLabel,
+  optimizeTarget,
+  recommendedGoals,
+} from "@/lib/gear-targets";
 import { MAX_GOALS, parseGoals, type GearSearch } from "@/lib/gear-search";
 import { ChatAnswer } from "./ChatAnswer";
 import { ChatMessage } from "./ChatMessage";
@@ -48,8 +56,8 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
     () => (target && locationAnswered && goals.length > 0 ? optimizeTarget(target, location) : null),
     [target, locationAnswered, goals.length, location],
   );
+  const suggestion = useGearSuggestion(gear, profile, optimize, goals);
   const update = (answers: GearSearch) => onSearchChange({ ...search, ...answers });
-  const locationLabel = target?.locations.find((l) => l.id === location)?.name ?? "Best location";
 
   return (
     <div className="space-y-3">
@@ -92,7 +100,10 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
             )}
           </ChatMessage>
           {location !== undefined && (
-            <ChatAnswer label={locationLabel} onChange={() => update({ location: undefined })} />
+            <ChatAnswer
+              label={locationLabel(target, location, suggestion?.location ?? null)}
+              onChange={() => update({ location: undefined })}
+            />
           )}
         </>
       )}
@@ -131,7 +142,7 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
       )}
 
       {target && optimize && (
-        <GearResult gear={gear} profile={profile} target={target} optimize={optimize} goals={goals} />
+        <GearResult gear={gear} profile={profile} target={target} optimize={optimize} suggestion={suggestion} />
       )}
     </div>
   );

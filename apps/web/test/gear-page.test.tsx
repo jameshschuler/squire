@@ -115,6 +115,11 @@ describe("Gear page", () => {
     expect(screen.getByRole("button", { name: "Change answer: Blackspell Harbour" })).toBeDefined();
   });
 
+  it("names the location it picked for the best location", async () => {
+    await renderPage({ target: "recipe:bake_a_bagel", location: "best", goals: "steps" });
+    expect(await screen.findByRole("button", { name: /^Change answer: Best location: \S/ })).toBeDefined();
+  });
+
   it("says when no gear helps", async () => {
     await renderPage({ target: "recipe:bake_a_bagel", location: "best", goals: "steps" });
     expect(await screen.findByText("No gear helps with this.")).toBeDefined();
