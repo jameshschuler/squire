@@ -16,16 +16,14 @@ import {
   type StepsResult,
 } from "@squire/api/gear-data";
 import { formatNumber } from "./format";
-import { efficiencyStatus, formatStatValue, statGroups, statLabel, type StatGroups, type StatRow } from "./gear-stats";
+import { efficiencyStatus, formatStatValue, statGroups, statLabel, type StatGroups, type StatTile } from "./gear-stats";
 import type { GearTarget } from "./gear-targets";
 
 export interface GearAnswerView {
   suggestion: GearSuggestion;
-  before: StepsResult | null;
   equipped: Map<string, number> | null;
   efficiencyStatus: string;
-  priorities: StatRow[];
-  steps: string | null;
+  results: StatTile[];
   stats: StatGroups;
   notes: string[];
   toolSlots: number;
@@ -48,24 +46,25 @@ export function gearAnswer(
     gear: lines.find((l) => l.stat === "workEfficiency" && l.isPercent)?.value ?? 0,
     level: levelBonus(optimize, level),
   };
-  const priorities = suggestion.goals.map((id): StatRow => {
-    const goal = GOALS.find((g) => g.id === id)!;
-    if (!goal.stat) {
-      return { label: goal.label, value: formatStepsResult(suggestion.result) };
+  const stepsTile = stepsResultTile(suggestion.result, before);
+  const results = suggestion.goals.map((id): StatTile => {
+    const stat = GOALS.find((g) => g.id === id)!.stat;
+    if (!stat) {
+      return stepsTile;
     }
-    const line = lines.find((l) => l.stat === goal.stat && l.isPercent);
+    const line = lines.find((l) => l.stat === stat && l.isPercent);
     return {
-      label: goal.label,
-      value: `${statLabel(goal.stat)} ${line ? formatStatValue(line) : "+0%"}`,
+      key: stat,
+      value: formatStatValue(line ?? { value: 0, isPercent: true }),
+      label: statLabel(stat),
+      highlight: false,
     };
   });
   return {
     suggestion,
-    before,
     equipped: character && wornCounts(Object.values(character.equipped).map(ownedKey)),
     efficiencyStatus: efficiencyStatus(parts),
-    priorities,
-    steps: suggestion.goals.includes("steps") ? null : formatStepsResult(suggestion.result),
+    results: suggestion.goals.includes("steps") ? results : [...results, stepsTile],
     stats: statGroups(lines, parts, goalStats(suggestion.goals)),
     notes: answerNotes(suggestion, target, before, character ? level : null),
     toolSlots: toolSlotsOf(profile),
@@ -92,11 +91,21 @@ export function answerNotes(
   return tooLow;
 }
 
-export function formatStepsResult({ steps, averageSteps }: StepsResult): string {
-  const perAction = `${formatNumber(steps)} steps per action`;
-  return averageSteps < steps ? `${perAction} (${formatNumber(Number(averageSteps.toFixed(1)))} avg)` : perAction;
-}
-
 function wornCounts(keys: string[]): Map<string, number> {
   return keys.reduce((counts, key) => counts.set(key, (counts.get(key) ?? 0) + 1), new Map<string, number>());
+}
+
+function stepsResultTile(result: StepsResult, before: StepsResult | null): StatTile {
+  const average = Math.round(result.averageSteps);
+  const change = before ? average - Math.round(before.averageSteps) : null;
+  const notes = [
+    "Steps",
+    ...(average < result.steps ? [`${formatNumber(average)} avg`] : []),
+    ...(change === null
+      ? []
+      : change === 0
+        ? ["same as now"]
+        : [`${change < 0 ? "−" : "+"}${formatNumber(Math.abs(change))} vs now`]),
+  ];
+  return { key: "steps", value: formatNumber(result.steps), label: notes.join(" · "), highlight: false };
 }

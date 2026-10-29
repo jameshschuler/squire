@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { GearSuggestion, StepsResult } from "@squire/api/gear-data";
-import { answerNotes, formatStepsResult } from "@/lib/gear-answer";
+import { answerNotes } from "@/lib/gear-answer";
 import type { GearTarget } from "@/lib/gear-targets";
 
 const target: GearTarget = {
@@ -48,12 +48,5 @@ describe("answerNotes", () => {
 
   it("says when no gear helps", () => {
     expect(answerNotes(suggestion(80, 0), target, null, null)).toEqual(["No gear helps with this."]);
-  });
-});
-
-describe("formatStepsResult", () => {
-  it("shows the average only when double action lowers it", () => {
-    expect(formatStepsResult(steps(35))).toBe("35 steps per action");
-    expect(formatStepsResult({ efficiency: 1, steps: 35, averageSteps: 24.64 })).toBe("35 steps per action (24.6 avg)");
   });
 });

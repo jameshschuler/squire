@@ -1,4 +1,4 @@
-import { formatStepsResult, type GearAnswerView } from "@/lib/gear-answer";
+import type { GearAnswerView } from "@/lib/gear-answer";
 import { formatRegion } from "@/lib/format";
 import { ChatMessage } from "./ChatMessage";
 import { CopyGearSetButton } from "./CopyGearSetButton";
@@ -12,19 +12,15 @@ type GearAnswerProps = GearAnswerView & {
 };
 
 export function GearAnswer(props: GearAnswerProps) {
-  const { suggestion, notes, showLocation, before, equipped, stats, toolSlots, compare } = props;
+  const { suggestion, notes, showLocation, equipped, stats, toolSlots, compare } = props;
   const { picks, pet, location } = suggestion;
-  const context = [
-    ...(before ? [`Now ${formatStepsResult(before)}`] : []),
-    ...(showLocation && location ? [`at ${location.name} (${formatRegion(location.region)})`] : []),
-  ];
+  const bestAt = showLocation && location ? `Best at ${location.name} (${formatRegion(location.region)})` : null;
   return (
     <ChatMessage>
       <GearSummary
-        priorities={props.priorities}
+        results={props.results}
         efficiencyStatus={props.efficiencyStatus}
-        steps={props.steps}
-        context={context}
+        location={bestAt}
         compare={compare}
       />
       {notes.length > 0 && (

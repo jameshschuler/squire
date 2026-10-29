@@ -3,11 +3,6 @@ import { formatPercent } from "./format";
 
 type StatType = StatLine["stat"];
 
-export interface StatRow {
-  label: string;
-  value: string;
-}
-
 export interface StatTile {
   key: string;
   value: string;
@@ -78,12 +73,13 @@ export function statGroups(lines: StatLine[], efficiency: EfficiencyParts, highl
 }
 
 function efficiencyTile(parts: EfficiencyParts): StatTile {
-  const { used, cap } = parts;
-  const label = !Number.isFinite(cap)
+  const { used, cap, gear, level } = parts;
+  const limit = !Number.isFinite(cap)
     ? "Work efficiency"
     : efficiencyOver(parts) >= 0
       ? "Work efficiency, maxed"
       : `Work efficiency of ${formatPercent(cap, 1)} max`;
+  const label = `${limit} · gear ${formatStatValue({ isPercent: true, value: gear })}, level ${formatStatValue({ isPercent: true, value: level })}`;
   return {
     key: "workEfficiency",
     value: formatStatValue({ isPercent: true, value: used }),
@@ -106,19 +102,17 @@ export function statLabel(stat: StatType): string {
 }
 
 export function efficiencyStatus(parts: EfficiencyParts): string {
-  const { used, cap, gear, level } = parts;
-  const sources = `gear ${formatStatValue({ isPercent: true, value: gear })}, level ${formatStatValue({ isPercent: true, value: level })}`;
+  const { used, cap } = parts;
   if (!Number.isFinite(cap)) {
-    return `Work efficiency ${formatPercent(used, 1)}, no max (${sources})`;
+    return `Work efficiency ${formatPercent(used, 1)}, no max`;
   }
   const over = efficiencyOver(parts);
   if (over > 0) {
-    return `Max work efficiency reached, ${formatPercent(over, 1)} over (${sources})`;
+    return `Work efficiency maxed, ${formatPercent(over, 1)} over`;
   }
-  if (over === 0) {
-    return `Max work efficiency reached (${sources})`;
-  }
-  return `Work efficiency ${formatPercent(used, 1)} of ${formatPercent(cap, 1)} max, ${formatPercent(-over, 1)} short (${sources})`;
+  return over === 0
+    ? "Work efficiency maxed"
+    : `Work efficiency ${formatPercent(used, 1)} of ${formatPercent(cap, 1)} max, ${formatPercent(-over, 1)} short`;
 }
 
 function efficiencyOver({ cap, gear, level }: EfficiencyParts): number {

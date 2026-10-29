@@ -103,7 +103,7 @@ describe("Gear page", () => {
     fireEvent.click(screen.getByRole("button", { name: "Find gear" }));
     expect(screen.getByRole("link", { name: "Add your character" }).getAttribute("href")).toBe("/character");
     expect(await screen.findByText("journeyman handwear")).toBeDefined();
-    expect(screen.getByText(/steps per action/)).toBeDefined();
+    expect((await screen.findByRole("region", { name: "Summary" })).textContent).toMatch(/[\d,]+Steps/);
     expect(screen.getByRole("button", { name: /Copy for WalkScape/ })).toBeDefined();
   });
 
@@ -124,7 +124,7 @@ describe("Gear page", () => {
   it("uses the character's gear without asking, and compares with what they wear now", async () => {
     addCharacter();
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
-    expect(await screen.findByText(/^Now \d+ steps per action/)).toBeDefined();
+    expect(await screen.findByText(/vs now/)).toBeDefined();
     expect(screen.queryByText("Whose gear?")).toBeNull();
     expect(screen.getByRole("link", { name: /journeyman handwear.*Equipped/ })).toBeDefined();
     expect(screen.getByRole("link", { name: /iron pickaxe/ }).textContent).not.toContain("Equipped");
@@ -135,7 +135,7 @@ describe("Gear page", () => {
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     fireEvent.click(await screen.findByRole("button", { name: "Compare with best in game" }));
     expect(await screen.findByRole("button", { name: "Use my gear" })).toBeDefined();
-    expect(screen.queryByText(/^Now /)).toBeNull();
+    expect(screen.queryByText(/vs now/)).toBeNull();
   });
 
   it("asks for priorities in order, up to three, offering only goals the activity can give", async () => {
@@ -150,23 +150,20 @@ describe("Gear page", () => {
     expect(screen.getByRole("button", { name: /^1\s*Most chests$/ }).getAttribute("aria-pressed")).toBe("true");
     expect(screen.getByRole("button", { name: "Most items" }).getAttribute("aria-pressed")).toBe("false");
     fireEvent.click(screen.getByRole("button", { name: "Find gear" }));
-    expect(
-      screen.getByRole("button", { name: /Change answer: 1\. Most chests\s+2\. Fewest steps\s+3\. Most XP/ }),
-    ).toBeDefined();
+    expect(screen.getByRole("button", { name: "Change answer: Most chests › Fewest steps › Most XP" })).toBeDefined();
   });
 
   it("shows steps per action even when fewest steps isn't a priority", async () => {
     await renderPage({ target: "activity:mine_gold_ore", goals: "chests" });
     const summary = await screen.findByRole("region", { name: "Summary" });
-    expect(summary.textContent).toMatch(/\d+ steps per action/);
+    expect(summary.textContent).toMatch(/\d+Steps/);
   });
 
   it("sums up each priority and how close the set is to max work efficiency", async () => {
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps,chests" });
     const summary = await screen.findByRole("region", { name: "Summary" });
-    expect(summary.textContent).toContain("1. Fewest steps");
-    expect(summary.textContent).toContain("2. Most chestsChest finding +0%");
-    expect(summary.textContent).toMatch(/Work efficiency [\d.]+% of 70% max, [\d.]+% short/);
+    expect(summary.textContent).toMatch(/^[\d,]+Steps.*\+0%Chest finding/);
+    expect(summary.textContent).toMatch(/Work efficiency [\d.]+% of 70% max/);
   });
 
   it("shows the set's stats, with work efficiency against the activity's max", async () => {
@@ -199,6 +196,7 @@ describe("Gear page", () => {
     gear = withGear([miningGear("journeyman_handwear", "hands", -3)]);
     await renderPage({ target: "activity:mine_gold_ore", gear: "mine", goals: "steps" });
     expect(await screen.findByText("You're already wearing the best set for this.")).toBeDefined();
+    expect(screen.getByRole("region", { name: "Summary" }).textContent).toContain("same as now");
   });
 
   it("says when the character's level is too low, and still shows the set", async () => {

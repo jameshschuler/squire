@@ -18,7 +18,7 @@ describe("statGroups", () => {
 
   it("starts the steps tiles with work efficiency, then one number per tile", () => {
     expect(shown(groups.steps)).toEqual([
-      "Work efficiency, maxed +20%",
+      "Work efficiency, maxed · gear +95%, level +25% +20%",
       "Steps per action −6",
       "Steps required −2%",
       "Double action +23.5%",
@@ -37,7 +37,7 @@ describe("statGroups", () => {
 
   it("says how far work efficiency is from the max when it isn't maxed", () => {
     const short = statGroups([], { used: 0.3, cap: 0.5, gear: 0.05, level: 0.25 }, []);
-    expect(shown(short.steps)).toEqual(["Work efficiency of 50% max +30%"]);
+    expect(shown(short.steps)).toEqual(["Work efficiency of 50% max · gear +5%, level +25% +30%"]);
   });
 
   it("lists highlighted stats in priority order, not A–Z", () => {
@@ -53,8 +53,8 @@ describe("statGroups", () => {
   });
 
   it.each([
-    [{ used: 0.3, cap: Number.POSITIVE_INFINITY, gear: 0.3, level: 0 }, "Work efficiency +30%"],
-    [{ used: -0.1, cap: 0.7, gear: -0.1, level: 0 }, "Work efficiency of 70% max −10%"],
+    [{ used: 0.3, cap: Number.POSITIVE_INFINITY, gear: 0.3, level: 0 }, "Work efficiency · gear +30%, level +0% +30%"],
+    [{ used: -0.1, cap: 0.7, gear: -0.1, level: 0 }, "Work efficiency of 70% max · gear −10%, level +0% −10%"],
   ])("labels the work efficiency tile for %j", (parts, expected) => {
     expect(shown(statGroups([], parts, []).steps)).toEqual([expected]);
   });
@@ -77,16 +77,10 @@ describe("formatStatValue", () => {
 
 describe("efficiencyStatus", () => {
   it.each([
-    [
-      { used: 0.3, cap: 0.5, gear: 0.05, level: 0.25 },
-      "Work efficiency 30% of 50% max, 20% short (gear +5%, level +25%)",
-    ],
-    [{ used: 0.5, cap: 0.5, gear: 0.25, level: 0.25 }, "Max work efficiency reached (gear +25%, level +25%)"],
-    [{ used: 0.5, cap: 0.5, gear: 0.58, level: 0.25 }, "Max work efficiency reached, 33% over (gear +58%, level +25%)"],
-    [
-      { used: 0.4, cap: Number.POSITIVE_INFINITY, gear: 0.4, level: 0 },
-      "Work efficiency 40%, no max (gear +40%, level +0%)",
-    ],
+    [{ used: 0.3, cap: 0.5, gear: 0.05, level: 0.25 }, "Work efficiency 30% of 50% max, 20% short"],
+    [{ used: 0.5, cap: 0.5, gear: 0.25, level: 0.25 }, "Work efficiency maxed"],
+    [{ used: 0.5, cap: 0.5, gear: 0.58, level: 0.25 }, "Work efficiency maxed, 33% over"],
+    [{ used: 0.4, cap: Number.POSITIVE_INFINITY, gear: 0.4, level: 0 }, "Work efficiency 40%, no max"],
   ])("describes %j", (parts, expected) => {
     expect(efficiencyStatus(parts)).toBe(expected);
   });

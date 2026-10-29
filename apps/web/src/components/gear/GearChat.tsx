@@ -108,7 +108,7 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
           </ChatMessage>
           {goals.length > 0 && (
             <ChatAnswer
-              label={goals.map((id, i) => `${i + 1}. ${allowedGoals.find((g) => g.id === id)!.label}`).join("  ")}
+              label={goals.map((id) => allowedGoals.find((g) => g.id === id)!.label).join(" › ")}
               onChange={() => update({ goals: undefined })}
             />
           )}

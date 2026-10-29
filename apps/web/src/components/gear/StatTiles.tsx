@@ -1,10 +1,10 @@
 import type { StatTile } from "@/lib/gear-stats";
 import { cn } from "@/lib/utils";
 
-export function StatTiles({ title, tiles }: { title: string; tiles: StatTile[] }) {
+export function StatTiles({ title, tiles }: { title?: string; tiles: StatTile[] }) {
   return (
     <div>
-      <h3 className="mb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">{title}</h3>
+      {title && <h3 className="mb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">{title}</h3>}
       <ul className="grid grid-cols-3 gap-1.5">
         {tiles.map((tile) => (
           <li
