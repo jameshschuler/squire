@@ -20,7 +20,7 @@ describe("statGroups", () => {
   it("starts the steps tiles with steps, then the gear's work efficiency, then one number per tile", () => {
     expect(shown(groups.steps)).toEqual([
       "Steps 35",
-      "Work efficiency +95%",
+      "Work efficiency +95% · 100% over the max",
       "Steps required (flat) −6",
       "Steps required −2%",
       "Double action +23.5%",
@@ -66,6 +66,11 @@ describe("statGroups", () => {
     [{ cap: 0.2, gear: 0, level: 0.25 }, false],
   ])("marks work efficiency as over only when gear adds efficiency past the max (%j)", (parts, over) => {
     expect(statGroups([], parts, [], steps).steps[1]).toMatchObject({ key: "workEfficiency", over });
+  });
+
+  it("says how far over the max gear and level go, to one decimal", () => {
+    const over = statGroups([], { cap: 0.5, gear: 0.445, level: 0.25 }, [], steps).steps[1];
+    expect(over).toMatchObject({ value: "+44.5%", details: ["19.5% over the max"], over: true });
   });
 
   it("shows the gear's work efficiency, not the capped total", () => {
