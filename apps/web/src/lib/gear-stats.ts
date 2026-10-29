@@ -9,6 +9,7 @@ export interface StatTile {
   label: string;
   details: string[];
   highlight: boolean;
+  over: boolean;
 }
 
 export interface StatGroups {
@@ -17,7 +18,6 @@ export interface StatGroups {
 }
 
 export interface EfficiencyParts {
-  used: number;
   cap: number;
   gear: number;
   level: number;
@@ -59,6 +59,7 @@ export function statGroups(
     label: TILE_LABELS[`${line.stat}:${line.isPercent}`] ?? STAT_LABELS[line.stat]!,
     details: [],
     highlight: highlightKeys.includes(`${line.stat}:${line.isPercent}`),
+    over: false,
   });
   const rank = (tile: StatTile) => {
     const index = highlightKeys.indexOf(tile.key);
@@ -84,19 +85,13 @@ export function statGroups(
 }
 
 function efficiencyTile(parts: EfficiencyParts): StatTile {
-  const { used, cap, gear, level } = parts;
-  const limit = !Number.isFinite(cap)
-    ? []
-    : [efficiencyOver(parts) >= 0 ? `Maxed at ${formatPercent(cap, 1)}` : `Max is ${formatPercent(cap, 1)}`];
   return {
     key: "workEfficiency",
-    value: formatStatValue({ isPercent: true, value: used }),
+    value: formatStatValue({ isPercent: true, value: parts.gear }),
     label: "Work efficiency",
-    details: [
-      ...limit,
-      `Gear ${formatStatValue({ isPercent: true, value: gear })}, level ${formatStatValue({ isPercent: true, value: level })}`,
-    ],
+    details: [],
     highlight: false,
+    over: parts.gear > 0 && efficiencyOver(parts) > 0,
   };
 }
 

@@ -130,7 +130,7 @@ describe("Gear page", () => {
   it("uses the character's gear without asking, and compares with no gear", async () => {
     addCharacter();
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
-    expect(await screen.findByText(/fewer than with no gear/)).toBeDefined();
+    expect(await screen.findByText(/^Min \d+ · Max \d+$/)).toBeDefined();
     expect(screen.queryByText("Whose gear?")).toBeNull();
   });
 
@@ -185,17 +185,24 @@ describe("Gear page", () => {
     expect(screen.queryByRole("region", { name: "Summary" })).toBeNull();
   });
 
-  it("shows the set's stats, with work efficiency against the activity's max", async () => {
+  it("shows the set's stats, with the steps range and the gear's work efficiency", async () => {
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     const stats = await screen.findByRole("region", { name: "Set stats" });
-    expect(stats.textContent).toContain("Work efficiency");
-    expect(stats.textContent).toContain("Work efficiencyMax is 70%");
+    expect(stats.textContent).toMatch(/Steps per actionMin \d+ · Max \d+/);
+    expect(stats.textContent).toContain("+0%Work efficiency");
     expect(stats.textContent).toContain("−5Steps required (flat)");
+  });
+
+  it("outlines each gear square in its item's tier", async () => {
+    gear = withGear([{ ...miningGear("journeyman_handwear", "hands", -3), quality: "rare" }]);
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
+    const hands = await screen.findByRole("link", { name: /Hands.*journeyman handwear\W+rare$/ });
+    expect(hands.className).toContain("border-teal-400");
   });
 
   it("shows the game's gear layout, with empty slots left to the player", async () => {
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
-    expect(await screen.findByRole("link", { name: /Hands.*journeyman handwear/ })).toBeDefined();
+    expect(await screen.findByRole("link", { name: /Hands.*journeyman handwear$/ })).toBeDefined();
     expect(screen.getAllByText("Player's choice").length).toBeGreaterThan(0);
     expect(screen.getByText("Tool 6")).toBeDefined();
   });

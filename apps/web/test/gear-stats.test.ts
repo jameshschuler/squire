@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { formatStatValue, statGroups, type StatTile } from "@/lib/gear-stats";
 
 describe("statGroups", () => {
-  const capped = { used: 0.2, cap: 0.2, gear: 0.95, level: 0.25 };
-  const steps = { key: "steps", value: "35", label: "Steps", details: [], highlight: true };
+  const capped = { cap: 0.2, gear: 0.95, level: 0.25 };
+  const steps = { key: "steps", value: "35", label: "Steps", details: [], highlight: true, over: false };
   const lines = [
     { stat: "chestFind", isPercent: true, value: 0.69 },
     { stat: "workEfficiency", isPercent: true, value: 0.95 },
@@ -17,10 +17,10 @@ describe("statGroups", () => {
   const groups = statGroups([...lines], capped, [{ stat: "chestFind", isPercent: true }], steps);
   const shown = (tiles: StatTile[]) => tiles.map((t) => [`${t.label} ${t.value}`, ...t.details].join(" · "));
 
-  it("starts the steps tiles with steps, then work efficiency, then one number per tile", () => {
+  it("starts the steps tiles with steps, then the gear's work efficiency, then one number per tile", () => {
     expect(shown(groups.steps)).toEqual([
       "Steps 35",
-      "Work efficiency +20% · Maxed at 20% · Gear +95%, level +25%",
+      "Work efficiency +95%",
       "Steps required (flat) −6",
       "Steps required −2%",
       "Double action +23.5%",
@@ -35,11 +35,6 @@ describe("statGroups", () => {
       "Inventory space +3",
     ]);
     expect(groups.other.filter((t) => t.highlight).map((t) => t.label)).toEqual(["Chest finding"]);
-  });
-
-  it("says what the work efficiency max is when it isn't maxed", () => {
-    const short = statGroups([], { used: 0.3, cap: 0.5, gear: 0.05, level: 0.25 }, [], steps);
-    expect(shown(short.steps)).toEqual(["Steps 35", "Work efficiency +30% · Max is 50% · Gear +5%, level +25%"]);
   });
 
   it("highlights only the exact stat a priority uses, not its flat or percent twin", () => {
@@ -64,10 +59,17 @@ describe("statGroups", () => {
   });
 
   it.each([
-    [{ used: 0.3, cap: Number.POSITIVE_INFINITY, gear: 0.3, level: 0 }, "Work efficiency +30% · Gear +30%, level +0%"],
-    [{ used: -0.1, cap: 0.7, gear: -0.1, level: 0 }, "Work efficiency −10% · Max is 70% · Gear −10%, level +0%"],
-  ])("labels the work efficiency tile for %j", (parts, expected) => {
-    expect(shown(statGroups([], parts, [], steps).steps)).toEqual(["Steps 35", expected]);
+    [{ cap: 0.2, gear: 0.95, level: 0.25 }, true],
+    [{ cap: 0.5, gear: 0.25, level: 0.25 }, false],
+    [{ cap: 0.5, gear: 0.05, level: 0.25 }, false],
+    [{ cap: Number.POSITIVE_INFINITY, gear: 3, level: 0.25 }, false],
+    [{ cap: 0.2, gear: 0, level: 0.25 }, false],
+  ])("marks work efficiency as over only when gear adds efficiency past the max (%j)", (parts, over) => {
+    expect(statGroups([], parts, [], steps).steps[1]).toMatchObject({ key: "workEfficiency", over });
+  });
+
+  it("shows the gear's work efficiency, not the capped total", () => {
+    expect(statGroups([], { cap: 0.5, gear: -0.1, level: 0.25 }, [], steps).steps[1]).toMatchObject({ value: "−10%" });
   });
 
   it("has only the steps and work efficiency tiles when the set gives nothing", () => {

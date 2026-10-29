@@ -50,30 +50,34 @@ describe("answerNotes", () => {
 
 describe("stepsTile", () => {
   const result: StepsResult = { efficiency: 1.5, steps: 40, averageSteps: 32 };
+  const noGear: StepsResult = { efficiency: 1, steps: 63, averageSteps: 63 };
   const withGoals = (goals: string[]) => ({ result, goals }) as unknown as GearSuggestion;
 
   it.each([
     [["steps", "chests"], true],
     [["chests"], false],
   ])("highlights the steps tile for goals %j: %s", (goals, highlight) => {
-    expect(stepsTile(withGoals(goals), result).highlight).toBe(highlight);
+    expect(stepsTile(withGoals(goals), noGear, 28).highlight).toBe(highlight);
   });
 
-  it.each([
-    [{ efficiency: 1, steps: 48, averageSteps: 48 }, ["32 on average with double action", "8 fewer than with no gear"]],
-    [{ efficiency: 1, steps: 40, averageSteps: 40 }, ["32 on average with double action"]],
-  ])("compares steps with no gear (%j)", (noGear, details) => {
-    expect(stepsTile(withGoals(["steps"]), noGear)).toEqual({
+  it("shows the set's steps with the fewest possible and the no-gear steps", () => {
+    expect(stepsTile(withGoals(["steps"]), noGear, 28)).toEqual({
       key: "steps",
       value: "40",
       label: "Steps per action",
-      details,
+      details: ["Min 28 · Max 63"],
       highlight: true,
+      over: false,
     });
   });
 
-  it("leaves out the average when there's no double action", () => {
-    const plain = { result: { efficiency: 1, steps: 40, averageSteps: 40 }, goals: [] } as unknown as GearSuggestion;
-    expect(stepsTile(plain, plain.result).details).toEqual([]);
+  it("never shows a minimum above the set's own steps", () => {
+    expect(stepsTile(withGoals(["steps"]), noGear, 42).details).toEqual(["Min 40 · Max 63"]);
+  });
+
+  it("formats large step counts", () => {
+    const long = { result: { efficiency: 1, steps: 5547, averageSteps: 5547 }, goals: [] } as unknown as GearSuggestion;
+    const bare = { efficiency: 1, steps: 12400, averageSteps: 12400 };
+    expect(stepsTile(long, bare, 4100)).toMatchObject({ value: "5,547", details: ["Min 4,100 · Max 12,400"] });
   });
 });

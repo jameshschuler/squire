@@ -1,4 +1,5 @@
 import { GEAR_SLOTS, type GearPick } from "@squire/api/gear-data";
+import { pickQuality } from "./gear-grid";
 
 interface GearSetEntry {
   type: string;
@@ -8,9 +9,7 @@ interface GearSetEntry {
 
 export function gearSetEntries(picks: GearPick[]): GearSetEntry[] {
   const entry = (pick: GearPick | undefined) =>
-    pick?.item.gameId
-      ? JSON.stringify({ id: pick.item.gameId, quality: pick.quality ?? pick.item.quality, tag: null })
-      : "null";
+    pick?.item.gameId ? JSON.stringify({ id: pick.item.gameId, quality: pickQuality(pick), tag: null }) : "null";
   return GEAR_SLOTS.flatMap(({ slot, capacity }) => {
     const inSlot = picks.filter((p) => p.slot === slot);
     return capacity === 1

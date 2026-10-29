@@ -4,6 +4,7 @@ import type { GearType } from "@walkscape-community/data-api-client";
 import type { Character } from "../src/character/index.js";
 import {
   BEST_IN_GAME,
+  fewestSteps,
   optimizeGear,
   type GearCondition,
   type GearData,
@@ -430,6 +431,20 @@ describe("optimizeGear", () => {
     const suggestion = optimizeGear(gearData([item("hat", "head", [])]), BEST_IN_GAME, mining);
     expect(suggestion).toMatchObject({ picks: [], pet: null, location: null });
     expect(suggestion.result.steps).toBe(80);
+  });
+});
+
+describe("fewestSteps", () => {
+  it("counts the steps with the best gear in the game, whatever the character owns", () => {
+    const gear = gearData([
+      item("small_gloves", "hands", [flatSteps(-2)]),
+      item("big_gloves", "hands", [flatSteps(-5)]),
+    ]);
+    expect(fewestSteps(gear, mining)).toBe(75);
+  });
+
+  it("is the no-gear steps when no gear helps", () => {
+    expect(fewestSteps(gearData([item("hat", "head", [])]), mining)).toBe(80);
   });
 });
 

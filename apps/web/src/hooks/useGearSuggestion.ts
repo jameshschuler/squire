@@ -1,18 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  fewestSteps,
   optimizeGear,
   type GearData,
   type GoalId,
-  type GearSuggestion,
   type OptimizeTarget,
   type PlayerProfile,
 } from "@squire/api/gear-data";
+import type { GearSolution } from "@/lib/gear-answer";
 
-interface Solved {
+interface Solved extends GearSolution {
   target: OptimizeTarget;
   profile: PlayerProfile;
   goals: GoalId[];
-  suggestion: GearSuggestion;
+}
+
+interface Fewest {
+  gear: GearData;
+  target: OptimizeTarget;
+  steps: number;
 }
 
 export function useGearSuggestion(
@@ -20,21 +26,23 @@ export function useGearSuggestion(
   profile: PlayerProfile,
   target: OptimizeTarget | null,
   goals: GoalId[],
-): GearSuggestion | null {
+): GearSolution | null {
   const [solved, setSolved] = useState<Solved | null>(null);
+  const fewest = useRef<Fewest | null>(null);
 
   useEffect(() => {
     if (!target) {
       return;
     }
-    const timer = setTimeout(
-      () => setSolved({ target, profile, goals, suggestion: optimizeGear(gear, profile, target, goals) }),
-      0,
-    );
+    const timer = setTimeout(() => {
+      if (fewest.current?.gear !== gear || fewest.current.target !== target) {
+        fewest.current = { gear, target, steps: fewestSteps(gear, target) };
+      }
+      const suggestion = optimizeGear(gear, profile, target, goals);
+      setSolved({ target, profile, goals, suggestion, fewestSteps: fewest.current.steps });
+    }, 0);
     return () => clearTimeout(timer);
   }, [gear, profile, target, goals]);
 
-  return solved && solved.target === target && solved.profile === profile && solved.goals === goals
-    ? solved.suggestion
-    : null;
+  return solved && solved.target === target && solved.profile === profile && solved.goals === goals ? solved : null;
 }

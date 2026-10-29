@@ -56,7 +56,7 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
     () => (target && locationAnswered && goals.length > 0 ? optimizeTarget(target, location) : null),
     [target, locationAnswered, goals.length, location],
   );
-  const suggestion = useGearSuggestion(gear, profile, optimize, goals);
+  const solution = useGearSuggestion(gear, profile, optimize, goals);
   const update = (answers: GearSearch) => onSearchChange({ ...search, ...answers });
 
   return (
@@ -101,7 +101,7 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
           </ChatMessage>
           {location !== undefined && (
             <ChatAnswer
-              label={locationLabel(target, location, suggestion?.location ?? null)}
+              label={locationLabel(target, location, solution?.suggestion.location ?? null)}
               onChange={() => update({ location: undefined })}
             />
           )}
@@ -142,7 +142,7 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
       )}
 
       {target && optimize && (
-        <GearResult gear={gear} profile={profile} target={target} optimize={optimize} suggestion={suggestion} />
+        <GearResult gear={gear} profile={profile} target={target} optimize={optimize} solution={solution} />
       )}
     </div>
   );

@@ -11,8 +11,9 @@ export function StatTiles({ title, tiles }: { title?: string; tiles: StatTile[] 
             key={tile.key}
             className={cn("rounded-lg border bg-background px-2 py-1.5", tile.highlight && "border-foreground/40")}
           >
-            <p className="text-base font-semibold">
+            <p className={cn("text-base font-semibold", tile.over && "text-destructive")}>
               {tile.value}
+              {tile.over && <span className="sr-only"> (over the max)</span>}
               {tile.highlight && <span className="sr-only"> (priority)</span>}
             </p>
             <p className="text-xs leading-tight font-medium">{tile.label}</p>

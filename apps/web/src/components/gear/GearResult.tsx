@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Loader2 } from "lucide-react";
-import type { GearData, GearSuggestion, OptimizeTarget, PlayerProfile } from "@squire/api/gear-data";
-import { gearAnswer } from "@/lib/gear-answer";
+import type { GearData, OptimizeTarget, PlayerProfile } from "@squire/api/gear-data";
+import { gearAnswer, type GearSolution } from "@/lib/gear-answer";
 import type { GearTarget } from "@/lib/gear-targets";
 import { ChatMessage } from "./ChatMessage";
 import { GearAnswer } from "./GearAnswer";
@@ -11,13 +11,13 @@ interface GearResultProps {
   profile: PlayerProfile;
   target: GearTarget;
   optimize: OptimizeTarget;
-  suggestion: GearSuggestion | null;
+  solution: GearSolution | null;
 }
 
-export function GearResult({ gear, profile, target, optimize, suggestion }: GearResultProps) {
+export function GearResult({ gear, profile, target, optimize, solution }: GearResultProps) {
   const answer = useMemo(
-    () => suggestion && gearAnswer(gear, profile, target, optimize, suggestion),
-    [gear, profile, target, optimize, suggestion],
+    () => solution && gearAnswer(gear, profile, target, optimize, solution),
+    [gear, profile, target, optimize, solution],
   );
   if (!answer) {
     return (

@@ -1,5 +1,5 @@
 import type { GearPick, OwnedPetView } from "@squire/api/gear-data";
-import { gearCells, toolCells, type GearCell } from "@/lib/gear-grid";
+import { gearCells, pickQuality, toolCells, type GearCell } from "@/lib/gear-grid";
 import { GearSlotCell } from "./GearSlotCell";
 
 interface GearGridProps {
@@ -16,6 +16,7 @@ export function GearGrid({ picks, pet, toolSlots }: GearGridProps) {
       name={cell.pick?.item.name ?? null}
       icon={cell.pick?.item.icon ?? ""}
       itemId={cell.pick?.item.id ?? null}
+      quality={cell.pick && pickQuality(cell.pick)}
     />
   );
   return (

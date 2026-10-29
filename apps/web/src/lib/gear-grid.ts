@@ -1,4 +1,5 @@
 import type { GearPick } from "@squire/api/gear-data";
+import type { ItemQuality } from "@squire/api/recipe-book";
 
 type Slot = GearPick["slot"];
 
@@ -32,4 +33,8 @@ export function toolCells(picks: GearPick[], toolSlots: number): GearCell[] {
 
 function cell(label: string, slot: Slot, index: number, picks: GearPick[]): GearCell {
   return { label, pick: picks.filter((p) => p.slot === slot)[index] ?? null };
+}
+
+export function pickQuality(pick: GearPick): ItemQuality | null {
+  return pick.quality ?? pick.item.quality;
 }

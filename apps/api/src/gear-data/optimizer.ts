@@ -7,7 +7,15 @@ import {
   type GearPick,
   type Situation,
 } from "./candidates.js";
-import { ownedGear, ownedPets, skillLevelOf, toolSlotsOf, type OwnedPetView, type PlayerProfile } from "./profile.js";
+import {
+  BEST_IN_GAME,
+  ownedGear,
+  ownedPets,
+  skillLevelOf,
+  toolSlotsOf,
+  type OwnedPetView,
+  type PlayerProfile,
+} from "./profile.js";
 import { compareScores, goalOf, goalScorer, goalStats, type GoalId, type Score } from "./goals.js";
 import { keywordRules, prune } from "./pruning.js";
 import { GEAR_SLOTS } from "./slots.js";
@@ -50,6 +58,10 @@ export function optimizeGear(
   return distinctLocations(gear, locations)
     .map((location) => optimizeAt(gear, situationFor(gear, profile, target, location, goalStats(goals)), goals))
     .reduce((best, next) => (compareScores(next.score, best.score) > 0 ? next : best));
+}
+
+export function fewestSteps(gear: GearData, target: OptimizeTarget): number {
+  return optimizeGear(gear, BEST_IN_GAME, target).result.steps;
 }
 
 function optimizeAt(gear: GearData, situation: Situation, goals: GoalId[]): GearSuggestion {
