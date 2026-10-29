@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { stepsPerAction } from "../src/gear-data/steps.js";
+import tailoringGear from "../../../fixtures/gear/tailoring.json";
 import type { GearType } from "@walkscape-community/data-api-client";
 import type { Character } from "../src/character/index.js";
 import {
@@ -445,6 +446,22 @@ describe("fewestSteps", () => {
 
   it("is the no-gear steps when no gear helps", () => {
     expect(fewestSteps(gearData([item("hat", "head", [])]), mining)).toBe(80);
+  });
+});
+
+describe("search size", () => {
+  it("finishes quickly with the best tailoring gear in the game, where many tool types compete", () => {
+    const tailoring = {
+      skill: "tailoring",
+      level: 43,
+      workRequired: 280,
+      maxWorkEfficiency: 2.1,
+      locationIds: ["azurazera"],
+    };
+    const start = performance.now();
+    const suggestion = optimizeGear(tailoringGear as unknown as GearData, BEST_IN_GAME, tailoring);
+    expect(performance.now() - start).toBeLessThan(4000);
+    expect(suggestion.result.steps).toBe(96);
   });
 });
 

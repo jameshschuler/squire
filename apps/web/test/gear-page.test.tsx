@@ -11,10 +11,21 @@ import { GameDataProvider } from "@/contexts/game-data-context";
 import { GearDataProvider } from "@/contexts/gear-data-context";
 import { CHARACTER_STORAGE_KEY, storeCharacter } from "@/lib/character";
 import { gearSetCode } from "@/lib/gear-set-code";
+import { solveInBackground } from "@/lib/gear-solver";
 import type { GearSearch } from "@/lib/gear-search";
+import type { GearRequest } from "@/lib/gear-solution";
 import { renderWithRouter } from "./render-with-router";
 
 vi.mock("@/lib/gear-set-code", () => ({ gearSetCode: vi.fn(async () => "GEAR-SET-CODE") }));
+vi.mock("@/lib/gear-solver", async () => {
+  const { solveGear } = await import("@/lib/gear-solution");
+  return {
+    solveInBackground: vi.fn((request: GearRequest) => ({
+      result: Promise.resolve(solveGear(request)),
+      cancel: () => {},
+    })),
+  };
+});
 
 const data = sample as unknown as GameData;
 const book = { ...buildRecipeBook(data), schema: RECIPE_BOOK_SCHEMA };
@@ -118,6 +129,12 @@ describe("Gear page", () => {
   it("names the location it picked for the best location", async () => {
     await renderPage({ target: "recipe:bake_a_bagel", location: "best", goals: "steps" });
     expect(await screen.findByRole("button", { name: /^Change answer: Best location: \S/ })).toBeDefined();
+  });
+
+  it("says when the gear search fails instead of working forever", async () => {
+    vi.mocked(solveInBackground).mockReturnValueOnce({ result: Promise.reject(new Error("boom")), cancel: () => {} });
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
+    expect((await screen.findByRole("alert")).textContent).toContain("Couldn't work out a gear set");
   });
 
   it("says when no gear helps", async () => {

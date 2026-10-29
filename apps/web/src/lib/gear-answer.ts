@@ -14,13 +14,9 @@ import {
   type StepsResult,
 } from "@squire/api/gear-data";
 import { formatNumber } from "./format";
+import type { GearSolution } from "./gear-solution";
 import { statGroups, type StatGroups, type StatTile } from "./gear-stats";
 import type { GearTarget } from "./gear-targets";
-
-export interface GearSolution {
-  suggestion: GearSuggestion;
-  fewestSteps: number;
-}
 
 export interface GearAnswerView {
   suggestion: GearSuggestion;

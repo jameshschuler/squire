@@ -89,7 +89,7 @@ function optimizeAt(gear: GearData, situation: Situation, goals: GoalId[]): Gear
     (seed, _, i) =>
       bestSet(groups, rules, useful, (totals) => score(totals).slice(0, i + 1), {
         seed,
-        maxStates: i === 0 && primaryIsSteps ? Number.POSITIVE_INFINITY : SEARCH_STATES,
+        maxStates: SEARCH_STATES,
         goalDims: goalStats(goals.slice(0, i + 1)).length,
         statFirst: primaryIsSteps ? null : 0,
         repair: i === goals.length - 1,
