@@ -391,7 +391,7 @@ describe("optimizeGear", () => {
       item("lucky_hat", "head", [stat("chestFind", 0.3, true)]),
     ]);
     const walker = character(["pickaxe", "lucky_hat"], { skillLevels: { mining: 70 } });
-    expect(picked(gear, walker)).toEqual(["pickaxe"]);
+    expect(picked(gear, walker)).toEqual(["lucky_hat", "pickaxe"]);
     expect(
       optimizeGear(gear, walker, mining, ["steps", "chests"])
         .picks.map((p) => p.item.id)
@@ -432,6 +432,80 @@ describe("optimizeGear", () => {
     const suggestion = optimizeGear(gearData([item("hat", "head", [])]), BEST_IN_GAME, mining);
     expect(suggestion).toMatchObject({ picks: [], pet: null, location: null });
     expect(suggestion.result.steps).toBe(80);
+  });
+});
+
+describe("free slots", () => {
+  const otherSkill = { type: "mainSkill", opposite: false, requirement: { skill: "fishing" } } as const;
+
+  it("fills a slot nothing else needs with an item whose bonuses apply", () => {
+    const gear = gearData([
+      item("gloves", "hands", [flatSteps(-5)]),
+      item("backpack", "back", [stat("inventorySpace", 4, false)]),
+    ]);
+    expect(picked(gear, BEST_IN_GAME)).toEqual(["backpack", "gloves"]);
+  });
+
+  it.each([
+    ["more steps", flatSteps(3)],
+    ["less work efficiency, even too little to change the steps", efficiency(-0.001)],
+    ["a worse bonus elsewhere", stat("chestFind", -0.05, true)],
+  ])("never adds an item with %s", (_, cost) => {
+    const gear = gearData([item("heavy_pack", "back", [stat("inventorySpace", 6, false), cost])]);
+    expect(picked(gear, BEST_IN_GAME)).toEqual([]);
+  });
+
+  it("wears a ring twice only when the character owns two", () => {
+    const gear = gearData([item("lucky_ring", "ring", [stat("chestFind", 0.1, true)])]);
+    expect(picked(gear, character(["lucky_ring"]))).toEqual(["lucky_ring"]);
+  });
+
+  it("wears one copy of an item, whatever qualities the character owns", () => {
+    const gear = gearData([
+      item("lucky_saw", "tool", [], {
+        tierStats: { common: [stat("chestFind", 0.1, true)], rare: [stat("chestFind", 0.2, true)] },
+      }),
+    ]);
+    const owner = character([], {
+      owned: [
+        { id: "lucky_saw", quality: "common", count: 1 },
+        { id: "lucky_saw", quality: "rare", count: 1 },
+      ],
+    });
+    expect(optimizeGear(gear, owner, mining).picks).toHaveLength(1);
+  });
+
+  it("ignores bonuses that don't apply to this activity", () => {
+    const gear = gearData([item("net_bag", "back", [stat("chestFind", 0.2, true, otherSkill)])]);
+    expect(picked(gear, BEST_IN_GAME)).toEqual([]);
+  });
+
+  it("prefers a percent bonus over a flat one when both give one bonus", () => {
+    const gear = gearData([
+      item("backpack", "back", [stat("inventorySpace", 4, false)]),
+      item("bandolier", "back", [stat("doubleRewards", 0.02, true)]),
+    ]);
+    expect(picked(gear, BEST_IN_GAME)).toEqual(["bandolier"]);
+  });
+
+  it("prefers the item with more bonuses, then the bigger ones", () => {
+    const gear = gearData([
+      item("tiny_pack", "back", [stat("inventorySpace", 1, false)]),
+      item("big_pack", "back", [stat("inventorySpace", 4, false)]),
+      item("bandolier", "back", [stat("inventorySpace", 1, false), stat("doubleRewards", 0.02, true)]),
+    ]);
+    expect(picked(gear, BEST_IN_GAME)).toEqual(["bandolier"]);
+  });
+
+  it("keeps the rule against two tools of the same type", () => {
+    const gear = gearData(
+      [
+        item("saw_a", "tool", [stat("chestFind", 0.1, true)], { keywords: ["hatchet"] }),
+        item("saw_b", "tool", [stat("chestFind", 0.2, true)], { keywords: ["hatchet"] }),
+      ],
+      { bannedKeywords: { hatchet: ["hatchet"] } },
+    );
+    expect(picked(gear, BEST_IN_GAME)).toEqual(["saw_b"]);
   });
 });
 

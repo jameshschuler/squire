@@ -1,3 +1,4 @@
+import type { GearType } from "@walkscape-community/data-api-client";
 import {
   gearCandidate,
   type Candidate,
@@ -19,6 +20,7 @@ import {
 import { compareScores, goalOf, goalScorer, goalStats, type GoalId, type Score } from "./goals.js";
 import { keywordRules, prune } from "./pruning.js";
 import { GEAR_SLOTS } from "./slots.js";
+import { fillFreeSlots } from "./free-slots.js";
 import { bestSet, type SlotGroup } from "./search.js";
 import {
   NO_STATS,
@@ -66,15 +68,23 @@ export function fewestSteps(gear: GearData, target: OptimizeTarget): number {
 
 function optimizeAt(gear: GearData, situation: Situation, goals: GoalId[]): GearSuggestion {
   const { profile, target } = situation;
-  const items = ownedGear(profile, gear.items).map((owned) => gearCandidate(situation, owned));
+  const choices = ownedGear(profile, gear.items).map((owned) => ({
+    owned,
+    candidate: gearCandidate(situation, owned),
+  }));
+  const items = choices.map((c) => c.candidate);
   const pets = ownedPets(profile, gear.pets).map((pet) => petCandidate(situation, pet));
   const level = skillLevelOf(profile, target.skill);
   const goalScore = goalScorer(goals);
   const score = (totals: StatTotals) => goalScore(stepsPerAction(target, level, totals), totals);
   const useful = usefulEfficiency(target, level);
   const rules = keywordRules(gear.bannedKeywords, [...items, ...pets]);
-  const groups: SlotGroup[] = GEAR_SLOTS.map(({ slot, capacity }) => ({
-    capacity: slot === "tool" ? toolSlotsOf(profile) : capacity,
+  const capacities = new Map(
+    GEAR_SLOTS.map(({ slot, capacity }) => [slot, slot === "tool" ? toolSlotsOf(profile) : capacity]),
+  );
+  const capacityOf = (slot: GearType) => capacities.get(slot)!;
+  const groups: SlotGroup[] = GEAR_SLOTS.map(({ slot }) => ({
+    capacity: capacityOf(slot),
     choices: items.filter((c) => c.slot === slot),
   }))
     .concat({ capacity: 1, choices: pets })
@@ -85,7 +95,7 @@ function optimizeAt(gear: GearData, situation: Situation, goals: GoalId[]): Gear
     .filter((group) => group.choices.length > 0);
 
   const primaryIsSteps = goals[0] === undefined || goalOf(goals[0]).stat === null;
-  const chosen = goals.reduce<Candidate[]>(
+  const searched = goals.reduce<Candidate[]>(
     (seed, _, i) =>
       bestSet(groups, rules, useful, (totals) => score(totals).slice(0, i + 1), {
         seed,
@@ -96,6 +106,7 @@ function optimizeAt(gear: GearData, situation: Situation, goals: GoalId[]): Gear
       }),
     [],
   );
+  const chosen = fillFreeSlots(situation, searched, choices, capacityOf, rules, score);
   const totals = withSetBonuses(chosen);
   return {
     location: situation.location,
