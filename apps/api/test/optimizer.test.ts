@@ -17,6 +17,7 @@ import {
   type Score,
   compareScores,
   goalScorer,
+  gearBonusesByLocation,
   locationBonuses,
   setStats,
 } from "../src/gear-data/index.js";
@@ -549,6 +550,123 @@ describe("locationBonuses", () => {
 
   it("lists nothing without a location", () => {
     expect(bonuses(null)).toEqual([]);
+  });
+});
+
+describe("gearBonusesByLocation", () => {
+  const desert: GearCondition = { type: "locationHasKeywords", opposite: false, requirement: { keywords: ["desert"] } };
+  const arc = { id: "arc", name: "Myriadian Arc", region: "Wrentmark", realms: ["wrentmark"], keywords: ["desert"] };
+  const peak = { ...arc, id: "peak", keywords: ["snowy"] };
+  const at = (gear: GearData, profile: PlayerProfile = BEST_IN_GAME) =>
+    gearBonusesByLocation(gear, profile, mining, [arc, peak]);
+
+  it("adds up the location bonuses of the best item per slot, percent bonuses first", () => {
+    const gear = gearData([
+      item("sun_hat", "head", [stat("doubleAction", 0.05, true, desert)]),
+      item("big_sun_hat", "head", [stat("doubleAction", 0.08, true, desert)]),
+      item("sun_boots", "feet", [stat("doubleAction", 0.03, true, desert), flatSteps(-2, desert)]),
+      item("cook_gloves", "hands", [stat("doubleAction", 0.2, true, desert, mainSkill("cooking"))]),
+      item("plain_ring", "ring", [stat("doubleAction", 0.1, true)]),
+    ]);
+    expect(at(gear)).toEqual(
+      new Map([
+        [
+          "arc",
+          [
+            { stat: "doubleAction", isPercent: true, value: 0.11 },
+            { stat: "stepsRequired", isPercent: false, value: -2 },
+          ],
+        ],
+        ["peak", []],
+      ]),
+    );
+  });
+
+  it("counts one item per slot even when two items in it help different stats", () => {
+    const gear = gearData([
+      item("lucky_hat", "head", [stat("doubleAction", 0.08, true, desert)]),
+      item("quick_hat", "head", [efficiency(0.05, desert)]),
+    ]);
+    expect(at(gear).get("arc")).toEqual([{ stat: "doubleAction", isPercent: true, value: 0.08 }]);
+  });
+
+  it("prefers the item that speeds you up for a slot, and lists speed bonuses first", () => {
+    const gear = gearData([
+      item("dance_corslet", "chest", [stat("doubleAction", 0.07, true, desert)]),
+      item("finder_vest", "chest", [stat("fineMaterialFind", 0.25, true, desert)]),
+      item("sand_hat", "head", [stat("chestFind", 0.3, true, desert)]),
+    ]);
+    expect(at(gear).get("arc")).toEqual([
+      { stat: "doubleAction", isPercent: true, value: 0.07 },
+      { stat: "chestFind", isPercent: true, value: 0.3 },
+    ]);
+  });
+
+  it("ranks a slot by its speed bonus, not by how many bonuses an item has", () => {
+    const gear = gearData([
+      item("busy_hat", "head", [stat("doubleAction", 0.01, true, desert), stat("chestFind", 0.01, true, desert)]),
+      item("dance_hat", "head", [stat("doubleAction", 0.08, true, desert)]),
+    ]);
+    expect(at(gear).get("arc")).toEqual([{ stat: "doubleAction", isPercent: true, value: 0.08 }]);
+  });
+
+  it.each([
+    ["a speed penalty", efficiency(-0.2)],
+    ["a worse bonus elsewhere", stat("chestFind", -0.05, true)],
+  ])("skips items with %s", (_, cost) => {
+    const gear = gearData([item("heavy_vest", "chest", [stat("doubleAction", 0.07, true, desert), cost])]);
+    expect(at(gear).get("arc")).toEqual([]);
+  });
+
+  it("keeps the rule against two tools of the same type, and wears one copy of each item", () => {
+    const gear = gearData(
+      [
+        item("saw_a", "tool", [efficiency(0.05, desert)], { keywords: ["saw"] }),
+        item("saw_b", "tool", [efficiency(0.04, desert)], { keywords: ["saw"] }),
+      ],
+      { bannedKeywords: { saw: ["saw"] } },
+    );
+    expect(at(gear).get("arc")).toEqual([{ stat: "workEfficiency", isPercent: true, value: 0.05 }]);
+    const owner = character([], {
+      owned: [
+        { id: "saw_a", quality: "common", count: 1 },
+        { id: "saw_a", quality: "rare", count: 1 },
+      ],
+    });
+    expect(at(gear, owner).get("arc")).toEqual([{ stat: "workEfficiency", isPercent: true, value: 0.05 }]);
+  });
+
+  it("counts as many tools as the tool slots hold", () => {
+    const gear = gearData([
+      item("saw", "tool", [efficiency(0.05, desert)]),
+      item("file", "tool", [efficiency(0.05, desert)]),
+    ]);
+    expect(at(gear).get("arc")).toEqual([{ stat: "workEfficiency", isPercent: true, value: 0.1 }]);
+  });
+
+  it("counts pets", () => {
+    const gear = gearData([], {
+      pets: [
+        {
+          id: "camel",
+          name: "Camel",
+          rareId: "two_hump_camel",
+          icon: "",
+          levels: [{ level: 1, stats: [efficiency(0.04, desert)] }],
+        },
+      ],
+    });
+    expect(at(gear).get("arc")).toEqual([{ stat: "workEfficiency", isPercent: true, value: 0.04 }]);
+  });
+
+  it("only counts gear the character owns", () => {
+    const gear = gearData([
+      item("sun_hat", "head", [stat("doubleAction", 0.05, true, desert)]),
+      item("big_sun_hat", "head", [stat("doubleAction", 0.08, true, desert)]),
+    ]);
+    expect(at(gear, character(["sun_hat"])).get("arc")).toEqual([
+      { stat: "doubleAction", isPercent: true, value: 0.05 },
+    ]);
   });
 });
 

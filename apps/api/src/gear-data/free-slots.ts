@@ -3,7 +3,7 @@ import { conditionHolds, withSetBonuses, type Candidate, type Situation } from "
 import { compareScores, type Score } from "./goals.js";
 import type { OwnedGear } from "./profile.js";
 import { conflicts, type KeywordRules } from "./pruning.js";
-import type { StatTotals } from "./steps.js";
+import { STEP_STATS, type StatTotals } from "./steps.js";
 import { copiesAllowed } from "./slots.js";
 import type { GearStat } from "./types.js";
 
@@ -11,8 +11,6 @@ export interface FreeSlotChoice {
   owned: OwnedGear;
   candidate: Candidate;
 }
-
-const STEP_STATS: GearStat["stat"][] = ["workEfficiency", "stepsRequired", "doubleAction"];
 
 export function fillFreeSlots(
   situation: Situation,
@@ -53,7 +51,7 @@ function costsNoSteps({ workEfficiency, stepsPercent, stepsFlat, doubleAction }:
 function otherBonuses(situation: Situation, stats: GearStat[]): GearStat[] {
   return stats.filter(
     (stat) =>
-      !STEP_STATS.includes(stat.stat) &&
+      !(STEP_STATS as readonly string[]).includes(stat.stat) &&
       stat.conditions.every((c) => c.type !== "distinctKeywordItemsEquipped" && conditionHolds(situation, c)),
   );
 }

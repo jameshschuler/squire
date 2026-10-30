@@ -19,7 +19,7 @@ import {
 } from "./profile.js";
 import { compareScores, goalOf, goalScorer, goalStats, type GoalId, type Score } from "./goals.js";
 import { keywordRules, prune } from "./pruning.js";
-import { GEAR_SLOTS } from "./slots.js";
+import { GEAR_SLOTS, slotCapacity } from "./slots.js";
 import { fillFreeSlots } from "./free-slots.js";
 import { bestSet, type SlotGroup } from "./search.js";
 import {
@@ -79,10 +79,7 @@ function optimizeAt(gear: GearData, situation: Situation, goals: GoalId[]): Gear
   const score = (totals: StatTotals) => goalScore(stepsPerAction(target, level, totals), totals);
   const useful = usefulEfficiency(target, level);
   const rules = keywordRules(gear.bannedKeywords, [...items, ...pets]);
-  const capacities = new Map(
-    GEAR_SLOTS.map(({ slot, capacity }) => [slot, slot === "tool" ? toolSlotsOf(profile) : capacity]),
-  );
-  const capacityOf = (slot: GearType) => capacities.get(slot)!;
+  const capacityOf = (slot: GearType) => slotCapacity(slot, toolSlotsOf(profile));
   const groups: SlotGroup[] = GEAR_SLOTS.map(({ slot }) => ({
     capacity: capacityOf(slot),
     choices: items.filter((c) => c.slot === slot),

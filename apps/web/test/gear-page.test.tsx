@@ -160,6 +160,25 @@ describe("Gear page", () => {
     expect(location.textContent).toContain("bakers hat: +5% Double rewards");
   });
 
+  it("shows on each location choice the gear bonuses it unlocks", async () => {
+    const harbour = baseGear.locations.find((l) => l.id === "blackspell_harbour")!;
+    gear = withGear([
+      {
+        ...miningGear("bakers_hat", "head", 0),
+        stats: [
+          {
+            stat: "doubleAction",
+            value: 0.05,
+            isPercent: true,
+            conditions: [{ type: "realm", opposite: false, requirement: { realm: harbour.realms[0]! } }],
+          },
+        ],
+      },
+    ]);
+    await renderPage({ target: "recipe:bake_a_bagel" });
+    expect(await screen.findByRole("button", { name: /^Blackspell Harbour\W+\+5% Double action$/ })).toBeDefined();
+  });
+
   it("leaves out the location section when no gear bonus depends on the location", async () => {
     await renderPage({ target: "recipe:bake_a_bagel", location: "best", goals: "steps" });
     await screen.findByRole("region", { name: "Set stats" });

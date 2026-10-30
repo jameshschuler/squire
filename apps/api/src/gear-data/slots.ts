@@ -22,6 +22,13 @@ export const GEAR_SLOTS: GearSlot[] = [
   { slot: "tool", capacity: toolSlots(MAX_LEVEL), copies: 1 },
 ];
 
-export function copiesAllowed(slot: GearType): number {
+export function copiesAllowed(slot: GearType | "pet"): number {
   return GEAR_SLOTS.find((s) => s.slot === slot)?.copies ?? 1;
+}
+
+export function slotCapacity(slot: GearType | "pet", tools: number): number {
+  if (slot === "tool") {
+    return tools;
+  }
+  return GEAR_SLOTS.find((s) => s.slot === slot)?.capacity ?? 1;
 }

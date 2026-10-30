@@ -44,6 +44,8 @@ const LEVEL_BONUS = 0.0125;
 const MAX_BONUS_LEVELS = 20;
 const MIN_EFFICIENCY = 0.01;
 const MIN_STEPS = 10;
+export const STEP_STATS = ["workEfficiency", "stepsRequired", "doubleAction"] as const;
+
 export const MAX_DOUBLE_ACTION = 1;
 const ROUNDING_SLACK = 1e-9;
 

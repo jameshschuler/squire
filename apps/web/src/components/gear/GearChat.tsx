@@ -17,7 +17,7 @@ import {
 import { MAX_GOALS, parseGoals, type GearSearch } from "@/lib/gear-search";
 import { ChatAnswer } from "./ChatAnswer";
 import { ChatMessage } from "./ChatMessage";
-import { ChoiceButtons } from "./ChoiceButtons";
+import { LocationQuestion } from "./LocationQuestion";
 import { PriorityQuestion } from "./PriorityQuestion";
 import { GearResult } from "./GearResult";
 import { NoCharacterNote } from "./NoCharacterNote";
@@ -92,11 +92,10 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
           <ChatMessage>
             <p>Where?</p>
             {location === undefined && (
-              <ChoiceButtons
-                choices={[
-                  { value: BEST_LOCATION, label: "Best location" },
-                  ...target.locations.map((l) => ({ value: l.id, label: l.name })),
-                ]}
+              <LocationQuestion
+                gear={gear}
+                profile={profile}
+                target={target}
                 onChoose={(location) => update({ location })}
               />
             )}

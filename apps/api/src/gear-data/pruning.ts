@@ -25,7 +25,11 @@ export function setGroupsOf({ setGroups }: KeywordRules, candidate: Candidate): 
   return setGroups.flatMap((keywords, i) => (candidate.keywords.some((k) => keywords.includes(k)) ? [i] : []));
 }
 
-export function conflicts({ bannedKeywords }: KeywordRules, a: Candidate, b: Candidate): boolean {
+export function conflicts(
+  { bannedKeywords }: Pick<KeywordRules, "bannedKeywords">,
+  a: Pick<Candidate, "keywords">,
+  b: Pick<Candidate, "keywords">,
+): boolean {
   const bans = (from: string[], to: string[]) => from.some((k) => bannedKeywords[k]?.some((x) => to.includes(x)));
   return bans(a.keywords, b.keywords) || bans(b.keywords, a.keywords);
 }
