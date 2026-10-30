@@ -1,5 +1,5 @@
 import type { GearData, LocationView, PlayerProfile } from "@squire/api/gear-data";
-import { locationLabel, type GearTarget } from "@/lib/gear-targets";
+import { locationLabel, locationRegion, type GearTarget } from "@/lib/gear-targets";
 import { ChatAnswer } from "./ChatAnswer";
 import { ChatMessage } from "./ChatMessage";
 import { LocationQuestion } from "./LocationQuestion";
@@ -24,7 +24,7 @@ export function LocationStep({ gear, profile, target, location, bestAt, onChoose
         <ChatMessage>
           <p>Where?</p>
         </ChatMessage>
-        <ChatAnswer label={`Only at ${only.name}`} />
+        <ChatAnswer label={`Only at ${only.name}`} hint={only.region} />
       </>
     );
   }
@@ -37,7 +37,11 @@ export function LocationStep({ gear, profile, target, location, bestAt, onChoose
         )}
       </ChatMessage>
       {location !== undefined && (
-        <ChatAnswer label={locationLabel(target, location, bestAt)} onChange={() => onChoose(undefined)} />
+        <ChatAnswer
+          label={locationLabel(target, location, bestAt)}
+          hint={locationRegion(target, location, bestAt)}
+          onChange={() => onChoose(undefined)}
+        />
       )}
     </>
   );

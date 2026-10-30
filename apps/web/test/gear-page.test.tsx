@@ -123,7 +123,7 @@ describe("Gear page", () => {
     await renderPage({ target: "recipe:bake_a_bagel" });
     expect(await screen.findByText("Where?")).toBeDefined();
     expect(screen.getByRole("button", { name: "Best location" })).toBeDefined();
-    fireEvent.click(screen.getByRole("button", { name: "Blackspell Harbour" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Blackspell Harbour\W+Grand Duchy/ }));
     expect(screen.getByRole("button", { name: "Change answer: Blackspell Harbour" })).toBeDefined();
   });
 
@@ -157,8 +157,8 @@ describe("Gear page", () => {
     gear = withGear([bakersHat]);
     await renderPage({ target: "recipe:bake_a_bagel", location: "blackspell_harbour", goals: "steps" });
     const location = await screen.findByRole("region", { name: "Location" });
-    expect(location.textContent).toContain(`At Blackspell Harbour · ${harbour.region}`);
-    expect(location.textContent).toContain("bakers hat: +5% Double rewards");
+    expect(location.textContent).toContain(`Blackspell Harbour ${harbour.region}`);
+    expect(location.textContent).toContain("+5%Double rewardsbakers hat");
   });
 
   it("shows on each location choice the gear bonuses it unlocks", async () => {
@@ -177,7 +177,11 @@ describe("Gear page", () => {
       },
     ]);
     await renderPage({ target: "recipe:bake_a_bagel" });
-    expect(await screen.findByRole("button", { name: /^Blackspell Harbour\W+\+5% Double action$/ })).toBeDefined();
+    expect(
+      await screen.findByRole("button", {
+        name: /^Blackspell Harbour\W+Grand Duchy of Trellin-Erdwise\W+\+5% Double action$/,
+      }),
+    ).toBeDefined();
   });
 
   it("leaves out the location section when no gear bonus depends on the location", async () => {

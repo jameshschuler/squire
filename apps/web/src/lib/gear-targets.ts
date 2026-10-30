@@ -76,6 +76,10 @@ export function locationLabel(target: GearTarget, location: string, bestAt: Loca
   return bestAt ? `Best location: ${bestAt.name}` : "Best location";
 }
 
+export function locationRegion(target: GearTarget, location: string, bestAt: LocationSummary | null): string | null {
+  return target.locations.find((l) => l.id === location)?.region ?? bestAt?.region ?? null;
+}
+
 export function optimizeTarget(target: GearTarget, location: string | undefined): OptimizeTarget {
   const pinned = target.locations.find((l) => l.id === location);
   return {

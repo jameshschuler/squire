@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface ChoiceButtonsProps {
-  choices: { value: string; label: string; detail?: string }[];
+  choices: { value: string; label: string; hint?: string; detail?: string }[];
   onChoose: (value: string) => void;
 }
 
@@ -21,7 +21,15 @@ export function ChoiceButtons({ choices, onChoose }: ChoiceButtonsProps) {
           )}
           onClick={() => onChoose(choice.value)}
         >
-          {choice.label}
+          <span>
+            {choice.label}
+            {choice.hint && (
+              <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                <span className="sr-only">, </span>
+                {choice.hint}
+              </span>
+            )}
+          </span>
           {choice.detail && (
             <span className="text-xs font-normal text-muted-foreground">
               <span className="sr-only">, </span>

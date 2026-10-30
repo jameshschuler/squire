@@ -57,8 +57,13 @@ describe("locationChoices", () => {
     ];
     expect(locationChoices(gear(items), BEST_IN_GAME, target)).toEqual([
       { value: "best", label: "Best location" },
-      { value: "vastalume", label: "Vastalume", detail: "+7% Double action · +5% Work efficiency" },
-      { value: "frusenholm", label: "Frusenholm" },
+      {
+        value: "vastalume",
+        label: "Vastalume",
+        hint: "Syrenthia",
+        detail: "+7% Double action · +5% Work efficiency",
+      },
+      { value: "frusenholm", label: "Frusenholm", hint: "Jarvonia" },
     ]);
   });
 

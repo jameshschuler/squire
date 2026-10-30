@@ -1,4 +1,4 @@
-import { sameStat, type GoalStat, type StatLine } from "@squire/api/gear-data";
+import { sameStat, type GoalStat, type LocationBonus, type StatLine } from "@squire/api/gear-data";
 import { formatPercent } from "./format";
 
 type StatType = StatLine["stat"];
@@ -96,6 +96,31 @@ function efficiencyTile(parts: EfficiencyParts): StatTile {
     highlight: false,
     over: wasted,
   };
+}
+
+export function locationTiles(bonuses: LocationBonus[]): StatTile[] {
+  const groups = new Map<string, LocationBonus[]>();
+  for (const bonus of bonuses.filter((b) => statName(b))) {
+    const key = `${bonus.stat}:${bonus.isPercent}`;
+    groups.set(key, [...(groups.get(key) ?? []), bonus]);
+  }
+  return [...groups].map(([key, group]) => ({
+    key,
+    label: statName(group[0]!)!,
+    value: formatStatValue({ isPercent: group[0]!.isPercent, value: group.reduce((sum, b) => sum + b.value, 0) }),
+    details: [joinNames(group.map((b) => b.source))],
+    highlight: false,
+    over: false,
+  }));
+}
+
+function joinNames(names: string[]): string {
+  const words = names.map((name) => name.split(" "));
+  const shared = words[0]!.findIndex((word, i) => words.some((w) => w.length <= i + 1 || w[i] !== word));
+  if (names.length < 2 || shared <= 0) {
+    return names.join(", ");
+  }
+  return `${words[0]!.slice(0, shared).join(" ")} ${words.map((w) => w.slice(shared).join(" ")).join(", ")}`;
 }
 
 export function statName({ stat, isPercent }: Pick<StatLine, "stat" | "isPercent">): string | undefined {

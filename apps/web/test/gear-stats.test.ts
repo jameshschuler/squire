@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatStatValue, statGroups, type StatTile } from "@/lib/gear-stats";
+import { formatStatValue, locationTiles, statGroups, type StatTile } from "@/lib/gear-stats";
 
 describe("statGroups", () => {
   const capped = { cap: 0.2, gear: 0.95, level: 0.25 };
@@ -87,6 +87,44 @@ describe("statGroups", () => {
   it("shows a highlighted zero for a priority stat the set doesn't give", () => {
     const none = statGroups([], capped, [{ stat: "chestFind", isPercent: true }], steps);
     expect(none.other).toMatchObject([{ label: "Chest finding", value: "+0%", highlight: true }]);
+  });
+});
+
+describe("locationTiles", () => {
+  it("adds up each stat across the items that give it, naming them", () => {
+    expect(
+      locationTiles([
+        { source: "Royal capesuit", stat: "rollSpecialTable", isPercent: true, value: 0.17 },
+        { source: "Royal gloves", stat: "rollSpecialTable", isPercent: true, value: 0.11 },
+        { source: "Chrome wool", stat: "doubleAction", isPercent: true, value: 0.05 },
+      ]),
+    ).toEqual([
+      expect.objectContaining({
+        label: "Special loot rolls",
+        value: "+28%",
+        details: ["Royal capesuit, gloves"],
+      }),
+      expect.objectContaining({ label: "Double action", value: "+5%", details: ["Chrome wool"] }),
+    ]);
+  });
+
+  it.each([
+    [
+      ["Merfolk dance corslet", "Merfolk dance bracers", "Merfolk dance skirt"],
+      "Merfolk dance corslet, bracers, skirt",
+    ],
+    [["Royal capesuit", "Chrome wool"], "Royal capesuit, Chrome wool"],
+    [["Spectral vest", "Spectral"], "Spectral vest, Spectral"],
+    [["Bubble bauble"], "Bubble bauble"],
+  ])("names %j as %s", (names, expected) => {
+    const tiles = locationTiles(
+      names.map((source) => ({ source, stat: "doubleAction", isPercent: true, value: 0.01 })),
+    );
+    expect(tiles[0]?.details).toEqual([expected]);
+  });
+
+  it("leaves out stats it has no name for", () => {
+    expect(locationTiles([{ source: "Odd hat", stat: "skillLevel", isPercent: false, value: 1 }])).toEqual([]);
   });
 });
 

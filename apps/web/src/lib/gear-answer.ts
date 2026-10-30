@@ -16,12 +16,13 @@ import {
 } from "@squire/api/gear-data";
 import { formatNumber } from "./format";
 import type { GearSolution } from "./gear-solution";
-import { formatStatValue, statGroups, statName, type StatGroups, type StatTile } from "./gear-stats";
+import { locationTiles, statGroups, type StatGroups, type StatTile } from "./gear-stats";
 import type { GearTarget } from "./gear-targets";
 
 export interface AnswerLocation {
   name: string;
-  bonuses: string[];
+  region: string;
+  tiles: StatTile[];
 }
 
 export interface GearAnswerView {
@@ -48,13 +49,10 @@ export function gearAnswer(
   };
   const noGear = stepsPerAction(optimize, level, NO_STATS);
   const { location } = suggestion;
-  const bonuses = locationBonuses(gear, profile, optimize, suggestion).flatMap((bonus) => {
-    const name = statName(bonus);
-    return name ? [`${bonus.source}: ${formatStatValue(bonus)} ${name}`] : [];
-  });
+  const tiles = locationTiles(locationBonuses(gear, profile, optimize, suggestion));
   return {
     suggestion,
-    location: location && bonuses.length > 0 ? { name: `${location.name} · ${location.region}`, bonuses } : null,
+    location: location && tiles.length > 0 ? { name: location.name, region: location.region, tiles } : null,
     stats: statGroups(lines, parts, goalStats(suggestion.goals), stepsTile(suggestion, noGear, fewestSteps)),
     notes: answerNotes(suggestion, target, profile.kind === "character" ? level : null),
     toolSlots: toolSlotsOf(profile),

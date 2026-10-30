@@ -5,6 +5,7 @@ import { BEST_LOCATION, optimizeTarget, type GearTarget } from "./gear-targets";
 export interface LocationChoice {
   value: string;
   label: string;
+  hint?: string;
   detail?: string;
 }
 
@@ -22,7 +23,12 @@ export function locationChoices(gear: GearData, profile: PlayerProfile, target: 
           return name ? [`${formatStatValue(line)} ${name}`] : [];
         })
         .slice(0, SHOWN_BONUSES);
-      return { value: summary.id, label: summary.name, ...(bonuses.length > 0 && { detail: bonuses.join(" · ") }) };
+      return {
+        value: summary.id,
+        label: summary.name,
+        hint: summary.region,
+        ...(bonuses.length > 0 && { detail: bonuses.join(" · ") }),
+      };
     }),
   ];
 }
