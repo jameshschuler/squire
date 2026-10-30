@@ -109,7 +109,8 @@ describe("Gear page", () => {
       target: { value: "mine" },
     });
     fireEvent.click(screen.getByRole("button", { name: /Mine gold ore/ }));
-    expect(screen.queryByText("Where?")).toBeNull();
+    expect(screen.getByText(/^Only at /)).toBeDefined();
+    expect(screen.queryByRole("button", { name: /^Change answer: Only at/ })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /^Fastest/ }));
     fireEvent.click(screen.getByRole("button", { name: "Find gear" }));
     expect(screen.getByRole("link", { name: "Add your character" }).getAttribute("href")).toBe("/character");

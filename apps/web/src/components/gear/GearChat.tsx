@@ -9,7 +9,6 @@ import {
   BEST_LOCATION,
   gearTargets,
   goalsFor,
-  locationLabel,
   optimizeTarget,
   recommendedGoals,
   tieBreakersFor,
@@ -17,7 +16,7 @@ import {
 import { MAX_GOALS, parseGoals, type GearSearch } from "@/lib/gear-search";
 import { ChatAnswer } from "./ChatAnswer";
 import { ChatMessage } from "./ChatMessage";
-import { LocationQuestion } from "./LocationQuestion";
+import { LocationStep } from "./LocationStep";
 import { PriorityQuestion } from "./PriorityQuestion";
 import { GearResult } from "./GearResult";
 import { NoCharacterNote } from "./NoCharacterNote";
@@ -87,26 +86,15 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
         />
       )}
 
-      {target && askLocation && (
-        <>
-          <ChatMessage>
-            <p>Where?</p>
-            {location === undefined && (
-              <LocationQuestion
-                gear={gear}
-                profile={profile}
-                target={target}
-                onChoose={(location) => update({ location })}
-              />
-            )}
-          </ChatMessage>
-          {location !== undefined && (
-            <ChatAnswer
-              label={locationLabel(target, location, solution?.suggestion.location ?? null)}
-              onChange={() => update({ location: undefined })}
-            />
-          )}
-        </>
+      {target && (
+        <LocationStep
+          gear={gear}
+          profile={profile}
+          target={target}
+          location={location}
+          bestAt={solution?.suggestion.location ?? null}
+          onChoose={(location) => update({ location })}
+        />
       )}
 
       {target && locationAnswered && (
