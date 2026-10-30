@@ -102,3 +102,9 @@ export function recommendedGoals(target: GearTarget): GoalId[] {
     target.kind === "recipe" ? ["steps", "materials", "quality", "xp"] : ["steps", "items", "chests", "xp"];
   return preferred.filter((id) => offered.includes(id)).slice(0, MAX_GOALS);
 }
+
+export function tieBreakersFor(target: GearTarget, goals: GoalId[]): GoalId[] {
+  return recommendedGoals(target)
+    .filter((id) => !goals.includes(id))
+    .slice(0, MAX_GOALS - goals.length);
+}

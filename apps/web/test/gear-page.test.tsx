@@ -197,6 +197,19 @@ describe("Gear page", () => {
     expect(stats.textContent).toMatch(/\d+Steps/);
   });
 
+  it("fills slots that don't change the priority with the recommended next priorities", async () => {
+    const luckyRing: GearItem = {
+      ...miningGear("lucky_ring", "ring", 0),
+      stats: [{ ...miningGear("lucky_ring", "ring", 0).stats[0]!, stat: "chestFind", value: 0.1, isPercent: true }],
+    };
+    gear = withGear([miningGear("journeyman_handwear", "hands", -3), luckyRing]);
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
+    expect(await screen.findByRole("link", { name: /Ring 1.*lucky ring/ })).toBeDefined();
+    const stats = screen.getByRole("region", { name: "Set stats" });
+    expect(stats.textContent).toContain("+20%Chest finding");
+    expect(stats.textContent).not.toContain("(priority)Chest finding");
+  });
+
   it("puts steps first in the stats and highlights the priority stats", async () => {
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps,chests" });
     const stats = await screen.findByRole("region", { name: "Set stats" });

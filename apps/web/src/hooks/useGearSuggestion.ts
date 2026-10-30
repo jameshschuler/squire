@@ -7,6 +7,7 @@ interface Solved {
   target: OptimizeTarget;
   profile: PlayerProfile;
   goals: GoalId[];
+  tieBreakers: GoalId[];
   solution: GearSolution | null;
 }
 
@@ -20,6 +21,7 @@ export function useGearSuggestion(
   profile: PlayerProfile,
   target: OptimizeTarget | null,
   goals: GoalId[],
+  tieBreakers: GoalId[],
 ): GearSuggestionState {
   const [solved, setSolved] = useState<Solved | null>(null);
 
@@ -28,10 +30,10 @@ export function useGearSuggestion(
       return;
     }
     let active = true;
-    const job = solveInBackground({ gear, profile, target, goals });
+    const job = solveInBackground({ gear, profile, target, goals, tieBreakers });
     const settle = (solution: GearSolution | null) => {
       if (active) {
-        setSolved({ target, profile, goals, solution });
+        setSolved({ target, profile, goals, tieBreakers, solution });
       }
     };
     job.result.then(settle, () => settle(null));
@@ -39,8 +41,14 @@ export function useGearSuggestion(
       active = false;
       job.cancel();
     };
-  }, [gear, profile, target, goals]);
+  }, [gear, profile, target, goals, tieBreakers]);
 
-  const current = solved?.target === target && solved.profile === profile && solved.goals === goals ? solved : null;
+  const current =
+    solved?.target === target &&
+    solved.profile === profile &&
+    solved.goals === goals &&
+    solved.tieBreakers === tieBreakers
+      ? solved
+      : null;
   return { solution: current?.solution ?? null, failed: current !== null && current.solution === null };
 }

@@ -13,6 +13,7 @@ export interface GearRequest {
   profile: PlayerProfile;
   target: OptimizeTarget;
   goals: GoalId[];
+  tieBreakers: GoalId[];
 }
 
 export interface GearSolution {
@@ -22,9 +23,10 @@ export interface GearSolution {
 
 const fewestByTarget = new Map<string, number>();
 
-export function solveGear({ gear, profile, target, goals }: GearRequest): GearSolution {
+export function solveGear({ gear, profile, target, goals, tieBreakers }: GearRequest): GearSolution {
   const key = `${gear.version}:${JSON.stringify(target)}`;
   const fewest = fewestByTarget.get(key) ?? fewestSteps(gear, target);
   fewestByTarget.set(key, fewest);
-  return { suggestion: optimizeGear(gear, profile, target, goals), fewestSteps: fewest };
+  const suggestion = optimizeGear(gear, profile, target, [...goals, ...tieBreakers]);
+  return { suggestion: { ...suggestion, goals }, fewestSteps: fewest };
 }

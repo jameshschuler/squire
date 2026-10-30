@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { Link } from "@tanstack/react-router";
 import { RotateCcw } from "lucide-react";
 import type { RecipeBook } from "@squire/api/recipe-book";
 import { BEST_IN_GAME, type GearData, type PlayerProfile } from "@squire/api/gear-data";
@@ -13,6 +12,7 @@ import {
   locationLabel,
   optimizeTarget,
   recommendedGoals,
+  tieBreakersFor,
 } from "@/lib/gear-targets";
 import { MAX_GOALS, parseGoals, type GearSearch } from "@/lib/gear-search";
 import { ChatAnswer } from "./ChatAnswer";
@@ -20,6 +20,7 @@ import { ChatMessage } from "./ChatMessage";
 import { ChoiceButtons } from "./ChoiceButtons";
 import { PriorityQuestion } from "./PriorityQuestion";
 import { GearResult } from "./GearResult";
+import { NoCharacterNote } from "./NoCharacterNote";
 import { TargetQuestion } from "./TargetQuestion";
 
 interface GearChatProps {
@@ -56,7 +57,8 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
     () => (target && locationAnswered && goals.length > 0 ? optimizeTarget(target, location) : null),
     [target, locationAnswered, goals.length, location],
   );
-  const { solution, failed } = useGearSuggestion(gear, profile, optimize, goals);
+  const tieBreakers = useMemo(() => (target ? tieBreakersFor(target, goals) : []), [target, goals]);
+  const { solution, failed } = useGearSuggestion(gear, profile, optimize, goals, tieBreakers);
   const update = (answers: GearSearch) => onSearchChange({ ...search, ...answers });
 
   return (
@@ -129,17 +131,7 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
         </>
       )}
 
-      {target && optimize && !character && (
-        <ChatMessage>
-          <p className="text-sm">
-            No character added, so I'll use the best gear in the game.{" "}
-            <Link to="/character" className="font-medium underline underline-offset-4">
-              Add your character
-            </Link>{" "}
-            to use your own.
-          </p>
-        </ChatMessage>
-      )}
+      {target && optimize && !character && <NoCharacterNote />}
 
       {target && optimize && (
         <GearResult

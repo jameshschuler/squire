@@ -5,6 +5,7 @@ import {
   goalsFor,
   locationLabel,
   optimizeTarget,
+  tieBreakersFor,
   recommendedGoals,
   searchGearTargets,
   type GearTarget,
@@ -113,6 +114,23 @@ describe("recommendedGoals", () => {
     const smelt = gearTargets(withGear).find((t) => t.key === "recipe:smelt_a_gold_bar")!;
     expect(smelt.makesTieredGear).toBe(true);
     expect(byKey("recipe:smelt_a_gold_bar").makesTieredGear).toBe(false);
+  });
+});
+
+describe("tieBreakersFor", () => {
+  const activity = {
+    kind: "activity",
+    lootTypes: ["main", "chestTable"],
+    makesTieredGear: false,
+  } as unknown as GearTarget;
+
+  it.each([
+    [["steps"], ["items", "chests"]],
+    [["xp"], ["steps", "items"]],
+    [["chests", "steps"], ["items"]],
+    [["steps", "items", "chests"], []],
+  ] as const)("fills %j up to three priorities with %j", (goals, expected) => {
+    expect(tieBreakersFor(activity, [...goals])).toEqual(expected);
   });
 });
 
