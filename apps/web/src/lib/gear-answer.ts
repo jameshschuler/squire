@@ -48,15 +48,13 @@ export function gearAnswer(
   };
   const noGear = stepsPerAction(optimize, level, NO_STATS);
   const { location } = suggestion;
+  const bonuses = locationBonuses(gear, profile, optimize, suggestion).flatMap((bonus) => {
+    const name = statName(bonus);
+    return name ? [`${bonus.source}: ${formatStatValue(bonus)} ${name}`] : [];
+  });
   return {
     suggestion,
-    location: location && {
-      name: `${location.name} · ${location.region}`,
-      bonuses: locationBonuses(gear, profile, optimize, suggestion).flatMap((bonus) => {
-        const name = statName(bonus);
-        return name ? [`${bonus.source}: ${formatStatValue(bonus)} ${name}`] : [];
-      }),
-    },
+    location: location && bonuses.length > 0 ? { name: `${location.name} · ${location.region}`, bonuses } : null,
     stats: statGroups(lines, parts, goalStats(suggestion.goals), stepsTile(suggestion, noGear, fewestSteps)),
     notes: answerNotes(suggestion, target, profile.kind === "character" ? level : null),
     toolSlots: toolSlotsOf(profile),

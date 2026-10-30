@@ -160,11 +160,10 @@ describe("Gear page", () => {
     expect(location.textContent).toContain("bakers hat: +5% Double rewards");
   });
 
-  it("says when no gear bonus depends on the location", async () => {
+  it("leaves out the location section when no gear bonus depends on the location", async () => {
     await renderPage({ target: "recipe:bake_a_bagel", location: "best", goals: "steps" });
-    expect((await screen.findByRole("region", { name: "Location" })).textContent).toContain(
-      "No gear bonuses here that depend on the location.",
-    );
+    await screen.findByRole("region", { name: "Set stats" });
+    expect(screen.queryByRole("region", { name: "Location" })).toBeNull();
   });
 
   it("says when no gear helps", async () => {
