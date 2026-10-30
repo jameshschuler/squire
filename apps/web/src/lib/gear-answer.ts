@@ -7,6 +7,7 @@ import {
   setStats,
   skillLevelOf,
   stepsPerAction,
+  statsBySource,
   toolSlotsOf,
   type GearData,
   type GearSuggestion,
@@ -46,6 +47,9 @@ export function gearAnswer(
     cap: efficiencyCap(optimize),
     gear: lines.find((l) => l.stat === "workEfficiency" && l.isPercent)?.value ?? 0,
     level: levelBonus(optimize, level),
+    cuts: statsBySource(gear, profile, optimize, suggestion).filter(
+      (line) => line.stat === "workEfficiency" && line.isPercent && line.value < 0,
+    ),
   };
   const noGear = stepsPerAction(optimize, level, NO_STATS);
   const { location } = suggestion;

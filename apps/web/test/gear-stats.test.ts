@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { formatStatValue, locationTiles, statGroups, type StatTile } from "@/lib/gear-stats";
 
 describe("statGroups", () => {
-  const capped = { cap: 0.2, gear: 0.95, level: 0.25 };
+  const capped = { cap: 0.2, gear: 0.95, level: 0.25, cuts: [] };
   const steps = { key: "steps", value: "35", label: "Steps", details: [], highlight: true, over: false };
   const lines = [
     { stat: "chestFind", isPercent: true, value: 0.69 },
@@ -59,22 +59,41 @@ describe("statGroups", () => {
   });
 
   it.each([
-    [{ cap: 0.2, gear: 0.95, level: 0.25 }, true],
-    [{ cap: 0.5, gear: 0.25, level: 0.25 }, false],
-    [{ cap: 0.5, gear: 0.05, level: 0.25 }, false],
-    [{ cap: Number.POSITIVE_INFINITY, gear: 3, level: 0.25 }, false],
-    [{ cap: 0.2, gear: 0, level: 0.25 }, false],
+    [{ cap: 0.2, gear: 0.95, level: 0.25, cuts: [] }, true],
+    [{ cap: 0.5, gear: 0.25, level: 0.25, cuts: [] }, false],
+    [{ cap: 0.5, gear: 0.05, level: 0.25, cuts: [] }, false],
+    [{ cap: Number.POSITIVE_INFINITY, gear: 3, level: 0.25, cuts: [] }, false],
+    [{ cap: 0.2, gear: 0, level: 0.25, cuts: [] }, false],
   ])("marks work efficiency as over only when gear adds efficiency past the max (%j)", (parts, over) => {
     expect(statGroups([], parts, [], steps).steps[1]).toMatchObject({ key: "workEfficiency", over });
   });
 
   it("says how far over the max gear and level go, to one decimal", () => {
-    const over = statGroups([], { cap: 0.5, gear: 0.445, level: 0.25 }, [], steps).steps[1];
+    const over = statGroups([], { cap: 0.5, gear: 0.445, level: 0.25, cuts: [] }, [], steps).steps[1];
     expect(over).toMatchObject({ value: "+44.5%", details: ["19.5% over the max"], over: true });
   });
 
+  it("names the items that lower work efficiency, worst first, up to three", () => {
+    const cut = (source: string, value: number) => ({
+      source,
+      stat: "workEfficiency" as const,
+      isPercent: true,
+      value,
+    });
+    const cuts = [
+      cut("Clingy tape", -0.05),
+      cut("Spectral needle", -0.35),
+      cut("Spectral vest", -0.08),
+      cut("Ink pen", -0.02),
+    ];
+    const tile = statGroups([], { cap: 1, gear: -0.31, level: 0.25, cuts }, [], steps).steps[1];
+    expect(tile?.details).toEqual(["Lowered by Spectral needle −35%, Spectral vest −8%, Clingy tape −5%"]);
+  });
+
   it("shows the gear's work efficiency, not the capped total", () => {
-    expect(statGroups([], { cap: 0.5, gear: -0.1, level: 0.25 }, [], steps).steps[1]).toMatchObject({ value: "−10%" });
+    expect(statGroups([], { cap: 0.5, gear: -0.1, level: 0.25, cuts: [] }, [], steps).steps[1]).toMatchObject({
+      value: "−10%",
+    });
   });
 
   it("has only the steps and work efficiency tiles when the set gives nothing", () => {

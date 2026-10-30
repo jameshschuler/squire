@@ -1,4 +1,4 @@
-import { sameStat, type GoalStat, type LocationBonus, type StatLine } from "@squire/api/gear-data";
+import { sameStat, type GoalStat, type SourcedStat, type StatLine } from "@squire/api/gear-data";
 import { formatPercent } from "./format";
 
 type StatType = StatLine["stat"];
@@ -21,7 +21,10 @@ export interface EfficiencyParts {
   cap: number;
   gear: number;
   level: number;
+  cuts: SourcedStat[];
 }
+
+const SHOWN_CUTS = 3;
 
 const STAT_LABELS: Partial<Record<StatType, string>> = {
   stepsRequired: "Steps required",
@@ -92,14 +95,17 @@ function efficiencyTile(parts: EfficiencyParts): StatTile {
     key: "workEfficiency",
     value: formatStatValue({ isPercent: true, value: parts.gear }),
     label: "Work efficiency",
-    details: wasted ? [`${formatPercent(over, 1)} over the max`] : [],
+    details: [
+      ...(wasted ? [`${formatPercent(over, 1)} over the max`] : []),
+      ...(parts.cuts.length > 0 ? [`Lowered by ${loweredBy(parts.cuts)}`] : []),
+    ],
     highlight: false,
     over: wasted,
   };
 }
 
-export function locationTiles(bonuses: LocationBonus[]): StatTile[] {
-  const groups = new Map<string, LocationBonus[]>();
+export function locationTiles(bonuses: SourcedStat[]): StatTile[] {
+  const groups = new Map<string, SourcedStat[]>();
   for (const bonus of bonuses.filter((b) => statName(b))) {
     const key = `${bonus.stat}:${bonus.isPercent}`;
     groups.set(key, [...(groups.get(key) ?? []), bonus]);
@@ -112,6 +118,14 @@ export function locationTiles(bonuses: LocationBonus[]): StatTile[] {
     highlight: false,
     over: false,
   }));
+}
+
+function loweredBy(cuts: SourcedStat[]): string {
+  return [...cuts]
+    .sort((a, b) => a.value - b.value)
+    .slice(0, SHOWN_CUTS)
+    .map((cut) => `${cut.source} ${formatStatValue(cut)}`)
+    .join(", ");
 }
 
 function joinNames(names: string[]): string {

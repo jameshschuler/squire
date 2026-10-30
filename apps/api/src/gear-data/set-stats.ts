@@ -14,7 +14,7 @@ export interface StatLine {
   value: number;
 }
 
-export interface LocationBonus extends StatLine {
+export interface SourcedStat extends StatLine {
   source: string;
 }
 
@@ -36,17 +36,37 @@ export function setStats(
   return sumLines(pieces.flatMap((p) => p.stats).filter((s) => s.conditions.every(holds)));
 }
 
+export function statsBySource(
+  gear: GearData,
+  profile: PlayerProfile,
+  target: WorkTarget,
+  suggestion: GearSuggestion,
+): SourcedStat[] {
+  return sourcedStats(gear, profile, target, suggestion, () => true);
+}
+
 export function locationBonuses(
   gear: GearData,
   profile: PlayerProfile,
   target: WorkTarget,
   suggestion: GearSuggestion,
-): LocationBonus[] {
+): SourcedStat[] {
+  return sourcedStats(gear, profile, target, suggestion, (s) => s.conditions.some(isLocationCondition));
+}
+
+function sourcedStats(
+  gear: GearData,
+  profile: PlayerProfile,
+  target: WorkTarget,
+  suggestion: GearSuggestion,
+  keep: (stat: GearStat) => boolean,
+): SourcedStat[] {
   const { pieces, holds } = worn(gear, profile, target, suggestion);
   return pieces.flatMap((piece) =>
-    sumLines(piece.stats.filter((s) => s.conditions.some(isLocationCondition) && s.conditions.every(holds))).map(
-      (line) => ({ ...line, source: piece.name }),
-    ),
+    sumLines(piece.stats.filter((s) => keep(s) && s.conditions.every(holds))).map((line) => ({
+      ...line,
+      source: piece.name,
+    })),
   );
 }
 
