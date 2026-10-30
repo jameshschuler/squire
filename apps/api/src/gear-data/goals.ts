@@ -16,7 +16,8 @@ export interface Goal {
   id: GoalId;
   label: string;
   description: string;
-  stat: GoalStat | null;
+  stats: GoalStat[];
+  value: (stats: number[]) => number;
   perStep: boolean;
   kind: GoalKind;
   lootType: LootType | null;
@@ -24,14 +25,20 @@ export interface Goal {
 
 export type Score = number[];
 
+const MIN_MATERIAL_USE = 0.01;
+
 const percent = (stat: StatType): GoalStat => ({ stat, isPercent: true });
+const single = ([value]: number[]) => value ?? 0;
+const outputsPerMaterial = ([doubleRewards, noMaterialsConsumed]: number[]) =>
+  (1 + (doubleRewards ?? 0)) / Math.max(1 - (noMaterialsConsumed ?? 0), MIN_MATERIAL_USE);
 
 export const GOALS: Goal[] = [
   {
     id: "steps",
     label: "Fastest",
     description: "Fewest steps per action, counting work efficiency and double action",
-    stat: null,
+    stats: [],
+    value: single,
     perStep: true,
     kind: "any",
     lootType: null,
@@ -40,7 +47,8 @@ export const GOALS: Goal[] = [
     id: "items",
     label: "Most items",
     description: "Double rewards: extra items from each action",
-    stat: percent("doubleRewards"),
+    stats: [percent("doubleRewards")],
+    value: single,
     perStep: true,
     kind: "any",
     lootType: null,
@@ -49,7 +57,8 @@ export const GOALS: Goal[] = [
     id: "xp",
     label: "Most XP",
     description: "Bonus XP from each action",
-    stat: percent("bonusExperience"),
+    stats: [percent("bonusExperience")],
+    value: single,
     perStep: true,
     kind: "any",
     lootType: null,
@@ -57,8 +66,10 @@ export const GOALS: Goal[] = [
   {
     id: "materials",
     label: "Save materials",
-    description: "Chance a craft doesn't use up its materials",
-    stat: percent("noMaterialsConsumed"),
+    description:
+      "More items from your materials: refunded crafts (no materials consumed) and doubled crafts (double rewards)",
+    stats: [percent("doubleRewards"), percent("noMaterialsConsumed")],
+    value: outputsPerMaterial,
     perStep: false,
     kind: "recipe",
     lootType: null,
@@ -67,7 +78,8 @@ export const GOALS: Goal[] = [
     id: "quality",
     label: "Best quality",
     description: "Quality outcome: better crafted items",
-    stat: { stat: "qualityOutcome", isPercent: false },
+    stats: [{ stat: "qualityOutcome", isPercent: false }],
+    value: single,
     perStep: false,
     kind: "recipe",
     lootType: null,
@@ -76,7 +88,8 @@ export const GOALS: Goal[] = [
     id: "chests",
     label: "Most chests",
     description: "Chest finding",
-    stat: percent("chestFind"),
+    stats: [percent("chestFind")],
+    value: single,
     perStep: true,
     kind: "activity",
     lootType: "chestTable",
@@ -85,7 +98,8 @@ export const GOALS: Goal[] = [
     id: "fine",
     label: "Most fine materials",
     description: "Fine material finding",
-    stat: percent("fineMaterialFind"),
+    stats: [percent("fineMaterialFind")],
+    value: single,
     perStep: true,
     kind: "activity",
     lootType: null,
@@ -94,7 +108,8 @@ export const GOALS: Goal[] = [
     id: "gems",
     label: "Most gems",
     description: "Gem finding",
-    stat: percent("findGems"),
+    stats: [percent("findGems")],
+    value: single,
     perStep: true,
     kind: "activity",
     lootType: "gem",
@@ -103,7 +118,8 @@ export const GOALS: Goal[] = [
     id: "birdNests",
     label: "Most bird nests",
     description: "Bird nest finding",
-    stat: percent("findBirdNests"),
+    stats: [percent("findBirdNests")],
+    value: single,
     perStep: true,
     kind: "activity",
     lootType: "birdNest",
@@ -112,7 +128,8 @@ export const GOALS: Goal[] = [
     id: "collectibles",
     label: "Most collectibles",
     description: "Collectible finding",
-    stat: percent("findCollectibles"),
+    stats: [percent("findCollectibles")],
+    value: single,
     perStep: true,
     kind: "activity",
     lootType: "collectible",
@@ -130,24 +147,26 @@ export function goalOf(id: GoalId): Goal {
 }
 
 export function goalStats(goals: GoalId[]): GoalStat[] {
-  const stats = goals.flatMap((id) => goalOf(id).stat ?? []);
+  const stats = goals.flatMap((id) => goalOf(id).stats);
   return stats.filter((stat, i) => stats.findIndex((other) => sameStat(other, stat)) === i);
 }
 
-export function goalScorer(goals: GoalId[]): (result: StepsResult, totals: StatTotals) => Score {
+export function goalValue(goals: GoalId[], id: GoalId): (goalStats: number[]) => number {
   const stats = goalStats(goals);
-  const parts = goals.map((id) => {
-    const { stat, perStep } = goalOf(id);
-    const index = stat ? stats.findIndex((s) => sameStat(s, stat)) : null;
-    return { index, perStep };
-  });
+  const goal = goalOf(id);
+  const indexes = goal.stats.map((stat) => stats.findIndex((s) => sameStat(s, stat)));
+  return (goalStats) => goal.value(indexes.map((i) => goalStats[i] ?? 0));
+}
+
+export function goalScorer(goals: GoalId[]): (result: StepsResult, totals: StatTotals) => Score {
+  const parts = goals.map((id) => ({ goal: goalOf(id), value: goalValue(goals, id) }));
   return (result, totals) =>
-    parts.map(({ index, perStep }) => {
-      if (index === null) {
+    parts.map(({ goal, value }) => {
+      if (goal.stats.length === 0) {
         return -result.averageSteps;
       }
-      const value = totals.goalStats[index] ?? 0;
-      return perStep ? (1 + value) / result.averageSteps : value;
+      const gained = value(totals.goalStats);
+      return goal.perStep ? (1 + gained) / result.averageSteps : gained;
     });
 }
 

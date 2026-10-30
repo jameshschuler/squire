@@ -421,6 +421,16 @@ describe("optimizeGear", () => {
     ]);
   });
 
+  it("counts double rewards as saving materials, against refunds", () => {
+    const gear = gearData([
+      item("thrifty_gloves", "hands", [stat("noMaterialsConsumed", 0.1, true)]),
+      item("doubling_gloves", "hands", [stat("doubleRewards", 0.2, true)]),
+    ]);
+    expect(optimizeGear(gear, BEST_IN_GAME, mining, ["materials"]).picks.map((p) => p.item.id)).toEqual([
+      "doubling_gloves",
+    ]);
+  });
+
   it("counts quality outcome, a flat stat, for the best quality goal", () => {
     const gear = gearData([
       item("plain_apron", "chest", [stat("qualityOutcome", 10, false)]),
@@ -862,6 +872,22 @@ describe("optimizeGear against every possible set", () => {
       );
       const found = optimizeGear(gear, profile, target, goals).score;
       expect(compareScores(found, bruteForce(gear, target, level, goals)), `run ${run}`).toBe(0);
+    }
+  });
+
+  it("finds the best set without the search limit too, which is what the check script compares against", () => {
+    const next = random(7);
+    for (let run = 0; run < 100; run++) {
+      const items = randomGear(next);
+      const gear = gearData(items, { bannedKeywords: { hatchet: ["hatchet"] } });
+      const level = 50 + Math.round(next() * 30);
+      const target = { ...mining, workRequired: 40 + Math.round(next() * 200) };
+      const profile = character(
+        items.map((i) => i.id),
+        { skillLevels: { mining: level } },
+      );
+      const exact = optimizeGear(gear, profile, target, ["steps"], { maxStates: Number.POSITIVE_INFINITY }).score;
+      expect(compareScores(exact, bruteForce(gear, target, level, ["steps"])), `run ${run}`).toBe(0);
     }
   });
 });

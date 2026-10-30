@@ -17,7 +17,7 @@ import {
   type OwnedPetView,
   type PlayerProfile,
 } from "./profile.js";
-import { compareScores, goalOf, goalScorer, goalStats, type GoalId, type Score } from "./goals.js";
+import { compareScores, goalOf, goalScorer, goalStats, goalValue, type GoalId, type Score } from "./goals.js";
 import { keywordRules, prune } from "./pruning.js";
 import { GEAR_SLOTS, slotCapacity } from "./slots.js";
 import { fillFreeSlots } from "./free-slots.js";
@@ -50,15 +50,22 @@ export interface GearSuggestion {
 
 const SEARCH_STATES = 300;
 
+export interface SearchLimits {
+  maxStates?: number;
+}
+
 export function optimizeGear(
   gear: GearData,
   profile: PlayerProfile,
   target: OptimizeTarget,
   goals: GoalId[] = ["steps"],
+  { maxStates = SEARCH_STATES }: SearchLimits = {},
 ): GearSuggestion {
   const locations = gear.locations.filter((l) => target.locationIds.includes(l.id));
   return distinctLocations(gear, locations)
-    .map((location) => optimizeAt(gear, situationFor(gear, profile, target, location, goalStats(goals)), goals))
+    .map((location) =>
+      optimizeAt(gear, situationFor(gear, profile, target, location, goalStats(goals)), goals, maxStates),
+    )
     .reduce((best, next) => (compareScores(next.score, best.score) > 0 ? next : best));
 }
 
@@ -66,7 +73,7 @@ export function fewestSteps(gear: GearData, target: OptimizeTarget): number {
   return optimizeGear(gear, BEST_IN_GAME, target).result.steps;
 }
 
-function optimizeAt(gear: GearData, situation: Situation, goals: GoalId[]): GearSuggestion {
+function optimizeAt(gear: GearData, situation: Situation, goals: GoalId[], maxStates: number): GearSuggestion {
   const { profile, target } = situation;
   const choices = ownedGear(profile, gear.items).map((owned) => ({
     owned,
@@ -91,14 +98,15 @@ function optimizeAt(gear: GearData, situation: Situation, goals: GoalId[]): Gear
     }))
     .filter((group) => group.choices.length > 0);
 
-  const primaryIsSteps = goals[0] === undefined || goalOf(goals[0]).stat === null;
+  const primary = goals[0];
+  const primaryValue = primary === undefined || goalOf(primary).stats.length === 0 ? null : goalValue(goals, primary);
   const searched = goals.reduce<Candidate[]>(
     (seed, _, i) =>
       bestSet(groups, rules, useful, (totals) => score(totals).slice(0, i + 1), {
         seed,
-        maxStates: SEARCH_STATES,
+        maxStates,
         goalDims: goalStats(goals.slice(0, i + 1)).length,
-        statFirst: primaryIsSteps ? null : 0,
+        primaryValue,
         repair: i === goals.length - 1,
       }),
     [],

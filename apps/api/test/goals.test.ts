@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GOALS, compareScores, goalScorer } from "../src/gear-data/goals.js";
+import { GOALS, compareScores, goalScorer, goalStats, goalValue } from "../src/gear-data/goals.js";
 import { NO_STATS } from "../src/gear-data/steps.js";
 
 const result = (averageSteps: number) => ({ efficiency: 1, steps: Math.ceil(averageSteps), averageSteps });
@@ -21,9 +21,36 @@ describe("goalScorer", () => {
 });
 
 describe("crafting goals", () => {
-  it("score saving materials and quality by the stat itself, not per step", () => {
-    const totals = { ...NO_STATS, goalStats: [0.1, 40] };
-    expect(goalScorer(["materials", "quality"])(result(30), totals)).toEqual([0.1, 40]);
+  it("score saving materials as outputs per material and quality by the stat, neither per step", () => {
+    const totals = { ...NO_STATS, goalStats: [0.2, 0.1, 40] };
+    expect(goalScorer(["materials", "quality"])(result(30), totals)).toEqual([1.2 / 0.9, 40]);
+  });
+
+  it.each([
+    ["a refund", [0, 0.2]],
+    ["a doubled craft", [0.25, 0]],
+  ])("counts %s as saving materials", (_, goalStats) => {
+    const nothing = goalScorer(["materials"])(result(30), { ...NO_STATS, goalStats: [0, 0] });
+    const saved = goalScorer(["materials"])(result(30), { ...NO_STATS, goalStats });
+    expect(compareScores(saved, nothing)).toBeGreaterThan(0);
+    expect(saved).toEqual([1.25]);
+  });
+
+  it("shares the double rewards stat with most items", () => {
+    expect(goalStats(["items", "materials"])).toEqual([
+      { stat: "doubleRewards", isPercent: true },
+      { stat: "noMaterialsConsumed", isPercent: true },
+    ]);
+  });
+});
+
+describe("goalValue", () => {
+  it("values a goal from its own stats, wherever they sit among the chosen goals", () => {
+    expect(goalValue(["chests", "materials"], "materials")([0.5, 0.2, 0.1])).toBeCloseTo(1.2 / 0.9);
+  });
+
+  it("isn't divided by steps for a per-step goal", () => {
+    expect(goalValue(["xp"], "xp")([0.4])).toBe(0.4);
   });
 });
 

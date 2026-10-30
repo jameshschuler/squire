@@ -7,7 +7,7 @@ export interface SearchOptions {
   seed: Candidate[];
   maxStates: number;
   goalDims: number;
-  statFirst: number | null;
+  primaryValue: ((goalStats: number[]) => number) | null;
   repair: boolean;
 }
 
@@ -30,7 +30,7 @@ export function bestSet(
   rules: KeywordRules,
   useful: number,
   score: (totals: StatTotals) => Score,
-  { seed, maxStates, goalDims, statFirst, repair }: SearchOptions,
+  { seed, maxStates, goalDims, primaryValue, repair }: SearchOptions,
 ): Candidate[] {
   const setScore = (set: Candidate[]) => score(withSetBonuses(set));
   const compatible = (chosen: Candidate[], next: Candidate) =>
@@ -77,11 +77,13 @@ export function bestSet(
     return best;
   }
   const starts =
-    statFirst === null
+    primaryValue === null
       ? [best]
       : [
           best,
-          greedy(groups, compatible, (set) => [set.reduce((sum, c) => sum + (c.best.goalStats[statFirst] ?? 0), 0)]),
+          greedy(groups, compatible, (set) => [
+            primaryValue(set.reduce((sum, c) => addStats(sum, c.best), NO_STATS).goalStats),
+          ]),
         ];
   const winner = starts
     .map((start) => improveBySwaps(groups, start, compatible, setScore))
