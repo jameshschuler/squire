@@ -3,9 +3,10 @@ import { ChatMessage } from "./ChatMessage";
 import { CopyGearSetButton } from "./CopyGearSetButton";
 import { GearGrid } from "./GearGrid";
 import { GearStats } from "./GearStats";
+import { LocationBonuses } from "./LocationBonuses";
 
 export function GearAnswer(props: GearAnswerView) {
-  const { suggestion, notes, stats, toolSlots } = props;
+  const { suggestion, location, notes, stats, toolSlots } = props;
   const { picks, pet } = suggestion;
   return (
     <ChatMessage wide>
@@ -18,6 +19,7 @@ export function GearAnswer(props: GearAnswerView) {
       )}
       {(picks.length > 0 || pet) && <GearGrid picks={picks} pet={pet} toolSlots={toolSlots} />}
       <GearStats groups={stats} />
+      {location && <LocationBonuses {...location} />}
       {picks.length > 0 && <CopyGearSetButton picks={picks} />}
     </ChatMessage>
   );

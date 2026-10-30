@@ -12,7 +12,7 @@ export function ChatAnswer({ label, onChange }: ChatAnswerProps) {
         type="button"
         onClick={onChange}
         aria-label={`Change answer: ${label}`}
-        className="flex max-w-[90%] items-center gap-2 rounded-2xl rounded-tr-sm border bg-background px-4 py-2.5 text-left"
+        className="flex max-w-[90%] items-center gap-2 rounded-2xl border bg-background px-4 py-2.5 text-left"
       >
         <span>{label}</span>
         <Pencil className="size-3.5 shrink-0 text-muted-foreground" />

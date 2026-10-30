@@ -17,6 +17,7 @@ import {
   type Score,
   compareScores,
   goalScorer,
+  locationBonuses,
   setStats,
 } from "../src/gear-data/index.js";
 
@@ -506,6 +507,48 @@ describe("free slots", () => {
       { bannedKeywords: { hatchet: ["hatchet"] } },
     );
     expect(picked(gear, BEST_IN_GAME)).toEqual(["saw_b"]);
+  });
+});
+
+describe("locationBonuses", () => {
+  const desert: GearCondition = { type: "locationHasKeywords", opposite: false, requirement: { keywords: ["desert"] } };
+  const snowy: GearCondition = { type: "locationHasKeywords", opposite: false, requirement: { keywords: ["snowy"] } };
+  const wrentmark: GearCondition = { type: "realm", opposite: false, requirement: { realm: "wrentmark" } };
+  const gear = gearData([
+    item("sun_hat", "head", [efficiency(0.05, desert), stat("chestFind", 0.1, true)], {
+      tierStats: { rare: [efficiency(0.02, desert)] },
+    }),
+    item("snow_boots", "feet", [flatSteps(-3, snowy)]),
+    item("guild_ring", "ring", [stat("bonusExperience", 0.04, true, wrentmark)]),
+    item("dry_cloak", "cape", [stat("chestFind", 0.03, true, { ...snowy, opposite: true })]),
+    item("chef_gloves", "hands", [stat("doubleRewards", 0.05, true, desert, mainSkill("cooking"))]),
+  ]);
+  const arc = { id: "arc", name: "Myriadian Arc", region: "Wrentmark", realms: ["wrentmark"], keywords: ["desert"] };
+  const bonuses = (location: typeof arc | null) => {
+    const suggestion = optimizeGear(gear, BEST_IN_GAME, mining);
+    const picks = gear.items.map((i) => ({
+      slot: i.slot,
+      item: i,
+      quality: i.id === "sun_hat" ? ("rare" as const) : null,
+    }));
+    return locationBonuses(gear, BEST_IN_GAME, mining, { ...suggestion, location, picks });
+  };
+
+  it("lists each worn item's bonuses that hold only because of where you are, tiers added up", () => {
+    expect(bonuses(arc)).toEqual([
+      { source: "sun_hat", stat: "workEfficiency", isPercent: true, value: 0.07 },
+      { source: "guild_ring", stat: "bonusExperience", isPercent: true, value: 0.04 },
+    ]);
+  });
+
+  it("leaves out bonuses for not being somewhere, and ones whose other conditions fail", () => {
+    const sources = bonuses(arc).map((b) => b.source);
+    expect(sources).not.toContain("dry_cloak");
+    expect(sources).not.toContain("chef_gloves");
+  });
+
+  it("lists nothing without a location", () => {
+    expect(bonuses(null)).toEqual([]);
   });
 });
 

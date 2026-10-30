@@ -2,6 +2,7 @@ import {
   efficiencyCap,
   goalStats,
   levelBonus,
+  locationBonuses,
   NO_STATS,
   setStats,
   skillLevelOf,
@@ -15,11 +16,17 @@ import {
 } from "@squire/api/gear-data";
 import { formatNumber } from "./format";
 import type { GearSolution } from "./gear-solution";
-import { statGroups, type StatGroups, type StatTile } from "./gear-stats";
+import { formatStatValue, statGroups, statName, type StatGroups, type StatTile } from "./gear-stats";
 import type { GearTarget } from "./gear-targets";
+
+export interface AnswerLocation {
+  name: string;
+  bonuses: string[];
+}
 
 export interface GearAnswerView {
   suggestion: GearSuggestion;
+  location: AnswerLocation | null;
   stats: StatGroups;
   notes: string[];
   toolSlots: number;
@@ -40,8 +47,16 @@ export function gearAnswer(
     level: levelBonus(optimize, level),
   };
   const noGear = stepsPerAction(optimize, level, NO_STATS);
+  const { location } = suggestion;
   return {
     suggestion,
+    location: location && {
+      name: `${location.name} · ${location.region}`,
+      bonuses: locationBonuses(gear, profile, optimize, suggestion).flatMap((bonus) => {
+        const name = statName(bonus);
+        return name ? [`${bonus.source}: ${formatStatValue(bonus)} ${name}`] : [];
+      }),
+    },
     stats: statGroups(lines, parts, goalStats(suggestion.goals), stepsTile(suggestion, noGear, fewestSteps)),
     notes: answerNotes(suggestion, target, profile.kind === "character" ? level : null),
     toolSlots: toolSlotsOf(profile),

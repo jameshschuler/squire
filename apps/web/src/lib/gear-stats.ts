@@ -41,6 +41,7 @@ const STAT_LABELS: Partial<Record<StatType, string>> = {
 const STEP_STATS: StatType[] = ["stepsRequired", "doubleAction"];
 
 const TILE_LABELS: Partial<Record<`${StatType}:${boolean}`, string>> = {
+  "workEfficiency:true": "Work efficiency",
   "stepsRequired:false": "Steps required (flat)",
   "bonusExperience:false": "Bonus XP per action",
   "bonusExperience:true": "Bonus XP",
@@ -56,7 +57,7 @@ export function statGroups(
   const tile = (line: StatLine): StatTile => ({
     key: `${line.stat}:${line.isPercent}`,
     value: formatStatValue(line),
-    label: TILE_LABELS[`${line.stat}:${line.isPercent}`] ?? STAT_LABELS[line.stat]!,
+    label: statName(line)!,
     details: [],
     highlight: highlightKeys.includes(`${line.stat}:${line.isPercent}`),
     over: false,
@@ -95,6 +96,10 @@ function efficiencyTile(parts: EfficiencyParts): StatTile {
     highlight: false,
     over: wasted,
   };
+}
+
+export function statName({ stat, isPercent }: Pick<StatLine, "stat" | "isPercent">): string | undefined {
+  return TILE_LABELS[`${stat}:${isPercent}`] ?? STAT_LABELS[stat];
 }
 
 export function formatStatValue({ value, isPercent }: Pick<StatLine, "value" | "isPercent">): string {

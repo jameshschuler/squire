@@ -140,6 +140,33 @@ describe("Gear page", () => {
     expect((await screen.findByRole("alert")).textContent).toContain("Couldn't work out a gear set");
   });
 
+  it("lists the set's bonuses that depend on the location it picked", async () => {
+    const harbour = baseGear.locations.find((l) => l.id === "blackspell_harbour")!;
+    const bakersHat: GearItem = {
+      ...miningGear("bakers_hat", "head", 0),
+      stats: [
+        {
+          stat: "doubleRewards",
+          value: 0.05,
+          isPercent: true,
+          conditions: [{ type: "realm", opposite: false, requirement: { realm: harbour.realms[0]! } }],
+        },
+      ],
+    };
+    gear = withGear([bakersHat]);
+    await renderPage({ target: "recipe:bake_a_bagel", location: "blackspell_harbour", goals: "steps" });
+    const location = await screen.findByRole("region", { name: "Location" });
+    expect(location.textContent).toContain(`At Blackspell Harbour · ${harbour.region}`);
+    expect(location.textContent).toContain("bakers hat: +5% Double rewards");
+  });
+
+  it("says when no gear bonus depends on the location", async () => {
+    await renderPage({ target: "recipe:bake_a_bagel", location: "best", goals: "steps" });
+    expect((await screen.findByRole("region", { name: "Location" })).textContent).toContain(
+      "No gear bonuses here that depend on the location.",
+    );
+  });
+
   it("says when no gear helps", async () => {
     await renderPage({ target: "recipe:bake_a_bagel", location: "best", goals: "steps" });
     expect(await screen.findByText("No gear helps with this.")).toBeDefined();
