@@ -20,7 +20,7 @@ describe("statGroups", () => {
   it("starts the steps tiles with steps, then the gear's work efficiency, then one number per tile", () => {
     expect(shown(groups.steps)).toEqual([
       "Steps 35",
-      "Work efficiency +95% · 100% over the max",
+      "Work efficiency +95% · Max +20% · Level +25% · 100% over the max",
       "Steps required (flat) −6",
       "Steps required −2%",
       "Double action +23.5%",
@@ -70,7 +70,11 @@ describe("statGroups", () => {
 
   it("says how far over the max gear and level go, to one decimal", () => {
     const over = statGroups([], { cap: 0.5, gear: 0.445, level: 0.25, cuts: [] }, [], steps).steps[1];
-    expect(over).toMatchObject({ value: "+44.5%", details: ["19.5% over the max"], over: true });
+    expect(over).toMatchObject({
+      value: "+44.5%",
+      details: ["Max +50% · Level +25%", "19.5% over the max"],
+      over: true,
+    });
   });
 
   it("names the items that lower work efficiency, worst first, up to three", () => {
@@ -87,7 +91,18 @@ describe("statGroups", () => {
       cut("Ink pen", -0.02),
     ];
     const tile = statGroups([], { cap: 1, gear: -0.31, level: 0.25, cuts }, [], steps).steps[1];
-    expect(tile?.details).toEqual(["Lowered by Spectral needle −35%, Spectral vest −8%, Clingy tape −5%"]);
+    expect(tile?.details).toEqual([
+      "Max +100% · Level +25%",
+      "Lowered by Spectral needle −35%, Spectral vest −8%, Clingy tape −5%",
+    ]);
+  });
+
+  it.each([
+    [{ cap: 0.6, gear: 0.59, level: 0.25, cuts: [] }, ["Max +60% · Level +25%", "24% over the max"]],
+    [{ cap: 0.6, gear: 0.3, level: 0, cuts: [] }, ["Max +60%"]],
+    [{ cap: Number.POSITIVE_INFINITY, gear: 0.3, level: 0, cuts: [] }, []],
+  ])("shows the max and the level's share, so gear under the max can still be over it (%j)", (parts, details) => {
+    expect(statGroups([], parts, [], steps).steps[1]?.details).toEqual(details);
   });
 
   it("shows the gear's work efficiency, not the capped total", () => {

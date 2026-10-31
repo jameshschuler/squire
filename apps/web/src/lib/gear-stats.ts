@@ -91,11 +91,17 @@ export function statGroups(
 function efficiencyTile(parts: EfficiencyParts): StatTile {
   const over = efficiencyOver(parts);
   const wasted = parts.gear > 0 && over > 0;
+  const percent = (value: number) => formatStatValue({ isPercent: true, value });
+  const limits = [
+    ...(Number.isFinite(parts.cap) ? [`Max ${percent(parts.cap)}`] : []),
+    ...(parts.level > 0 ? [`Level ${percent(parts.level)}`] : []),
+  ];
   return {
     key: "workEfficiency",
-    value: formatStatValue({ isPercent: true, value: parts.gear }),
+    value: percent(parts.gear),
     label: "Work efficiency",
     details: [
+      ...(limits.length > 0 ? [limits.join(" · ")] : []),
       ...(wasted ? [`${formatPercent(over, 1)} over the max`] : []),
       ...(parts.cuts.length > 0 ? [`Lowered by ${loweredBy(parts.cuts)}`] : []),
     ],
