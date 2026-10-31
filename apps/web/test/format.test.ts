@@ -6,6 +6,7 @@ import {
   formatEffect,
   formatKeyword,
   formatPercent,
+  formatPercentOf,
   formatRegion,
   formatSkillLevel,
   formatSkillLevels,
@@ -21,6 +22,15 @@ describe("formatPercent", () => {
     [1.125, "113%"],
   ])("formats %s as %s", (ratio, expected) => {
     expect(formatPercent(ratio)).toBe(expected);
+  });
+});
+
+describe("formatPercentOf", () => {
+  it.each([
+    [1.84, 1.6, 0, "184/160%"],
+    [1.695, 1.5, 1, "169.5/150%"],
+  ])("formats %s of %s as %s", (ratio, max, decimals, expected) => {
+    expect(formatPercentOf(ratio, max, decimals)).toBe(expected);
   });
 });
 

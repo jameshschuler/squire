@@ -27,6 +27,17 @@ describe("SearchInput", () => {
     expect(screen.getByRole("button", { name: "Clear search" })).toBeDefined();
   });
 
+  it.each([
+    ["", false],
+    ["hatchet", true],
+  ])(
+    "keeps room for the clear button only when there is text, so the placeholder isn't cut off (%j)",
+    (initial, roomForClear) => {
+      render(<ControlledSearch initial={initial} />);
+      expect(screen.getByRole("searchbox").classList.contains("pr-11")).toBe(roomForClear);
+    },
+  );
+
   it("clears the search and puts the cursor back in the field", () => {
     render(<ControlledSearch initial="hatchet" />);
     fireEvent.click(screen.getByRole("button", { name: "Clear search" }));

@@ -1,8 +1,10 @@
 import type { GearType } from "@walkscape-community/data-api-client";
+import { sameStat, type GoalStat } from "./goals.js";
 import type { ItemQuality } from "../recipe-book/types.js";
-import { playerConditionHolds, type OwnedPetView, type PlayerProfile } from "./profile.js";
+import { ownedKey } from "./items.js";
+import { playerConditionHolds, type OwnedGear, type OwnedPetView, type PlayerProfile } from "./profile.js";
 import { NO_STATS, addStats, type StatTotals, type WorkTarget } from "./steps.js";
-import type { GearCondition, GearItem, GearStat, LocationView } from "./types.js";
+import type { GearCondition, GearData, GearItem, GearStat, LocationView } from "./types.js";
 
 export interface GearPick {
   slot: GearType;
@@ -17,6 +19,9 @@ export interface SetBonus {
   totals: StatTotals;
 }
 
+// One owned item (or pet) reduced to what the search needs for the current situation. `totals` are the
+// stats that always apply here; `setBonuses` depend on how many set pieces end up worn; `best` is
+// `totals` plus every helpful set bonus, the most this item could ever add.
 export interface Candidate {
   id: string;
   slot: GearType | "pet";
@@ -33,15 +38,47 @@ export interface Situation {
   skillType: string;
   location: LocationView | null;
   profile: PlayerProfile;
+  goalStats: GoalStat[];
 }
 
 type CandidateBase = Omit<Candidate, "totals" | "setBonuses" | "best">;
 
+export function situationFor(
+  gear: GearData,
+  profile: PlayerProfile,
+  target: WorkTarget,
+  location: LocationView | null,
+  goalStats: GoalStat[] = [],
+): Situation {
+  const skillType = gear.skills.find((s) => s.id === target.skill)?.type ?? "";
+  return { target, skillType, location, profile, goalStats };
+}
+
+export function gearCandidate(situation: Situation, owned: OwnedGear): Candidate {
+  return toCandidate(
+    situation,
+    {
+      id: ownedKey({ id: owned.item.id, quality: owned.quality }),
+      slot: owned.item.slot,
+      keywords: owned.item.keywords,
+      pick: { slot: owned.item.slot, item: owned.item, quality: owned.quality },
+      pet: null,
+    },
+    owned.stats,
+  );
+}
+
+export function petCandidate(situation: Situation, pet: OwnedPetView): Candidate {
+  return toCandidate(situation, { id: `pet:${pet.pet.id}`, slot: "pet", keywords: [], pick: null, pet }, pet.stats);
+}
+
+// Splits an item's stats: ones whose conditions fail here are dropped, set bonuses are kept aside, and
+// the rest are added to `totals`.
 export function toCandidate(situation: Situation, base: CandidateBase, stats: GearStat[]): Candidate {
   let totals = NO_STATS;
   const setBonuses: SetBonus[] = [];
   for (const stat of stats) {
-    const contribution = statTotals(stat);
+    const contribution = statTotals(stat, situation.goalStats);
     const setConditions = stat.conditions.filter((c): c is SetCondition => c.type === "distinctKeywordItemsEquipped");
     const others = stat.conditions.filter((c) => c.type !== "distinctKeywordItemsEquipped");
     if (contribution === NO_STATS || !others.every((condition) => conditionHolds(situation, condition))) {
@@ -61,10 +98,12 @@ export function itemId(candidate: Candidate): string {
   return candidate.pick?.item.id ?? candidate.id;
 }
 
+// Distinct items worn with any of the keywords. Two copies of one ring count once, as in the game.
 export function setCount(chosen: Candidate[], keywords: string[]): number {
   return new Set(chosen.filter((c) => c.keywords.some((k) => keywords.includes(k))).map(itemId)).size;
 }
 
+// A finished set's real stats, with each set bonus added only when its piece count holds.
 export function withSetBonuses(chosen: Candidate[]): StatTotals {
   return chosen.reduce((sum, c) => {
     const active = c.setBonuses.filter((bonus) =>
@@ -74,7 +113,11 @@ export function withSetBonuses(chosen: Candidate[]): StatTotals {
   }, NO_STATS);
 }
 
-function statTotals(stat: GearStat): StatTotals {
+function statTotals(stat: GearStat, goalStats: GoalStat[]): StatTotals {
+  const goal = goalStats.findIndex((g) => sameStat(g, stat));
+  if (goal >= 0) {
+    return { ...NO_STATS, goalStats: goalStats.map((_, i) => (i === goal ? stat.value : 0)) };
+  }
   switch (stat.stat) {
     case "workEfficiency":
       return { ...NO_STATS, workEfficiency: stat.value };
@@ -87,7 +130,7 @@ function statTotals(stat: GearStat): StatTotals {
   }
 }
 
-function conditionHolds(situation: Situation, condition: GearCondition): boolean {
+export function conditionHolds(situation: Situation, condition: GearCondition): boolean {
   const holds = situationHolds(situation, condition) ?? playerConditionHolds(situation.profile, condition);
   return (holds ?? false) !== condition.opposite;
 }
@@ -109,11 +152,13 @@ function situationHolds({ target, skillType, location }: Situation, condition: G
   }
 }
 
+// Only the helpful part of a set bonus, for the optimistic `best` stats.
 function gains(totals: StatTotals): StatTotals {
   return {
     workEfficiency: Math.max(totals.workEfficiency, 0),
     stepsPercent: Math.min(totals.stepsPercent, 0),
     stepsFlat: Math.min(totals.stepsFlat, 0),
     doubleAction: Math.max(totals.doubleAction, 0),
+    goalStats: totals.goalStats.map((value) => Math.max(value, 0)),
   };
 }

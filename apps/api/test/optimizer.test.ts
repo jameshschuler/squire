@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { stepsPerAction } from "../src/gear-data/steps.js";
+import tailoringGear from "../../../fixtures/gear/tailoring.json";
 import type { GearType } from "@walkscape-community/data-api-client";
 import type { Character } from "../src/character/index.js";
 import {
   BEST_IN_GAME,
+  fewestSteps,
   optimizeGear,
   type GearCondition,
   type GearData,
@@ -11,6 +13,14 @@ import {
   type GearStat,
   type OptimizeTarget,
   type PlayerProfile,
+  type GoalId,
+  type Score,
+  compareScores,
+  goalScorer,
+  marginHolds,
+  gearBonusesByLocation,
+  locationBonuses,
+  setStats,
 } from "../src/gear-data/index.js";
 
 const stat = (stat: GearStat["stat"], value: number, isPercent: boolean, ...conditions: GearCondition[]): GearStat => ({
@@ -72,8 +82,9 @@ function character(owned: string[], extra: Partial<Character> = {}): PlayerProfi
       collectibles: [],
       equipped: {},
       owned: owned.map((entry) => {
-        const [id = "", quality] = entry.split("@");
-        return { id, quality: (quality as GearItem["quality"]) ?? null };
+        const [item = "", count = "1"] = entry.split("*");
+        const [id = "", quality] = item.split("@");
+        return { id, quality: (quality as GearItem["quality"]) ?? null, count: Number(count) };
       }),
       pets: [],
       ...extra,
@@ -120,6 +131,39 @@ describe("optimizeGear", () => {
     ).toEqual(["light_gloves", "pickaxe"]);
   });
 
+  it("keeps efficiency past the cap when a penalty pulls the set back under it", () => {
+    const gear = gearData([
+      item("brisk_gloves", "hands", [efficiency(0.5)]),
+      item("swift_gloves", "hands", [efficiency(0.6)]),
+      item("heavy_pickaxe", "tool", [efficiency(-0.1), flatSteps(-10)]),
+    ]);
+    expect(picked(gear, character(["brisk_gloves", "swift_gloves", "heavy_pickaxe"]))).toEqual([
+      "heavy_pickaxe",
+      "swift_gloves",
+    ]);
+  });
+
+  it("keeps efficiency past the cap when a pet's penalty pulls the set back under it", () => {
+    const gear = gearData(
+      [item("brisk_gloves", "hands", [efficiency(0.5)]), item("swift_gloves", "hands", [efficiency(0.6)])],
+      {
+        pets: [
+          {
+            id: "camel",
+            name: "Camel",
+            rareId: "two_hump_camel",
+            icon: "",
+            levels: [{ level: 1, stats: [efficiency(-0.1), flatSteps(-10)] }],
+          },
+        ],
+      },
+    );
+    const owned = character(["brisk_gloves", "swift_gloves"], { pets: [{ species: "camel", level: 1 }] });
+    const suggestion = optimizeGear(gear, owned, mining);
+    expect(suggestion.picks.map((p) => p.item.id)).toEqual(["swift_gloves"]);
+    expect(suggestion.pet).toMatchObject({ pet: { id: "camel" } });
+  });
+
   it("never wears two tools that ban each other", () => {
     const hatchet = (id: string, value: number) => item(id, "tool", [flatSteps(value)], { keywords: ["hatchet"] });
     const gear = gearData(
@@ -146,7 +190,7 @@ describe("optimizeGear", () => {
 
   it("wears two rings", () => {
     const rings = [1, 2, 3].map((n) => item(`ring_${n}`, "ring", [flatSteps(-n)]));
-    expect(picked(gearData(rings), BEST_IN_GAME)).toEqual(["ring_2", "ring_3"]);
+    expect(picked(gearData(rings), character(rings.map((r) => r.id)))).toEqual(["ring_2", "ring_3"]);
   });
 
   it("uses only gear the character owns, at the quality they own it", () => {
@@ -177,6 +221,34 @@ describe("optimizeGear", () => {
     });
     expect(picked(gearData([locked]), character(["locked_boots"]))).toEqual([]);
     expect(picked(gearData([locked]), BEST_IN_GAME)).toEqual(["locked_boots"]);
+  });
+
+  it("wears two copies of a ring the character owns twice", () => {
+    const rings = [item("good_ring", "ring", [flatSteps(-5)]), item("weak_ring", "ring", [flatSteps(-1)])];
+    expect(picked(gearData(rings), character(["good_ring*2", "weak_ring"]))).toEqual(["good_ring", "good_ring"]);
+  });
+
+  it("wears at most two copies of a ring, however many the character owns", () => {
+    expect(picked(gearData([item("good_ring", "ring", [flatSteps(-5)])]), character(["good_ring*5"]))).toEqual([
+      "good_ring",
+      "good_ring",
+    ]);
+  });
+
+  it("wears one copy of a ring the character owns once", () => {
+    const rings = [item("good_ring", "ring", [flatSteps(-5)]), item("weak_ring", "ring", [flatSteps(-1)])];
+    expect(picked(gearData(rings), character(["good_ring", "weak_ring"]))).toEqual(["good_ring", "weak_ring"]);
+  });
+
+  it("assumes two of every ring with no character", () => {
+    expect(picked(gearData([item("good_ring", "ring", [flatSteps(-5)])]), BEST_IN_GAME)).toEqual([
+      "good_ring",
+      "good_ring",
+    ]);
+  });
+
+  it("never wears two copies of a tool", () => {
+    expect(picked(gearData([item("watch", "tool", [flatSteps(-5)])]), character(["watch*3"]))).toEqual(["watch"]);
   });
 
   it("picks the location where location bonuses apply, and says which", () => {
@@ -284,7 +356,7 @@ describe("optimizeGear", () => {
         }),
       ]),
     ]);
-    expect(picked(gear, BEST_IN_GAME)).toEqual(["quest_ring"]);
+    expect(picked(gear, BEST_IN_GAME)).toEqual(["quest_ring", "quest_ring"]);
     expect(picked(gear, character(["quest_ring"]))).toEqual([]);
   });
 
@@ -349,6 +421,59 @@ describe("optimizeGear", () => {
     expect(picked(gear, character(["pickaxe", "spare_pickaxe"], { skillLevels: { mining: 70 } }))).toHaveLength(1);
   });
 
+  it("fills slots that don't change steps with the second priority once efficiency is maxed", () => {
+    const gear = gearData([
+      item("pickaxe", "tool", [efficiency(0.25)]),
+      item("lucky_hat", "head", [stat("chestFind", 0.3, true)]),
+    ]);
+    const walker = character(["pickaxe", "lucky_hat"], { skillLevels: { mining: 70 } });
+    expect(picked(gear, walker)).toEqual(["lucky_hat", "pickaxe"]);
+    expect(
+      optimizeGear(gear, walker, mining, ["steps", "chests"])
+        .picks.map((p) => p.item.id)
+        .sort(),
+    ).toEqual(["lucky_hat", "pickaxe"]);
+  });
+
+  it("trades steps for the first priority when it comes first", () => {
+    const gear = gearData([
+      item("fast_hat", "head", [flatSteps(-20)]),
+      item("lucky_hat", "head", [stat("chestFind", 0.5, true)]),
+    ]);
+    expect(optimizeGear(gear, BEST_IN_GAME, mining, ["chests"]).picks.map((p) => p.item.id)).toEqual(["lucky_hat"]);
+    expect(optimizeGear(gear, BEST_IN_GAME, mining, ["steps"]).picks.map((p) => p.item.id)).toEqual(["fast_hat"]);
+  });
+
+  it("saves materials first when asked, trading steps for it", () => {
+    const gear = gearData([
+      item("fast_gloves", "hands", [flatSteps(-20)]),
+      item("thrifty_gloves", "hands", [stat("noMaterialsConsumed", 0.1, true)]),
+    ]);
+    expect(optimizeGear(gear, BEST_IN_GAME, mining, ["materials"]).picks.map((p) => p.item.id)).toEqual([
+      "thrifty_gloves",
+    ]);
+  });
+
+  it("counts double rewards as saving materials, against refunds", () => {
+    const gear = gearData([
+      item("thrifty_gloves", "hands", [stat("noMaterialsConsumed", 0.1, true)]),
+      item("doubling_gloves", "hands", [stat("doubleRewards", 0.2, true)]),
+    ]);
+    expect(optimizeGear(gear, BEST_IN_GAME, mining, ["materials"]).picks.map((p) => p.item.id)).toEqual([
+      "doubling_gloves",
+    ]);
+  });
+
+  it("counts quality outcome, a flat stat, for the best quality goal", () => {
+    const gear = gearData([
+      item("plain_apron", "chest", [stat("qualityOutcome", 10, false)]),
+      item("fine_apron", "chest", [stat("qualityOutcome", 25, false)]),
+    ]);
+    const suggestion = optimizeGear(gear, BEST_IN_GAME, mining, ["quality", "steps"]);
+    expect(suggestion.picks.map((p) => p.item.id)).toEqual(["fine_apron"]);
+    expect(suggestion.score[0]).toBe(25);
+  });
+
   it("suggests nothing when no gear helps", () => {
     const suggestion = optimizeGear(gearData([item("hat", "head", [])]), BEST_IN_GAME, mining);
     expect(suggestion).toMatchObject({ picks: [], pet: null, location: null });
@@ -356,7 +481,372 @@ describe("optimizeGear", () => {
   });
 });
 
-describe("optimizeGear against every possible set", () => {
+describe("free slots", () => {
+  const otherSkill = { type: "mainSkill", opposite: false, requirement: { skill: "fishing" } } as const;
+
+  it("fills a slot nothing else needs with an item whose bonuses apply", () => {
+    const gear = gearData([
+      item("gloves", "hands", [flatSteps(-5)]),
+      item("backpack", "back", [stat("inventorySpace", 4, false)]),
+    ]);
+    expect(picked(gear, BEST_IN_GAME)).toEqual(["backpack", "gloves"]);
+  });
+
+  it.each([
+    ["more steps", flatSteps(3)],
+    ["less work efficiency, even too little to change the steps", efficiency(-0.001)],
+    ["a worse bonus elsewhere", stat("chestFind", -0.05, true)],
+  ])("never adds an item with %s", (_, cost) => {
+    const gear = gearData([item("heavy_pack", "back", [stat("inventorySpace", 6, false), cost])]);
+    expect(picked(gear, BEST_IN_GAME)).toEqual([]);
+  });
+
+  it("wears a ring twice only when the character owns two", () => {
+    const gear = gearData([item("lucky_ring", "ring", [stat("chestFind", 0.1, true)])]);
+    expect(picked(gear, character(["lucky_ring"]))).toEqual(["lucky_ring"]);
+  });
+
+  it("wears one copy of an item, whatever qualities the character owns", () => {
+    const gear = gearData([
+      item("lucky_saw", "tool", [], {
+        tierStats: { common: [stat("chestFind", 0.1, true)], rare: [stat("chestFind", 0.2, true)] },
+      }),
+    ]);
+    const owner = character([], {
+      owned: [
+        { id: "lucky_saw", quality: "common", count: 1 },
+        { id: "lucky_saw", quality: "rare", count: 1 },
+      ],
+    });
+    expect(optimizeGear(gear, owner, mining).picks).toHaveLength(1);
+  });
+
+  it("wears only the best quality of an item when a goal wants more of it", () => {
+    const gear = gearData([
+      item("lucky_saw", "tool", [], {
+        tierStats: { common: [stat("chestFind", 0.1, true)], rare: [stat("chestFind", 0.2, true)] },
+      }),
+    ]);
+    const owner = character([], {
+      owned: [
+        { id: "lucky_saw", quality: "common", count: 1 },
+        { id: "lucky_saw", quality: "rare", count: 1 },
+      ],
+    });
+    expect(optimizeGear(gear, owner, mining, ["chests"]).picks.map((p) => p.quality)).toEqual(["rare"]);
+  });
+
+  it("keeps a plain item over a slightly better set piece when the set piece would cost a fewer-pieces bonus", () => {
+    const fewerThanTwo: GearCondition = {
+      type: "distinctKeywordItemsEquipped",
+      opposite: true,
+      requirement: { quantity: 2, keywords: ["lone"] },
+    };
+    const gear = gearData([
+      item("lone_hat", "head", [flatSteps(-3)], { keywords: ["lone"] }),
+      item("plain_hat", "head", [flatSteps(-2)]),
+      item("lone_watch", "tool", [flatSteps(-10, fewerThanTwo)], { keywords: ["lone"] }),
+    ]);
+    const found = optimizeGear(gear, character(["lone_hat", "plain_hat", "lone_watch"]), mining);
+    expect(found.picks.map((p) => p.item.id).sort()).toEqual(["lone_watch", "plain_hat"]);
+    expect(found.margin).toBeNull();
+  });
+
+  it("ignores bonuses that don't apply to this activity", () => {
+    const gear = gearData([item("net_bag", "back", [stat("chestFind", 0.2, true, otherSkill)])]);
+    expect(picked(gear, BEST_IN_GAME)).toEqual([]);
+  });
+
+  it("prefers a percent bonus over a flat one when both give one bonus", () => {
+    const gear = gearData([
+      item("backpack", "back", [stat("inventorySpace", 4, false)]),
+      item("bandolier", "back", [stat("doubleRewards", 0.02, true)]),
+    ]);
+    expect(picked(gear, BEST_IN_GAME)).toEqual(["bandolier"]);
+  });
+
+  it("prefers the item with more bonuses, then the bigger ones", () => {
+    const gear = gearData([
+      item("tiny_pack", "back", [stat("inventorySpace", 1, false)]),
+      item("big_pack", "back", [stat("inventorySpace", 4, false)]),
+      item("bandolier", "back", [stat("inventorySpace", 1, false), stat("doubleRewards", 0.02, true)]),
+    ]);
+    expect(picked(gear, BEST_IN_GAME)).toEqual(["bandolier"]);
+  });
+
+  it("keeps the rule against two tools of the same type", () => {
+    const gear = gearData(
+      [
+        item("saw_a", "tool", [stat("chestFind", 0.1, true)], { keywords: ["hatchet"] }),
+        item("saw_b", "tool", [stat("chestFind", 0.2, true)], { keywords: ["hatchet"] }),
+      ],
+      { bannedKeywords: { hatchet: ["hatchet"] } },
+    );
+    expect(picked(gear, BEST_IN_GAME)).toEqual(["saw_b"]);
+  });
+});
+
+describe("locationBonuses", () => {
+  const desert: GearCondition = { type: "locationHasKeywords", opposite: false, requirement: { keywords: ["desert"] } };
+  const snowy: GearCondition = { type: "locationHasKeywords", opposite: false, requirement: { keywords: ["snowy"] } };
+  const wrentmark: GearCondition = { type: "realm", opposite: false, requirement: { realm: "wrentmark" } };
+  const gear = gearData([
+    item("sun_hat", "head", [efficiency(0.05, desert), stat("chestFind", 0.1, true)], {
+      tierStats: { rare: [efficiency(0.02, desert)] },
+    }),
+    item("snow_boots", "feet", [flatSteps(-3, snowy)]),
+    item("guild_ring", "ring", [stat("bonusExperience", 0.04, true, wrentmark)]),
+    item("dry_cloak", "cape", [stat("chestFind", 0.03, true, { ...snowy, opposite: true })]),
+    item("chef_gloves", "hands", [stat("doubleRewards", 0.05, true, desert, mainSkill("cooking"))]),
+  ]);
+  const arc = { id: "arc", name: "Myriadian Arc", region: "Wrentmark", realms: ["wrentmark"], keywords: ["desert"] };
+  const bonuses = (location: typeof arc | null) => {
+    const suggestion = optimizeGear(gear, BEST_IN_GAME, mining);
+    const picks = gear.items.map((i) => ({
+      slot: i.slot,
+      item: i,
+      quality: i.id === "sun_hat" ? ("rare" as const) : null,
+    }));
+    return locationBonuses(gear, BEST_IN_GAME, mining, { ...suggestion, location, picks });
+  };
+
+  it("lists each worn item's bonuses that hold only because of where you are, tiers added up", () => {
+    expect(bonuses(arc)).toEqual([
+      { source: "sun_hat", stat: "workEfficiency", isPercent: true, value: 0.07 },
+      { source: "guild_ring", stat: "bonusExperience", isPercent: true, value: 0.04 },
+    ]);
+  });
+
+  it("leaves out bonuses for not being somewhere, and ones whose other conditions fail", () => {
+    const sources = bonuses(arc).map((b) => b.source);
+    expect(sources).not.toContain("dry_cloak");
+    expect(sources).not.toContain("chef_gloves");
+  });
+
+  it("lists nothing without a location", () => {
+    expect(bonuses(null)).toEqual([]);
+  });
+});
+
+describe("gearBonusesByLocation", () => {
+  const desert: GearCondition = { type: "locationHasKeywords", opposite: false, requirement: { keywords: ["desert"] } };
+  const arc = { id: "arc", name: "Myriadian Arc", region: "Wrentmark", realms: ["wrentmark"], keywords: ["desert"] };
+  const peak = { ...arc, id: "peak", keywords: ["snowy"] };
+  const at = (gear: GearData, profile: PlayerProfile = BEST_IN_GAME) =>
+    gearBonusesByLocation(gear, profile, mining, [arc, peak]);
+
+  it("adds up the location bonuses of the best item per slot, percent bonuses first", () => {
+    const gear = gearData([
+      item("sun_hat", "head", [stat("doubleAction", 0.05, true, desert)]),
+      item("big_sun_hat", "head", [stat("doubleAction", 0.08, true, desert)]),
+      item("sun_boots", "feet", [stat("doubleAction", 0.03, true, desert), flatSteps(-2, desert)]),
+      item("cook_gloves", "hands", [stat("doubleAction", 0.2, true, desert, mainSkill("cooking"))]),
+      item("plain_ring", "ring", [stat("doubleAction", 0.1, true)]),
+    ]);
+    expect(at(gear)).toEqual(
+      new Map([
+        [
+          "arc",
+          [
+            { stat: "doubleAction", isPercent: true, value: 0.11 },
+            { stat: "stepsRequired", isPercent: false, value: -2 },
+          ],
+        ],
+        ["peak", []],
+      ]),
+    );
+  });
+
+  it("counts one item per slot even when two items in it help different stats", () => {
+    const gear = gearData([
+      item("lucky_hat", "head", [stat("doubleAction", 0.08, true, desert)]),
+      item("quick_hat", "head", [efficiency(0.05, desert)]),
+    ]);
+    expect(at(gear).get("arc")).toEqual([{ stat: "doubleAction", isPercent: true, value: 0.08 }]);
+  });
+
+  it("prefers the item that speeds you up for a slot, and lists speed bonuses first", () => {
+    const gear = gearData([
+      item("dance_corslet", "chest", [stat("doubleAction", 0.07, true, desert)]),
+      item("finder_vest", "chest", [stat("fineMaterialFind", 0.25, true, desert)]),
+      item("sand_hat", "head", [stat("chestFind", 0.3, true, desert)]),
+    ]);
+    expect(at(gear).get("arc")).toEqual([
+      { stat: "doubleAction", isPercent: true, value: 0.07 },
+      { stat: "chestFind", isPercent: true, value: 0.3 },
+    ]);
+  });
+
+  it("ranks a slot by its speed bonus, not by how many bonuses an item has", () => {
+    const gear = gearData([
+      item("busy_hat", "head", [stat("doubleAction", 0.01, true, desert), stat("chestFind", 0.01, true, desert)]),
+      item("dance_hat", "head", [stat("doubleAction", 0.08, true, desert)]),
+    ]);
+    expect(at(gear).get("arc")).toEqual([{ stat: "doubleAction", isPercent: true, value: 0.08 }]);
+  });
+
+  it.each([
+    ["a speed penalty", efficiency(-0.2)],
+    ["a worse bonus elsewhere", stat("chestFind", -0.05, true)],
+  ])("skips items with %s", (_, cost) => {
+    const gear = gearData([item("heavy_vest", "chest", [stat("doubleAction", 0.07, true, desert), cost])]);
+    expect(at(gear).get("arc")).toEqual([]);
+  });
+
+  it("keeps the rule against two tools of the same type, and wears one copy of each item", () => {
+    const gear = gearData(
+      [
+        item("saw_a", "tool", [efficiency(0.05, desert)], { keywords: ["saw"] }),
+        item("saw_b", "tool", [efficiency(0.04, desert)], { keywords: ["saw"] }),
+      ],
+      { bannedKeywords: { saw: ["saw"] } },
+    );
+    expect(at(gear).get("arc")).toEqual([{ stat: "workEfficiency", isPercent: true, value: 0.05 }]);
+    const owner = character([], {
+      owned: [
+        { id: "saw_a", quality: "common", count: 1 },
+        { id: "saw_a", quality: "rare", count: 1 },
+      ],
+    });
+    expect(at(gear, owner).get("arc")).toEqual([{ stat: "workEfficiency", isPercent: true, value: 0.05 }]);
+  });
+
+  it("counts as many tools as the tool slots hold", () => {
+    const gear = gearData([
+      item("saw", "tool", [efficiency(0.05, desert)]),
+      item("file", "tool", [efficiency(0.05, desert)]),
+    ]);
+    expect(at(gear).get("arc")).toEqual([{ stat: "workEfficiency", isPercent: true, value: 0.1 }]);
+  });
+
+  it("counts pets", () => {
+    const gear = gearData([], {
+      pets: [
+        {
+          id: "camel",
+          name: "Camel",
+          rareId: "two_hump_camel",
+          icon: "",
+          levels: [{ level: 1, stats: [efficiency(0.04, desert)] }],
+        },
+      ],
+    });
+    expect(at(gear).get("arc")).toEqual([{ stat: "workEfficiency", isPercent: true, value: 0.04 }]);
+  });
+
+  it("only counts gear the character owns", () => {
+    const gear = gearData([
+      item("sun_hat", "head", [stat("doubleAction", 0.05, true, desert)]),
+      item("big_sun_hat", "head", [stat("doubleAction", 0.08, true, desert)]),
+    ]);
+    expect(at(gear, character(["sun_hat"])).get("arc")).toEqual([
+      { stat: "doubleAction", isPercent: true, value: 0.05 },
+    ]);
+  });
+});
+
+describe("search time", () => {
+  it("says how long the search took, in whole milliseconds", () => {
+    const gear = gearData([item("small_gloves", "hands", [flatSteps(-2)])]);
+    const before = performance.now();
+    const { searchMs } = optimizeGear(gear, BEST_IN_GAME, mining);
+    const took = performance.now() - before;
+    expect(Number.isInteger(searchMs)).toBe(true);
+    expect(searchMs).toBeGreaterThanOrEqual(0);
+    expect(searchMs).toBeLessThanOrEqual(Math.ceil(took));
+  });
+});
+
+describe("fewestSteps", () => {
+  it("counts the steps with the best gear in the game, whatever the character owns", () => {
+    const gear = gearData([
+      item("small_gloves", "hands", [flatSteps(-2)]),
+      item("big_gloves", "hands", [flatSteps(-5)]),
+    ]);
+    expect(fewestSteps(gear, mining)).toBe(75);
+  });
+
+  it("is the no-gear steps when no gear helps", () => {
+    expect(fewestSteps(gearData([item("hat", "head", [])]), mining)).toBe(80);
+  });
+});
+
+describe("search size", () => {
+  it("stops at its time budget even partway through a search", () => {
+    const tailoring = {
+      skill: "tailoring",
+      level: 43,
+      workRequired: 280,
+      maxWorkEfficiency: 2.1,
+      locationIds: ["azurazera"],
+    };
+    const gear = tailoringGear as unknown as GearData;
+    const found = optimizeGear(gear, BEST_IN_GAME, tailoring, ["steps"], { maxStates: 100_000, timeBudgetMs: 50 });
+    expect(found.searchMs).toBeLessThan(2000);
+    expect(found.picks.length).toBeGreaterThan(0);
+  });
+
+  it("finishes quickly with the best tailoring gear in the game, where many tool types compete", () => {
+    const tailoring = {
+      skill: "tailoring",
+      level: 43,
+      workRequired: 280,
+      maxWorkEfficiency: 2.1,
+      locationIds: ["azurazera"],
+    };
+    const start = performance.now();
+    const suggestion = optimizeGear(tailoringGear as unknown as GearData, BEST_IN_GAME, tailoring);
+    expect(performance.now() - start).toBeLessThan(4000);
+    expect(suggestion.result.steps).toBe(96);
+  });
+});
+
+describe("setStats", () => {
+  const chest = stat("chestFind", 0.1, true);
+  const gear = gearData([
+    item("miner_hat", "head", [flatSteps(-2), chest, efficiency(0.2, mainSkill("cooking"))], {
+      keywords: ["miner_set"],
+    }),
+    item(
+      "miner_boots",
+      "feet",
+      [
+        chest,
+        stat("doubleRewards", 0.05, true, {
+          type: "distinctKeywordItemsEquipped",
+          opposite: false,
+          requirement: { quantity: 2, keywords: ["miner_set"] },
+        }),
+      ],
+      { keywords: ["miner_set"] },
+    ),
+  ]);
+  const stats = (ids: string[]) => {
+    const suggestion = optimizeGear(gear, BEST_IN_GAME, mining);
+    const picks = gear.items.filter((i) => ids.includes(i.id)).map((i) => ({ slot: i.slot, item: i, quality: null }));
+    return setStats(gear, BEST_IN_GAME, mining, { ...suggestion, picks });
+  };
+
+  it("totals each stat the set gives, percent and flat apart, including ones that don't change steps", () => {
+    expect(stats(["miner_hat", "miner_boots"])).toEqual(
+      expect.arrayContaining([
+        { stat: "stepsRequired", isPercent: false, value: -2 },
+        { stat: "chestFind", isPercent: true, value: 0.2 },
+        { stat: "doubleRewards", isPercent: true, value: 0.05 },
+      ]),
+    );
+  });
+
+  it("leaves out effects whose conditions don't hold", () => {
+    expect(stats(["miner_hat"]).map((s) => s.stat)).not.toContain("workEfficiency");
+  });
+
+  it("counts a set bonus only with enough set pieces", () => {
+    expect(stats(["miner_boots"]).map((s) => s.stat)).toEqual(["chestFind"]);
+  });
+});
+
+describe("optimizeGear against every possible set", { timeout: 30_000 }, () => {
   function random(seed: number) {
     let state = seed;
     return () => {
@@ -369,10 +859,11 @@ describe("optimizeGear against every possible set", () => {
     const slots: GearType[] = ["head", "feet", "hands", "ring", "ring", "ring", "tool", "tool", "tool", "tool", "tool"];
     return slots.map((slot, i) => {
       const stats = [
-        efficiency(Math.round(next() * 30) / 100),
+        efficiency(Math.round(next() * 40 - 10) / 100),
         flatSteps(-Math.round(next() * 6)),
         stat("stepsRequired", -Math.round(next() * 10) / 100, true),
         doubleAction(Math.round(next() * 20) / 100),
+        stat("chestFind", Math.round(next() * 40) / 100, true),
       ].filter(() => next() < 0.5);
       const inSet = next() < 0.6;
       if (inSet && next() < 0.7) {
@@ -385,6 +876,7 @@ describe("optimizeGear against every possible set", () => {
           flatSteps(-3 - Math.round(next() * 7), condition),
           efficiency(Math.round(next() * 30) / 100, condition),
           stat("doubleAction", Math.round(next() * 30) / 100, true, condition),
+          stat("chestFind", Math.round(next() * 30) / 100, true, condition),
         ];
         stats.push(bonuses[Math.floor(next() * bonuses.length)]!);
       }
@@ -393,7 +885,21 @@ describe("optimizeGear against every possible set", () => {
     });
   }
 
-  function bruteForce(gear: GearData, target: OptimizeTarget, level: number): number {
+  function randomCase(next: () => number) {
+    const items = randomGear(next);
+    const level = 50 + Math.round(next() * 30);
+    return {
+      gear: gearData(items, { bannedKeywords: { hatchet: ["hatchet"] } }),
+      level,
+      target: { ...mining, workRequired: 40 + Math.round(next() * 200) },
+      profile: character(
+        items.map((i) => i.id),
+        { skillLevels: { mining: level } },
+      ),
+    };
+  }
+
+  function bruteForce(gear: GearData, target: OptimizeTarget, level: number, goals: GoalId[]): Score {
     const bySlot = (slot: GearType) => gear.items.filter((i) => i.slot === slot);
     const subsets = (items: GearItem[], max: number): GearItem[][] =>
       items.reduce<GearItem[][]>(
@@ -409,46 +915,75 @@ describe("optimizeGear against every possible set", () => {
       (acc, choices) => acc.flatMap((set) => choices.map((choice) => [...set, ...choice])),
       [[]],
     );
-    return Math.min(
-      ...combos
-        .filter((set) => set.filter((it) => it.keywords.includes("hatchet")).length <= 1)
-        .map((set) => {
-          const setCount = set.filter((it) => it.keywords.includes("set")).length;
-          const totals = set
-            .flatMap((it) => it.stats)
-            .filter((s) =>
-              s.conditions.every(
-                (c) => c.type !== "distinctKeywordItemsEquipped" || setCount >= c.requirement.quantity,
-              ),
-            )
-            .reduce(
-              (sum, s) => ({
-                workEfficiency: sum.workEfficiency + (s.stat === "workEfficiency" ? s.value : 0),
-                stepsPercent: sum.stepsPercent + (s.stat === "stepsRequired" && s.isPercent ? s.value : 0),
-                stepsFlat: sum.stepsFlat + (s.stat === "stepsRequired" && !s.isPercent ? s.value : 0),
-                doubleAction: sum.doubleAction + (s.stat === "doubleAction" ? s.value : 0),
-              }),
-              { workEfficiency: 0, stepsPercent: 0, stepsFlat: 0, doubleAction: 0 },
-            );
-          return stepsPerAction(target, level, totals).averageSteps;
-        }),
-    );
+    return combos
+      .filter((set) => set.filter((it) => it.keywords.includes("hatchet")).length <= 1)
+      .map((set) => {
+        const setCount = set.filter((it) => it.keywords.includes("set")).length;
+        const totals = set
+          .flatMap((it) => it.stats)
+          .filter((s) =>
+            s.conditions.every((c) => c.type !== "distinctKeywordItemsEquipped" || setCount >= c.requirement.quantity),
+          )
+          .reduce(
+            (sum, s) => ({
+              workEfficiency: sum.workEfficiency + (s.stat === "workEfficiency" ? s.value : 0),
+              stepsPercent: sum.stepsPercent + (s.stat === "stepsRequired" && s.isPercent ? s.value : 0),
+              stepsFlat: sum.stepsFlat + (s.stat === "stepsRequired" && !s.isPercent ? s.value : 0),
+              doubleAction: sum.doubleAction + (s.stat === "doubleAction" ? s.value : 0),
+              goalStats: [sum.goalStats[0]! + (s.stat === "chestFind" ? s.value : 0)],
+            }),
+            { workEfficiency: 0, stepsPercent: 0, stepsFlat: 0, doubleAction: 0, goalStats: [0] },
+          );
+        return goalScorer(goals)(stepsPerAction(target, level, totals), totals);
+      })
+      .reduce((best, next) => (compareScores(next, best) > 0 ? next : best));
   }
 
-  it("finds a set as good as the best one on 300 random gear pools", () => {
+  it.each([
+    ["fewest steps", ["steps"]],
+    ["fewest steps, then most chests", ["steps", "chests"]],
+    ["most chests, then fewest steps", ["chests", "steps"]],
+  ] as [string, GoalId[]][])("finds a set as good as the best one for %s on 300 random gear pools", (_, goals) => {
     const next = random(42);
     for (let run = 0; run < 300; run++) {
-      const items = randomGear(next);
-      const gear = gearData(items, { bannedKeywords: { hatchet: ["hatchet"] } });
-      const level = 50 + Math.round(next() * 30);
-      const target = { ...mining, workRequired: 40 + Math.round(next() * 200) };
-      const profile = character(
-        items.map((i) => i.id),
-        { skillLevels: { mining: level } },
+      const { gear, level, target, profile } = randomCase(next);
+      const found = optimizeGear(gear, profile, target, goals).score;
+      expect(compareScores(found, bruteForce(gear, target, level, goals)), `run ${run}`).toBe(0);
+    }
+  });
+
+  it("finds the best set without the search limit too, which is what the check script compares against", () => {
+    const next = random(7);
+    for (let run = 0; run < 100; run++) {
+      const { gear, level, target, profile } = randomCase(next);
+      const exact = optimizeGear(gear, profile, target, ["steps"], { maxStates: Number.POSITIVE_INFINITY }).score;
+      expect(compareScores(exact, bruteForce(gear, target, level, ["steps"])), `run ${run}`).toBe(0);
+    }
+  });
+
+  it("never claims a closer margin than the real one, even when stopped at once", () => {
+    const next = random(11);
+    const goals: GoalId[] = ["steps", "chests"];
+    const margins = Array.from({ length: 200 }, (_, run) => {
+      const { gear, level, target, profile } = randomCase(next);
+      const found = optimizeGear(gear, profile, target, goals, { maxStates: 1, timeBudgetMs: 0 });
+      expect(marginHolds(goals, found.margin, found.score, bruteForce(gear, target, level, goals)), `run ${run}`).toBe(
+        true,
       );
-      expect(optimizeGear(gear, profile, target).result.averageSteps, `run ${run}`).toBeCloseTo(
-        bruteForce(gear, target, level),
-        9,
+      return found.margin;
+    });
+    expect(margins.some((m) => m !== null)).toBe(true);
+  });
+
+  it("keeps searching with a bigger limit until the set is within 1% of the best", () => {
+    const next = random(13);
+    const goals: GoalId[] = ["steps", "chests"];
+    for (let run = 0; run < 100; run++) {
+      const { gear, level, target, profile } = randomCase(next);
+      const found = optimizeGear(gear, profile, target, goals, { maxStates: 1 });
+      expect(found.margin?.gap ?? 0, `run ${run}`).toBeLessThanOrEqual(0.01);
+      expect(marginHolds(goals, found.margin, found.score, bruteForce(gear, target, level, goals)), `run ${run}`).toBe(
+        true,
       );
     }
   });

@@ -15,6 +15,10 @@ export function gearItems(
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
+export function ownedKey({ id, quality }: { id: string; quality: ItemQuality | null }): string {
+  return `${id}:${quality ?? ""}`;
+}
+
 export function stackedStats(item: GearItem, quality: ItemQuality | null): GearStat[] {
   const tiers = quality ? QUALITIES.slice(0, QUALITIES.indexOf(quality) + 1) : [];
   return [...item.stats, ...tiers.flatMap((tier) => item.tierStats[tier] ?? [])];

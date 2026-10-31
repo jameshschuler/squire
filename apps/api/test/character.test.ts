@@ -86,19 +86,19 @@ describe("parseCharacterExport", () => {
     });
   });
 
-  it("owns everything equipped, banked or carried once, leaving out fine materials", () => {
+  it("lists each item equipped, banked or carried with how many, leaving out fine materials", () => {
     const owned = parseCharacterExport(fixtureText).owned;
     expect(owned).toHaveLength(9);
     expect(owned).toEqual(
       expect.arrayContaining([
-        { id: "journeyman_handwear", quality: "epic" },
-        { id: "iron_pickaxe", quality: "epic" },
-        { id: "iron_pickaxe", quality: "common" },
-        { id: "oven_mittens", quality: null },
-        { id: "coal", quality: null },
+        { id: "journeyman_handwear", quality: "epic", count: 1 },
+        { id: "iron_pickaxe", quality: "epic", count: 1 },
+        { id: "iron_pickaxe", quality: "common", count: 1 },
+        { id: "oven_mittens", quality: null, count: 1 },
+        { id: "coal", quality: null, count: 3102 },
       ]),
     );
-    expect(owned.filter((item) => item.id === "recipe_book")).toHaveLength(1);
+    expect(owned.filter((item) => item.id === "recipe_book")).toEqual([{ id: "recipe_book", quality: null, count: 2 }]);
     expect(owned.some((item) => item.id.endsWith("_fine"))).toBe(false);
   });
 
@@ -121,6 +121,16 @@ describe("parseCharacterExport", () => {
   it("has no pets when the export lists none", () => {
     const { pets: _pets, available_pets: _available, ...withoutPets } = exportFixture;
     expect(parseCharacterExport(JSON.stringify(withoutPets)).pets).toEqual([]);
+  });
+
+  it("adds a worn copy to the banked ones, and leaves out items with none left", () => {
+    const text = JSON.stringify({
+      ...exportFixture,
+      bank: { ...exportFixture.bank, gold_ethernite_ring_epic: 1, silver_ring: 0 },
+    });
+    const owned = parseCharacterExport(text).owned;
+    expect(owned.find((item) => item.id === "gold_ethernite_ring" && item.quality === "epic")?.count).toBe(2);
+    expect(owned.some((item) => item.id === "silver_ring")).toBe(false);
   });
 
   it("rejects text that isn't JSON", () => {
