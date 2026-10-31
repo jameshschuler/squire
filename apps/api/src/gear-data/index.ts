@@ -18,11 +18,14 @@ export {
   goalOf,
   goalScorer,
   goalStats,
+  marginHolds,
+  marginOf,
   sameStat,
   type Goal,
   type GoalId,
   type GoalKind,
   type GoalStat,
+  type Margin,
   type Score,
 } from "./goals.js";
 export { GEAR_SLOTS } from "./slots.js";

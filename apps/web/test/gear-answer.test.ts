@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { GearSuggestion, StepsResult } from "@squire/api/gear-data";
+import type { GearSuggestion, Margin, StepsResult } from "@squire/api/gear-data";
 import { answerNotes, stepsTile } from "@/lib/gear-answer";
 import type { GearTarget } from "@/lib/gear-targets";
 
@@ -16,24 +16,26 @@ const target: GearTarget = {
   makesTieredGear: false,
 };
 const steps = (averageSteps: number): StepsResult => ({ efficiency: 1, steps: Math.ceil(averageSteps), averageSteps });
-const suggestion = (averageSteps: number, picks = 1, proven = true): GearSuggestion =>
+const suggestion = (averageSteps: number, picks = 1, margin: Margin | null = null): GearSuggestion =>
   ({
     location: null,
     picks: Array(picks).fill({}),
     pet: null,
     totals: {},
     result: steps(averageSteps),
-    proven,
+    goals: ["steps", "chests"],
+    margin,
   }) as unknown as GearSuggestion;
 
 describe("answerNotes", () => {
-  it("says nothing when gear helps and the level is fine", () => {
-    expect(answerNotes(suggestion(30), target, 50)).toEqual([]);
+  it("says the set is proven best when gear helps and the level is fine", () => {
+    expect(answerNotes(suggestion(30), target, 50)).toEqual(["Proven best set for this gear."]);
   });
 
   it("says when the character's level is too low", () => {
     expect(answerNotes(suggestion(30), target, 20)).toEqual([
       "You need Mining level 40 for this. Here's the set for when you get there.",
+      "Proven best set for this gear.",
     ]);
   });
 
@@ -48,10 +50,12 @@ describe("answerNotes", () => {
     ]);
   });
 
-  it("says when the search ran out of time before it could prove the set is the best", () => {
-    expect(answerNotes(suggestion(30, 1, false), target, null)).toEqual([
-      "This is the best set found in the time allowed. There may be a slightly better one.",
-    ]);
+  it.each([
+    [{ goal: "steps", gap: 0.008 }, "Within 0.8% of the best possible for Fastest."],
+    [{ goal: "chests", gap: 0.021 }, "Proven best for Fastest. Within 2.1% of the best possible for Most chests."],
+    [{ goal: "steps", gap: 0.00041 }, "Within 0.1% of the best possible for Fastest."],
+  ] as const)("says how close an unproven set is to the best possible (%j)", (margin, note) => {
+    expect(answerNotes(suggestion(30, 1, margin), target, null)).toEqual([note]);
   });
 });
 

@@ -9,6 +9,7 @@ export interface SearchOptions {
   goalDims: number;
   primaryValue: ((goalStats: number[]) => number) | null;
   repair: boolean;
+  deadline: number;
 }
 
 export interface SearchResult {
@@ -35,7 +36,7 @@ export function bestSet(
   rules: KeywordRules,
   useful: number,
   score: (totals: StatTotals) => Score,
-  { seed, maxStates, goalDims, primaryValue, repair }: SearchOptions,
+  { seed, maxStates, goalDims, primaryValue, repair, deadline }: SearchOptions,
 ): SearchResult {
   const setScore = (set: Candidate[]) => score(withSetBonuses(set));
   const compatible = (chosen: Candidate[], next: Candidate) =>
@@ -53,16 +54,24 @@ export function bestSet(
   const covers = coverage(useful, goalDims, rules.cappedSetGroups);
   let states: PartialSet[] = [emptySet(rules.setGroups.length)];
   let ceiling: Score | null = null;
-  groups.forEach(({ choices, capacity }, g) => {
+  const raise = (bound: Score) => {
+    ceiling = ceiling && compareScores(ceiling, bound) >= 0 ? ceiling : bound;
+  };
+  search: for (const [g, { choices, capacity }] of groups.entries()) {
     states = states.map((state) => ({ ...state, used: 0 }));
-    choices.forEach((next, i) => {
+    for (const [i, next] of choices.entries()) {
+      const bound = (state: PartialSet, from: number) =>
+        score(addStats(state.optimistic, addStats(tops[g]![from]![capacity - state.used]!, rest[g + 1]!)));
+      if (performance.now() > deadline) {
+        states.forEach((state) => raise(bound(state, i)));
+        break search;
+      }
       const nextBans = masks(next);
       const nextGroups = setGroupsOf(rules, next);
       const grown = states.flatMap((state) =>
         state.used < capacity && !clashes(state.bans, nextBans) ? [grow(state, next, nextBans, nextGroups)] : [],
       );
-      const remaining = (state: PartialSet) => addStats(tops[g]![i + 1]![capacity - state.used]!, rest[g + 1]!);
-      const bounded = (state: PartialSet) => ({ state, bound: score(addStats(state.optimistic, remaining(state))) });
+      const bounded = (state: PartialSet) => ({ state, bound: bound(state, i + 1) });
       const promising = (list: PartialSet[]) =>
         list.map(bounded).filter(({ bound }) => compareScores(bound, bestScore) > 0);
       const kept =
@@ -71,12 +80,11 @@ export function bestSet(
           : frontier(promising(states), promising(grown), covers);
       if (kept.length > maxStates) {
         kept.sort((a, b) => compareScores(b.bound, a.bound));
-        const cut = kept[maxStates]!.bound;
-        ceiling = ceiling && compareScores(ceiling, cut) >= 0 ? ceiling : cut;
+        raise(kept[maxStates]!.bound);
       }
       states = kept.slice(0, maxStates).map(({ state }) => state);
-    });
-  });
+    }
+  }
   for (const { chosen } of states) {
     const candidateScore = setScore(chosen);
     if (compareScores(candidateScore, bestScore) > 0) {

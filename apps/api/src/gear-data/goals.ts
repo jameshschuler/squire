@@ -137,6 +137,7 @@ export const GOALS: Goal[] = [
 ];
 
 const SIGNIFICANT_DIGITS = 9;
+const MARGIN_TOLERANCE = 1e-9;
 
 export function sameStat(a: GoalStat, b: GoalStat): boolean {
   return a.stat === b.stat && a.isPercent === b.isPercent;
@@ -168,6 +169,36 @@ export function goalScorer(goals: GoalId[]): (result: StepsResult, totals: StatT
       const gained = value(totals.goalStats);
       return goal.perStep ? (1 + gained) / result.averageSteps : gained;
     });
+}
+
+export interface Margin {
+  goal: GoalId;
+  gap: number;
+}
+
+export function marginOf(goals: GoalId[], found: Score, ceiling: Score | null): Margin | null {
+  if (!ceiling) {
+    return null;
+  }
+  for (const [i, goal] of goals.entries()) {
+    const [have, best] = [rounded(found[i]!), rounded(ceiling[i]!)];
+    if (best !== have) {
+      return best < have ? null : { goal, gap: (best - have) / (Math.abs(best) || Math.abs(have)) };
+    }
+  }
+  return null;
+}
+
+export function marginHolds(goals: GoalId[], claimed: Margin | null, found: Score, best: Score): boolean {
+  const real = marginOf(goals, found, best);
+  if (!real) {
+    return true;
+  }
+  if (!claimed) {
+    return false;
+  }
+  const [claimedAt, realAt] = [goals.indexOf(claimed.goal), goals.indexOf(real.goal)];
+  return claimedAt < realAt || (claimedAt === realAt && real.gap <= claimed.gap + MARGIN_TOLERANCE);
 }
 
 export function compareScores(a: Score, b: Score): number {

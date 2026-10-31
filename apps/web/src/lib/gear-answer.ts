@@ -1,5 +1,6 @@
 import {
   efficiencyCap,
+  goalOf,
   goalStats,
   levelBonus,
   locationBonuses,
@@ -11,11 +12,12 @@ import {
   toolSlotsOf,
   type GearData,
   type GearSuggestion,
+  type GoalId,
   type OptimizeTarget,
   type PlayerProfile,
   type StepsResult,
 } from "@squire/api/gear-data";
-import { formatNumber } from "./format";
+import { formatNumber, formatPercent } from "./format";
 import type { GearSolution } from "./gear-solution";
 import { locationTiles, statGroups, type StatGroups, type StatTile } from "./gear-stats";
 import type { GearTarget } from "./gear-targets";
@@ -69,11 +71,20 @@ export function answerNotes(suggestion: GearSuggestion, target: GearTarget, skil
     skillLevel !== null && skillLevel < required
       ? [`You need ${target.skill.name} level ${required} for this. Here's the set for when you get there.`]
       : [];
-  const noGear = suggestion.picks.length === 0 && !suggestion.pet ? ["No gear helps with this."] : [];
-  const unproven = suggestion.proven
-    ? []
-    : ["This is the best set found in the time allowed. There may be a slightly better one."];
-  return [...tooLow, ...noGear, ...unproven];
+  if (suggestion.picks.length === 0 && !suggestion.pet) {
+    return [...tooLow, "No gear helps with this."];
+  }
+  return [...tooLow, marginNote(suggestion)];
+}
+
+export function marginNote({ margin, goals }: GearSuggestion): string {
+  if (!margin) {
+    return "Proven best set for this gear.";
+  }
+  const label = (goal: GoalId) => goalOf(goal).label;
+  const proven = goals.slice(0, goals.indexOf(margin.goal)).map(label);
+  const within = `Within ${formatPercent(Math.ceil(margin.gap * 1000) / 1000, 1)} of the best possible for ${label(margin.goal)}.`;
+  return proven.length > 0 ? `Proven best for ${proven.join(", ")}. ${within}` : within;
 }
 
 export function stepsTile({ result, goals }: GearSuggestion, noGear: StepsResult, fewest: number): StatTile {

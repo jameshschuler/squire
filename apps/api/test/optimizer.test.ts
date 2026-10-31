@@ -17,6 +17,7 @@ import {
   type Score,
   compareScores,
   goalScorer,
+  marginHolds,
   gearBonusesByLocation,
   locationBonuses,
   setStats,
@@ -516,7 +517,7 @@ describe("free slots", () => {
     ]);
     const found = optimizeGear(gear, character(["lone_hat", "plain_hat", "lone_watch"]), mining);
     expect(found.picks.map((p) => p.item.id).sort()).toEqual(["lone_watch", "plain_hat"]);
-    expect(found.proven).toBe(true);
+    expect(found.margin).toBeNull();
   });
 
   it("ignores bonuses that don't apply to this activity", () => {
@@ -759,6 +760,20 @@ describe("fewestSteps", () => {
 });
 
 describe("search size", () => {
+  it("stops at its time budget even partway through a search", () => {
+    const tailoring = {
+      skill: "tailoring",
+      level: 43,
+      workRequired: 280,
+      maxWorkEfficiency: 2.1,
+      locationIds: ["azurazera"],
+    };
+    const gear = tailoringGear as unknown as GearData;
+    const found = optimizeGear(gear, BEST_IN_GAME, tailoring, ["steps"], { maxStates: 100_000, timeBudgetMs: 50 });
+    expect(found.searchMs).toBeLessThan(2000);
+    expect(found.picks.length).toBeGreaterThan(0);
+  });
+
   it("finishes quickly with the best tailoring gear in the game, where many tool types compete", () => {
     const tailoring = {
       skill: "tailoring",
@@ -934,28 +949,30 @@ describe("optimizeGear against every possible set", { timeout: 30_000 }, () => {
     }
   });
 
-  it("never calls a set proven when a better one exists, even when the search is cut hard", () => {
+  it("never claims a closer margin than the real one, even when stopped at once", () => {
     const next = random(11);
-    const proven = Array.from({ length: 200 }, (_, run) => {
+    const goals: GoalId[] = ["steps", "chests"];
+    const margins = Array.from({ length: 200 }, (_, run) => {
       const { gear, level, target, profile } = randomCase(next);
-      const goals: GoalId[] = ["steps", "chests"];
       const found = optimizeGear(gear, profile, target, goals, { maxStates: 1, timeBudgetMs: 0 });
-      if (found.proven) {
-        expect(compareScores(found.score, bruteForce(gear, target, level, goals)), `run ${run}`).toBe(0);
-      }
-      return found.proven;
+      expect(marginHolds(goals, found.margin, found.score, bruteForce(gear, target, level, goals)), `run ${run}`).toBe(
+        true,
+      );
+      return found.margin;
     });
-    expect(proven).toContain(true);
-    expect(proven).toContain(false);
+    expect(margins.some((m) => m !== null)).toBe(true);
   });
 
-  it("keeps searching with a bigger limit until it can prove the set is the best", () => {
+  it("keeps searching with a bigger limit until the set is within 1% of the best", () => {
     const next = random(13);
+    const goals: GoalId[] = ["steps", "chests"];
     for (let run = 0; run < 100; run++) {
       const { gear, level, target, profile } = randomCase(next);
-      const found = optimizeGear(gear, profile, target, ["steps", "chests"], { maxStates: 1 });
-      expect(found.proven, `run ${run}`).toBe(true);
-      expect(compareScores(found.score, bruteForce(gear, target, level, ["steps", "chests"])), `run ${run}`).toBe(0);
+      const found = optimizeGear(gear, profile, target, goals, { maxStates: 1 });
+      expect(found.margin?.gap ?? 0, `run ${run}`).toBeLessThanOrEqual(0.01);
+      expect(marginHolds(goals, found.margin, found.score, bruteForce(gear, target, level, goals)), `run ${run}`).toBe(
+        true,
+      );
     }
   });
 });

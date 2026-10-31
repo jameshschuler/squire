@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { GOALS, compareScores, goalScorer, goalStats, goalValue } from "../src/gear-data/goals.js";
+import {
+  GOALS,
+  compareScores,
+  goalScorer,
+  goalStats,
+  goalValue,
+  marginHolds,
+  marginOf,
+} from "../src/gear-data/goals.js";
+import type { GoalId } from "../src/gear-data/goals.js";
 import { NO_STATS } from "../src/gear-data/steps.js";
 
 const result = (averageSteps: number) => ({ efficiency: 1, steps: Math.ceil(averageSteps), averageSteps });
@@ -51,6 +60,55 @@ describe("goalValue", () => {
 
   it("isn't divided by steps for a per-step goal", () => {
     expect(goalValue(["xp"], "xp")([0.4])).toBe(0.4);
+  });
+});
+
+describe("marginOf", () => {
+  it.each([
+    ["nothing was cut", [-40], null, null],
+    ["nothing cut can beat the set", [-40], [-41], null],
+    ["the best possible ties the set", [-40, 0.2], [-40, 0.2], null],
+    ["a cut set could take fewer steps", [-44], [-40], { goal: "steps", gap: 0.1 }],
+    ["steps are proven but chests could be higher", [-40, 0.18], [-40, 0.2], { goal: "chests", gap: 0.1 }],
+    ["the best possible is zero", [-40, -0.5], [-40, 0], { goal: "chests", gap: 1 }],
+  ] as const)("when %s", (_, found, ceiling, margin) => {
+    const result = marginOf(["steps", "chests"], [...found], ceiling && [...ceiling]);
+    if (margin) {
+      expect(result?.goal).toBe(margin.goal);
+      expect(result?.gap).toBeCloseTo(margin.gap);
+    } else {
+      expect(result).toBeNull();
+    }
+  });
+
+  it("ignores goals past the ones it's asked to check", () => {
+    expect(marginOf(["steps"], [-40, 0.18], [-40, 0.2])).toBeNull();
+  });
+});
+
+describe("marginHolds", () => {
+  const goals: GoalId[] = ["steps", "chests"];
+  it.each([
+    ["the set is the best", null, [-40, 0.2], [-40, 0.2], true],
+    ["a proven set is beaten", null, [-40, 0.2], [-38, 0.2], false],
+    ["the real gap fits the claimed one", { goal: "steps", gap: 0.1 }, [-44], [-41], true],
+    ["the real gap is wider than claimed", { goal: "steps", gap: 0.05 }, [-44], [-40], false],
+    [
+      "only a later goal was uncertain, but an earlier one is beaten",
+      { goal: "chests", gap: 0.5 },
+      [-44, 0],
+      [-40, 0],
+      false,
+    ],
+    [
+      "an earlier goal was uncertain and a later one is beaten",
+      { goal: "steps", gap: 0.01 },
+      [-40, 0.1],
+      [-40, 0.2],
+      true,
+    ],
+  ] as const)("says whether the margin holds when %s", (_, claimed, found, best, holds) => {
+    expect(marginHolds(goals, claimed, [...found], [...best])).toBe(holds);
   });
 });
 

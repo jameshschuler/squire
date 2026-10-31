@@ -6,34 +6,38 @@ import { parseCharacterExport } from "@squire/api/character";
 import {
   BEST_IN_GAME,
   compareScores,
+  marginHolds,
   optimizeGear,
   type GearData,
   type GoalId,
+  type Margin,
   type OptimizeTarget,
   type PlayerProfile,
   type Score,
+  type SearchLimits,
 } from "@squire/api/gear-data";
 import type { RecipeBook } from "@squire/api/recipe-book";
-import { gearTargets, optimizeTarget, recommendedGoals } from "../src/lib/gear-targets";
+import { gearTargets, optimizeTarget, recommendedGoals, tieBreakersFor } from "../src/lib/gear-targets";
 
 interface Job {
   id: number;
   name: string;
   profile: string;
   goals: GoalId[];
+  tieBreakers: GoalId[];
   target: OptimizeTarget;
 }
 
 interface Run {
   steps: number;
   score: Score;
-  proven: boolean;
+  margin: Margin | null;
   ms: number;
 }
 
-type Outcome = "same" | "missed" | "wrong proof" | "exact worse" | "timed out" | "failed";
+type Outcome = "same" | "missed" | "wrong margin" | "exact worse" | "timed out" | "failed";
 
-const FAILING: Outcome[] = ["wrong proof", "exact worse", "failed"];
+const FAILING: Outcome[] = ["wrong margin", "exact worse", "failed"];
 
 interface Result {
   job: Job;
@@ -106,6 +110,7 @@ function buildJobs(book: RecipeBook, profiles: string[]): Job[] {
           name: target.name,
           profile,
           goals,
+          tieBreakers: tieBreakersFor(target, goals),
           target: optimizeTarget(target, undefined),
         })),
       ),
@@ -150,7 +155,7 @@ function runJob(worker: Worker, job: Job, timeoutMs: number): Promise<Result> {
         fast = run;
         return;
       }
-      finish(outcomeOf(compareScores(run.score, fast.score), fast.proven), run);
+      finish(outcomeOf(job.goals, fast, run), run);
     };
     const onError = () => finish("failed", null);
     const timer = setTimeout(() => finish("timed out", null), timeoutMs);
@@ -161,23 +166,26 @@ function runJob(worker: Worker, job: Job, timeoutMs: number): Promise<Result> {
   });
 }
 
-function outcomeOf(comparison: number, proven: boolean): Outcome {
+function outcomeOf(goals: GoalId[], fast: Run, exact: Run): Outcome {
+  const comparison = compareScores(exact.score, fast.score);
   if (comparison > 0) {
-    return proven ? "wrong proof" : "missed";
+    return marginHolds(goals, fast.margin, fast.score, exact.score) ? "missed" : "wrong margin";
   }
   return comparison < 0 ? "exact worse" : "same";
 }
 
 function serve({ gear, profiles }: Shared) {
   parentPort!.on("message", (job: Job) => {
-    const run = (maxStates?: number): Run => {
-      const { result, score, proven, searchMs } = optimizeGear(gear, profiles[job.profile]!, job.target, job.goals, {
-        maxStates,
+    const run = (limits: SearchLimits): Run => {
+      const goals = [...job.goals, ...job.tieBreakers];
+      const found = optimizeGear(gear, profiles[job.profile]!, job.target, goals, {
+        ...limits,
+        checkedGoals: job.goals.length,
       });
-      return { steps: result.steps, score, proven, ms: searchMs };
+      return { steps: found.result.steps, score: found.score, margin: found.margin, ms: found.searchMs };
     };
-    parentPort!.postMessage(run());
-    parentPort!.postMessage(run(Number.POSITIVE_INFINITY));
+    parentPort!.postMessage(run({}));
+    parentPort!.postMessage(run({ maxStates: Number.POSITIVE_INFINITY, timeBudgetMs: Number.POSITIVE_INFINITY }));
   });
 }
 
@@ -185,7 +193,8 @@ function report(results: Result[]) {
   const describe = ({ job }: Result) => `${job.name} · ${job.profile} · ${job.goals.join(" › ")}`;
   for (const result of results.filter((r) => r.outcome !== "same")) {
     const { fast, exact } = result;
-    const limited = fast && `limited ${fast.steps} steps`;
+    const claim = fast?.margin ? `within ${(fast.margin.gap * 100).toFixed(1)}% on ${fast.margin.goal}` : "proven";
+    const limited = fast && `limited ${fast.steps} steps, ${claim}`;
     const detail = limited ? ` (${limited}, ${exact ? `exact ${exact.steps} steps` : "exact didn't finish"})` : "";
     console.log(`${result.outcome.toUpperCase()}: ${describe(result)}${detail}`);
   }
@@ -198,7 +207,7 @@ function report(results: Result[]) {
     .sort((a, b) => b.ms - a.ms)
     .slice(0, 3)
     .map(({ result, ms }) => `${describe(result)} ${ms} ms`);
-  const proven = results.filter((r) => r.fast?.proven).length;
+  const proven = results.filter((r) => r.fast && !r.fast.margin).length;
   console.log([...counts].map(([outcome, count]) => `${count} ${outcome}`).join(", "));
   console.log(`${proven} of ${results.length} searches proved their own set is the best`);
   console.log(`Slowest exact searches: ${slowest.join("; ")}`);
