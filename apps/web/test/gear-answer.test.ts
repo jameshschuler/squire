@@ -16,13 +16,14 @@ const target: GearTarget = {
   makesTieredGear: false,
 };
 const steps = (averageSteps: number): StepsResult => ({ efficiency: 1, steps: Math.ceil(averageSteps), averageSteps });
-const suggestion = (averageSteps: number, picks = 1): GearSuggestion =>
+const suggestion = (averageSteps: number, picks = 1, proven = true): GearSuggestion =>
   ({
     location: null,
     picks: Array(picks).fill({}),
     pet: null,
     totals: {},
     result: steps(averageSteps),
+    proven,
   }) as unknown as GearSuggestion;
 
 describe("answerNotes", () => {
@@ -44,6 +45,12 @@ describe("answerNotes", () => {
     expect(answerNotes(suggestion(80, 0), target, 20)).toEqual([
       "You need Mining level 40 for this. Here's the set for when you get there.",
       "No gear helps with this.",
+    ]);
+  });
+
+  it("says when the search ran out of time before it could prove the set is the best", () => {
+    expect(answerNotes(suggestion(30, 1, false), target, null)).toEqual([
+      "This is the best set found in the time allowed. There may be a slightly better one.",
     ]);
   });
 });

@@ -701,6 +701,18 @@ describe("gearBonusesByLocation", () => {
   });
 });
 
+describe("search time", () => {
+  it("says how long the search took, in whole milliseconds", () => {
+    const gear = gearData([item("small_gloves", "hands", [flatSteps(-2)])]);
+    const before = performance.now();
+    const { searchMs } = optimizeGear(gear, BEST_IN_GAME, mining);
+    const took = performance.now() - before;
+    expect(Number.isInteger(searchMs)).toBe(true);
+    expect(searchMs).toBeGreaterThanOrEqual(0);
+    expect(searchMs).toBeLessThanOrEqual(Math.ceil(took));
+  });
+});
+
 describe("fewestSteps", () => {
   it("counts the steps with the best gear in the game, whatever the character owns", () => {
     const gear = gearData([
@@ -776,7 +788,7 @@ describe("setStats", () => {
   });
 });
 
-describe("optimizeGear against every possible set", () => {
+describe("optimizeGear against every possible set", { timeout: 30_000 }, () => {
   function random(seed: number) {
     let state = seed;
     return () => {
@@ -813,6 +825,20 @@ describe("optimizeGear against every possible set", () => {
       const keywords = [...(inSet ? ["set"] : []), ...(slot === "tool" && next() < 0.5 ? ["hatchet"] : [])];
       return item(`item_${i}`, slot, stats, { keywords });
     });
+  }
+
+  function randomCase(next: () => number) {
+    const items = randomGear(next);
+    const level = 50 + Math.round(next() * 30);
+    return {
+      gear: gearData(items, { bannedKeywords: { hatchet: ["hatchet"] } }),
+      level,
+      target: { ...mining, workRequired: 40 + Math.round(next() * 200) },
+      profile: character(
+        items.map((i) => i.id),
+        { skillLevels: { mining: level } },
+      ),
+    };
   }
 
   function bruteForce(gear: GearData, target: OptimizeTarget, level: number, goals: GoalId[]): Score {
@@ -862,14 +888,7 @@ describe("optimizeGear against every possible set", () => {
   ] as [string, GoalId[]][])("finds a set as good as the best one for %s on 300 random gear pools", (_, goals) => {
     const next = random(42);
     for (let run = 0; run < 300; run++) {
-      const items = randomGear(next);
-      const gear = gearData(items, { bannedKeywords: { hatchet: ["hatchet"] } });
-      const level = 50 + Math.round(next() * 30);
-      const target = { ...mining, workRequired: 40 + Math.round(next() * 200) };
-      const profile = character(
-        items.map((i) => i.id),
-        { skillLevels: { mining: level } },
-      );
+      const { gear, level, target, profile } = randomCase(next);
       const found = optimizeGear(gear, profile, target, goals).score;
       expect(compareScores(found, bruteForce(gear, target, level, goals)), `run ${run}`).toBe(0);
     }
@@ -878,16 +897,34 @@ describe("optimizeGear against every possible set", () => {
   it("finds the best set without the search limit too, which is what the check script compares against", () => {
     const next = random(7);
     for (let run = 0; run < 100; run++) {
-      const items = randomGear(next);
-      const gear = gearData(items, { bannedKeywords: { hatchet: ["hatchet"] } });
-      const level = 50 + Math.round(next() * 30);
-      const target = { ...mining, workRequired: 40 + Math.round(next() * 200) };
-      const profile = character(
-        items.map((i) => i.id),
-        { skillLevels: { mining: level } },
-      );
+      const { gear, level, target, profile } = randomCase(next);
       const exact = optimizeGear(gear, profile, target, ["steps"], { maxStates: Number.POSITIVE_INFINITY }).score;
       expect(compareScores(exact, bruteForce(gear, target, level, ["steps"])), `run ${run}`).toBe(0);
+    }
+  });
+
+  it("never calls a set proven when a better one exists, even when the search is cut hard", () => {
+    const next = random(11);
+    const proven = Array.from({ length: 200 }, (_, run) => {
+      const { gear, level, target, profile } = randomCase(next);
+      const goals: GoalId[] = ["steps", "chests"];
+      const found = optimizeGear(gear, profile, target, goals, { maxStates: 1, timeBudgetMs: 0 });
+      if (found.proven) {
+        expect(compareScores(found.score, bruteForce(gear, target, level, goals)), `run ${run}`).toBe(0);
+      }
+      return found.proven;
+    });
+    expect(proven).toContain(true);
+    expect(proven).toContain(false);
+  });
+
+  it("keeps searching with a bigger limit until it can prove the set is the best", () => {
+    const next = random(13);
+    for (let run = 0; run < 100; run++) {
+      const { gear, level, target, profile } = randomCase(next);
+      const found = optimizeGear(gear, profile, target, ["steps", "chests"], { maxStates: 1 });
+      expect(found.proven, `run ${run}`).toBe(true);
+      expect(compareScores(found.score, bruteForce(gear, target, level, ["steps", "chests"])), `run ${run}`).toBe(0);
     }
   });
 });

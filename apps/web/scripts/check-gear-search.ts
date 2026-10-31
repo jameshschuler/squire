@@ -27,12 +27,8 @@ interface Job {
 interface Run {
   steps: number;
   score: Score;
+  proven: boolean;
   ms: number;
-}
-
-interface Answer {
-  fast: Run;
-  exact: Run;
 }
 
 type Outcome = "same" | "missed" | "exact worse" | "timed out" | "failed";
@@ -42,7 +38,8 @@ const FAILING: Outcome[] = ["missed", "exact worse", "failed"];
 interface Result {
   job: Job;
   outcome: Outcome;
-  answer: Answer | null;
+  fast: Run | null;
+  exact: Run | null;
 }
 
 interface Shared {
@@ -140,20 +137,25 @@ async function runAll(jobs: Job[], shared: Shared, lanes: number, timeoutMs: num
 
 function runJob(worker: Worker, job: Job, timeoutMs: number): Promise<Result> {
   return new Promise((resolve) => {
-    const finish = (outcome: Outcome, answer: Answer | null) => {
+    let fast: Run | null = null;
+    const finish = (outcome: Outcome, exact: Run | null) => {
       clearTimeout(timer);
-      worker.off("message", onAnswer);
+      worker.off("message", onRun);
       worker.off("error", onError);
       worker.off("exit", onError);
-      resolve({ job, outcome, answer });
+      resolve({ job, outcome, fast, exact });
     };
-    const onAnswer = (answer: Answer) => {
-      const comparison = compareScores(answer.exact.score, answer.fast.score);
-      finish(comparison > 0 ? "missed" : comparison < 0 ? "exact worse" : "same", answer);
+    const onRun = (run: Run) => {
+      if (!fast) {
+        fast = run;
+        return;
+      }
+      const comparison = compareScores(run.score, fast.score);
+      finish(comparison > 0 ? "missed" : comparison < 0 ? "exact worse" : "same", run);
     };
     const onError = () => finish("failed", null);
     const timer = setTimeout(() => finish("timed out", null), timeoutMs);
-    worker.on("message", onAnswer);
+    worker.on("message", onRun);
     worker.on("error", onError);
     worker.on("exit", onError);
     worker.postMessage(job);
@@ -163,20 +165,22 @@ function runJob(worker: Worker, job: Job, timeoutMs: number): Promise<Result> {
 function serve({ gear, profiles }: Shared) {
   parentPort!.on("message", (job: Job) => {
     const run = (maxStates?: number): Run => {
-      const start = performance.now();
-      const suggestion = optimizeGear(gear, profiles[job.profile]!, job.target, job.goals, { maxStates });
-      return { steps: suggestion.result.steps, score: suggestion.score, ms: Math.round(performance.now() - start) };
+      const { result, score, proven, searchMs } = optimizeGear(gear, profiles[job.profile]!, job.target, job.goals, {
+        maxStates,
+      });
+      return { steps: result.steps, score, proven, ms: searchMs };
     };
-    parentPort!.postMessage({ fast: run(), exact: run(Number.POSITIVE_INFINITY) } satisfies Answer);
+    parentPort!.postMessage(run());
+    parentPort!.postMessage(run(Number.POSITIVE_INFINITY));
   });
 }
 
 function report(results: Result[]) {
   const describe = ({ job }: Result) => `${job.name} · ${job.profile} · ${job.goals.join(" › ")}`;
   for (const result of results.filter((r) => r.outcome !== "same")) {
-    const detail = result.answer
-      ? ` (limited ${result.answer.fast.steps} steps, exact ${result.answer.exact.steps} steps)`
-      : "";
+    const { fast, exact } = result;
+    const limited = fast && `limited ${fast.steps} steps${fast.proven ? ", claimed proven" : ""}`;
+    const detail = limited ? ` (${limited}, ${exact ? `exact ${exact.steps} steps` : "exact didn't finish"})` : "";
     console.log(`${result.outcome.toUpperCase()}: ${describe(result)}${detail}`);
   }
   const counts = new Map<Outcome, number>();
@@ -184,10 +188,12 @@ function report(results: Result[]) {
     counts.set(outcome, (counts.get(outcome) ?? 0) + 1);
   }
   const slowest = results
-    .filter((r) => r.answer)
-    .sort((a, b) => b.answer!.exact.ms - a.answer!.exact.ms)
+    .flatMap((r) => (r.exact ? [{ result: r, ms: r.exact.ms }] : []))
+    .sort((a, b) => b.ms - a.ms)
     .slice(0, 3)
-    .map((r) => `${describe(r)} ${r.answer!.exact.ms} ms`);
+    .map(({ result, ms }) => `${describe(result)} ${ms} ms`);
+  const proven = results.filter((r) => r.fast?.proven).length;
   console.log([...counts].map(([outcome, count]) => `${count} ${outcome}`).join(", "));
+  console.log(`${proven} of ${results.length} searches proved their own set is the best`);
   console.log(`Slowest exact searches: ${slowest.join("; ")}`);
 }

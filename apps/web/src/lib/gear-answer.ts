@@ -69,10 +69,11 @@ export function answerNotes(suggestion: GearSuggestion, target: GearTarget, skil
     skillLevel !== null && skillLevel < required
       ? [`You need ${target.skill.name} level ${required} for this. Here's the set for when you get there.`]
       : [];
-  if (suggestion.picks.length === 0 && !suggestion.pet) {
-    return [...tooLow, "No gear helps with this."];
-  }
-  return tooLow;
+  const noGear = suggestion.picks.length === 0 && !suggestion.pet ? ["No gear helps with this."] : [];
+  const unproven = suggestion.proven
+    ? []
+    : ["This is the best set found in the time allowed. There may be a slightly better one."];
+  return [...tooLow, ...noGear, ...unproven];
 }
 
 export function stepsTile({ result, goals }: GearSuggestion, noGear: StepsResult, fewest: number): StatTile {

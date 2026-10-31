@@ -11,6 +11,11 @@ export interface SearchOptions {
   repair: boolean;
 }
 
+export interface SearchResult {
+  set: Candidate[];
+  ceiling: Score | null;
+}
+
 export interface SlotGroup {
   capacity: number;
   choices: Candidate[];
@@ -31,7 +36,7 @@ export function bestSet(
   useful: number,
   score: (totals: StatTotals) => Score,
   { seed, maxStates, goalDims, primaryValue, repair }: SearchOptions,
-): Candidate[] {
+): SearchResult {
   const setScore = (set: Candidate[]) => score(withSetBonuses(set));
   const compatible = (chosen: Candidate[], next: Candidate) =>
     !chosen.some((other) => other === next || conflicts(rules, other, next));
@@ -47,6 +52,7 @@ export function bestSet(
   const masks = banMasks(rules);
   const covers = coverage(useful, goalDims);
   let states: PartialSet[] = [emptySet(rules.setGroups.length)];
+  let ceiling: Score | null = null;
   groups.forEach(({ choices, capacity }, g) => {
     states = states.map((state) => ({ ...state, used: 0 }));
     choices.forEach((next, i) => {
@@ -63,9 +69,12 @@ export function bestSet(
         i === 0
           ? frontier([], [...promising(states), ...promising(grown)], covers)
           : frontier(promising(states), promising(grown), covers);
-      states = (
-        kept.length > maxStates ? kept.sort((a, b) => compareScores(b.bound, a.bound)).slice(0, maxStates) : kept
-      ).map(({ state }) => state);
+      if (kept.length > maxStates) {
+        kept.sort((a, b) => compareScores(b.bound, a.bound));
+        const cut = kept[maxStates]!.bound;
+        ceiling = ceiling && compareScores(ceiling, cut) >= 0 ? ceiling : cut;
+      }
+      states = kept.slice(0, maxStates).map(({ state }) => state);
     });
   });
   for (const { chosen } of states) {
@@ -76,7 +85,7 @@ export function bestSet(
     }
   }
   if (!repair) {
-    return best;
+    return { set: best, ceiling };
   }
   const starts =
     primaryValue === null
@@ -90,7 +99,7 @@ export function bestSet(
   const winner = starts
     .map((start) => improveBySwaps(groups, start, compatible, setScore))
     .reduce((a, b) => (compareScores(setScore(b), setScore(a)) > 0 ? b : a));
-  return withoutIdlePicks(winner, setScore);
+  return { set: withoutIdlePicks(winner, setScore), ceiling };
 }
 
 function improveBySwaps(

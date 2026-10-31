@@ -1,7 +1,6 @@
 import type { GearType } from "@walkscape-community/data-api-client";
 import {
   gearCandidate,
-  type Candidate,
   petCandidate,
   situationFor,
   withSetBonuses,
@@ -21,7 +20,7 @@ import { compareScores, goalOf, goalScorer, goalStats, goalValue, type GoalId, t
 import { keywordRules, prune } from "./pruning.js";
 import { GEAR_SLOTS, slotCapacity } from "./slots.js";
 import { fillFreeSlots } from "./free-slots.js";
-import { bestSet, type SlotGroup } from "./search.js";
+import { bestSet, type SearchResult, type SlotGroup } from "./search.js";
 import {
   NO_STATS,
   efficiencyCap,
@@ -46,12 +45,19 @@ export interface GearSuggestion {
   result: StepsResult;
   goals: GoalId[];
   score: Score;
+  proven: boolean;
+  searchMs: number;
 }
 
+type LocationSearch = Omit<GearSuggestion, "proven" | "searchMs"> & { ceiling: Score | null };
+
 const SEARCH_STATES = 1000;
+const SEARCH_BUDGET_MS = 10_000;
+const STATES_GROWTH = 4;
 
 export interface SearchLimits {
   maxStates?: number;
+  timeBudgetMs?: number;
 }
 
 export function optimizeGear(
@@ -59,21 +65,40 @@ export function optimizeGear(
   profile: PlayerProfile,
   target: OptimizeTarget,
   goals: GoalId[] = ["steps"],
-  { maxStates = SEARCH_STATES }: SearchLimits = {},
+  { maxStates = SEARCH_STATES, timeBudgetMs = SEARCH_BUDGET_MS }: SearchLimits = {},
 ): GearSuggestion {
+  const start = performance.now();
+  for (let limit = maxStates; ; limit *= STATES_GROWTH) {
+    const roundStart = performance.now();
+    const suggestion = optimizeWithin(gear, profile, target, goals, limit);
+    const now = performance.now();
+    if (suggestion.proven || now - start + (now - roundStart) * STATES_GROWTH ** 2 >= timeBudgetMs) {
+      return { ...suggestion, searchMs: Math.round(now - start) };
+    }
+  }
+}
+
+function optimizeWithin(
+  gear: GearData,
+  profile: PlayerProfile,
+  target: OptimizeTarget,
+  goals: GoalId[],
+  maxStates: number,
+): Omit<GearSuggestion, "searchMs"> {
   const locations = gear.locations.filter((l) => target.locationIds.includes(l.id));
-  return distinctLocations(gear, locations)
-    .map((location) =>
-      optimizeAt(gear, situationFor(gear, profile, target, location, goalStats(goals)), goals, maxStates),
-    )
-    .reduce((best, next) => (compareScores(next.score, best.score) > 0 ? next : best));
+  const searches = distinctLocations(gear, locations).map((location) =>
+    optimizeAt(gear, situationFor(gear, profile, target, location, goalStats(goals)), goals, maxStates),
+  );
+  const { ceiling: _ceiling, ...best } = searches.reduce((a, b) => (compareScores(b.score, a.score) > 0 ? b : a));
+  const proven = searches.every(({ ceiling }) => ceiling === null || compareScores(best.score, ceiling) >= 0);
+  return { ...best, proven };
 }
 
 export function fewestSteps(gear: GearData, target: OptimizeTarget): number {
-  return optimizeGear(gear, BEST_IN_GAME, target).result.steps;
+  return optimizeGear(gear, BEST_IN_GAME, target, ["steps"], { timeBudgetMs: 0 }).result.steps;
 }
 
-function optimizeAt(gear: GearData, situation: Situation, goals: GoalId[], maxStates: number): GearSuggestion {
+function optimizeAt(gear: GearData, situation: Situation, goals: GoalId[], maxStates: number): LocationSearch {
   const { profile, target } = situation;
   const choices = ownedGear(profile, gear.items).map((owned) => ({
     owned,
@@ -100,18 +125,18 @@ function optimizeAt(gear: GearData, situation: Situation, goals: GoalId[], maxSt
 
   const primary = goals[0];
   const primaryValue = primary === undefined || goalOf(primary).stats.length === 0 ? null : goalValue(goals, primary);
-  const searched = goals.reduce<Candidate[]>(
-    (seed, _, i) =>
+  const searched = goals.reduce<SearchResult>(
+    ({ set }, _, i) =>
       bestSet(groups, rules, useful, (totals) => score(totals).slice(0, i + 1), {
-        seed,
+        seed: set,
         maxStates,
         goalDims: goalStats(goals.slice(0, i + 1)).length,
         primaryValue,
         repair: i === goals.length - 1,
       }),
-    [],
+    { set: [], ceiling: null },
   );
-  const chosen = fillFreeSlots(situation, searched, choices, capacityOf, rules, score);
+  const chosen = fillFreeSlots(situation, searched.set, choices, capacityOf, rules, score);
   const totals = withSetBonuses(chosen);
   return {
     location: situation.location,
@@ -121,6 +146,7 @@ function optimizeAt(gear: GearData, situation: Situation, goals: GoalId[], maxSt
     result: stepsPerAction(target, level, totals),
     goals,
     score: score(totals),
+    ceiling: searched.ceiling,
   };
 }
 
