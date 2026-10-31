@@ -21,7 +21,6 @@ import {
   gearBonusesByLocation,
   locationBonuses,
   setStats,
-  statsBySource,
 } from "../src/gear-data/index.js";
 
 const stat = (stat: GearStat["stat"], value: number, isPercent: boolean, ...conditions: GearCondition[]): GearStat => ({
@@ -593,26 +592,6 @@ describe("locationBonuses", () => {
 
   it("lists nothing without a location", () => {
     expect(bonuses(null)).toEqual([]);
-  });
-});
-
-describe("statsBySource", () => {
-  it("lists each worn item's stats that apply, its tiers added up", () => {
-    const gear = gearData([
-      item("spectral_needle", "tool", [efficiency(-0.65)], {
-        tierStats: { rare: [efficiency(0.15)], epic: [efficiency(0.15)] },
-      }),
-      item("chef_hat", "head", [efficiency(0.2, mainSkill("cooking")), stat("chestFind", 0.1, true)]),
-    ]);
-    const suggestion = optimizeGear(gear, BEST_IN_GAME, mining);
-    const picks = [
-      { slot: "tool" as const, item: gear.items[0]!, quality: "epic" as const },
-      { slot: "head" as const, item: gear.items[1]!, quality: null },
-    ];
-    expect(statsBySource(gear, BEST_IN_GAME, mining, { ...suggestion, picks })).toEqual([
-      { source: "spectral_needle", stat: "workEfficiency", isPercent: true, value: expect.closeTo(-0.35) },
-      { source: "chef_hat", stat: "chestFind", isPercent: true, value: 0.1 },
-    ]);
   });
 });
 

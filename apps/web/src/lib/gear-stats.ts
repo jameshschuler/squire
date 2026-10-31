@@ -3,6 +3,8 @@ import { formatPercent } from "./format";
 
 type StatType = StatLine["stat"];
 
+const BASE_EFFICIENCY = 1;
+
 export interface StatTile {
   key: string;
   value: string;
@@ -15,21 +17,12 @@ export interface StatTile {
 export interface StatGroups {
   steps: StatTile[];
   other: StatTile[];
-  efficiency: BreakdownRow[];
 }
 
 export interface EfficiencyParts {
   cap: number;
   gear: number;
   level: number;
-  sources: SourcedStat[];
-}
-
-const BASE_EFFICIENCY = 1;
-
-export interface BreakdownRow {
-  label: string;
-  value: string;
 }
 
 const STAT_LABELS: Partial<Record<StatType, string>> = {
@@ -91,40 +84,19 @@ export function statGroups(
       .filter((line) => !STEP_STATS.includes(line.stat))
       .map(tile)
       .sort((a, b) => rank(a) - rank(b) || a.label.localeCompare(b.label)),
-    efficiency: efficiencyBreakdown(efficiency),
   };
 }
 
-export function efficiencyBreakdown({ cap, gear, level, sources }: EfficiencyParts): BreakdownRow[] {
-  if (sources.length === 0 && level === 0) {
-    return [];
-  }
-  const byName = new Map<string, number[]>();
-  for (const { source, value } of sources) {
-    byName.set(source, [...(byName.get(source) ?? []), value]);
-  }
-  return [
-    { label: "Base", value: formatPercent(BASE_EFFICIENCY) },
-    ...(level > 0 ? [{ label: "Your level", value: percent(level) }] : []),
-    ...[...byName]
-      .map(([name, values]) => ({ name, count: values.length, total: values.reduce((sum, v) => sum + v, 0) }))
-      .sort((a, b) => b.total - a.total)
-      .map(({ name, count, total }) => ({ label: count > 1 ? `${name} ×${count}` : name, value: percent(total) })),
-    { label: "Total", value: formatPercent(BASE_EFFICIENCY + level + gear, 1) },
-    ...(Number.isFinite(cap) ? [{ label: "Max", value: formatPercent(BASE_EFFICIENCY + cap, 1) }] : []),
-  ];
-}
-
 function efficiencyTile(parts: EfficiencyParts): StatTile {
-  const over = efficiencyOver(parts);
-  const wasted = parts.gear > 0 && over > 0;
+  const wasted = Math.min(efficiencyOver(parts), parts.gear);
   return {
     key: "workEfficiency",
     value: percent(parts.gear),
     label: "Work efficiency",
-    details: wasted ? [`${formatPercent(over, 1)} over the max`] : [],
+    details:
+      wasted > 0 ? [`${formatPercent(wasted, 1)} wasted · max ${formatPercent(BASE_EFFICIENCY + parts.cap, 1)}`] : [],
     highlight: false,
-    over: wasted,
+    over: wasted > 0,
   };
 }
 

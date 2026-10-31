@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { efficiencyBreakdown, formatStatValue, locationTiles, statGroups, type StatTile } from "@/lib/gear-stats";
+import { formatStatValue, locationTiles, statGroups, type StatTile } from "@/lib/gear-stats";
 
 describe("statGroups", () => {
-  const capped = { cap: 0.2, gear: 0.95, level: 0.25, sources: [] };
+  const capped = { cap: 0.2, gear: 0.95, level: 0.25 };
   const steps = { key: "steps", value: "35", label: "Steps", details: [], highlight: true, over: false };
   const lines = [
     { stat: "chestFind", isPercent: true, value: 0.69 },
@@ -20,7 +20,7 @@ describe("statGroups", () => {
   it("starts the steps tiles with steps, then the gear's work efficiency, then one number per tile", () => {
     expect(shown(groups.steps)).toEqual([
       "Steps 35",
-      "Work efficiency +95% · 100% over the max",
+      "Work efficiency +95% · 95% wasted · max 120%",
       "Steps required (flat) −6",
       "Steps required −2%",
       "Double action +23.5%",
@@ -59,31 +59,34 @@ describe("statGroups", () => {
   });
 
   it.each([
-    [{ cap: 0.2, gear: 0.95, level: 0.25, sources: [] }, true],
-    [{ cap: 0.5, gear: 0.25, level: 0.25, sources: [] }, false],
-    [{ cap: 0.5, gear: 0.05, level: 0.25, sources: [] }, false],
-    [{ cap: Number.POSITIVE_INFINITY, gear: 3, level: 0.25, sources: [] }, false],
-    [{ cap: 0.2, gear: 0, level: 0.25, sources: [] }, false],
+    [{ cap: 0.2, gear: 0.95, level: 0.25 }, true],
+    [{ cap: 0.5, gear: 0.25, level: 0.25 }, false],
+    [{ cap: 0.5, gear: 0.05, level: 0.25 }, false],
+    [{ cap: Number.POSITIVE_INFINITY, gear: 3, level: 0.25 }, false],
+    [{ cap: 0.2, gear: 0, level: 0.25 }, false],
   ])("marks work efficiency as over only when gear adds efficiency past the max (%j)", (parts, over) => {
     expect(statGroups([], parts, [], steps).steps[1]).toMatchObject({ key: "workEfficiency", over });
   });
 
-  it("says how far over the max gear and level go, to one decimal", () => {
-    const over = statGroups([], { cap: 0.5, gear: 0.445, level: 0.25, sources: [] }, [], steps).steps[1];
+  it("says how much of the gear's work efficiency is wasted past the max, to one decimal", () => {
+    const over = statGroups([], { cap: 0.5, gear: 0.445, level: 0.25 }, [], steps).steps[1];
     expect(over).toMatchObject({
       value: "+44.5%",
-      details: ["19.5% over the max"],
+      details: ["19.5% wasted · max 150%"],
       over: true,
     });
   });
 
-  it("keeps the tile to one line: how far over the max it goes", () => {
-    const parts = { cap: 0.6, gear: 0.59, level: 0.25, sources: [] };
-    expect(statGroups([], parts, [], steps).steps[1]?.details).toEqual(["24% over the max"]);
+  it.each([
+    [{ cap: 0.6, gear: 0.59, level: 0.25 }, ["24% wasted · max 160%"]],
+    [{ cap: 0.2, gear: 0.1, level: 0.25 }, ["10% wasted · max 120%"]],
+    [{ cap: 0.6, gear: 0.3, level: 0.25 }, []],
+  ])("keeps the tile to one line on what's wasted, never more than the gear adds (%j)", (parts, details) => {
+    expect(statGroups([], parts, [], steps).steps[1]?.details).toEqual(details);
   });
 
   it("shows the gear's work efficiency, not the capped total", () => {
-    expect(statGroups([], { cap: 0.5, gear: -0.1, level: 0.25, sources: [] }, [], steps).steps[1]).toMatchObject({
+    expect(statGroups([], { cap: 0.5, gear: -0.1, level: 0.25 }, [], steps).steps[1]).toMatchObject({
       value: "−10%",
     });
   });
@@ -98,58 +101,6 @@ describe("statGroups", () => {
   it("shows a highlighted zero for a priority stat the set doesn't give", () => {
     const none = statGroups([], capped, [{ stat: "chestFind", isPercent: true }], steps);
     expect(none.other).toMatchObject([{ label: "Chest finding", value: "+0%", highlight: true }]);
-  });
-});
-
-describe("efficiencyBreakdown", () => {
-  const source = (name: string, value: number) => ({
-    source: name,
-    stat: "workEfficiency" as const,
-    isPercent: true,
-    value,
-  });
-
-  it("adds up from the 100% base: level, then each item best first, then the total and the max", () => {
-    const sources = [source("Spectral hunting bow", -0.04), source("Box trap", 0.35), source("Hunter's cap", 0.28)];
-    expect(efficiencyBreakdown({ cap: 0.6, gear: 0.59, level: 0.25, sources })).toEqual([
-      { label: "Base", value: "100%" },
-      { label: "Your level", value: "+25%" },
-      { label: "Box trap", value: "+35%" },
-      { label: "Hunter's cap", value: "+28%" },
-      { label: "Spectral hunting bow", value: "−4%" },
-      { label: "Total", value: "184%" },
-      { label: "Max", value: "160%" },
-    ]);
-  });
-
-  it("puts copies of one item on one row, with a count", () => {
-    const sources = [source("Lucky ring", 0.05), source("Lucky ring", 0.05)];
-    expect(efficiencyBreakdown({ cap: 0.6, gear: 0.1, level: 0, sources })[1]).toEqual({
-      label: "Lucky ring ×2",
-      value: "+10%",
-    });
-  });
-
-  it("leaves out the level when it adds nothing, and the max when there is none", () => {
-    const sources = [source("Box trap", 0.35)];
-    expect(efficiencyBreakdown({ cap: Number.POSITIVE_INFINITY, gear: 0.35, level: 0, sources })).toEqual([
-      { label: "Base", value: "100%" },
-      { label: "Box trap", value: "+35%" },
-      { label: "Total", value: "135%" },
-    ]);
-  });
-
-  it("still explains the level's share when no gear changes work efficiency", () => {
-    expect(efficiencyBreakdown({ cap: 0.6, gear: 0, level: 0.25, sources: [] })).toEqual([
-      { label: "Base", value: "100%" },
-      { label: "Your level", value: "+25%" },
-      { label: "Total", value: "125%" },
-      { label: "Max", value: "160%" },
-    ]);
-  });
-
-  it("is empty when neither gear nor level changes work efficiency", () => {
-    expect(efficiencyBreakdown({ cap: 0.6, gear: 0, level: 0, sources: [] })).toEqual([]);
   });
 });
 

@@ -36,37 +36,16 @@ export function setStats(
   return sumLines(pieces.flatMap((p) => p.stats).filter((s) => s.conditions.every(holds)));
 }
 
-export function statsBySource(
-  gear: GearData,
-  profile: PlayerProfile,
-  target: WorkTarget,
-  suggestion: GearSuggestion,
-): SourcedStat[] {
-  return sourcedStats(gear, profile, target, suggestion, () => true);
-}
-
 export function locationBonuses(
   gear: GearData,
   profile: PlayerProfile,
   target: WorkTarget,
   suggestion: GearSuggestion,
 ): SourcedStat[] {
-  return sourcedStats(gear, profile, target, suggestion, (s) => s.conditions.some(isLocationCondition));
-}
-
-function sourcedStats(
-  gear: GearData,
-  profile: PlayerProfile,
-  target: WorkTarget,
-  suggestion: GearSuggestion,
-  keep: (stat: GearStat) => boolean,
-): SourcedStat[] {
   const { pieces, holds } = worn(gear, profile, target, suggestion);
+  const applies = (s: GearStat) => s.conditions.some(isLocationCondition) && s.conditions.every(holds);
   return pieces.flatMap((piece) =>
-    sumLines(piece.stats.filter((s) => keep(s) && s.conditions.every(holds))).map((line) => ({
-      ...line,
-      source: piece.name,
-    })),
+    sumLines(piece.stats.filter(applies)).map((line) => ({ ...line, source: piece.name })),
   );
 }
 

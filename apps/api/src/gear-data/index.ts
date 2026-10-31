@@ -4,14 +4,7 @@ export * from "./types.js";
 export * from "./optimizer.js";
 export { BEST_IN_GAME, skillLevelOf, toolSlotsOf, type OwnedPetView, type PlayerProfile } from "./profile.js";
 export * from "./steps.js";
-export {
-  gearBonusesByLocation,
-  locationBonuses,
-  setStats,
-  statsBySource,
-  type SourcedStat,
-  type StatLine,
-} from "./set-stats.js";
+export { gearBonusesByLocation, locationBonuses, setStats, type SourcedStat, type StatLine } from "./set-stats.js";
 export {
   GOALS,
   compareScores,
