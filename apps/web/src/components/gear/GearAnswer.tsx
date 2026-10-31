@@ -18,9 +18,9 @@ export function GearAnswer(props: GearAnswerView) {
         </div>
       )}
       {(picks.length > 0 || pet) && <GearGrid picks={picks} pet={pet} toolSlots={toolSlots} />}
+      {picks.length > 0 && <CopyGearSetButton picks={picks} />}
       <GearStats groups={stats} />
       {location && <LocationBonuses {...location} />}
-      {picks.length > 0 && <CopyGearSetButton picks={picks} />}
     </ChatMessage>
   );
 }

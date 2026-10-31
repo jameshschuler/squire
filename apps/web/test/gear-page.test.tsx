@@ -119,6 +119,15 @@ describe("Gear page", () => {
     expect(screen.getByRole("button", { name: /Copy gear set for WalkScape/ })).toBeDefined();
   });
 
+  it("puts the copy button right below the gear, before the set stats", async () => {
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
+    const gear = await screen.findByText("journeyman handwear");
+    const copy = await screen.findByRole("button", { name: /Copy gear set for WalkScape/ });
+    const stats = screen.getByRole("region", { name: "Set stats" });
+    expect(gear.compareDocumentPosition(copy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(copy.compareDocumentPosition(stats) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("asks where when the activity has several locations, with a best-location choice", async () => {
     await renderPage({ target: "recipe:bake_a_bagel" });
     expect(await screen.findByText("Where?")).toBeDefined();
