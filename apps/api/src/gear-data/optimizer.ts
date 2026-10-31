@@ -48,7 +48,7 @@ export interface GearSuggestion {
   score: Score;
 }
 
-const SEARCH_STATES = 300;
+const SEARCH_STATES = 1000;
 
 export interface SearchLimits {
   maxStates?: number;

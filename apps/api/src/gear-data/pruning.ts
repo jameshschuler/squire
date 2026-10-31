@@ -21,6 +21,27 @@ export function keywordRules(bannedKeywords: Record<string, string[]>, candidate
   };
 }
 
+export interface BanMasks {
+  keys: bigint;
+  clashes: bigint;
+}
+
+export function banMasks({ banKeys, bannedKeywords }: KeywordRules): (candidate: Candidate) => BanMasks {
+  const bits = new Map([...banKeys].map((key, i) => [key, 1n << BigInt(i)]));
+  const maskOf = (keywords: string[]) => keywords.reduce((mask, k) => mask | (bits.get(k) ?? 0n), 0n);
+  return ({ keywords }) => ({
+    keys: maskOf(keywords),
+    clashes: maskOf([
+      ...keywords.flatMap((k) => bannedKeywords[k] ?? []),
+      ...Object.entries(bannedKeywords).flatMap(([k, banned]) => (banned.some((x) => keywords.includes(x)) ? [k] : [])),
+    ]),
+  });
+}
+
+export function clashes(wornKeys: bigint, next: BanMasks): boolean {
+  return (wornKeys & next.clashes) !== 0n;
+}
+
 export function setGroupsOf({ setGroups }: KeywordRules, candidate: Candidate): number[] {
   return setGroups.flatMap((keywords, i) => (candidate.keywords.some((k) => keywords.includes(k)) ? [i] : []));
 }

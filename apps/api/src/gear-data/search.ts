@@ -1,5 +1,5 @@
 import { itemId, withSetBonuses, type Candidate } from "./candidates.js";
-import { conflicts, setGroupsOf, type KeywordRules } from "./pruning.js";
+import { banMasks, clashes, conflicts, setGroupsOf, type BanMasks, type KeywordRules } from "./pruning.js";
 import { compareScores, type Score } from "./goals.js";
 import { MAX_DOUBLE_ACTION, NO_STATS, addStats, type StatTotals } from "./steps.js";
 
@@ -21,7 +21,7 @@ interface PartialSet {
   guaranteed: StatTotals;
   optimistic: StatTotals;
   used: number;
-  bans: string[];
+  bans: bigint;
   setItems: string[][];
 }
 
@@ -44,26 +44,28 @@ export function bestSet(
     (sums, top, g) => [addStats(top[0]![groups[g]!.capacity]!, sums[0]!), ...sums],
     [NO_STATS],
   );
+  const masks = banMasks(rules);
+  const covers = coverage(useful, goalDims);
   let states: PartialSet[] = [emptySet(rules.setGroups.length)];
   groups.forEach(({ choices, capacity }, g) => {
     states = states.map((state) => ({ ...state, used: 0 }));
     choices.forEach((next, i) => {
+      const nextBans = masks(next);
+      const nextGroups = setGroupsOf(rules, next);
       const grown = states.flatMap((state) =>
-        state.used < capacity && compatible(state.chosen, next) ? [grow(state, next, rules)] : [],
+        state.used < capacity && !clashes(state.bans, nextBans) ? [grow(state, next, nextBans, nextGroups)] : [],
       );
       const remaining = (state: PartialSet) => addStats(tops[g]![i + 1]![capacity - state.used]!, rest[g + 1]!);
-      const promising = [...states, ...grown].filter(
-        (state) => compareScores(score(addStats(state.optimistic, remaining(state))), bestScore) > 0,
-      );
-      const kept = frontier(promising, useful, goalDims);
-      states =
-        kept.length > maxStates
-          ? kept
-              .map((state) => ({ state, bound: score(addStats(state.optimistic, remaining(state))) }))
-              .sort((a, b) => compareScores(b.bound, a.bound))
-              .slice(0, maxStates)
-              .map(({ state }) => state)
-          : kept;
+      const bounded = (state: PartialSet) => ({ state, bound: score(addStats(state.optimistic, remaining(state))) });
+      const promising = (list: PartialSet[]) =>
+        list.map(bounded).filter(({ bound }) => compareScores(bound, bestScore) > 0);
+      const kept =
+        i === 0
+          ? frontier([], [...promising(states), ...promising(grown)], covers)
+          : frontier(promising(states), promising(grown), covers);
+      states = (
+        kept.length > maxStates ? kept.sort((a, b) => compareScores(b.bound, a.bound)).slice(0, maxStates) : kept
+      ).map(({ state }) => state);
     });
   });
   for (const { chosen } of states) {
@@ -157,46 +159,64 @@ function emptySet(setGroupCount: number): PartialSet {
     guaranteed: NO_STATS,
     optimistic: NO_STATS,
     used: 0,
-    bans: [],
+    bans: 0n,
     setItems: Array.from({ length: setGroupCount }, () => []),
   };
 }
 
-function grow(state: PartialSet, next: Candidate, rules: KeywordRules): PartialSet {
-  const groups = setGroupsOf(rules, next);
+function grow(state: PartialSet, next: Candidate, nextBans: BanMasks, groups: number[]): PartialSet {
   return {
     chosen: [...state.chosen, next],
     guaranteed: addStats(state.guaranteed, next.totals),
     optimistic: addStats(state.optimistic, next.best),
     used: state.used + 1,
-    bans: [...new Set([...state.bans, ...next.keywords.filter((k) => rules.banKeys.has(k))])],
+    bans: state.bans | nextBans.keys,
     setItems: state.setItems.map((ids, i) => (groups.includes(i) ? [...new Set([...ids, itemId(next)])] : ids)),
   };
 }
 
-function frontier(states: PartialSet[], useful: number, goalDims: number): PartialSet[] {
-  const covers = (a: PartialSet, b: PartialSet) =>
-    Math.min(a.guaranteed.workEfficiency, useful) >= Math.min(b.optimistic.workEfficiency, useful) &&
-    a.guaranteed.stepsPercent <= b.optimistic.stepsPercent &&
-    a.guaranteed.stepsFlat <= b.optimistic.stepsFlat &&
-    Math.min(a.guaranteed.doubleAction, MAX_DOUBLE_ACTION) >= Math.min(b.optimistic.doubleAction, MAX_DOUBLE_ACTION) &&
-    a.used <= b.used &&
-    a.bans.every((k) => b.bans.includes(k)) &&
-    a.setItems.every((ids, i) => ids.length >= b.setItems[i]!.length) &&
-    b.optimistic.goalStats.slice(0, goalDims).every((value, i) => (a.guaranteed.goalStats[i] ?? 0) >= value);
-  const kept: PartialSet[] = [];
-  for (const state of states) {
-    if (kept.some((other) => covers(other, state))) {
-      continue;
+interface Bounded {
+  state: PartialSet;
+  bound: Score;
+}
+
+function coverage(useful: number, goalDims: number): (a: PartialSet, b: PartialSet) => boolean {
+  return (a, b) => {
+    const have = a.guaranteed;
+    const could = b.optimistic;
+    if (
+      a.used > b.used ||
+      have.stepsPercent > could.stepsPercent ||
+      have.stepsFlat > could.stepsFlat ||
+      Math.min(have.workEfficiency, useful) < Math.min(could.workEfficiency, useful) ||
+      Math.min(have.doubleAction, MAX_DOUBLE_ACTION) < Math.min(could.doubleAction, MAX_DOUBLE_ACTION) ||
+      (a.bans & ~b.bans) !== 0n
+    ) {
+      return false;
     }
-    for (let i = kept.length - 1; i >= 0; i--) {
-      if (covers(state, kept[i]!)) {
-        kept.splice(i, 1);
+    for (let i = 0; i < goalDims; i++) {
+      if ((have.goalStats[i] ?? 0) < (could.goalStats[i] ?? 0)) {
+        return false;
       }
     }
-    kept.push(state);
+    return a.setItems.every((ids, i) => ids.length >= b.setItems[i]!.length);
+  };
+}
+
+function frontier(kept: Bounded[], added: Bounded[], covers: (a: PartialSet, b: PartialSet) => boolean): Bounded[] {
+  const result = [...kept];
+  for (const entry of added) {
+    if (result.some((other) => covers(other.state, entry.state))) {
+      continue;
+    }
+    for (let i = result.length - 1; i >= 0; i--) {
+      if (covers(entry.state, result[i]!.state)) {
+        result.splice(i, 1);
+      }
+    }
+    result.push(entry);
   }
-  return kept;
+  return result;
 }
 
 function topSums(choices: Candidate[], capacity: number, useful: number): StatTotals[][] {
