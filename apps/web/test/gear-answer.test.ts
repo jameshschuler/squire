@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { GearSuggestion, Margin, StepsResult } from "@squire/api/gear-data";
-import { answerNotes, stepsTile } from "@/lib/gear-answer";
+import { BEST_IN_GAME, buildGearData, type GearSuggestion, type Margin, type StepsResult } from "@squire/api/gear-data";
+import type { GameData } from "@squire/api/recipe-book";
+import sample from "../../../fixtures/api/gamedata-sample.json";
+import gearItems from "../../../fixtures/api/gear.json";
+import { answerNotes, gearAnswer, stepsTile } from "@/lib/gear-answer";
+import { solveGear } from "@/lib/gear-solution";
 import type { GearTarget } from "@/lib/gear-targets";
 
 const target: GearTarget = {
@@ -90,5 +94,18 @@ describe("stepsTile", () => {
     const long = { result: { efficiency: 1, steps: 5547, averageSteps: 5547 }, goals: [] } as unknown as GearSuggestion;
     const bare = { efficiency: 1, steps: 12400, averageSteps: 12400 };
     expect(stepsTile(long, bare, 4100)).toMatchObject({ value: "5,547", details: ["Min 4,100 · Max 12,400"] });
+  });
+});
+
+describe("gearAnswer", () => {
+  it("lists every item that changes work efficiency in the breakdown, with the gear total", () => {
+    const gear = buildGearData({ ...sample, items: [...sample.items, ...gearItems] } as unknown as GameData);
+    const optimize = { skill: "woodcutting", level: 1, workRequired: 100, maxWorkEfficiency: 2, locationIds: [] };
+    const woodcutting: GearTarget = { ...target, skill: { id: "woodcutting", name: "Woodcutting", level: 1 } };
+    const request = { gear, profile: BEST_IN_GAME, target: optimize, goals: ["steps" as const], tieBreakers: [] };
+    const view = gearAnswer(gear, BEST_IN_GAME, woodcutting, optimize, solveGear(request));
+    const labels = view.stats.efficiency.map((row) => row.label);
+    expect(labels.some((label) => /hatchet/i.test(label))).toBe(true);
+    expect(labels).toContain("Gear total");
   });
 });

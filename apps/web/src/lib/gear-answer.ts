@@ -49,8 +49,8 @@ export function gearAnswer(
     cap: efficiencyCap(optimize),
     gear: lines.find((l) => l.stat === "workEfficiency" && l.isPercent)?.value ?? 0,
     level: levelBonus(optimize, level),
-    cuts: statsBySource(gear, profile, optimize, suggestion).filter(
-      (line) => line.stat === "workEfficiency" && line.isPercent && line.value < 0,
+    sources: statsBySource(gear, profile, optimize, suggestion).filter(
+      (line) => line.stat === "workEfficiency" && line.isPercent,
     ),
   };
   const noGear = stepsPerAction(optimize, level, NO_STATS);

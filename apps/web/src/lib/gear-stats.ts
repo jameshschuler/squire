@@ -15,16 +15,20 @@ export interface StatTile {
 export interface StatGroups {
   steps: StatTile[];
   other: StatTile[];
+  efficiency: BreakdownRow[];
 }
 
 export interface EfficiencyParts {
   cap: number;
   gear: number;
   level: number;
-  cuts: SourcedStat[];
+  sources: SourcedStat[];
 }
 
-const SHOWN_CUTS = 3;
+export interface BreakdownRow {
+  label: string;
+  value: string;
+}
 
 const STAT_LABELS: Partial<Record<StatType, string>> = {
   stepsRequired: "Steps required",
@@ -85,29 +89,44 @@ export function statGroups(
       .filter((line) => !STEP_STATS.includes(line.stat))
       .map(tile)
       .sort((a, b) => rank(a) - rank(b) || a.label.localeCompare(b.label)),
+    efficiency: efficiencyBreakdown(efficiency),
   };
+}
+
+export function efficiencyBreakdown({ cap, gear, level, sources }: EfficiencyParts): BreakdownRow[] {
+  if (sources.length === 0) {
+    return [];
+  }
+  const byName = new Map<string, number[]>();
+  for (const { source, value } of sources) {
+    byName.set(source, [...(byName.get(source) ?? []), value]);
+  }
+  return [
+    ...[...byName]
+      .map(([name, values]) => ({ name, count: values.length, total: values.reduce((sum, v) => sum + v, 0) }))
+      .sort((a, b) => b.total - a.total)
+      .map(({ name, count, total }) => ({ label: count > 1 ? `${name} ×${count}` : name, value: percent(total) })),
+    { label: "Gear total", value: percent(gear) },
+    ...(level > 0 ? [{ label: "Your level", value: percent(level) }] : []),
+    ...(Number.isFinite(cap) ? [{ label: "Max for this activity", value: percent(cap) }] : []),
+  ];
 }
 
 function efficiencyTile(parts: EfficiencyParts): StatTile {
   const over = efficiencyOver(parts);
   const wasted = parts.gear > 0 && over > 0;
-  const percent = (value: number) => formatStatValue({ isPercent: true, value });
-  const limits = [
-    ...(Number.isFinite(parts.cap) ? [`Max ${percent(parts.cap)}`] : []),
-    ...(parts.level > 0 ? [`Level ${percent(parts.level)}`] : []),
-  ];
   return {
     key: "workEfficiency",
     value: percent(parts.gear),
     label: "Work efficiency",
-    details: [
-      ...(limits.length > 0 ? [limits.join(" · ")] : []),
-      ...(wasted ? [`${formatPercent(over, 1)} over the max`] : []),
-      ...(parts.cuts.length > 0 ? [`Lowered by ${loweredBy(parts.cuts)}`] : []),
-    ],
+    details: wasted ? [`${formatPercent(over, 1)} over the max`] : [],
     highlight: false,
     over: wasted,
   };
+}
+
+function percent(value: number): string {
+  return formatStatValue({ isPercent: true, value });
 }
 
 export function locationTiles(bonuses: SourcedStat[]): StatTile[] {
@@ -124,14 +143,6 @@ export function locationTiles(bonuses: SourcedStat[]): StatTile[] {
     highlight: false,
     over: false,
   }));
-}
-
-function loweredBy(cuts: SourcedStat[]): string {
-  return [...cuts]
-    .sort((a, b) => a.value - b.value)
-    .slice(0, SHOWN_CUTS)
-    .map((cut) => `${cut.source} ${formatStatValue(cut)}`)
-    .join(", ");
 }
 
 function joinNames(names: string[]): string {
