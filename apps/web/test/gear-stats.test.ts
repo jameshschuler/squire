@@ -109,21 +109,22 @@ describe("efficiencyBreakdown", () => {
     value,
   });
 
-  it("lists each item's work efficiency, best first, then the gear total, the level and the max", () => {
+  it("adds up from the 100% base: level, then each item best first, then the total and the max", () => {
     const sources = [source("Spectral hunting bow", -0.04), source("Box trap", 0.35), source("Hunter's cap", 0.28)];
     expect(efficiencyBreakdown({ cap: 0.6, gear: 0.59, level: 0.25, sources })).toEqual([
+      { label: "Base", value: "100%" },
+      { label: "Your level", value: "+25%" },
       { label: "Box trap", value: "+35%" },
       { label: "Hunter's cap", value: "+28%" },
       { label: "Spectral hunting bow", value: "−4%" },
-      { label: "Gear total", value: "+59%" },
-      { label: "Your level", value: "+25%" },
-      { label: "Max for this activity", value: "+60%" },
+      { label: "Total", value: "184%" },
+      { label: "Max", value: "160%" },
     ]);
   });
 
   it("puts copies of one item on one row, with a count", () => {
     const sources = [source("Lucky ring", 0.05), source("Lucky ring", 0.05)];
-    expect(efficiencyBreakdown({ cap: 0.6, gear: 0.1, level: 0, sources })[0]).toEqual({
+    expect(efficiencyBreakdown({ cap: 0.6, gear: 0.1, level: 0, sources })[1]).toEqual({
       label: "Lucky ring ×2",
       value: "+10%",
     });
@@ -132,13 +133,23 @@ describe("efficiencyBreakdown", () => {
   it("leaves out the level when it adds nothing, and the max when there is none", () => {
     const sources = [source("Box trap", 0.35)];
     expect(efficiencyBreakdown({ cap: Number.POSITIVE_INFINITY, gear: 0.35, level: 0, sources })).toEqual([
+      { label: "Base", value: "100%" },
       { label: "Box trap", value: "+35%" },
-      { label: "Gear total", value: "+35%" },
+      { label: "Total", value: "135%" },
     ]);
   });
 
-  it("is empty when no gear changes work efficiency", () => {
-    expect(efficiencyBreakdown({ cap: 0.6, gear: 0, level: 0.25, sources: [] })).toEqual([]);
+  it("still explains the level's share when no gear changes work efficiency", () => {
+    expect(efficiencyBreakdown({ cap: 0.6, gear: 0, level: 0.25, sources: [] })).toEqual([
+      { label: "Base", value: "100%" },
+      { label: "Your level", value: "+25%" },
+      { label: "Total", value: "125%" },
+      { label: "Max", value: "160%" },
+    ]);
+  });
+
+  it("is empty when neither gear nor level changes work efficiency", () => {
+    expect(efficiencyBreakdown({ cap: 0.6, gear: 0, level: 0, sources: [] })).toEqual([]);
   });
 });
 

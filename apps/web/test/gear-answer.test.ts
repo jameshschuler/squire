@@ -98,7 +98,7 @@ describe("stepsTile", () => {
 });
 
 describe("gearAnswer", () => {
-  it("lists every item that changes work efficiency in the breakdown, with the gear total", () => {
+  it("lists every item that changes work efficiency in the breakdown, with the total", () => {
     const gear = buildGearData({ ...sample, items: [...sample.items, ...gearItems] } as unknown as GameData);
     const optimize = { skill: "woodcutting", level: 1, workRequired: 100, maxWorkEfficiency: 2, locationIds: [] };
     const woodcutting: GearTarget = { ...target, skill: { id: "woodcutting", name: "Woodcutting", level: 1 } };
@@ -106,6 +106,6 @@ describe("gearAnswer", () => {
     const view = gearAnswer(gear, BEST_IN_GAME, woodcutting, optimize, solveGear(request));
     const labels = view.stats.efficiency.map((row) => row.label);
     expect(labels.some((label) => /hatchet/i.test(label))).toBe(true);
-    expect(labels).toContain("Gear total");
+    expect(labels).toContain("Total");
   });
 });

@@ -14,7 +14,7 @@ const efficiencyTile = (over: boolean) => ({
 });
 const rows = [
   { label: "Box trap", value: "+35%" },
-  { label: "Gear total", value: "+35%" },
+  { label: "Total", value: "135%" },
 ];
 
 afterEach(cleanup);
@@ -25,7 +25,7 @@ describe("GearStats", () => {
     render(<GearStats groups={groups} />);
     const breakdown = screen.getByText("How work efficiency adds up").closest("details")!;
     expect(breakdown.textContent).toContain("Box trap+35%");
-    expect(breakdown.textContent).toContain("Gear total+35%");
+    expect(breakdown.textContent).toContain("Total135%");
     expect(breakdown.open).toBe(false);
   });
 

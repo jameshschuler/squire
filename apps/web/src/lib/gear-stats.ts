@@ -25,6 +25,8 @@ export interface EfficiencyParts {
   sources: SourcedStat[];
 }
 
+const BASE_EFFICIENCY = 1;
+
 export interface BreakdownRow {
   label: string;
   value: string;
@@ -94,7 +96,7 @@ export function statGroups(
 }
 
 export function efficiencyBreakdown({ cap, gear, level, sources }: EfficiencyParts): BreakdownRow[] {
-  if (sources.length === 0) {
+  if (sources.length === 0 && level === 0) {
     return [];
   }
   const byName = new Map<string, number[]>();
@@ -102,13 +104,14 @@ export function efficiencyBreakdown({ cap, gear, level, sources }: EfficiencyPar
     byName.set(source, [...(byName.get(source) ?? []), value]);
   }
   return [
+    { label: "Base", value: formatPercent(BASE_EFFICIENCY) },
+    ...(level > 0 ? [{ label: "Your level", value: percent(level) }] : []),
     ...[...byName]
       .map(([name, values]) => ({ name, count: values.length, total: values.reduce((sum, v) => sum + v, 0) }))
       .sort((a, b) => b.total - a.total)
       .map(({ name, count, total }) => ({ label: count > 1 ? `${name} ×${count}` : name, value: percent(total) })),
-    { label: "Gear total", value: percent(gear) },
-    ...(level > 0 ? [{ label: "Your level", value: percent(level) }] : []),
-    ...(Number.isFinite(cap) ? [{ label: "Max for this activity", value: percent(cap) }] : []),
+    { label: "Total", value: formatPercent(BASE_EFFICIENCY + level + gear, 1) },
+    ...(Number.isFinite(cap) ? [{ label: "Max", value: formatPercent(BASE_EFFICIENCY + cap, 1) }] : []),
   ];
 }
 
