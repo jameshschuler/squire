@@ -93,15 +93,11 @@ function efficiencyTile(parts: EfficiencyParts): StatTile {
   return {
     key: "workEfficiency",
     value: Number.isFinite(max) ? formatPercentOf(total, max, 1) : formatPercent(total, 1),
-    label: "Work efficiency",
-    details: percentPoints(parts.gear, 1) !== 0 ? [`Gear ${percent(parts.gear)}`] : [],
+    label: statName({ stat: "workEfficiency", isPercent: true })!,
+    details: [],
     highlight: false,
     over: percentPoints(total, 1) > percentPoints(max, 1),
   };
-}
-
-function percent(value: number): string {
-  return formatStatValue({ isPercent: true, value });
 }
 
 export function locationTiles(bonuses: SourcedStat[]): StatTile[] {

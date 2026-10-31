@@ -20,7 +20,7 @@ describe("statGroups", () => {
   it("starts the steps tiles with steps, then work efficiency against the max, then one number per tile", () => {
     expect(shown(groups.steps)).toEqual([
       "Steps 35",
-      "Work efficiency 220/120% · Gear +95%",
+      "Work efficiency 220/120%",
       "Steps required (flat) −6",
       "Steps required −2%",
       "Double action +23.5%",
@@ -70,19 +70,14 @@ describe("statGroups", () => {
     expect(statGroups([], parts, [], steps).steps[1]).toMatchObject({ key: "workEfficiency", over });
   });
 
-  it("leaves out the gear line when the gear's share rounds to nothing", () => {
-    const parts = { cap: 0.6, gear: 0.1 + 0.2 - 0.3, level: 0.25 };
-    expect(statGroups([], parts, [], steps).steps[1]?.details).toEqual([]);
-  });
-
   it.each([
-    [{ cap: 0.6, gear: 0.59, level: 0.25 }, "184/160%", ["Gear +59%"]],
-    [{ cap: 0.5, gear: 0.445, level: 0.25 }, "169.5/150%", ["Gear +44.5%"]],
-    [{ cap: 0.5, gear: -0.1, level: 0.25 }, "115/150%", ["Gear −10%"]],
-    [{ cap: Number.POSITIVE_INFINITY, gear: 0.3, level: 0 }, "130%", ["Gear +30%"]],
-    [{ cap: 0.6, gear: 0, level: 0.25 }, "125/160%", []],
-  ])("shows total work efficiency against the max, with the gear's share below (%j)", (parts, value, details) => {
-    expect(statGroups([], parts, [], steps).steps[1]).toMatchObject({ value, details });
+    [{ cap: 0.6, gear: 0.59, level: 0.25 }, "184/160%"],
+    [{ cap: 0.5, gear: 0.445, level: 0.25 }, "169.5/150%"],
+    [{ cap: 0.5, gear: -0.1, level: 0.25 }, "115/150%"],
+    [{ cap: Number.POSITIVE_INFINITY, gear: 0.3, level: 0 }, "130%"],
+    [{ cap: 0.6, gear: 0, level: 0.25 }, "125/160%"],
+  ])("shows total work efficiency against the max (%j)", (parts, value) => {
+    expect(statGroups([], parts, [], steps).steps[1]?.value).toBe(value);
   });
 
   it("has only the steps and work efficiency tiles when the set gives nothing", () => {
