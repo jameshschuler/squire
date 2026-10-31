@@ -1,7 +1,15 @@
 import type { LootType } from "@squire/api/recipe-book";
 
 export function formatPercent(ratio: number, decimals = 0): string {
-  return `${Number((ratio * 100).toFixed(decimals))}%`;
+  return `${percentPoints(ratio, decimals)}%`;
+}
+
+export function formatPercentOf(ratio: number, max: number, decimals = 0): string {
+  return `${percentPoints(ratio, decimals)}/${percentPoints(max, decimals)}%`;
+}
+
+export function percentPoints(ratio: number, decimals: number): number {
+  return Number((ratio * 100).toFixed(decimals));
 }
 
 export function formatSteps(workRequired: number, maxWorkEfficiency: number | null): string {

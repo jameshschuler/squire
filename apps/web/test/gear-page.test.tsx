@@ -277,11 +277,11 @@ describe("Gear page", () => {
     expect(screen.queryByRole("region", { name: "Summary" })).toBeNull();
   });
 
-  it("shows the set's stats, with the steps range and the gear's work efficiency", async () => {
+  it("shows the set's stats, with the steps range and total work efficiency against the max", async () => {
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     const stats = await screen.findByRole("region", { name: "Set stats" });
     expect(stats.textContent).toMatch(/Steps per actionMin \d+ · Max \d+/);
-    expect(stats.textContent).toContain("+0%Work efficiency");
+    expect(stats.textContent).toMatch(/\d+(\.\d)?\/\d+(\.\d)?%Work efficiency/);
     expect(stats.textContent).toContain("−5Steps required (flat)");
   });
 

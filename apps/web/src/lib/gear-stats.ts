@@ -1,5 +1,5 @@
 import { sameStat, type GoalStat, type SourcedStat, type StatLine } from "@squire/api/gear-data";
-import { formatPercent } from "./format";
+import { formatPercent, formatPercentOf, percentPoints } from "./format";
 
 type StatType = StatLine["stat"];
 
@@ -88,15 +88,15 @@ export function statGroups(
 }
 
 function efficiencyTile(parts: EfficiencyParts): StatTile {
-  const wasted = Math.min(efficiencyOver(parts), parts.gear);
+  const total = BASE_EFFICIENCY + parts.level + parts.gear;
+  const max = BASE_EFFICIENCY + parts.cap;
   return {
     key: "workEfficiency",
-    value: percent(parts.gear),
+    value: Number.isFinite(max) ? formatPercentOf(total, max, 1) : formatPercent(total, 1),
     label: "Work efficiency",
-    details:
-      wasted > 0 ? [`${formatPercent(wasted, 1)} wasted · max ${formatPercent(BASE_EFFICIENCY + parts.cap, 1)}`] : [],
+    details: percentPoints(parts.gear, 1) !== 0 ? [`Gear ${percent(parts.gear)}`] : [],
     highlight: false,
-    over: wasted > 0,
+    over: percentPoints(total, 1) > percentPoints(max, 1),
   };
 }
 
@@ -140,9 +140,4 @@ export function formatStatValue({ value, isPercent }: Pick<StatLine, "value" | "
     return `${sign}${formatPercent(amount, 1)}`;
   }
   return `${sign}${Number(amount.toFixed(2))}`;
-}
-
-function efficiencyOver({ cap, gear, level }: EfficiencyParts): number {
-  const over = gear + level - cap;
-  return Math.abs(over) < 1e-9 ? 0 : over;
 }
