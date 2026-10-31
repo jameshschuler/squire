@@ -1,6 +1,8 @@
 import type { Candidate } from "./candidates.js";
 import { MAX_DOUBLE_ACTION, type StatTotals } from "./steps.js";
 
+// `banKeys` are every keyword that takes part in a ban. `setGroups` are the keyword lists set bonuses
+// count, and `cappedSetGroups` the ones with a "fewer than N pieces" bonus, where more pieces can hurt.
 export interface KeywordRules {
   bannedKeywords: Record<string, string[]>;
   banKeys: Set<string>;
@@ -20,6 +22,8 @@ export function keywordRules(bannedKeywords: Record<string, string[]>, candidate
   };
 }
 
+// Ban keywords as bits. `keys` are the item's own; `clashes` are the bits that can't be worn alongside
+// it, in either direction. A set clashes with an item when its keys overlap the item's clashes.
 export interface BanMasks {
   keys: bigint;
   clashes: bigint;
@@ -54,6 +58,8 @@ export function conflicts(
   return bans(a.keywords, b.keywords) || bans(b.keywords, a.keywords);
 }
 
+// Drops items that can never be worth wearing: ones that help nothing here, and ones beaten outright by
+// at least `capacity` others in the same slot (so a better item is always free to wear instead).
 export function prune(choices: Candidate[], capacity: number, rules: KeywordRules, useful: number): Candidate[] {
   const keys = new Map(
     choices.map((c) => [

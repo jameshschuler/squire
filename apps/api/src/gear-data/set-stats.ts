@@ -36,6 +36,7 @@ export function setStats(
   return sumLines(pieces.flatMap((p) => p.stats).filter((s) => s.conditions.every(holds)));
 }
 
+// Each worn item's bonuses that only apply because of the location, for the "Location bonuses" tiles.
 export function locationBonuses(
   gear: GearData,
   profile: PlayerProfile,
@@ -49,6 +50,9 @@ export function locationBonuses(
   );
 }
 
+// A short summary per location for the "Where?" choices: the location-only bonuses a player could get
+// there. It's a quick greedy pick (best speed bonuses first, skipping items that cost anything here,
+// respecting slots, copies and bans), not a full search, so it's only a hint.
 export function gearBonusesByLocation(
   gear: GearData,
   profile: PlayerProfile,
@@ -162,10 +166,12 @@ function worn(gear: GearData, profile: PlayerProfile, target: WorkTarget, sugges
   return { pieces, holds };
 }
 
+// How much a stat helps; fewer steps required is a gain, so its sign flips.
 function gain({ stat, value }: StatLine): number {
   return stat === "stepsRequired" ? -value : value;
 }
 
+// A condition that depends on where the activity happens (and isn't an "anywhere but" condition).
 function isLocationCondition({ type, opposite }: GearCondition): boolean {
   return !opposite && (type === "realm" || type === "locationHasKeywords");
 }

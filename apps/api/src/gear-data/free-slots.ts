@@ -12,6 +12,9 @@ export interface FreeSlotChoice {
   candidate: Candidate;
 }
 
+// After the search, fills empty places with owned items that add other bonuses (inventory space, gem
+// finding…) without costing steps. Items with the most bonuses go first, and each is kept only if the
+// set still fits its slots, copies and bans and scores no lower.
 export function fillFreeSlots(
   situation: Situation,
   chosen: Candidate[],

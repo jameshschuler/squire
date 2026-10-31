@@ -18,6 +18,7 @@ export interface OwnedPetView {
   stats: GearStat[];
 }
 
+// Owns every item at its best quality and every pet at its top level, at max skill levels.
 export const BEST_IN_GAME: PlayerProfile = { kind: "best" };
 
 export function skillLevelOf(profile: PlayerProfile, skill: string): number {
@@ -28,6 +29,8 @@ export function toolSlotsOf(profile: PlayerProfile): number {
   return profile.kind === "best" ? toolSlots(MAX_LEVEL) : profile.character.toolSlots;
 }
 
+// The gear a profile can wear. A character only gets as many copies of an item as its slot allows,
+// best qualities first, since a higher quality always includes the lower tiers' stats.
 export function ownedGear(profile: PlayerProfile, items: GearItem[]): OwnedGear[] {
   if (profile.kind === "best") {
     return items.flatMap((item) => {
@@ -72,6 +75,9 @@ export function petAt(pets: PetView[], { species, level }: OwnedPet): OwnedPetVi
   return pet && reached ? { pet, level: reached.level, stats: reached.stats } : undefined;
 }
 
+// Whether a condition about the player holds. Undefined means it isn't about the player (or can't be
+// checked), and the caller decides. The best-in-game profile returns true for every condition, so
+// callers check location and skill conditions first.
 export function playerConditionHolds(profile: PlayerProfile, condition: GearCondition): boolean | undefined {
   if (profile.kind === "best") {
     return true;

@@ -47,8 +47,12 @@ const MIN_STEPS = 10;
 export const STEP_STATS = ["workEfficiency", "stepsRequired", "doubleAction"] as const;
 
 export const MAX_DOUBLE_ACTION = 1;
+// Stops floating-point error from rounding an exact whole number of steps up by one.
 const ROUNDING_SLACK = 1e-9;
 
+// The game's formula: work efficiency (capped at the activity's max) divides the work, step changes
+// apply on top, the result is rounded up with a floor of 10, and double action (capped at 100%)
+// spreads it over more actions on average.
 export function stepsPerAction(target: WorkTarget, skillLevel: number, totals: StatTotals): StepsResult {
   const cap = efficiencyCap(target);
   const efficiency = Math.max(
@@ -60,6 +64,7 @@ export function stepsPerAction(target: WorkTarget, skillLevel: number, totals: S
   return { efficiency, steps, averageSteps: steps / (1 + Math.min(totals.doubleAction, MAX_DOUBLE_ACTION)) };
 }
 
+// How much work efficiency can be added on top of the base 100%, from the activity's max.
 export function efficiencyCap(target: WorkTarget): number {
   return target.maxWorkEfficiency === null ? Number.POSITIVE_INFINITY : target.maxWorkEfficiency - 1;
 }

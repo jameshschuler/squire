@@ -19,6 +19,9 @@ export interface SetBonus {
   totals: StatTotals;
 }
 
+// One owned item (or pet) reduced to what the search needs for the current situation. `totals` are the
+// stats that always apply here; `setBonuses` depend on how many set pieces end up worn; `best` is
+// `totals` plus every helpful set bonus, the most this item could ever add.
 export interface Candidate {
   id: string;
   slot: GearType | "pet";
@@ -69,6 +72,8 @@ export function petCandidate(situation: Situation, pet: OwnedPetView): Candidate
   return toCandidate(situation, { id: `pet:${pet.pet.id}`, slot: "pet", keywords: [], pick: null, pet }, pet.stats);
 }
 
+// Splits an item's stats: ones whose conditions fail here are dropped, set bonuses are kept aside, and
+// the rest are added to `totals`.
 export function toCandidate(situation: Situation, base: CandidateBase, stats: GearStat[]): Candidate {
   let totals = NO_STATS;
   const setBonuses: SetBonus[] = [];
@@ -93,10 +98,12 @@ export function itemId(candidate: Candidate): string {
   return candidate.pick?.item.id ?? candidate.id;
 }
 
+// Distinct items worn with any of the keywords. Two copies of one ring count once, as in the game.
 export function setCount(chosen: Candidate[], keywords: string[]): number {
   return new Set(chosen.filter((c) => c.keywords.some((k) => keywords.includes(k))).map(itemId)).size;
 }
 
+// A finished set's real stats, with each set bonus added only when its piece count holds.
 export function withSetBonuses(chosen: Candidate[]): StatTotals {
   return chosen.reduce((sum, c) => {
     const active = c.setBonuses.filter((bonus) =>
@@ -145,6 +152,7 @@ function situationHolds({ target, skillType, location }: Situation, condition: G
   }
 }
 
+// Only the helpful part of a set bonus, for the optimistic `best` stats.
 function gains(totals: StatTotals): StatTotals {
   return {
     workEfficiency: Math.max(totals.workEfficiency, 0),
