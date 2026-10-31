@@ -131,6 +131,39 @@ describe("optimizeGear", () => {
     ).toEqual(["light_gloves", "pickaxe"]);
   });
 
+  it("keeps efficiency past the cap when a penalty pulls the set back under it", () => {
+    const gear = gearData([
+      item("brisk_gloves", "hands", [efficiency(0.5)]),
+      item("swift_gloves", "hands", [efficiency(0.6)]),
+      item("heavy_pickaxe", "tool", [efficiency(-0.1), flatSteps(-10)]),
+    ]);
+    expect(picked(gear, character(["brisk_gloves", "swift_gloves", "heavy_pickaxe"]))).toEqual([
+      "heavy_pickaxe",
+      "swift_gloves",
+    ]);
+  });
+
+  it("keeps efficiency past the cap when a pet's penalty pulls the set back under it", () => {
+    const gear = gearData(
+      [item("brisk_gloves", "hands", [efficiency(0.5)]), item("swift_gloves", "hands", [efficiency(0.6)])],
+      {
+        pets: [
+          {
+            id: "camel",
+            name: "Camel",
+            rareId: "two_hump_camel",
+            icon: "",
+            levels: [{ level: 1, stats: [efficiency(-0.1), flatSteps(-10)] }],
+          },
+        ],
+      },
+    );
+    const owned = character(["brisk_gloves", "swift_gloves"], { pets: [{ species: "camel", level: 1 }] });
+    const suggestion = optimizeGear(gear, owned, mining);
+    expect(suggestion.picks.map((p) => p.item.id)).toEqual(["swift_gloves"]);
+    expect(suggestion.pet).toMatchObject({ pet: { id: "camel" } });
+  });
+
   it("never wears two tools that ban each other", () => {
     const hatchet = (id: string, value: number) => item(id, "tool", [flatSteps(value)], { keywords: ["hatchet"] });
     const gear = gearData(
@@ -826,7 +859,7 @@ describe("optimizeGear against every possible set", { timeout: 30_000 }, () => {
     const slots: GearType[] = ["head", "feet", "hands", "ring", "ring", "ring", "tool", "tool", "tool", "tool", "tool"];
     return slots.map((slot, i) => {
       const stats = [
-        efficiency(Math.round(next() * 30) / 100),
+        efficiency(Math.round(next() * 40 - 10) / 100),
         flatSteps(-Math.round(next() * 6)),
         stat("stepsRequired", -Math.round(next() * 10) / 100, true),
         doubleAction(Math.round(next() * 20) / 100),

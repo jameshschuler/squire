@@ -4,6 +4,7 @@ import {
   petCandidate,
   situationFor,
   withSetBonuses,
+  type Candidate,
   type GearPick,
   type Situation,
 } from "./candidates.js";
@@ -30,7 +31,7 @@ import {
 import { keywordRules, prune, type KeywordRules } from "./pruning.js";
 import { GEAR_SLOTS, slotCapacity } from "./slots.js";
 import { fillFreeSlots, type FreeSlotChoice } from "./free-slots.js";
-import { bestSet, type SearchResult, type SlotGroup } from "./search.js";
+import { bestSet, topSum, type SearchResult, type SlotGroup } from "./search.js";
 import {
   NO_STATS,
   efficiencyCap,
@@ -228,14 +229,14 @@ function planAt(gear: GearData, situation: Situation, goals: GoalId[]): Location
   const level = skillLevelOf(profile, target.skill);
   const goalScore = goalScorer(goals);
   const score = (totals: StatTotals) => goalScore(stepsPerAction(target, level, totals), totals);
-  const useful = usefulEfficiency(target, level);
   const rules = keywordRules(gear.bannedKeywords, [...items, ...pets]);
   const capacityOf = (slot: GearType) => slotCapacity(slot, toolSlotsOf(profile));
-  const groups: SlotGroup[] = GEAR_SLOTS.map(({ slot }) => ({
+  const slotGroups: SlotGroup[] = GEAR_SLOTS.map(({ slot }) => ({
     capacity: capacityOf(slot),
     choices: items.filter((c) => c.slot === slot),
-  }))
-    .concat({ capacity: 1, choices: pets })
+  })).concat({ capacity: 1, choices: pets });
+  const useful = usefulEfficiency(target, level, slotGroups);
+  const groups = slotGroups
     .map(({ capacity, choices }) => ({
       capacity,
       choices: prune(choices, capacity, rules, useful).sort((a, b) => compareScores(score(b.best), score(a.best))),
@@ -262,9 +263,15 @@ function finish({ plan, searched }: LocationProgress, goals: GoalId[]): Search {
   };
 }
 
-// How much gear work efficiency can still count before hitting the activity's max.
-function usefulEfficiency(target: WorkTarget, level: number): number {
-  return Math.max(efficiencyCap(target) - (stepsPerAction(target, level, NO_STATS).efficiency - 1), 0);
+// How much gear work efficiency can still count before hitting the activity's max. Efficiency past the
+// max still counts when a penalty (a heavy tool, a camel) pulls the total back under it, so this allows
+// for the biggest penalties a set could wear; otherwise the search could drop a set that a later penalty
+// would have made the faster one.
+function usefulEfficiency(target: WorkTarget, level: number, groups: SlotGroup[]): number {
+  const penaltyOf = ({ totals, setBonuses }: Candidate) =>
+    [totals, ...setBonuses.map((bonus) => bonus.totals)].reduce((sum, t) => sum + Math.max(-t.workEfficiency, 0), 0);
+  const penalties = groups.reduce((sum, { capacity, choices }) => sum + topSum(choices.map(penaltyOf), capacity), 0);
+  return Math.max(efficiencyCap(target) - (stepsPerAction(target, level, NO_STATS).efficiency - 1) + penalties, 0);
 }
 
 // Locations where every location-based gear bonus applies the same way give the same answer, so only

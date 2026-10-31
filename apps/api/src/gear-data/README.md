@@ -33,7 +33,7 @@ average steps = steps / (1 + min(double action, 100%))
 
 Two things follow from this and shape the whole search:
 
-- Work efficiency past the max does nothing. The search tracks how much is still "useful" (`usefulEfficiency` in `optimizer.ts`) and caps work efficiency there when comparing sets.
+- Work efficiency past the max does nothing. The search tracks how much is still "useful" (`usefulEfficiency` in `optimizer.ts`) and caps work efficiency there when comparing sets. Some gear has a work efficiency penalty (guidebooks, spectral tools, the camel), and a penalty can pull a set back under the max, so the cap allows for the biggest penalties a set could wear. Without that, a set at 57% could be dropped for one at 51% when the max is 51%, even though a −10% tool later makes the 57% set the faster one.
 - Double action caps at 100%, so anything past that is also ignored.
 
 ## Scoring a set

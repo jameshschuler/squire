@@ -296,7 +296,7 @@ function topSums(choices: Candidate[], capacity: number, useful: number): StatTo
   });
 }
 
-function topSum(values: number[], picks: number): number {
+export function topSum(values: number[], picks: number): number {
   return values
     .filter((v) => v > 0)
     .sort((a, b) => b - a)

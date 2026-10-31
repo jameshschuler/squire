@@ -39,6 +39,9 @@ type Outcome = "same" | "missed" | "wrong margin" | "exact worse" | "timed out" 
 
 const FAILING: Outcome[] = ["wrong margin", "exact worse", "failed"];
 
+// The app claims a margin for the first priority only, so that's the claim checked here.
+const CHECKED_GOALS = 1;
+
 interface Result {
   job: Job;
   outcome: Outcome;
@@ -169,7 +172,7 @@ function runJob(worker: Worker, job: Job, timeoutMs: number): Promise<Result> {
 function outcomeOf(goals: GoalId[], fast: Run, exact: Run): Outcome {
   const comparison = compareScores(exact.score, fast.score);
   if (comparison > 0) {
-    return marginHolds(goals, fast.margin, fast.score, exact.score) ? "missed" : "wrong margin";
+    return marginHolds(goals.slice(0, CHECKED_GOALS), fast.margin, fast.score, exact.score) ? "missed" : "wrong margin";
   }
   return comparison < 0 ? "exact worse" : "same";
 }
@@ -178,13 +181,10 @@ function serve({ gear, profiles }: Shared) {
   parentPort!.on("message", (job: Job) => {
     const run = (limits: SearchLimits): Run => {
       const goals = [...job.goals, ...job.tieBreakers];
-      const found = optimizeGear(gear, profiles[job.profile]!, job.target, goals, {
-        ...limits,
-        checkedGoals: 1,
-      });
+      const found = optimizeGear(gear, profiles[job.profile]!, job.target, goals, limits);
       return { steps: found.result.steps, score: found.score, margin: found.margin, ms: found.searchMs };
     };
-    parentPort!.postMessage(run({}));
+    parentPort!.postMessage(run({ checkedGoals: CHECKED_GOALS }));
     parentPort!.postMessage(run({ maxStates: Number.POSITIVE_INFINITY, timeBudgetMs: Number.POSITIVE_INFINITY }));
   });
 }
