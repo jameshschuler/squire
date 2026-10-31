@@ -180,7 +180,7 @@ function serve({ gear, profiles }: Shared) {
       const goals = [...job.goals, ...job.tieBreakers];
       const found = optimizeGear(gear, profiles[job.profile]!, job.target, goals, {
         ...limits,
-        checkedGoals: job.goals.length,
+        checkedGoals: 1,
       });
       return { steps: found.result.steps, score: found.score, margin: found.margin, ms: found.searchMs };
     };

@@ -49,7 +49,7 @@ A set's score is a list of numbers, one per priority, compared in order: the fir
 
 Numbers are rounded to 9 significant digits before comparing, so floating-point noise never makes two equal sets look different.
 
-The web app tops the user's priorities up to three with quiet tie-breakers from the activity's recommended ones (`tieBreakersFor` in `apps/web/src/lib/gear-targets.ts`). They're scored like any other priority but never show in the answer, and the margin ignores them (`checkedGoals`).
+The web app tops the user's priorities up to three with quiet tie-breakers from the activity's recommended ones (`tieBreakersFor` in `apps/web/src/lib/gear-targets.ts`). They're scored like any other priority but never show in the answer.
 
 ## Candidates
 
@@ -84,7 +84,9 @@ Before the main search, a **greedy** set (keep adding whichever item helps most)
 When the search finishes, the best set found scores `found`, and every set it never fully looked at scores at most `ceiling`. So:
 
 - If nothing was cut, or `ceiling ≤ found`, the set is the **proven best**.
-- Otherwise the true best is at most `ceiling`, and the gap is `(ceiling − found) / |ceiling|` on the first priority where they differ. That's the margin: "within 2.8% of the best possible for Most chests". Earlier priorities that tie are proven.
+- Otherwise the true best is at most `ceiling`, and the gap is `(ceiling − found) / |ceiling|` on the first priority where they differ. That's the margin. Earlier priorities that tie are proven.
+
+The web app checks only the first priority (`checkedGoals: 1`), so the answer says "Proven best for Fastest" or "Within 0.8% of the best possible for Fastest". Later priorities only break ties, and their bounds can be very loose: "no materials consumed" has no cap in the game, so the best case for Save materials assumes refunds near 100%. The search still optimizes every priority; it just doesn't claim a margin for the later ones.
 
 `marginOf` computes this. `marginHolds` is the check used by the tests and the check script: it confirms a claimed margin is never smaller than the real gap to the true best.
 

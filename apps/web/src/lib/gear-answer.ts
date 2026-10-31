@@ -11,7 +11,6 @@ import {
   toolSlotsOf,
   type GearData,
   type GearSuggestion,
-  type GoalId,
   type OptimizeTarget,
   type PlayerProfile,
   type StepsResult,
@@ -74,13 +73,11 @@ export function answerNotes(suggestion: GearSuggestion, target: GearTarget, skil
 }
 
 export function marginNote({ margin, goals }: GearSuggestion): string {
-  if (!margin) {
-    return "Proven best set for this gear.";
+  const first = goalOf(goals[0] ?? "steps").label;
+  if (margin) {
+    return `Within ${formatPercent(Math.ceil(margin.gap * 1000) / 1000, 1)} of the best possible for ${first}.`;
   }
-  const label = (goal: GoalId) => goalOf(goal).label;
-  const proven = goals.slice(0, goals.indexOf(margin.goal)).map(label);
-  const within = `Within ${formatPercent(Math.ceil(margin.gap * 1000) / 1000, 1)} of the best possible for ${label(margin.goal)}.`;
-  return proven.length > 0 ? `Proven best for ${proven.join(", ")}. ${within}` : within;
+  return goals.length > 1 ? `Proven best for ${first}.` : "Proven best set for this gear.";
 }
 
 export function stepsTile({ result, goals }: GearSuggestion, noGear: StepsResult, fewest: number): StatTile {

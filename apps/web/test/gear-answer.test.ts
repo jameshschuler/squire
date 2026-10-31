@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { GearSuggestion, Margin, StepsResult } from "@squire/api/gear-data";
+import type { GearSuggestion, GoalId, Margin, StepsResult } from "@squire/api/gear-data";
 import { answerNotes, stepsTile } from "@/lib/gear-answer";
 import type { GearTarget } from "@/lib/gear-targets";
 
@@ -16,14 +16,19 @@ const target: GearTarget = {
   makesTieredGear: false,
 };
 const steps = (averageSteps: number): StepsResult => ({ efficiency: 1, steps: Math.ceil(averageSteps), averageSteps });
-const suggestion = (averageSteps: number, picks = 1, margin: Margin | null = null): GearSuggestion =>
+const suggestion = (
+  averageSteps: number,
+  picks = 1,
+  margin: Margin | null = null,
+  goals: GoalId[] = ["steps"],
+): GearSuggestion =>
   ({
     location: null,
     picks: Array(picks).fill({}),
     pet: null,
     totals: {},
     result: steps(averageSteps),
-    goals: ["steps", "chests"],
+    goals,
     margin,
   }) as unknown as GearSuggestion;
 
@@ -52,10 +57,14 @@ describe("answerNotes", () => {
 
   it.each([
     [{ goal: "steps", gap: 0.008 }, "Within 0.8% of the best possible for Fastest."],
-    [{ goal: "chests", gap: 0.021 }, "Proven best for Fastest. Within 2.1% of the best possible for Most chests."],
     [{ goal: "steps", gap: 0.00041 }, "Within 0.1% of the best possible for Fastest."],
-  ] as const)("says how close an unproven set is to the best possible (%j)", (margin, note) => {
+  ] as const)("says how close the set is on the first priority (%j)", (margin, note) => {
     expect(answerNotes(suggestion(30, 1, margin), target, null)).toEqual([note]);
+  });
+
+  it("claims proof only for the first priority when the player picked several", () => {
+    const notes = answerNotes(suggestion(30, 1, null, ["steps", "chests", "materials"]), target, null);
+    expect(notes).toEqual(["Proven best for Fastest."]);
   });
 });
 
