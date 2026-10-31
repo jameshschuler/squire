@@ -70,7 +70,7 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
           </Button>
         </div>
       )}
-      <ChatMessage>
+      <ChatMessage wide={!target}>
         <p>What do you want to do?</p>
         {!target && (
           <TargetQuestion

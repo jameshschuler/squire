@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 interface SearchInputProps {
   value: string;
@@ -21,7 +22,7 @@ export function SearchInput({ value, placeholder, onChange }: SearchInputProps) 
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="h-11 pr-11 pl-9 text-base [&::-webkit-search-cancel-button]:appearance-none"
+        className={cn("h-11 pl-9 text-base [&::-webkit-search-cancel-button]:appearance-none", value && "pr-11")}
       />
       {value && (
         <Button
