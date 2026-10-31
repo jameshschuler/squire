@@ -50,7 +50,7 @@ export function bestSet(
     [NO_STATS],
   );
   const masks = banMasks(rules);
-  const covers = coverage(useful, goalDims);
+  const covers = coverage(useful, goalDims, rules.cappedSetGroups);
   let states: PartialSet[] = [emptySet(rules.setGroups.length)];
   let ceiling: Score | null = null;
   groups.forEach(({ choices, capacity }, g) => {
@@ -189,7 +189,11 @@ interface Bounded {
   bound: Score;
 }
 
-function coverage(useful: number, goalDims: number): (a: PartialSet, b: PartialSet) => boolean {
+function coverage(
+  useful: number,
+  goalDims: number,
+  cappedSetGroups: Set<number>,
+): (a: PartialSet, b: PartialSet) => boolean {
   return (a, b) => {
     const have = a.guaranteed;
     const could = b.optimistic;
@@ -208,7 +212,10 @@ function coverage(useful: number, goalDims: number): (a: PartialSet, b: PartialS
         return false;
       }
     }
-    return a.setItems.every((ids, i) => ids.length >= b.setItems[i]!.length);
+    return a.setItems.every((ids, i) => {
+      const other = b.setItems[i]!.length;
+      return cappedSetGroups.has(i) ? ids.length === other : ids.length >= other;
+    });
   };
 }
 

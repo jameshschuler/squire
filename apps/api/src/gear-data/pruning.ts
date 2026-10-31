@@ -5,19 +5,18 @@ export interface KeywordRules {
   bannedKeywords: Record<string, string[]>;
   banKeys: Set<string>;
   setGroups: string[][];
+  cappedSetGroups: Set<number>;
 }
 
 export function keywordRules(bannedKeywords: Record<string, string[]>, candidates: Candidate[]): KeywordRules {
+  const conditions = candidates.flatMap((c) => c.setBonuses.flatMap((b) => b.conditions));
+  const groups = [...new Set(conditions.map((s) => JSON.stringify(s.requirement.keywords)))];
+  const capped = new Set(conditions.filter((s) => s.opposite).map((s) => JSON.stringify(s.requirement.keywords)));
   return {
     bannedKeywords,
     banKeys: new Set([...Object.keys(bannedKeywords), ...Object.values(bannedKeywords).flat()]),
-    setGroups: [
-      ...new Set(
-        candidates.flatMap((c) =>
-          c.setBonuses.flatMap((b) => b.conditions.map((s) => JSON.stringify(s.requirement.keywords))),
-        ),
-      ),
-    ].map((group) => JSON.parse(group) as string[]),
+    setGroups: groups.map((group) => JSON.parse(group) as string[]),
+    cappedSetGroups: new Set(groups.flatMap((group, i) => (capped.has(group) ? [i] : []))),
   };
 }
 
@@ -76,7 +75,8 @@ export function prune(choices: Candidate[], capacity: number, rules: KeywordRule
       Math.min(a.totals.doubleAction, MAX_DOUBLE_ACTION) >= Math.min(b.best.doubleAction, MAX_DOUBLE_ACTION) &&
       b.best.goalStats.every((value, i) => (a.totals.goalStats[i] ?? 0) >= value) &&
       aKeys.ban.every((k) => bKeys.ban.includes(k)) &&
-      [...bKeys.set].every((k) => aKeys.set.has(k))
+      [...bKeys.set].every((k) => aKeys.set.has(k)) &&
+      [...rules.cappedSetGroups].every((g) => aKeys.set.has(g) === bKeys.set.has(g))
     );
   };
   const dominates = (a: Candidate, b: Candidate) => covers(a, b) && (!covers(b, a) || a.id < b.id);

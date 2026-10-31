@@ -488,6 +488,37 @@ describe("free slots", () => {
     expect(optimizeGear(gear, owner, mining).picks).toHaveLength(1);
   });
 
+  it("wears only the best quality of an item when a goal wants more of it", () => {
+    const gear = gearData([
+      item("lucky_saw", "tool", [], {
+        tierStats: { common: [stat("chestFind", 0.1, true)], rare: [stat("chestFind", 0.2, true)] },
+      }),
+    ]);
+    const owner = character([], {
+      owned: [
+        { id: "lucky_saw", quality: "common", count: 1 },
+        { id: "lucky_saw", quality: "rare", count: 1 },
+      ],
+    });
+    expect(optimizeGear(gear, owner, mining, ["chests"]).picks.map((p) => p.quality)).toEqual(["rare"]);
+  });
+
+  it("keeps a plain item over a slightly better set piece when the set piece would cost a fewer-pieces bonus", () => {
+    const fewerThanTwo: GearCondition = {
+      type: "distinctKeywordItemsEquipped",
+      opposite: true,
+      requirement: { quantity: 2, keywords: ["lone"] },
+    };
+    const gear = gearData([
+      item("lone_hat", "head", [flatSteps(-3)], { keywords: ["lone"] }),
+      item("plain_hat", "head", [flatSteps(-2)]),
+      item("lone_watch", "tool", [flatSteps(-10, fewerThanTwo)], { keywords: ["lone"] }),
+    ]);
+    const found = optimizeGear(gear, character(["lone_hat", "plain_hat", "lone_watch"]), mining);
+    expect(found.picks.map((p) => p.item.id).sort()).toEqual(["lone_watch", "plain_hat"]);
+    expect(found.proven).toBe(true);
+  });
+
   it("ignores bonuses that don't apply to this activity", () => {
     const gear = gearData([item("net_bag", "back", [stat("chestFind", 0.2, true, otherSkill)])]);
     expect(picked(gear, BEST_IN_GAME)).toEqual([]);

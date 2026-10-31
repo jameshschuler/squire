@@ -31,9 +31,9 @@ interface Run {
   ms: number;
 }
 
-type Outcome = "same" | "missed" | "exact worse" | "timed out" | "failed";
+type Outcome = "same" | "missed" | "wrong proof" | "exact worse" | "timed out" | "failed";
 
-const FAILING: Outcome[] = ["missed", "exact worse", "failed"];
+const FAILING: Outcome[] = ["wrong proof", "exact worse", "failed"];
 
 interface Result {
   job: Job;
@@ -150,8 +150,7 @@ function runJob(worker: Worker, job: Job, timeoutMs: number): Promise<Result> {
         fast = run;
         return;
       }
-      const comparison = compareScores(run.score, fast.score);
-      finish(comparison > 0 ? "missed" : comparison < 0 ? "exact worse" : "same", run);
+      finish(outcomeOf(compareScores(run.score, fast.score), fast.proven), run);
     };
     const onError = () => finish("failed", null);
     const timer = setTimeout(() => finish("timed out", null), timeoutMs);
@@ -160,6 +159,13 @@ function runJob(worker: Worker, job: Job, timeoutMs: number): Promise<Result> {
     worker.on("exit", onError);
     worker.postMessage(job);
   });
+}
+
+function outcomeOf(comparison: number, proven: boolean): Outcome {
+  if (comparison > 0) {
+    return proven ? "wrong proof" : "missed";
+  }
+  return comparison < 0 ? "exact worse" : "same";
 }
 
 function serve({ gear, profiles }: Shared) {
@@ -179,7 +185,7 @@ function report(results: Result[]) {
   const describe = ({ job }: Result) => `${job.name} · ${job.profile} · ${job.goals.join(" › ")}`;
   for (const result of results.filter((r) => r.outcome !== "same")) {
     const { fast, exact } = result;
-    const limited = fast && `limited ${fast.steps} steps${fast.proven ? ", claimed proven" : ""}`;
+    const limited = fast && `limited ${fast.steps} steps`;
     const detail = limited ? ` (${limited}, ${exact ? `exact ${exact.steps} steps` : "exact didn't finish"})` : "";
     console.log(`${result.outcome.toUpperCase()}: ${describe(result)}${detail}`);
   }

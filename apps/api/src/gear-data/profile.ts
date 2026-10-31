@@ -36,12 +36,20 @@ export function ownedGear(profile: PlayerProfile, items: GearItem[]): OwnedGear[
     });
   }
   const byId = new Map(items.map((item) => [item.id, item]));
-  return profile.character.owned.flatMap(({ id, quality, count }) => {
-    const item = byId.get(id);
-    return item && meetsRequirements(profile.character, item.requirements)
-      ? copies({ item, quality, stats: stackedStats(item, quality) }, count)
-      : [];
-  });
+  const worn = new Map<string, number>();
+  const rank = (quality: ItemQuality | null) => (quality ? QUALITIES.indexOf(quality) : -1);
+  return [...profile.character.owned]
+    .sort((a, b) => rank(b.quality) - rank(a.quality))
+    .flatMap(({ id, quality, count }) => {
+      const item = byId.get(id);
+      if (!item || !meetsRequirements(profile.character, item.requirements)) {
+        return [];
+      }
+      const already = worn.get(id) ?? 0;
+      const kept = Math.min(count, copiesAllowed(item.slot) - already);
+      worn.set(id, already + kept);
+      return Array.from({ length: kept }, () => ({ item, quality, stats: stackedStats(item, quality) }));
+    });
 }
 
 function copies(owned: OwnedGear, count: number): OwnedGear[] {
