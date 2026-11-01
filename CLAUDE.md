@@ -7,6 +7,10 @@
 - **Exception: the data client's public API.** Exported functions, types and options in `packages/data-client` get TSDoc comments, because they are the package's documentation in editors and on npm. Its internal code still follows the zero-comments rule.
 - Keep components and functions modular and minimal.
 - Always use braces for `if` statements, even single-line bodies. Write `if (existing) { return existing; }` (on separate lines), never `if (existing) return existing;`.
+- **Blank line before `return`**, unless it's the first statement in its block.
+- **Group logic with blank lines.** Inside a function, leave a blank line after a run of declarations and after each block (`if`, `for`, `switch`, …), so each step reads as its own paragraph. Consecutive `const`s that belong together stay together.
+- **Avoid nested loops.** Don't search a list inside a loop (`.includes`, `.indexOf`, `.find`, `.some` on an array): build a `Set` or `Map` once and look up in it. When loops nest more than two deep, pull the inner work into a named function. Walking nested data (groups of items, a list of lists in a component) and comparing items in pairs are fine.
+- **No single-letter names.** Name variables, parameters and callbacks after what they hold: `(item) => item.slot`, not `(i) => i.slot`; `for (let index = 0; …)`; sort comparators take `(left, right)` or domain names like `(slower, faster)`. A lone `_` for an unused parameter is fine.
 - Don't nest `await`. Give each awaited value its own `const` before using it: `const data = await loadGameData(client);` then `buildRecipeBook(data)`, never `buildRecipeBook(await loadGameData(client))`. The same goes for `(await x).field`, `await (await fetch(url)).json()` and passing `await x` as an argument. In tests, use `await expect(promise).resolves…` instead of `expect(await promise)`. A single `await` that's assigned, returned or cast (`const body = (await res.json()) as Body`) is fine.
 
 ## Quality & Simplicity
