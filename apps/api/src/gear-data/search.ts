@@ -62,12 +62,15 @@ export function bestSet(
 
   // tops[g][i][n]: the best stats any n of group g's items from index i onward could add.
   // rest[g]: the best stats every group from g onward could add when filled.
+  // ahead[g][i][n]: tops[g][i][n] plus rest[g + 1], everything a partial set could still add.
   const tops = groups.map(({ choices, capacity }) => topSums(choices, capacity, useful));
   const rest = tops.reduceRight<StatTotals[]>(
     (sums, top, g) => [addStats(top[0]![groups[g]!.capacity]!, sums[0]!), ...sums],
     [NO_STATS],
   );
+  const ahead = tops.map((top, g) => top.map((byCount) => byCount.map((sum) => addStats(sum, rest[g + 1]!))));
   const masks = banMasks(rules);
+  const stats = dominanceStats(useful, goalDims);
   const covers = coverage(useful, goalDims, rules.cappedSetGroups);
   let states: PartialSet[] = [emptySet(rules.setGroups.length)];
   let ceiling: Score | null = null;
@@ -79,7 +82,7 @@ export function bestSet(
     for (const [i, next] of choices.entries()) {
       // The best score `state` could still reach if items `from` onward in this group, and every later group, are added.
       const bound = (state: PartialSet, from: number) =>
-        score(addStats(state.optimistic, addStats(tops[g]![from]![capacity - state.used]!, rest[g + 1]!)));
+        score(addStats(state.optimistic, ahead[g]![from]![capacity - state.used]!));
       // Out of time: every unfinished partial set might still have led to the best set, so their
       // bounds join the ceiling and the margin stays honest.
       if (performance.now() > deadline) {
@@ -94,12 +97,14 @@ export function bestSet(
       const bounded = (state: PartialSet) => ({ state, bound: bound(state, i + 1) });
       const promising = (list: PartialSet[]) =>
         list.map(bounded).filter(({ bound }) => compareScores(bound, bestScore) > 0);
+      const [old, added] = [promising(states), promising(grown)];
+      const merge = (base: Scored[], more: Scored[]) => {
+        const signed = withSignatures([...base, ...more], stats);
+        return frontier(signed.slice(0, base.length), signed.slice(base.length), covers);
+      };
       // Old states were already compared with each other, so only new ones need comparing, except at
       // the start of a group, where resetting `used` can make one old state dominate another.
-      const kept =
-        i === 0
-          ? frontier([], [...promising(states), ...promising(grown)], covers)
-          : frontier(promising(states), promising(grown), covers);
+      const kept: Scored[] = i === 0 ? merge([], [...old, ...added]) : added.length > 0 ? merge(old, added) : old;
       // Keep the most promising; the best bound among those cut is the highest any of them could reach.
       if (kept.length > maxStates) {
         kept.sort((a, b) => compareScores(b.bound, a.bound));
@@ -221,9 +226,51 @@ function grow(state: PartialSet, next: Candidate, nextBans: BanMasks, groups: nu
   };
 }
 
-interface Bounded {
+// A partial set with its bound.
+interface Scored {
   state: PartialSet;
   bound: Score;
+}
+
+// Plus signatures of the state's guaranteed and optimistic stats; see withSignatures.
+interface Bounded extends Scored {
+  haveBits: number;
+  couldBits: number;
+}
+
+// The stats dominance compares, each turned so that higher is better and capped where more stops helping.
+function dominanceStats(useful: number, goalDims: number): ((totals: StatTotals) => number)[] {
+  return [
+    (t) => Math.min(t.workEfficiency, useful),
+    (t) => -t.stepsPercent,
+    (t) => -t.stepsFlat,
+    (t) => Math.min(t.doubleAction, MAX_DOUBLE_ACTION),
+    ...Array.from({ length: goalDims }, (_, i) => (t: StatTotals) => t.goalStats[i] ?? 0),
+  ];
+}
+
+// 30 bits keeps signatures small integers, which V8 stores and compares fastest.
+const SIGNATURE_BITS = 30;
+
+// Almost no pair of partial sets is a dominance match, so a quick test that rules most pairs out saves
+// most of the work. Each stat gets a few levels, spread through the optimistic values in this list, and a
+// signature has one bit per level the stats reach. If a's guaranteed stats are each at least b's
+// optimistic ones, every bit in b's optimistic signature is in a's guaranteed one, so frontier
+// only calls `covers` for pairs that pass that bitwise check.
+function withSignatures(entries: Scored[], stats: ((t: StatTotals) => number)[]): Bounded[] {
+  const perStat = Math.floor(SIGNATURE_BITS / stats.length);
+  const levels = stats.flatMap((stat) => {
+    const values = entries.map(({ state }) => stat(state.optimistic)).sort((a, b) => a - b);
+    const at = Array.from({ length: perStat }, (_, k) => values[Math.floor(((k + 1) * values.length) / (perStat + 1))]);
+    return [...new Set(at)].flatMap((value) => (value === undefined ? [] : [{ stat, value }]));
+  });
+  const bitsOf = (totals: StatTotals) =>
+    levels.reduce((bits, { stat, value }, i) => (stat(totals) >= value ? bits | (1 << i) : bits), 0);
+  return entries.map((entry) => ({
+    ...entry,
+    haveBits: bitsOf(entry.state.guaranteed),
+    couldBits: bitsOf(entry.state.optimistic),
+  }));
 }
 
 // a covers b when anything b could become, a could become at least as well: a's guaranteed stats are
@@ -260,20 +307,42 @@ function coverage(
 }
 
 // Adds `added` to `kept` (already free of dominated states), dropping any state another one covers.
+// This runs for every pair of partial sets, so signatures sit in plain arrays next to the list and are
+// checked before `covers`.
 function frontier(kept: Bounded[], added: Bounded[], covers: (a: PartialSet, b: PartialSet) => boolean): Bounded[] {
   const result = [...kept];
+  const haves = result.map((entry) => entry.haveBits);
+  const coulds = result.map((entry) => entry.couldBits);
   for (const entry of added) {
-    if (result.some((other) => covers(other.state, entry.state))) {
+    if (isCovered(result, haves, entry, covers)) {
       continue;
     }
     for (let i = result.length - 1; i >= 0; i--) {
-      if (covers(entry.state, result[i]!.state)) {
+      if ((coulds[i]! & ~entry.haveBits) === 0 && covers(entry.state, result[i]!.state)) {
         result.splice(i, 1);
+        haves.splice(i, 1);
+        coulds.splice(i, 1);
       }
     }
     result.push(entry);
+    haves.push(entry.haveBits);
+    coulds.push(entry.couldBits);
   }
   return result;
+}
+
+function isCovered(
+  list: Bounded[],
+  haves: number[],
+  entry: Bounded,
+  covers: (a: PartialSet, b: PartialSet) => boolean,
+): boolean {
+  for (let i = 0; i < list.length; i++) {
+    if ((entry.couldBits & ~haves[i]!) === 0 && covers(list[i]!.state, entry.state)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // For each starting index and pick count, the best total of each stat on its own. One item can't give

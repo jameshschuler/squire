@@ -122,6 +122,20 @@ describe("compareScores", () => {
     expect(compareScores([0.1 + 0.2], [0.3])).toBe(0);
   });
 
+  it.each([
+    [-337.7049180327869, -337.704918032787, 0],
+    [0.003790291262135922, 0.00379029126213592, 0],
+    [123456789, 123456790, -1],
+    [-15.5642023, -15.5642024, 1],
+    [1e-12, 1.0000000001e-12, 0],
+    [0, -0, 0],
+    [0, 1e-300, -1],
+    [1e-305, 2e-305, -1],
+    [-1.0000000005, 1.0000000005, -1],
+  ])("rounds to 9 significant digits whatever the size or sign (%s vs %s)", (a, b, sign) => {
+    expect(Math.sign(compareScores([a], [b]))).toBe(sign);
+  });
+
   it("is transitive, so a chain of near-ties can't drift", () => {
     const [a, b, c] = [[1], [1 + 4e-10], [1 + 8e-10]];
     const ab = compareScores(a, b) === 0;

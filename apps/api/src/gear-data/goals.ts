@@ -224,6 +224,16 @@ export function compareScores(a: Score, b: Score): number {
   return 0;
 }
 
+// Rounds like value.toPrecision(SIGNIFICANT_DIGITS) without building a string, since the search compares
+// scores millions of times. Values too small to scale (below about 1e-300) fall back to toPrecision.
 function rounded(value: number): number {
-  return Number(value.toPrecision(SIGNIFICANT_DIGITS));
+  if (value === 0 || !Number.isFinite(value)) {
+    return value;
+  }
+  const size = Math.abs(value);
+  const scale = 10 ** (SIGNIFICANT_DIGITS - 1 - Math.floor(Math.log10(size)));
+  if (!Number.isFinite(scale)) {
+    return Number(value.toPrecision(SIGNIFICANT_DIGITS));
+  }
+  return (Math.sign(value) * Math.round(size * scale)) / scale;
 }
