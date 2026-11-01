@@ -6,13 +6,14 @@ import type {
   SpecificInput,
 } from "@walkscape-community/data-api-client";
 import { itemsIn, lootTypeOf } from "./game-rules.js";
-import { skillLevels } from "./lookup.js";
+import { skillLevels, xpRewards } from "./lookup.js";
 import { byActivityLevel } from "./order.js";
 import { humanize, spaced } from "./text.js";
 import type {
   ActivityDrops,
   ActivityNeed,
   ActivityView,
+  GearNeed,
   ItemSummary,
   LocationSummary,
   LootType,
@@ -44,10 +45,12 @@ function activityView(activity: ActivityDetail, indexes: ActivityIndexes): Activ
     skills: skillLevels(activity.relatedSkillsList, requirements, indexes.skillName),
     locations: indexes.locationsByActivity.get(activity.id) ?? [],
     needs: requirements.flatMap((requirement) => needOf(requirement, indexes)),
+    gearNeeds: requirements.flatMap((requirement) => gearNeedOf(requirement, indexes)),
     uses: (activity.options ?? []).flatMap((option) =>
       option.type === "inputActivity" ? option.inputs.map((input) => useOf(input, indexes)) : [],
     ),
     drops: dropsOf(activity, indexes),
+    xp: xpRewards(activity.xpRewardsMap, indexes.skillName),
     workRequired: activity.workRequired,
     maxWorkEfficiency: activity.maxWorkEfficiency,
   };
@@ -87,6 +90,34 @@ function needOf(requirement: ActivitiesRequirement, { summary, skillName }: Acti
       const { value, isPercentage } = requirement.requirement;
       return [need(isPercentage ? `${value}% of achievement points` : `${value} achievement points`)];
     }
+    default:
+      return [];
+  }
+}
+
+function gearNeedOf(requirement: ActivitiesRequirement, indexes: ActivityIndexes): GearNeed[] {
+  const [shown] = needOf(requirement, indexes);
+  if (!shown) {
+    return [];
+  }
+
+  const label = shown.level ? `${shown.label} (${shown.level.name} ${shown.level.level})` : shown.label;
+  const gear = (need: Omit<GearNeed, "label">): GearNeed[] => [{ label, ...need }];
+  switch (requirement.type) {
+    case "keywordEquipped":
+      return gear({ keywords: [requirement.requirement.keyword], count: 1, level: null, itemId: null });
+    case "keywordWithLevelEquipped": {
+      const { keyword, skill, level } = requirement.requirement;
+
+      return gear({ keywords: [keyword], count: 1, level: { skill, level }, itemId: null });
+    }
+    case "distinctKeywordItemsEquipped": {
+      const { keywords, quantity } = requirement.requirement;
+
+      return gear({ keywords, count: quantity, level: null, itemId: null });
+    }
+    case "itemEquipped":
+      return gear({ keywords: [], count: 1, level: null, itemId: requirement.requirement.item });
     default:
       return [];
   }

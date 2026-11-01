@@ -7,6 +7,7 @@ import type {
   RecipeBook,
   RecipeView,
   SkillLevel,
+  XpReward,
 } from "./types.js";
 
 export function findItem(book: RecipeBook, itemId: string): ItemWithEffects | undefined {
@@ -69,6 +70,10 @@ export function lowestSkillLevels(skills: SkillLevel[]): SkillLevel[] {
     }
   }
   return [...lowest.values()].sort((a, b) => (a.level ?? 0) - (b.level ?? 0));
+}
+
+export function xpRewards(rewards: Record<string, number> | null, skillName: (id: string) => string): XpReward[] {
+  return Object.entries(rewards ?? {}).map(([id, amount]) => ({ id, name: skillName(id), amount }));
 }
 
 export function skillLevels(

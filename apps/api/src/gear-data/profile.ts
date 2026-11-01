@@ -1,6 +1,7 @@
-import { MAX_LEVEL, toolSlots, type Character } from "../character/character.js";
+import { MAX_LEVEL, toolSlots, type Character, type OwnedPet } from "../character/character.js";
 import { QUALITIES, type ItemQuality } from "../recipe-book/types.js";
 import { stackedStats } from "./items.js";
+import { copiesAllowed } from "./slots.js";
 import type { GearCondition, GearItem, GearStat, PetView } from "./types.js";
 
 export type PlayerProfile = { kind: "best" } | { kind: "character"; character: Character };
@@ -17,6 +18,7 @@ export interface OwnedPetView {
   stats: GearStat[];
 }
 
+// Owns every item at its best quality and every pet at its top level, at max skill levels.
 export const BEST_IN_GAME: PlayerProfile = { kind: "best" };
 
 export function skillLevelOf(profile: PlayerProfile, skill: string): number {
@@ -27,20 +29,34 @@ export function toolSlotsOf(profile: PlayerProfile): number {
   return profile.kind === "best" ? toolSlots(MAX_LEVEL) : profile.character.toolSlots;
 }
 
+// The gear a profile can wear. A character only gets as many copies of an item as its slot allows,
+// best qualities first, since a higher quality always includes the lower tiers' stats.
 export function ownedGear(profile: PlayerProfile, items: GearItem[]): OwnedGear[] {
   if (profile.kind === "best") {
-    return items.map((item) => {
+    return items.flatMap((item) => {
       const quality = bestQuality(item);
-      return { item, quality, stats: stackedStats(item, quality) };
+      return copies({ item, quality, stats: stackedStats(item, quality) }, Number.POSITIVE_INFINITY);
     });
   }
   const byId = new Map(items.map((item) => [item.id, item]));
-  return profile.character.owned.flatMap(({ id, quality }) => {
-    const item = byId.get(id);
-    return item && meetsRequirements(profile.character, item.requirements)
-      ? [{ item, quality, stats: stackedStats(item, quality) }]
-      : [];
-  });
+  const worn = new Map<string, number>();
+  const rank = (quality: ItemQuality | null) => (quality ? QUALITIES.indexOf(quality) : -1);
+  return [...profile.character.owned]
+    .sort((a, b) => rank(b.quality) - rank(a.quality))
+    .flatMap(({ id, quality, count }) => {
+      const item = byId.get(id);
+      if (!item || !meetsRequirements(profile.character, item.requirements)) {
+        return [];
+      }
+      const already = worn.get(id) ?? 0;
+      const kept = Math.min(count, copiesAllowed(item.slot) - already);
+      worn.set(id, already + kept);
+      return Array.from({ length: kept }, () => ({ item, quality, stats: stackedStats(item, quality) }));
+    });
+}
+
+function copies(owned: OwnedGear, count: number): OwnedGear[] {
+  return Array.from({ length: Math.min(count, copiesAllowed(owned.item.slot)) }, () => owned);
 }
 
 export function ownedPets(profile: PlayerProfile, pets: PetView[]): OwnedPetView[] {
@@ -50,13 +66,18 @@ export function ownedPets(profile: PlayerProfile, pets: PetView[]): OwnedPetView
       return top ? [{ pet, level: top.level, stats: top.stats }] : [];
     });
   }
-  return profile.character.pets.flatMap(({ species, level }) => {
-    const pet = pets.find((p) => p.id === species || p.rareId === species);
-    const reached = pet?.levels.filter((l) => l.level <= level).at(-1);
-    return pet && reached ? [{ pet, level: reached.level, stats: reached.stats }] : [];
-  });
+  return profile.character.pets.flatMap((owned) => petAt(pets, owned) ?? []);
 }
 
+export function petAt(pets: PetView[], { species, level }: OwnedPet): OwnedPetView | undefined {
+  const pet = pets.find((p) => p.id === species || p.rareId === species);
+  const reached = pet?.levels.filter((l) => l.level <= level).at(-1);
+  return pet && reached ? { pet, level: reached.level, stats: reached.stats } : undefined;
+}
+
+// Whether a condition about the player holds. Undefined means it isn't about the player (or can't be
+// checked), and the caller decides. The best-in-game profile returns true for every condition, so
+// callers check location and skill conditions first.
 export function playerConditionHolds(profile: PlayerProfile, condition: GearCondition): boolean | undefined {
   if (profile.kind === "best") {
     return true;

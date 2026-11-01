@@ -1,7 +1,7 @@
 import type { ItemDetail, ServiceTier } from "@walkscape-community/data-api-client";
 
 // Bump whenever the RecipeBook shape changes, so cached copies on devices refresh.
-export const RECIPE_BOOK_SCHEMA = 26;
+export const RECIPE_BOOK_SCHEMA = 28;
 
 export interface EffectTarget {
   id: string;
@@ -71,6 +71,12 @@ export interface SkillLevel {
   level: number | null;
 }
 
+export interface XpReward {
+  id: string;
+  name: string;
+  amount: number;
+}
+
 export interface RecipeView {
   id: string;
   name: string;
@@ -79,7 +85,7 @@ export interface RecipeView {
   service: RecipeService | null;
   materials: RecipeItem[][];
   outputs: RecipeItem[];
-  xp: { skill: string; amount: number }[];
+  xp: XpReward[];
   workRequired: number | null;
   maxWorkEfficiency: number | null;
 }
@@ -90,6 +96,16 @@ export interface ActivityNeed {
   label: string;
   level: SkillLevel | null;
   item: ItemSummary | null;
+}
+
+// Gear an activity can't be done without: `count` different equipped items that each have one of
+// `keywords` (and, with `level`, take at least that skill level to wear), or the item `itemId`.
+export interface GearNeed {
+  label: string;
+  keywords: string[];
+  count: number;
+  level: { skill: string; level: number } | null;
+  itemId: string | null;
 }
 
 export interface ActivityDrops {
@@ -104,8 +120,10 @@ export interface ActivityView {
   skills: SkillLevel[];
   locations: LocationSummary[];
   needs: ActivityNeed[];
+  gearNeeds: GearNeed[];
   uses: ActivityNeed[];
   drops: ActivityDrops[];
+  xp: XpReward[];
   workRequired: number | null;
   maxWorkEfficiency: number | null;
 }
