@@ -42,8 +42,8 @@ export function createIconStore(client: WalkScapeClient): IconStore {
       const missing = paths.filter((path) => !icons.has(path));
       let loaded = 0;
 
-      for (let i = 0; i < missing.length; i += BATCH_SIZE) {
-        const batch = await client.icons(missing.slice(i, i + BATCH_SIZE));
+      for (let index = 0; index < missing.length; index += BATCH_SIZE) {
+        const batch = await client.icons(missing.slice(index, index + BATCH_SIZE));
 
         for (const [path, dataUri] of Object.entries(batch)) {
           if (dataUri) {

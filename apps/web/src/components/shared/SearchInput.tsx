@@ -20,7 +20,7 @@ export function SearchInput({ value, placeholder, onChange }: SearchInputProps) 
         ref={inputRef}
         type="search"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         className={cn("h-11 pl-9 text-base [&::-webkit-search-cancel-button]:appearance-none", value && "pr-11")}
       />

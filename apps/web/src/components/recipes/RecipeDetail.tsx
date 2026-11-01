@@ -33,11 +33,11 @@ export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
       </header>
 
       <Section title="Materials">
-        {recipe.materials.map((options, i) => (
-          <div key={i} className="border-b last:border-b-0">
-            {options.map((item, j) => (
+        {recipe.materials.map((options, index) => (
+          <div key={index} className="border-b last:border-b-0">
+            {options.map((item, position) => (
               <div key={item.id}>
-                {j > 0 && <p className="pl-11 text-xs tracking-wide text-muted-foreground uppercase">or</p>}
+                {position > 0 && <p className="pl-11 text-xs tracking-wide text-muted-foreground uppercase">or</p>}
                 <RecipeItemRow item={item} />
               </div>
             ))}

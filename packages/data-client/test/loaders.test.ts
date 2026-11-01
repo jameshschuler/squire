@@ -6,13 +6,13 @@ type Entry = { id: string; full: boolean; canBeSold?: boolean; relatedSkills?: s
 
 function fakeClient(entries: Partial<Record<ApiResource, Entry[]>>) {
   const list = vi.fn(async (resource: ApiResource) => (entries[resource] ?? []).map(({ id }) => ({ id })));
-  const get = vi.fn(async (resource: ApiResource, id: string) => entries[resource]!.find((e) => e.id === id));
+  const get = vi.fn(async (resource: ApiResource, id: string) => entries[resource]!.find((entry) => entry.id === id));
   const search = vi.fn(async (resource: ApiResource, filters: Record<string, unknown>) =>
-    (entries[resource] ?? []).filter((e) =>
-      Object.entries(filters).every(([k, v]) => {
-        const actual = e[k as keyof Entry];
+    (entries[resource] ?? []).filter((entry) =>
+      Object.entries(filters).every(([key, value]) => {
+        const actual = entry[key as keyof Entry];
 
-        return Array.isArray(actual) ? actual.includes(v as string) : actual === v;
+        return Array.isArray(actual) ? actual.includes(value as string) : actual === value;
       }),
     ),
   );
@@ -50,7 +50,7 @@ describe("loadAllEntries", () => {
     });
     const items = (await loadAllEntries(client, "items")) as Entry[];
 
-    expect(items.map((e) => e.id)).toEqual(["ore", "odd"]);
+    expect(items.map((item) => item.id)).toEqual(["ore", "odd"]);
     expect(get.mock.calls).toEqual([["items", "odd"]]);
   });
 

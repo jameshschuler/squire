@@ -105,7 +105,7 @@ const mining: OptimizeTarget = {
 };
 const picked = (gear: GearData, profile: PlayerProfile, target: OptimizeTarget = mining) =>
   optimizeGear(gear, profile, target)
-    .picks.map((p) => (p.quality ? `${p.item.id}@${p.quality}` : p.item.id))
+    .picks.map((pick) => (pick.quality ? `${pick.item.id}@${pick.quality}` : pick.item.id))
     .sort();
 
 describe("optimizeGear", () => {
@@ -116,7 +116,7 @@ describe("optimizeGear", () => {
     ]);
     const suggestion = optimizeGear(gear, BEST_IN_GAME, mining);
 
-    expect(suggestion.picks.map((p) => p.item.id)).toEqual(["big_gloves"]);
+    expect(suggestion.picks.map((pick) => pick.item.id)).toEqual(["big_gloves"]);
     expect(suggestion.result.steps).toBe(75);
   });
 
@@ -169,7 +169,7 @@ describe("optimizeGear", () => {
     const owned = character(["brisk_gloves", "swift_gloves"], { pets: [{ species: "camel", level: 1 }] });
     const suggestion = optimizeGear(gear, owned, mining);
 
-    expect(suggestion.picks.map((p) => p.item.id)).toEqual(["swift_gloves"]);
+    expect(suggestion.picks.map((pick) => pick.item.id)).toEqual(["swift_gloves"]);
     expect(suggestion.pet).toMatchObject({ pet: { id: "camel" } });
   });
 
@@ -186,13 +186,13 @@ describe("optimizeGear", () => {
   });
 
   it("fills only the tool slots the character has", () => {
-    const tools = [1, 2, 3, 4].map((n) => item(`tool_${n}`, "tool", [flatSteps(-n)]));
+    const tools = [1, 2, 3, 4].map((rank) => item(`tool_${rank}`, "tool", [flatSteps(-rank)]));
 
     expect(
       picked(
         gearData(tools),
         character(
-          tools.map((t) => t.id),
+          tools.map((tool) => tool.id),
           { toolSlots: 3 },
         ),
       ),
@@ -200,9 +200,9 @@ describe("optimizeGear", () => {
   });
 
   it("wears two rings", () => {
-    const rings = [1, 2, 3].map((n) => item(`ring_${n}`, "ring", [flatSteps(-n)]));
+    const rings = [1, 2, 3].map((rank) => item(`ring_${rank}`, "ring", [flatSteps(-rank)]));
 
-    expect(picked(gearData(rings), character(rings.map((r) => r.id)))).toEqual(["ring_2", "ring_3"]);
+    expect(picked(gearData(rings), character(rings.map((ring) => ring.id)))).toEqual(["ring_2", "ring_3"]);
   });
 
   it("uses only gear the character owns, at the quality they own it", () => {
@@ -215,7 +215,7 @@ describe("optimizeGear", () => {
       mining,
     );
 
-    expect(suggestion.picks.map((p) => `${p.item.id}@${p.quality}`)).toEqual(["pickaxe@uncommon"]);
+    expect(suggestion.picks.map((pick) => `${pick.item.id}@${pick.quality}`)).toEqual(["pickaxe@uncommon"]);
     expect(suggestion.totals.stepsFlat).toBe(-2);
   });
 
@@ -285,7 +285,7 @@ describe("optimizeGear", () => {
     const suggestion = optimizeGear(gear, BEST_IN_GAME, { ...mining, locationIds: ["beach", "peak"] });
 
     expect(suggestion.location?.id).toBe("peak");
-    expect(suggestion.picks.map((p) => p.item.id)).toEqual(["snow_boots"]);
+    expect(suggestion.picks.map((pick) => pick.item.id)).toEqual(["snow_boots"]);
   });
 
   it("counts a region bonus in a location's sub-region", () => {
@@ -468,7 +468,7 @@ describe("optimizeGear", () => {
     ]);
     const suggestion = optimizeGear(gear, BEST_IN_GAME, mining);
 
-    expect(suggestion.picks.map((p) => p.item.id).sort()).toEqual(["heavy_boots", "lucky_charm"]);
+    expect(suggestion.picks.map((pick) => pick.item.id).sort()).toEqual(["heavy_boots", "lucky_charm"]);
     expect(suggestion.result).toMatchObject({ steps: 10, averageSteps: 10 / 1.5 });
   });
 
@@ -491,7 +491,7 @@ describe("optimizeGear", () => {
     expect(picked(gear, walker)).toEqual(["lucky_hat", "pickaxe"]);
     expect(
       optimizeGear(gear, walker, mining, ["steps", "chests"])
-        .picks.map((p) => p.item.id)
+        .picks.map((pick) => pick.item.id)
         .sort(),
     ).toEqual(["lucky_hat", "pickaxe"]);
   });
@@ -502,8 +502,10 @@ describe("optimizeGear", () => {
       item("lucky_hat", "head", [stat("chestFind", 0.5, true)]),
     ]);
 
-    expect(optimizeGear(gear, BEST_IN_GAME, mining, ["chests"]).picks.map((p) => p.item.id)).toEqual(["lucky_hat"]);
-    expect(optimizeGear(gear, BEST_IN_GAME, mining, ["steps"]).picks.map((p) => p.item.id)).toEqual(["fast_hat"]);
+    expect(optimizeGear(gear, BEST_IN_GAME, mining, ["chests"]).picks.map((pick) => pick.item.id)).toEqual([
+      "lucky_hat",
+    ]);
+    expect(optimizeGear(gear, BEST_IN_GAME, mining, ["steps"]).picks.map((pick) => pick.item.id)).toEqual(["fast_hat"]);
   });
 
   it("saves materials first when asked, trading steps for it", () => {
@@ -512,7 +514,7 @@ describe("optimizeGear", () => {
       item("thrifty_gloves", "hands", [stat("noMaterialsConsumed", 0.1, true)]),
     ]);
 
-    expect(optimizeGear(gear, BEST_IN_GAME, mining, ["materials"]).picks.map((p) => p.item.id)).toEqual([
+    expect(optimizeGear(gear, BEST_IN_GAME, mining, ["materials"]).picks.map((pick) => pick.item.id)).toEqual([
       "thrifty_gloves",
     ]);
   });
@@ -523,7 +525,7 @@ describe("optimizeGear", () => {
       item("doubling_gloves", "hands", [stat("doubleRewards", 0.2, true)]),
     ]);
 
-    expect(optimizeGear(gear, BEST_IN_GAME, mining, ["materials"]).picks.map((p) => p.item.id)).toEqual([
+    expect(optimizeGear(gear, BEST_IN_GAME, mining, ["materials"]).picks.map((pick) => pick.item.id)).toEqual([
       "doubling_gloves",
     ]);
   });
@@ -535,7 +537,7 @@ describe("optimizeGear", () => {
     ]);
     const suggestion = optimizeGear(gear, BEST_IN_GAME, mining, ["quality", "steps"]);
 
-    expect(suggestion.picks.map((p) => p.item.id)).toEqual(["fine_apron"]);
+    expect(suggestion.picks.map((pick) => pick.item.id)).toEqual(["fine_apron"]);
     expect(suggestion.score[0]).toBe(25);
   });
 
@@ -549,7 +551,7 @@ describe("optimizeGear", () => {
     ]);
     const suggestion = optimizeGear(gear, BEST_IN_GAME, { ...mining, baseXp }, ["xp"]);
 
-    expect(suggestion.picks.map((p) => p.item.id)).toEqual([wears]);
+    expect(suggestion.picks.map((pick) => pick.item.id)).toEqual([wears]);
   });
 
   it("suggests nothing when no gear helps", () => {
@@ -630,8 +632,8 @@ describe("required gear", () => {
     ]);
     const suggestion = optimizeGear(gear, character(["light_gloves"]), withNeeds(need({})));
 
-    expect(suggestion.missingNeeds.map((n) => n.label)).toEqual(["Pickaxe"]);
-    expect(suggestion.picks.map((p) => p.item.id)).toEqual(["light_gloves"]);
+    expect(suggestion.missingNeeds.map((missingNeed) => missingNeed.label)).toEqual(["Pickaxe"]);
+    expect(suggestion.picks.map((pick) => pick.item.id)).toEqual(["light_gloves"]);
   });
 
   it("names the needs no set can meet together, and still picks the best set for the rest", () => {
@@ -647,7 +649,7 @@ describe("required gear", () => {
     const owned = character(["rusty_pickaxe", "rusty_hatchet", "light_gloves"]);
     const suggestion = optimizeGear(gear, owned, withNeeds(need({}), hatchet));
 
-    expect(suggestion.picks.map((p) => p.item.id).sort()).toEqual(["light_gloves", "rusty_pickaxe"]);
+    expect(suggestion.picks.map((pick) => pick.item.id).sort()).toEqual(["light_gloves", "rusty_pickaxe"]);
     expect(suggestion.missingNeeds).toEqual([hatchet]);
   });
 
@@ -716,7 +718,7 @@ describe("free slots", () => {
       ],
     });
 
-    expect(optimizeGear(gear, owner, mining, ["chests"]).picks.map((p) => p.quality)).toEqual(["rare"]);
+    expect(optimizeGear(gear, owner, mining, ["chests"]).picks.map((pick) => pick.quality)).toEqual(["rare"]);
   });
 
   it("keeps a plain item over a slightly better set piece when the set piece would cost a fewer-pieces bonus", () => {
@@ -732,7 +734,7 @@ describe("free slots", () => {
     ]);
     const found = optimizeGear(gear, character(["lone_hat", "plain_hat", "lone_watch"]), mining);
 
-    expect(found.picks.map((p) => p.item.id).sort()).toEqual(["lone_watch", "plain_hat"]);
+    expect(found.picks.map((pick) => pick.item.id).sort()).toEqual(["lone_watch", "plain_hat"]);
     expect(found.margin).toBeNull();
   });
 
@@ -790,10 +792,10 @@ describe("locationBonuses", () => {
   const arc = { id: "arc", name: "Myriadian Arc", region: "Wrentmark", realms: ["wrentmark"], keywords: ["desert"] };
   const bonuses = (location: typeof arc | null) => {
     const suggestion = optimizeGear(gear, BEST_IN_GAME, mining);
-    const picks = gear.items.map((i) => ({
-      slot: i.slot,
-      item: i,
-      quality: i.id === "sun_hat" ? ("rare" as const) : null,
+    const picks = gear.items.map((gearItem) => ({
+      slot: gearItem.slot,
+      item: gearItem,
+      quality: gearItem.id === "sun_hat" ? ("rare" as const) : null,
     }));
 
     return locationBonuses(gear, BEST_IN_GAME, mining, { ...suggestion, location, picks });
@@ -807,7 +809,7 @@ describe("locationBonuses", () => {
   });
 
   it("leaves out bonuses for not being somewhere, and ones whose other conditions fail", () => {
-    const sources = bonuses(arc).map((b) => b.source);
+    const sources = bonuses(arc).map((bonus) => bonus.source);
 
     expect(sources).not.toContain("dry_cloak");
     expect(sources).not.toContain("chef_gloves");
@@ -1031,7 +1033,9 @@ describe("setStats", () => {
   ]);
   const stats = (ids: string[]) => {
     const suggestion = optimizeGear(gear, BEST_IN_GAME, mining);
-    const picks = gear.items.filter((i) => ids.includes(i.id)).map((i) => ({ slot: i.slot, item: i, quality: null }));
+    const picks = gear.items
+      .filter((gearItem) => ids.includes(gearItem.id))
+      .map((gearItem) => ({ slot: gearItem.slot, item: gearItem, quality: null }));
 
     return setStats(gear, BEST_IN_GAME, mining, { ...suggestion, picks });
   };
@@ -1047,11 +1051,11 @@ describe("setStats", () => {
   });
 
   it("leaves out effects whose conditions don't hold", () => {
-    expect(stats(["miner_hat"]).map((s) => s.stat)).not.toContain("workEfficiency");
+    expect(stats(["miner_hat"]).map((line) => line.stat)).not.toContain("workEfficiency");
   });
 
   it("counts a set bonus only with enough set pieces", () => {
-    expect(stats(["miner_boots"]).map((s) => s.stat)).toEqual(["chestFind"]);
+    expect(stats(["miner_boots"]).map((line) => line.stat)).toEqual(["chestFind"]);
   });
 });
 
@@ -1069,7 +1073,7 @@ describe("optimizeGear against every possible set", { timeout: 30_000 }, () => {
   function randomGear(next: () => number): GearItem[] {
     const slots: GearType[] = ["head", "feet", "hands", "ring", "ring", "ring", "tool", "tool", "tool", "tool", "tool"];
 
-    return slots.map((slot, i) => {
+    return slots.map((slot, index) => {
       const stats = [
         efficiency(Math.round(next() * 40 - 10) / 100),
         flatSteps(-Math.round(next() * 6)),
@@ -1097,7 +1101,7 @@ describe("optimizeGear against every possible set", { timeout: 30_000 }, () => {
 
       const keywords = [...(inSet ? ["set"] : []), ...(slot === "tool" && next() < 0.5 ? ["hatchet"] : [])];
 
-      return item(`item_${i}`, slot, stats, { keywords });
+      return item(`item_${index}`, slot, stats, { keywords });
     });
   }
 
@@ -1110,7 +1114,7 @@ describe("optimizeGear against every possible set", { timeout: 30_000 }, () => {
       level,
       target: { ...mining, workRequired: 40 + Math.round(next() * 200) },
       profile: character(
-        items.map((i) => i.id),
+        items.map((gearItem) => gearItem.id),
         { skillLevels: { mining: level } },
       ),
     };
@@ -1123,7 +1127,7 @@ describe("optimizeGear against every possible set", { timeout: 30_000 }, () => {
     goals: GoalId[],
     allowed: (set: GearItem[]) => boolean = () => true,
   ): Score {
-    const bySlot = (slot: GearType) => gear.items.filter((i) => i.slot === slot);
+    const bySlot = (slot: GearType) => gear.items.filter((gearItem) => gearItem.slot === slot);
     const subsets = (items: GearItem[], max: number): GearItem[][] =>
       items.reduce<GearItem[][]>(
         (sets, it) => [...sets, ...sets.filter((set) => set.length < max).map((set) => [...set, it])],
@@ -1145,16 +1149,21 @@ describe("optimizeGear against every possible set", { timeout: 30_000 }, () => {
         const setCount = set.filter((it) => it.keywords.includes("set")).length;
         const totals = set
           .flatMap((it) => it.stats)
-          .filter((s) =>
-            s.conditions.every((c) => c.type !== "distinctKeywordItemsEquipped" || setCount >= c.requirement.quantity),
+          .filter((gearStat) =>
+            gearStat.conditions.every(
+              (condition) =>
+                condition.type !== "distinctKeywordItemsEquipped" || setCount >= condition.requirement.quantity,
+            ),
           )
           .reduce(
-            (sum, s) => ({
-              workEfficiency: sum.workEfficiency + (s.stat === "workEfficiency" ? s.value : 0),
-              stepsPercent: sum.stepsPercent + (s.stat === "stepsRequired" && s.isPercent ? s.value : 0),
-              stepsFlat: sum.stepsFlat + (s.stat === "stepsRequired" && !s.isPercent ? s.value : 0),
-              doubleAction: sum.doubleAction + (s.stat === "doubleAction" ? s.value : 0),
-              goalStats: [sum.goalStats[0]! + (s.stat === "chestFind" ? s.value : 0)],
+            (sum, gearStat) => ({
+              workEfficiency: sum.workEfficiency + (gearStat.stat === "workEfficiency" ? gearStat.value : 0),
+              stepsPercent:
+                sum.stepsPercent + (gearStat.stat === "stepsRequired" && gearStat.isPercent ? gearStat.value : 0),
+              stepsFlat:
+                sum.stepsFlat + (gearStat.stat === "stepsRequired" && !gearStat.isPercent ? gearStat.value : 0),
+              doubleAction: sum.doubleAction + (gearStat.stat === "doubleAction" ? gearStat.value : 0),
+              goalStats: [sum.goalStats[0]! + (gearStat.stat === "chestFind" ? gearStat.value : 0)],
             }),
             { workEfficiency: 0, stepsPercent: 0, stepsFlat: 0, doubleAction: 0, goalStats: [0] },
           );
@@ -1194,7 +1203,7 @@ describe("optimizeGear against every possible set", { timeout: 30_000 }, () => {
       }
 
       checked++;
-      expect(wearsTwo(found.picks.map((p) => p.item)), `run ${run}`).toBe(true);
+      expect(wearsTwo(found.picks.map((pick) => pick.item)), `run ${run}`).toBe(true);
       expect(compareScores(found.score, bruteForce(gear, target, level, ["steps"], wearsTwo)), `run ${run}`).toBe(0);
     }
 
@@ -1226,7 +1235,7 @@ describe("optimizeGear against every possible set", { timeout: 30_000 }, () => {
       return found.margin;
     });
 
-    expect(margins.some((m) => m !== null)).toBe(true);
+    expect(margins.some((margin) => margin !== null)).toBe(true);
   });
 
   it("keeps searching with a bigger limit until the set is within 1% of the best", () => {

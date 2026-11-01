@@ -14,12 +14,15 @@ import sample from "../../../fixtures/api/gamedata-sample.json";
 
 const book = buildRecipeBook(sample as unknown as GameData);
 const targets = gearTargets(book);
-const byKey = (key: string) => targets.find((t) => t.key === key)!;
-const findGold = () => ({ ...book.recipes.find((r) => r.id === "smelt_a_gold_bar")!.outputs[0]!, effects: null });
+const byKey = (key: string) => targets.find((target) => target.key === key)!;
+const findGold = () => ({
+  ...book.recipes.find((recipe) => recipe.id === "smelt_a_gold_bar")!.outputs[0]!,
+  effects: null,
+});
 
 describe("gearTargets", () => {
   it("offers activities and recipes with steps, A–Z", () => {
-    expect(targets.map((t) => t.key)).toEqual([
+    expect(targets.map((target) => target.key)).toEqual([
       "recipe:assemble_dynamite",
       "recipe:bake_a_bagel",
       "activity:mine_gold_ore",
@@ -28,7 +31,7 @@ describe("gearTargets", () => {
   });
 
   it("uses an activity's locations and a recipe's service locations", () => {
-    expect(byKey("activity:mine_gold_ore").locations.map((l) => l.id)).toEqual(["crown_of_cinders"]);
+    expect(byKey("activity:mine_gold_ore").locations.map((location) => location.id)).toEqual(["crown_of_cinders"]);
     expect(byKey("recipe:smelt_a_gold_bar").locations.length).toBeGreaterThan(0);
   });
 
@@ -38,15 +41,15 @@ describe("gearTargets", () => {
   });
 
   it("leaves out recipes without steps", () => {
-    const noSteps = { ...book, recipes: book.recipes.map((r) => ({ ...r, workRequired: null })) };
+    const noSteps = { ...book, recipes: book.recipes.map((recipe) => ({ ...recipe, workRequired: null })) };
 
-    expect(gearTargets(noSteps).map((t) => t.key)).toEqual(["activity:mine_gold_ore"]);
+    expect(gearTargets(noSteps).map((target) => target.key)).toEqual(["activity:mine_gold_ore"]);
   });
 });
 
 describe("searchGearTargets", () => {
   it("matches names by word prefix", () => {
-    expect(searchGearTargets(targets, "gold").map((t) => t.key)).toEqual([
+    expect(searchGearTargets(targets, "gold").map((target) => target.key)).toEqual([
       "activity:mine_gold_ore",
       "recipe:smelt_a_gold_bar",
     ]);
@@ -80,7 +83,7 @@ describe("optimizeTarget", () => {
 
 describe("goalsFor", () => {
   it("offers loot goals only when the activity drops that loot, and crafting goals only for recipes", () => {
-    expect(goalsFor(byKey("activity:mine_gold_ore")).map((g) => g.id)).toEqual([
+    expect(goalsFor(byKey("activity:mine_gold_ore")).map((goal) => goal.id)).toEqual([
       "steps",
       "items",
       "xp",
@@ -88,7 +91,12 @@ describe("goalsFor", () => {
       "fine",
       "gems",
     ]);
-    expect(goalsFor(byKey("recipe:bake_a_bagel")).map((g) => g.id)).toEqual(["steps", "items", "xp", "materials"]);
+    expect(goalsFor(byKey("recipe:bake_a_bagel")).map((goal) => goal.id)).toEqual([
+      "steps",
+      "items",
+      "xp",
+      "materials",
+    ]);
   });
 });
 
@@ -110,7 +118,7 @@ describe("recommendedGoals", () => {
   it("offers and recommends best quality for a recipe that makes tiered gear", () => {
     const tiered = { ...byKey("recipe:smelt_a_gold_bar"), makesTieredGear: true };
 
-    expect(goalsFor(tiered).map((g) => g.id)).toContain("quality");
+    expect(goalsFor(tiered).map((goal) => goal.id)).toContain("quality");
     expect(recommendedGoals(tiered)).toEqual(["steps", "materials", "quality"]);
   });
 
@@ -121,7 +129,7 @@ describe("recommendedGoals", () => {
         { ...findGold(), effects: { steps: null, effects: [], tiers: [{ quality: "rare" as const, effects: [] }] } },
       ],
     };
-    const smelt = gearTargets(withGear).find((t) => t.key === "recipe:smelt_a_gold_bar")!;
+    const smelt = gearTargets(withGear).find((target) => target.key === "recipe:smelt_a_gold_bar")!;
 
     expect(smelt.makesTieredGear).toBe(true);
     expect(byKey("recipe:smelt_a_gold_bar").makesTieredGear).toBe(false);

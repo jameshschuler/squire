@@ -27,15 +27,15 @@ export const NO_STATS: StatTotals = {
   goalStats: [],
 };
 
-export function addStats(a: StatTotals, b: StatTotals): StatTotals {
+export function addStats(left: StatTotals, right: StatTotals): StatTotals {
   return {
-    workEfficiency: a.workEfficiency + b.workEfficiency,
-    stepsPercent: a.stepsPercent + b.stepsPercent,
-    stepsFlat: a.stepsFlat + b.stepsFlat,
-    doubleAction: a.doubleAction + b.doubleAction,
+    workEfficiency: left.workEfficiency + right.workEfficiency,
+    stepsPercent: left.stepsPercent + right.stepsPercent,
+    stepsFlat: left.stepsFlat + right.stepsFlat,
+    doubleAction: left.doubleAction + right.doubleAction,
     goalStats: Array.from(
-      { length: Math.max(a.goalStats.length, b.goalStats.length) },
-      (_, i) => (a.goalStats[i] ?? 0) + (b.goalStats[i] ?? 0),
+      { length: Math.max(left.goalStats.length, right.goalStats.length) },
+      (_, index) => (left.goalStats[index] ?? 0) + (right.goalStats[index] ?? 0),
     ),
   };
 }

@@ -19,9 +19,13 @@ export function keywordRules(
   candidates: Candidate[],
   needCounts: number[],
 ): KeywordRules {
-  const conditions = candidates.flatMap((c) => c.setBonuses.flatMap((b) => b.conditions));
-  const groups = [...new Set(conditions.map((s) => JSON.stringify(s.requirement.keywords)))];
-  const capped = new Set(conditions.filter((s) => s.opposite).map((s) => JSON.stringify(s.requirement.keywords)));
+  const conditions = candidates.flatMap((candidate) => candidate.setBonuses.flatMap((setBonus) => setBonus.conditions));
+  const groups = [...new Set(conditions.map((condition) => JSON.stringify(condition.requirement.keywords)))];
+  const capped = new Set(
+    conditions
+      .filter((condition) => condition.opposite)
+      .map((condition) => JSON.stringify(condition.requirement.keywords)),
+  );
   const needs = needCounts.map((count, index) => ({
     keyword: needKeyword(index),
     count,
@@ -32,7 +36,7 @@ export function keywordRules(
     bannedKeywords,
     banKeys: new Set([...Object.keys(bannedKeywords), ...Object.values(bannedKeywords).flat()]),
     setGroups: [...groups.map((group) => JSON.parse(group) as string[]), ...needs.map((need) => [need.keyword])],
-    cappedSetGroups: new Set(groups.flatMap((group, i) => (capped.has(group) ? [i] : []))),
+    cappedSetGroups: new Set(groups.flatMap((group, index) => (capped.has(group) ? [index] : []))),
     needs,
   };
 }
@@ -45,14 +49,16 @@ export interface BanMasks {
 }
 
 export function banMasks({ banKeys, bannedKeywords }: KeywordRules): (candidate: Candidate) => BanMasks {
-  const bits = new Map([...banKeys].map((key, i) => [key, 1n << BigInt(i)]));
-  const maskOf = (keywords: string[]) => keywords.reduce((mask, k) => mask | (bits.get(k) ?? 0n), 0n);
+  const bits = new Map([...banKeys].map((key, index) => [key, 1n << BigInt(index)]));
+  const maskOf = (keywords: string[]) => keywords.reduce((mask, keyword) => mask | (bits.get(keyword) ?? 0n), 0n);
 
   return ({ keywords }) => ({
     keys: maskOf(keywords),
     clashes: maskOf([
-      ...keywords.flatMap((k) => bannedKeywords[k] ?? []),
-      ...Object.entries(bannedKeywords).flatMap(([k, banned]) => (banned.some((x) => keywords.includes(x)) ? [k] : [])),
+      ...keywords.flatMap((keyword) => bannedKeywords[keyword] ?? []),
+      ...Object.entries(bannedKeywords).flatMap(([key, banned]) =>
+        banned.some((bannedKeyword) => keywords.includes(bannedKeyword)) ? [key] : [],
+      ),
     ]),
   });
 }
@@ -62,49 +68,58 @@ export function clashes(wornKeys: bigint, next: BanMasks): boolean {
 }
 
 export function setGroupsOf({ setGroups }: KeywordRules, candidate: Candidate): number[] {
-  return setGroups.flatMap((keywords, i) => (candidate.keywords.some((k) => keywords.includes(k)) ? [i] : []));
+  return setGroups.flatMap((keywords, index) =>
+    candidate.keywords.some((keyword) => keywords.includes(keyword)) ? [index] : [],
+  );
 }
 
 export function conflicts(
   { bannedKeywords }: Pick<KeywordRules, "bannedKeywords">,
-  a: Pick<Candidate, "keywords">,
-  b: Pick<Candidate, "keywords">,
+  left: Pick<Candidate, "keywords">,
+  right: Pick<Candidate, "keywords">,
 ): boolean {
-  const bans = (from: string[], to: string[]) => from.some((k) => bannedKeywords[k]?.some((x) => to.includes(x)));
+  const bans = (from: string[], to: string[]) =>
+    from.some((keyword) => bannedKeywords[keyword]?.some((banned) => to.includes(banned)));
 
-  return bans(a.keywords, b.keywords) || bans(b.keywords, a.keywords);
+  return bans(left.keywords, right.keywords) || bans(right.keywords, left.keywords);
 }
 
 // Drops items that can never be worth wearing: ones that help nothing here, and ones beaten outright by
 // at least `capacity` others in the same slot (so a better item is always free to wear instead).
 export function prune(choices: Candidate[], capacity: number, rules: KeywordRules, useful: number): Candidate[] {
   const keys = new Map(
-    choices.map((c) => [
-      c,
+    choices.map((choice) => [
+      choice,
       {
-        ban: c.keywords.filter((k) => rules.banKeys.has(k)),
-        set: new Set(setGroupsOf(rules, c)),
+        ban: choice.keywords.filter((keyword) => rules.banKeys.has(keyword)),
+        set: new Set(setGroupsOf(rules, choice)),
       },
     ]),
   );
   const efficiency = (value: number) => Math.min(value, useful);
-  const kept = choices.filter((c) => c.setBonuses.length > 0 || keys.get(c)!.set.size > 0 || helps(c.best, useful));
-  const covers = (a: Candidate, b: Candidate) => {
-    const [aKeys, bKeys] = [keys.get(a)!, keys.get(b)!];
+  const kept = choices.filter(
+    (choice) => choice.setBonuses.length > 0 || keys.get(choice)!.set.size > 0 || helps(choice.best, useful),
+  );
+  const covers = (candidate: Candidate, other: Candidate) => {
+    const [candidateKeys, otherKeys] = [keys.get(candidate)!, keys.get(other)!];
 
     return (
-      efficiency(a.worst.workEfficiency) >= efficiency(b.best.workEfficiency) &&
-      a.worst.stepsPercent <= b.best.stepsPercent &&
-      a.worst.stepsFlat <= b.best.stepsFlat &&
-      Math.min(a.worst.doubleAction, MAX_DOUBLE_ACTION) >= Math.min(b.best.doubleAction, MAX_DOUBLE_ACTION) &&
-      b.best.goalStats.every((value, i) => (a.worst.goalStats[i] ?? 0) >= value) &&
-      aKeys.ban.every((k) => bKeys.ban.includes(k)) &&
-      [...bKeys.set].every((k) => aKeys.set.has(k)) &&
-      [...rules.cappedSetGroups].every((g) => aKeys.set.has(g) === bKeys.set.has(g))
+      efficiency(candidate.worst.workEfficiency) >= efficiency(other.best.workEfficiency) &&
+      candidate.worst.stepsPercent <= other.best.stepsPercent &&
+      candidate.worst.stepsFlat <= other.best.stepsFlat &&
+      Math.min(candidate.worst.doubleAction, MAX_DOUBLE_ACTION) >=
+        Math.min(other.best.doubleAction, MAX_DOUBLE_ACTION) &&
+      other.best.goalStats.every((value, index) => (candidate.worst.goalStats[index] ?? 0) >= value) &&
+      candidateKeys.ban.every((keyword) => otherKeys.ban.includes(keyword)) &&
+      [...otherKeys.set].every((group) => candidateKeys.set.has(group)) &&
+      [...rules.cappedSetGroups].every(
+        (cappedSetGroup) => candidateKeys.set.has(cappedSetGroup) === otherKeys.set.has(cappedSetGroup),
+      )
     );
   };
 
-  const dominates = (a: Candidate, b: Candidate) => covers(a, b) && (!covers(b, a) || a.id < b.id);
+  const dominates = (candidate: Candidate, other: Candidate) =>
+    covers(candidate, other) && (!covers(other, candidate) || candidate.id < other.id);
 
   // Set bonuses count distinct items, so two copies of one ring are only one set piece: a set piece is
   // only dropped when enough different items beat it.

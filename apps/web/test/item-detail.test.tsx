@@ -13,7 +13,7 @@ async function renderItem(itemId: string) {
   await renderWithRouter(<ItemDetail item={findItem(book, itemId)!} book={book} />);
 }
 
-const sectionTitles = () => screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
+const sectionTitles = () => screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent);
 
 function section(title: string) {
   return within(screen.getByRole("heading", { name: title }).parentElement!);

@@ -29,8 +29,8 @@ describe.skipIf(!apiKey)("client.loadAll against the live dev API", () => {
 
     expect(recipes).toHaveLength(recipeList.length);
     expect(activities).toHaveLength(activityList.length);
-    const tables = new Map(lootTables.map((t) => [t.id, t]));
-    const referenced = activities.flatMap((a) => (a.tables ?? []).flatMap((ref) => ref.tables));
+    const tables = new Map(lootTables.map((lootTable) => [lootTable.id, lootTable]));
+    const referenced = activities.flatMap((activity) => (activity.tables ?? []).flatMap((ref) => ref.tables));
 
     expect(referenced.filter((id) => !tables.has(id))).toEqual([]);
     expect(loadRequests).toBeLessThan(35);

@@ -57,7 +57,7 @@ function qualityTotals(
   add(base);
 
   return [...tiers]
-    .sort((a, b) => QUALITIES.indexOf(a.quality) - QUALITIES.indexOf(b.quality))
+    .sort((left, right) => QUALITIES.indexOf(left.quality) - QUALITIES.indexOf(right.quality))
     .map(({ quality, attributes }) => {
       add(attributes ?? []);
 
@@ -91,7 +91,9 @@ function foodEffects(item: Extract<ItemDetail, { type: "consumable" }>, names: E
 
   const effects = buff.data.flatMap((data) =>
     data.buffs.flatMap((group) =>
-      group.attributes.flatMap((attribute, i) => effectLine(attribute, group.fineAttributes[i] ?? attribute, names)),
+      group.attributes.flatMap((attribute, index) =>
+        effectLine(attribute, group.fineAttributes[index] ?? attribute, names),
+      ),
     ),
   );
 

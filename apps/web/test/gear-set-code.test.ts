@@ -33,11 +33,11 @@ describe("gearSetEntries", () => {
   it("lists every slot in the game's order, with empty slots as null", () => {
     const entries = gearSetEntries([]);
 
-    expect(entries.map((e) => (e.index === undefined ? e.type : `${e.type}${e.index}`))).toEqual([
+    expect(entries.map((entry) => (entry.index === undefined ? entry.type : `${entry.type}${entry.index}`))).toEqual([
       ...["head", "cape", "back", "chest", "primary", "secondary", "hands", "legs", "neck", "feet"],
       ...["ring0", "ring1", "tool0", "tool1", "tool2", "tool3", "tool4", "tool5"],
     ]);
-    expect(entries.every((e) => e.item === "null")).toBe(true);
+    expect(entries.every((entry) => entry.item === "null")).toBe(true);
   });
 
   it("writes each item's game id and quality, falling back to the item's own quality", () => {
@@ -46,10 +46,10 @@ describe("gearSetEntries", () => {
       pick("cape_of_half_achiever", "cape", null, { quality: "legendary" }),
     ]);
 
-    expect(entries.find((e) => e.type === "hands")?.item).toBe(
+    expect(entries.find((entry) => entry.type === "hands")?.item).toBe(
       JSON.stringify({ id: "game-oven_mittens", quality: "uncommon", tag: null }),
     );
-    expect(JSON.parse(entries.find((e) => e.type === "cape")!.item)).toMatchObject({ quality: "legendary" });
+    expect(JSON.parse(entries.find((entry) => entry.type === "cape")!.item)).toMatchObject({ quality: "legendary" });
   });
 
   it("puts rings and tools in order by index", () => {
@@ -58,7 +58,7 @@ describe("gearSetEntries", () => {
       pick("ring_b", "ring", null),
       pick("saw", "tool", null),
     ]);
-    const ids = entries.map((e) => (e.item === "null" ? null : (JSON.parse(e.item) as { id: string }).id));
+    const ids = entries.map((entry) => (entry.item === "null" ? null : (JSON.parse(entry.item) as { id: string }).id));
 
     expect(ids.slice(10, 13)).toEqual(["game-ring_a", "game-ring_b", "game-saw"]);
   });

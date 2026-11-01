@@ -17,7 +17,7 @@ export function validateGearSearch(search: Record<string, unknown>): GearSearch 
 }
 
 export function parseGoals(goals: string | undefined, allowed: GoalId[]): GoalId[] {
-  const known = new Set<string>(GOALS.map((g) => g.id).filter((id) => allowed.includes(id)));
+  const known = new Set<string>(GOALS.map((goal) => goal.id).filter((id) => allowed.includes(id)));
   const picked = [...new Set((goals ?? "").split(","))].filter((id): id is GoalId => known.has(id));
 
   return picked.slice(0, MAX_GOALS);

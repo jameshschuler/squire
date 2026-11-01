@@ -12,7 +12,7 @@ export function gearSetEntries(picks: GearPick[]): GearSetEntry[] {
     pick?.item.gameId ? JSON.stringify({ id: pick.item.gameId, quality: pickQuality(pick), tag: null }) : "null";
 
   return GEAR_SLOTS.flatMap(({ slot, capacity }) => {
-    const inSlot = picks.filter((p) => p.slot === slot);
+    const inSlot = picks.filter((pick) => pick.slot === slot);
 
     return capacity === 1
       ? [{ type: slot, item: entry(inSlot[0]) }]

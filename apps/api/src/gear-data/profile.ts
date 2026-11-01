@@ -45,7 +45,7 @@ export function ownedGear(profile: PlayerProfile, items: GearItem[]): OwnedGear[
   const rank = (quality: ItemQuality | null) => (quality ? QUALITIES.indexOf(quality) : -1);
 
   return [...profile.character.owned]
-    .sort((a, b) => rank(b.quality) - rank(a.quality))
+    .sort((left, right) => rank(right.quality) - rank(left.quality))
     .flatMap(({ id, quality, count }) => {
       const item = byId.get(id);
 
@@ -79,8 +79,8 @@ export function ownedPets(profile: PlayerProfile, pets: PetView[]): OwnedPetView
 }
 
 export function petAt(pets: PetView[], { species, level }: OwnedPet): OwnedPetView | undefined {
-  const pet = pets.find((p) => p.id === species || p.rareId === species);
-  const reached = pet?.levels.filter((l) => l.level <= level).at(-1);
+  const pet = pets.find((option) => option.id === species || option.rareId === species);
+  const reached = pet?.levels.filter((petLevel) => petLevel.level <= level).at(-1);
 
   return pet && reached ? { pet, level: reached.level, stats: reached.stats } : undefined;
 }

@@ -65,7 +65,7 @@ describe("ActivityDetail", () => {
 
   it("lists drops under the main loot, then each kind of extra find", async () => {
     await renderWithRouter(<ActivityDetail activity={goldOre} />);
-    const headings = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
+    const headings = screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent);
 
     expect(headings).toEqual(["Needs", "Where", "Drops", "Gem find", "Chest"]);
     expect(screen.getByRole("link", { name: "Gold ore" }).getAttribute("href")).toBe("/items/gold_ore");

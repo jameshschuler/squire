@@ -5,7 +5,7 @@ import foods from "../../../fixtures/api/foods.json";
 import gearItems from "../../../fixtures/api/gear.json";
 import lootItems from "../../../fixtures/api/loot.json";
 
-const food = (id: string) => (foods as unknown as ItemDetail[]).find((f) => f.id === id)!;
+const food = (id: string) => (foods as unknown as ItemDetail[]).find((entry) => entry.id === id)!;
 
 const SKILL_TYPES = {
   agility: "utility",
@@ -192,7 +192,7 @@ describe("itemEffects for loot", () => {
   });
 
   it("treats gear with no requirement as global", () => {
-    expect(effectsOf("Absorbing amulet").effects.map((e) => e.condition)).toEqual(["Global", "Global"]);
+    expect(effectsOf("Absorbing amulet").effects.map((effect) => effect.condition)).toEqual(["Global", "Global"]);
   });
 
   it.each([
@@ -203,7 +203,7 @@ describe("itemEffects for loot", () => {
 
     expect(effect.condition).toBe(condition);
     expect(effect.scope).toBe(scope);
-    expect(effect.appliesTo.map((t) => t.id)).toEqual(appliesTo);
+    expect(effect.appliesTo.map((target) => target.id)).toEqual(appliesTo);
   });
 
   it("combines several known requirements", () => {
@@ -218,7 +218,7 @@ describe("itemEffects for loot", () => {
 
     expect(effect!.condition).toBe("While doing gathering skills and not doing Fishing");
     expect(effect!.scope).toBe("Gathering skills and not Fishing");
-    expect(effect!.appliesTo.map((t) => t.id)).toEqual(["foraging", "hunting", "mining", "woodcutting"]);
+    expect(effect!.appliesTo.map((target) => target.id)).toEqual(["foraging", "hunting", "mining", "woodcutting"]);
   });
 
   const withRequirements = (...requirements: object[]) => {
@@ -273,7 +273,7 @@ describe("itemEffects for loot", () => {
 
     expect(effect.condition).toBe(condition);
     expect(effect.scope).toBe("Global");
-    expect(effect.appliesTo.map((t) => t.id)).toEqual([...ALL_SKILLS, "travelling"]);
+    expect(effect.appliesTo.map((target) => target.id)).toEqual([...ALL_SKILLS, "travelling"]);
   });
 
   it("applies a negated place requirement everywhere", () => {
@@ -291,14 +291,14 @@ describe("itemEffects for loot", () => {
 
     expect(effect.condition).toBe("While doing Fishing (with other conditions)");
     expect(effect.scope).toBe("Fishing");
-    expect(effect.appliesTo.map((t) => t.id)).toEqual(["fishing"]);
+    expect(effect.appliesTo.map((target) => target.id)).toEqual(["fishing"]);
   });
 });
 
 describe("itemEffects for crafted gear", () => {
   const hatchet = (gearItems as unknown as ItemDetail[]).find((item) => item.id === "steel_hatchet")!;
   const effects = itemEffects(hatchet, NAMES)!;
-  const tier = (quality: string) => effects.tiers.find((t) => t.quality === quality)!;
+  const tier = (quality: string) => effects.tiers.find((entry) => entry.quality === quality)!;
   const values = (list: { stat: string; normal: string }[]) =>
     Object.fromEntries(list.map((effect) => [effect.stat, effect.normal]));
 
@@ -307,7 +307,7 @@ describe("itemEffects for crafted gear", () => {
   });
 
   it("lists the tiers in order, whatever order the API sends them in", () => {
-    expect(effects.tiers.map((t) => t.quality)).toEqual(["uncommon", "rare", "epic", "legendary", "ethereal"]);
+    expect(effects.tiers.map((entry) => entry.quality)).toEqual(["uncommon", "rare", "epic", "legendary", "ethereal"]);
   });
 
   it.each([
@@ -333,7 +333,9 @@ describe("itemEffects for crafted gear", () => {
   });
 
   it("keeps each tier's condition", () => {
-    expect(new Set(tier("ethereal").effects.map((e) => e.condition))).toEqual(new Set(["While doing Woodcutting"]));
+    expect(new Set(tier("ethereal").effects.map((effect) => effect.condition))).toEqual(
+      new Set(["While doing Woodcutting"]),
+    );
   });
 
   it("keeps flat and percentage bonuses with the same label apart across tiers", () => {
@@ -349,7 +351,9 @@ describe("itemEffects for crafted gear", () => {
       { quality: "uncommon", attributes: [bonus(0.02, true)] },
       { quality: "rare", attributes: [bonus(1, false), bonus(0.01, true)] },
     ];
-    const tiers = itemEffects(gear, NAMES)!.tiers.map((t) => t.effects.map((e) => `${e.stat} ${e.normal}`));
+    const tiers = itemEffects(gear, NAMES)!.tiers.map((entry) =>
+      entry.effects.map((effect) => `${effect.stat} ${effect.normal}`),
+    );
 
     expect(tiers).toEqual([
       ["Bonus experience +5", "Bonus experience +2%"],
@@ -369,7 +373,7 @@ describe("itemEffects for crafted gear", () => {
     gear.itemQualityAttrs = [{ quality: "uncommon", attributes: [steps(1)] }];
     const [uncommon] = itemEffects(gear, NAMES)!.tiers;
 
-    expect(uncommon!.effects.map((e) => e.normal)).toEqual(["+1.3"]);
+    expect(uncommon!.effects.map((effect) => effect.normal)).toEqual(["+1.3"]);
   });
 
   it("gives gear without tiers an empty tier list", () => {

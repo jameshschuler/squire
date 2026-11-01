@@ -155,7 +155,7 @@ describe("Gear page", () => {
   });
 
   it("lists the set's bonuses that depend on the location it picked", async () => {
-    const harbour = baseGear.locations.find((l) => l.id === "blackspell_harbour")!;
+    const harbour = baseGear.locations.find((location) => location.id === "blackspell_harbour")!;
     const bakersHat: GearItem = {
       ...miningGear("bakers_hat", "head", 0),
       stats: [
@@ -177,7 +177,7 @@ describe("Gear page", () => {
   });
 
   it("shows on each location choice the gear bonuses it unlocks", async () => {
-    const harbour = baseGear.locations.find((l) => l.id === "blackspell_harbour")!;
+    const harbour = baseGear.locations.find((location) => location.id === "blackspell_harbour")!;
 
     gear = withGear([
       {
@@ -368,7 +368,9 @@ describe("Gear page", () => {
     await renderPage({}, async (url) => (url.includes("/api/gear") ? new Promise<Response>(() => {}) : serveData(url)));
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(screen.getByText("Loading game data…")).toBeDefined();
-    expect(screen.getAllByRole("paragraph").filter((p) => p.textContent?.includes("Loading"))).toHaveLength(1);
+    expect(
+      screen.getAllByRole("paragraph").filter((paragraph) => paragraph.textContent?.includes("Loading")),
+    ).toHaveLength(1);
     expect(screen.queryByPlaceholderText("Search activities and recipes…")).toBeNull();
   });
 

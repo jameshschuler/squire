@@ -17,12 +17,12 @@ class FakeIntersectionObserver {
 }
 
 function scrollToBottom() {
-  const observer = observers.findLast((o) => !o.disconnected);
+  const observer = observers.findLast((entry) => !entry.disconnected);
 
   act(() => observer?.callback([{ isIntersecting: true } as IntersectionObserverEntry], {} as IntersectionObserver));
 }
 
-const items = Array.from({ length: 25 }, (_, i) => `item ${i}`);
+const items = Array.from({ length: 25 }, (_, index) => `item ${index}`);
 
 function List({ listKey }: { listKey: string }) {
   const { visibleItems, hasMore, sentinelRef } = useIncrementalList(items, listKey, 10);
@@ -60,7 +60,7 @@ describe("useIncrementalList", () => {
     scrollToBottom();
     scrollToBottom();
     expect(screen.queryByTestId("sentinel")).toBeNull();
-    expect(observers.every((o) => o.disconnected)).toBe(true);
+    expect(observers.every((observer) => observer.disconnected)).toBe(true);
   });
 
   it("remembers how far a list was scrolled when it's shown again", () => {

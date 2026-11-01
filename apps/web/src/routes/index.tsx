@@ -8,12 +8,12 @@ export const Route = createFileRoute("/")({
 });
 
 function SearchPage() {
-  const { q = "", skill } = Route.useSearch();
+  const { q: query = "", skill } = Route.useSearch();
   const navigate = Route.useNavigate();
 
   return (
     <RecipeSearch
-      query={q}
+      query={query}
       skill={skill}
       onQueryChange={(value) => navigate({ search: (prev) => ({ ...prev, q: value || undefined }), replace: true })}
       onSkillChange={(value) => navigate({ search: (prev) => ({ ...prev, skill: value }), replace: true })}

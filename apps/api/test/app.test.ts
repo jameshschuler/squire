@@ -15,7 +15,7 @@ describe("GET /api/recipes", () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.headers.etag).toBe(`"${RECIPE_BOOK_SCHEMA}-v1"`);
-    expect(res.json<RecipeBook>().recipes.map((r) => r.id)).toEqual([
+    expect(res.json<RecipeBook>().recipes.map((recipe) => recipe.id)).toEqual([
       "smelt_a_gold_bar",
       "bake_a_bagel",
       "assemble_dynamite",
@@ -48,7 +48,7 @@ describe("GET /api/gear", () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.headers.etag).toBe(`"${GEAR_DATA_SCHEMA}-v1"`);
-    expect(res.json<GearData>().pets.map((p) => p.id)).toEqual(["mummy"]);
+    expect(res.json<GearData>().pets.map((pet) => pet.id)).toEqual(["mummy"]);
   });
 
   it("answers 304 when the client already has this version", async () => {

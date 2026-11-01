@@ -74,9 +74,11 @@ describe.skipIf(!apiKey)("live dev API matches its OpenAPI spec", () => {
       const validate = ajv.compile(schema);
 
       if (!validate(data)) {
-        const errors = (validate.errors ?? []).filter((e) => e.keyword !== "anyOf");
+        const errors = (validate.errors ?? []).filter((error) => error.keyword !== "anyOf");
 
-        mismatches.push(...errors.map((e) => `${label}${e.instancePath} ${e.message} ${JSON.stringify(e.params)}`));
+        mismatches.push(
+          ...errors.map((error) => `${label}${error.instancePath} ${error.message} ${JSON.stringify(error.params)}`),
+        );
       }
     };
 

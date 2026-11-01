@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { knownOption, skillOptions } from "@/lib/skills";
 
-const recipe = (skills: { id: string; name: string }[]) => ({ skills: skills.map((s) => ({ ...s, level: 1 })) });
+const recipe = (skills: { id: string; name: string }[]) => ({
+  skills: skills.map((skill) => ({ ...skill, level: 1 })),
+});
 
 describe("skillOptions", () => {
   it("returns each skill once, sorted by name", () => {

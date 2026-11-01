@@ -136,7 +136,7 @@ describe("ItemEffectsSection", () => {
 
     it("names the tiers like the game and starts on Normal", () => {
       render(<ItemEffectsSection effects={hatchet} />);
-      expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual(["Normal", "Good", "Eternal"]);
+      expect(screen.getAllByRole("button").map((button) => button.textContent)).toEqual(["Normal", "Good", "Eternal"]);
       expect(tier("Normal").getAttribute("aria-pressed")).toBe("true");
       expect(rows().slice(1)).toEqual([["Work efficiency", "+9%"]]);
     });

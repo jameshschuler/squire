@@ -24,7 +24,7 @@ for (const resource of resources) {
 
   for (const { name, schema } of filters) {
     if (schema.enum) {
-      const isBoolean = schema.enum.length === 2 && schema.enum.every((v) => v === "true" || v === "false");
+      const isBoolean = schema.enum.length === 2 && schema.enum.every((value) => value === "true" || value === "false");
 
       (searchValues[resource] ??= {})[name] = isBoolean ? [true, false] : schema.enum;
     }

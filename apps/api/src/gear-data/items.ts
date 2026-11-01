@@ -12,7 +12,7 @@ export function gearItems(
   return items
     .filter(isGear)
     .map((item) => gearItem(item, gameIds, summary))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((left, right) => left.name.localeCompare(right.name));
 }
 
 export function ownedKey({ id, quality }: { id: string; quality: ItemQuality | null }): string {

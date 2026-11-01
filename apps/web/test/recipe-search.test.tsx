@@ -36,7 +36,7 @@ describe("RecipeSearch favorites", () => {
   it("lists only favorites under the Favorites chip, with Clear all", async () => {
     localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(["smelt_a_gold_bar"]));
     await renderSearch(FAVORITES_FILTER);
-    expect(screen.getAllByRole("link").map((a) => a.textContent)).toEqual([
+    expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual([
       expect.stringContaining("Smelt a gold bar"),
     ]);
     expect(screen.getByRole("button", { name: "Clear all" })).toBeDefined();

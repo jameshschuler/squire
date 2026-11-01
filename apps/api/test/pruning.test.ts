@@ -21,9 +21,9 @@ describe("banMasks", () => {
     ["two nets, which nothing bans together", item("fishing_net"), item("fishing_net"), false],
     ["a rod and a needle", item("fishing_rod"), item("needle"), false],
     ["items without ban keywords", item("ring"), item("ring", "rare"), false],
-  ])("finds the same clash as the keyword rules for %s", (_, a, b, clash) => {
-    expect(clashes(masks(a).keys, masks(b))).toBe(clash);
-    expect(conflicts(rules, a, b)).toBe(clash);
+  ])("finds the same clash as the keyword rules for %s", (_, left, right, clash) => {
+    expect(clashes(masks(left).keys, masks(right))).toBe(clash);
+    expect(conflicts(rules, left, right)).toBe(clash);
   });
 
   it("clashes with worn gear once any piece bans the next item, or the next item bans a piece", () => {

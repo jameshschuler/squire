@@ -52,9 +52,9 @@ export function fakeClient(version = "v1", extraItems: Record<string, unknown>[]
 
       return json(
         Object.fromEntries(
-          iconPaths.map((p) => [
-            p,
-            p.includes("missing") || p.includes("unbatched") ? null : "data:image/webp;base64,AQID",
+          iconPaths.map((iconPath) => [
+            iconPath,
+            iconPath.includes("missing") || iconPath.includes("unbatched") ? null : "data:image/webp;base64,AQID",
           ]),
         ),
       );

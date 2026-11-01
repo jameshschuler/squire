@@ -64,9 +64,9 @@ async function mapPool<T, R>(inputs: readonly T[], fn: (input: T) => Promise<R>)
   let next = 0;
   const worker = async () => {
     while (next < inputs.length) {
-      const i = next++;
+      const index = next++;
 
-      results[i] = await fn(inputs[i] as T);
+      results[index] = await fn(inputs[index] as T);
     }
   };
 

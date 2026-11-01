@@ -45,7 +45,7 @@ export function gearAnswer(
   const level = skillLevelOf(profile, optimize.skill);
   const parts = {
     cap: efficiencyCap(optimize),
-    gear: lines.find((l) => l.stat === "workEfficiency" && l.isPercent)?.value ?? 0,
+    gear: lines.find((line) => line.stat === "workEfficiency" && line.isPercent)?.value ?? 0,
     level: levelBonus(optimize, level),
   };
   const noGear = stepsPerAction(optimize, level, NO_STATS);

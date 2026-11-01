@@ -15,7 +15,7 @@ function RecipePage() {
     return <GameDataStatus state={state} />;
   }
 
-  const recipe = state.book.recipes.find((r) => r.id === recipeId);
+  const recipe = state.book.recipes.find((option) => option.id === recipeId);
 
   if (!recipe) {
     return <p className="py-8 text-center text-muted-foreground">Recipe not found.</p>;

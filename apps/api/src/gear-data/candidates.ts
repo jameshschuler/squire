@@ -52,7 +52,7 @@ export function situationFor(
   location: LocationView | null,
   goalStats: GoalStat[] = [],
 ): Situation {
-  const skillType = gear.skills.find((s) => s.id === target.skill)?.type ?? "";
+  const skillType = gear.skills.find((skill) => skill.id === target.skill)?.type ?? "";
 
   return { target, skillType, location, profile, goalStats };
 }
@@ -83,8 +83,10 @@ export function toCandidate(situation: Situation, base: CandidateBase, stats: Ge
 
   for (const stat of stats) {
     const contribution = statTotals(stat, situation.goalStats);
-    const setConditions = stat.conditions.filter((c): c is SetCondition => c.type === "distinctKeywordItemsEquipped");
-    const others = stat.conditions.filter((c) => c.type !== "distinctKeywordItemsEquipped");
+    const setConditions = stat.conditions.filter(
+      (condition): condition is SetCondition => condition.type === "distinctKeywordItemsEquipped",
+    );
+    const others = stat.conditions.filter((condition) => condition.type !== "distinctKeywordItemsEquipped");
 
     if (contribution === NO_STATS || !others.every((condition) => conditionHolds(situation, condition))) {
       continue;
@@ -109,25 +111,30 @@ export function itemId(candidate: Candidate): string {
 
 // Distinct items worn with any of the keywords. Two copies of one ring count once, as in the game.
 export function setCount(chosen: Candidate[], keywords: string[]): number {
-  return new Set(chosen.filter((c) => c.keywords.some((k) => keywords.includes(k))).map(itemId)).size;
+  return new Set(
+    chosen.filter((candidate) => candidate.keywords.some((keyword) => keywords.includes(keyword))).map(itemId),
+  ).size;
 }
 
 // A finished set's real stats, with each set bonus added only when its piece count holds.
 export function withSetBonuses(chosen: Candidate[]): StatTotals {
-  return chosen.reduce((sum, c) => {
-    const active = c.setBonuses.filter((bonus) =>
-      bonus.conditions.every((s) => setCount(chosen, s.requirement.keywords) >= s.requirement.quantity !== s.opposite),
+  return chosen.reduce((sum, candidate) => {
+    const active = candidate.setBonuses.filter((bonus) =>
+      bonus.conditions.every(
+        (condition) =>
+          setCount(chosen, condition.requirement.keywords) >= condition.requirement.quantity !== condition.opposite,
+      ),
     );
 
-    return active.reduce((total, bonus) => addStats(total, bonus.totals), addStats(sum, c.totals));
+    return active.reduce((total, bonus) => addStats(total, bonus.totals), addStats(sum, candidate.totals));
   }, NO_STATS);
 }
 
 function statTotals(stat: GearStat, goalStats: GoalStat[]): StatTotals {
-  const goal = goalStats.findIndex((g) => sameStat(g, stat));
+  const goal = goalStats.findIndex((goalStat) => sameStat(goalStat, stat));
 
   if (goal >= 0) {
-    return { ...NO_STATS, goalStats: goalStats.map((_, i) => (i === goal ? stat.value : 0)) };
+    return { ...NO_STATS, goalStats: goalStats.map((_, index) => (index === goal ? stat.value : 0)) };
   }
 
   switch (stat.stat) {

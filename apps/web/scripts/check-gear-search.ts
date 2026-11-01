@@ -94,7 +94,7 @@ async function main() {
   const results = await runAll(jobs, { gear, profiles }, lanes, timeoutMs);
 
   report(results);
-  process.exitCode = results.some((r) => FAILING.includes(r.outcome)) ? 1 : 0;
+  process.exitCode = results.some((result) => FAILING.includes(result.outcome)) ? 1 : 0;
 }
 
 async function load<T>(api: string, path: string): Promise<T> {
@@ -154,7 +154,7 @@ async function runAll(jobs: Job[], shared: Shared, lanes: number, timeoutMs: num
   await Promise.all(Array.from({ length: lanes }, lane));
   process.stdout.write("\n");
 
-  return results.sort((a, b) => a.job.id - b.job.id);
+  return results.sort((left, right) => left.job.id - right.job.id);
 }
 
 function runJob(worker: Worker, job: Job, timeoutMs: number): Promise<Result> {
@@ -215,7 +215,7 @@ function serve({ gear, profiles }: Shared) {
 function report(results: Result[]) {
   const describe = ({ job }: Result) => `${job.name} · ${job.profile} · ${job.goals.join(" › ")}`;
 
-  for (const result of results.filter((r) => r.outcome !== "same")) {
+  for (const result of results.filter((entry) => entry.outcome !== "same")) {
     const { fast, exact } = result;
     const claim = fast?.margin ? `within ${(fast.margin.gap * 100).toFixed(1)}% on ${fast.margin.goal}` : "proven";
     const limited = fast && `limited ${fast.steps} steps, ${claim}`;
@@ -231,11 +231,11 @@ function report(results: Result[]) {
   }
 
   const slowest = results
-    .flatMap((r) => (r.exact ? [{ result: r, ms: r.exact.ms }] : []))
-    .sort((a, b) => b.ms - a.ms)
+    .flatMap((result) => (result.exact ? [{ result, ms: result.exact.ms }] : []))
+    .sort((left, right) => right.ms - left.ms)
     .slice(0, 3)
     .map(({ result, ms }) => `${describe(result)} ${ms} ms`);
-  const proven = results.filter((r) => r.fast && !r.fast.margin).length;
+  const proven = results.filter((result) => result.fast && !result.fast.margin).length;
 
   console.log([...counts].map(([outcome, count]) => `${count} ${outcome}`).join(", "));
   console.log(`${proven} of ${results.length} searches proved their own set is the best`);

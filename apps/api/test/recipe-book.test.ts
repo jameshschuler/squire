@@ -21,8 +21,8 @@ import sample from "../../../fixtures/api/gamedata-sample.json";
 
 const book = buildRecipeBook(sample as unknown as GameData);
 const { recipes } = book;
-const byId = (id: string) => recipes.find((r) => r.id === id);
-const ids = (list: { id: string }[]) => list.map((r) => r.id);
+const byId = (id: string) => recipes.find((recipe) => recipe.id === id);
+const ids = (list: { id: string }[]) => list.map((entry) => entry.id);
 
 describe("buildRecipeBook", () => {
   it("stamps the book with its schema version", () => {
@@ -36,8 +36,8 @@ describe("buildRecipeBook", () => {
   it("breaks level ties by the name of the item made, not the recipe name", () => {
     const data = structuredClone(sample) as unknown as GameData;
     const [bagel, bar] = [
-      data.recipes.find((r) => r.id === "bake_a_bagel")!,
-      data.recipes.find((r) => r.id === "smelt_a_gold_bar")!,
+      data.recipes.find((recipe) => recipe.id === "bake_a_bagel")!,
+      data.recipes.find((recipe) => recipe.id === "smelt_a_gold_bar")!,
     ];
 
     bar.relatedSkills = bagel.relatedSkills;
@@ -87,7 +87,7 @@ describe("buildRecipeBook", () => {
   });
 
   it("names each location's region from its faction", () => {
-    const regions = byId("smelt_a_gold_bar")?.service?.locations.map((l) => [l.name, l.region]);
+    const regions = byId("smelt_a_gold_bar")?.service?.locations.map((location) => [location.name, location.region]);
 
     expect(regions).toContainEqual(["Bilgemont Port", "Grand Duchy of Trellin-Erdwise"]);
   });
@@ -96,7 +96,8 @@ describe("buildRecipeBook", () => {
     const data = structuredClone(sample) as unknown as GameData;
 
     data.factions = [];
-    const location = buildRecipeBook(data).recipes.find((r) => r.id === "smelt_a_gold_bar")?.service?.locations[0];
+    const location = buildRecipeBook(data).recipes.find((recipe) => recipe.id === "smelt_a_gold_bar")?.service
+      ?.locations[0];
 
     expect(location?.region).toBe("Grand duchy of trellin erdwise");
   });
@@ -112,7 +113,7 @@ describe("buildRecipeBook", () => {
         requirement: { keywords: ["kitchen", "cursed"], tier: "advanced" },
       },
     ];
-    expect(buildRecipeBook(data).recipes.find((r) => r.id === data.recipes[0]!.id)?.service).toEqual({
+    expect(buildRecipeBook(data).recipes.find((recipe) => recipe.id === data.recipes[0]!.id)?.service).toEqual({
       label: "Cursed kitchen (advanced)",
       tier: "advanced",
       locations: [],
@@ -124,13 +125,13 @@ describe("buildRecipeBook", () => {
     ["wardrobe", false],
   ] as const)("only lists locations with a crafting service (%s: %s)", (serviceType, listed) => {
     const data = structuredClone(sample) as unknown as GameData;
-    const kitchen = data.services.find((s) => s.id === "alight_kitchen_basic")!;
+    const kitchen = data.services.find((service) => service.id === "alight_kitchen_basic")!;
 
     data.services.push({ ...kitchen, id: "closet_service", serviceType });
     data.locations.push({ ...data.locations[0]!, id: "closet", name: "Closet", serviceList: ["closet_service"] });
-    const bagel = buildRecipeBook(data).recipes.find((r) => r.id === "bake_a_bagel")!;
+    const bagel = buildRecipeBook(data).recipes.find((recipe) => recipe.id === "bake_a_bagel")!;
 
-    expect(bagel.service!.locations.some((l) => l.id === "closet")).toBe(listed);
+    expect(bagel.service!.locations.some((location) => location.id === "closet")).toBe(listed);
   });
 
   describe("service tiers", () => {
@@ -156,7 +157,7 @@ describe("buildRecipeBook", () => {
         keywords: [],
         serviceList: tiers.map((tier) => `${tier}_forge`),
       }));
-      data.recipes = data.recipes.filter((r) => r.id === "smelt_a_gold_bar");
+      data.recipes = data.recipes.filter((recipe) => recipe.id === "smelt_a_gold_bar");
       data.recipes[0]!.requirements = [
         { type: "service", name: null, opposite: false, requirement: { serviceKeyword: "forge", tier: requiredTier } },
       ];
@@ -170,7 +171,9 @@ describe("buildRecipeBook", () => {
       ["advanced", "advanced", ["town"]],
       ["basic", "advanced", []],
     ])("a %s forge for a %s recipe lists %j", (serviceTier, requiredTier, expected) => {
-      expect(forgeRecipe(requiredTier, { town: [serviceTier] }).locations.map((l) => l.id)).toEqual(expected);
+      expect(forgeRecipe(requiredTier, { town: [serviceTier] }).locations.map((location) => location.id)).toEqual(
+        expected,
+      );
     });
 
     it("marks each location with the lowest qualifying tier it has", () => {
@@ -194,7 +197,9 @@ describe("buildRecipeBook", () => {
     const data = structuredClone(sample) as unknown as GameData;
 
     data.items = [];
-    expect(buildRecipeBook(data).recipes.find((r) => r.id === "smelt_a_gold_bar")?.outputs[0]?.name).toBe("Gold bar");
+    expect(buildRecipeBook(data).recipes.find((recipe) => recipe.id === "smelt_a_gold_bar")?.outputs[0]?.name).toBe(
+      "Gold bar",
+    );
   });
 });
 
@@ -253,7 +258,7 @@ describe("activities", () => {
   });
 
   it("groups drops by loot type: main loot, then gems, then chests", () => {
-    expect(goldOre.drops.map((d) => [d.lootType, ids(d.items)])).toEqual([
+    expect(goldOre.drops.map((drop) => [drop.lootType, ids(drop.items)])).toEqual([
       ["main", ["gold_ore"]],
       ["gem", ["rough_wrentmarine", "rough_sun_stone"]],
       ["chestTable", ["mining_chest"]],
@@ -265,7 +270,7 @@ describe("activities", () => {
       data.activities[0]!.tables!.reverse();
     });
 
-    expect(activity!.drops.map((d) => d.lootType)).toEqual(["main", "gem", "chestTable"]);
+    expect(activity!.drops.map((drop) => drop.lootType)).toEqual(["main", "gem", "chestTable"]);
   });
 
   it("lists an item once per loot type, even when several tables drop it", () => {
@@ -472,11 +477,18 @@ describe("recipeBookIcons", () => {
   it("lists every recipe, material, output, activity, drop and source icon once", () => {
     const icons = recipeBookIcons(book);
     const expected = [
-      ...recipes.flatMap((r) => [r.icon, ...r.outputs.map((o) => o.icon), ...r.materials.flat().map((m) => m.icon)]),
-      ...book.activities.flatMap((a) => [a.icon, ...a.drops.flatMap((d) => d.items.map((i) => i.icon))]),
+      ...recipes.flatMap((recipe) => [
+        recipe.icon,
+        ...recipe.outputs.map((output) => output.icon),
+        ...recipe.materials.flat().map((material) => material.icon),
+      ]),
+      ...book.activities.flatMap((activity) => [
+        activity.icon,
+        ...activity.drops.flatMap((drop) => drop.items.map((item) => item.icon)),
+      ]),
       ...Object.values(book.sources)
         .flat()
-        .map((s) => s.icon),
+        .map((source) => source.icon),
     ];
 
     expect(new Set(icons)).toEqual(new Set(expected.filter(Boolean)));
@@ -486,7 +498,7 @@ describe("recipeBookIcons", () => {
 
   it("includes the icons of items an activity needs or uses", () => {
     const data = structuredClone(sample) as unknown as GameData;
-    const wheat = data.items.find((i) => i.id === "wheat")!;
+    const wheat = data.items.find((item) => item.id === "wheat")!;
 
     wheat.icon = "assets/icons/wheat-only-needed.png";
     data.activities[0]!.requirements!.push({
@@ -544,7 +556,7 @@ describe("sources", () => {
   });
 
   it("covers items only an activity drops", () => {
-    expect(book.sources.rough_sun_stone?.map((s) => s.id)).toEqual(["mine_gold_ore"]);
+    expect(book.sources.rough_sun_stone?.map((source) => source.id)).toEqual(["mine_gold_ore"]);
   });
 
   it("leaves out items nothing in the book links to", () => {
@@ -563,7 +575,7 @@ describe("sources", () => {
       data.activities[0]!.tables!.push({ isPrimary: false, type: [], rollAmount: 1, tables: [main!.id] });
     });
 
-    expect(sources.gold_ore?.map((s) => (s.kind === "activity" ? s.lootType : s.kind))).toEqual([
+    expect(sources.gold_ore?.map((source) => (source.kind === "activity" ? source.lootType : source.kind))).toEqual([
       "main",
       "secondary",
       "gem",
@@ -600,7 +612,8 @@ describe("sources", () => {
 
   it("lists a chest that contains the material, with the levels of the activities that drop the chest", () => {
     const sources = withActivity((data) => {
-      data.lootTables.find((t) => t.id === "mining_chest_table")!.tableRows![0]!.rowItemID = "salt_crystal";
+      data.lootTables.find((lootTable) => lootTable.id === "mining_chest_table")!.tableRows![0]!.rowItemID =
+        "salt_crystal";
     });
 
     expect(sources.salt_crystal).toEqual([
@@ -633,30 +646,35 @@ describe("sources", () => {
 
   it("orders activities first, then shops, then chests", () => {
     const sources = withActivity((data) => {
-      data.lootTables.find((t) => t.id === "mining_chest_table")!.tableRows![0]!.rowItemID = "gold_ore";
+      data.lootTables.find((lootTable) => lootTable.id === "mining_chest_table")!.tableRows![0]!.rowItemID = "gold_ore";
       data.shops[0]!.soldItems.push("gold_ore");
     });
 
-    expect(sources.gold_ore?.map((s) => s.kind)).toEqual(["activity", "shop", "chest"]);
+    expect(sources.gold_ore?.map((source) => source.kind)).toEqual(["activity", "shop", "chest"]);
   });
 
   it("sorts chests no activity drops after the others, by name", () => {
     const sources = withActivity((data) => {
-      const chest = data.items.find((i) => i.id === "mining_chest")!;
+      const chest = data.items.find((item) => item.id === "mining_chest")!;
 
       data.items.push(
         { ...chest, id: "chest_of_zeta", name: "Chest of Zeta" },
         { ...chest, id: "chest_of_alpha", name: "Chest of Alpha" },
       );
-      data.lootTables.find((t) => t.id === "mining_chest_table")!.tableRows![0]!.rowItemID = "salt_crystal";
+      data.lootTables.find((lootTable) => lootTable.id === "mining_chest_table")!.tableRows![0]!.rowItemID =
+        "salt_crystal";
     });
 
-    expect(sources.salt_crystal?.map((s) => s.name)).toEqual(["Mining chest", "Chest of Alpha", "Chest of Zeta"]);
+    expect(sources.salt_crystal?.map((source) => source.name)).toEqual([
+      "Mining chest",
+      "Chest of Alpha",
+      "Chest of Zeta",
+    ]);
   });
 
   it("gives an activity with no location an empty location list", () => {
     const sources = withActivity((data) => {
-      data.locations = data.locations.filter((l) => !l.activityList?.length);
+      data.locations = data.locations.filter((location) => !location.activityList?.length);
     });
 
     expect(sources.gold_ore?.[0]).toMatchObject({ locations: [] });
@@ -735,17 +753,17 @@ describe("words", () => {
 
 describe("foods", () => {
   const data = structuredClone(sample) as unknown as GameData;
-  const known = new Set(data.items.map((i) => i.id));
+  const known = new Set(data.items.map((item) => item.id));
 
   data.items.push(...(foodItems as unknown as ItemDetail[]).filter((food) => !known.has(food.id)));
   const withFoods = buildRecipeBook(data);
 
   it("lists every food in the game data A–Z, including ones no recipe uses", () => {
-    const names = withFoods.foods.map((f) => f.name);
+    const names = withFoods.foods.map((food) => food.name);
 
     expect(names).toContain("Dried fruit");
-    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
-    expect(withFoods.foods.every((f) => f.effects)).toBe(true);
+    expect(names).toEqual([...names].sort((left, right) => left.localeCompare(right)));
+    expect(withFoods.foods.every((food) => food.effects)).toBe(true);
   });
 
   it("finds a food no recipe mentions", () => {
@@ -753,7 +771,7 @@ describe("foods", () => {
   });
 
   it("includes food icons in the icons to prefetch", () => {
-    const driedFruit = withFoods.foods.find((f) => f.id === "dried_fruit")!;
+    const driedFruit = withFoods.foods.find((food) => food.id === "dried_fruit")!;
 
     expect(recipeBookIcons(withFoods)).toContain(driedFruit.icon);
   });
@@ -766,7 +784,7 @@ describe("loot", () => {
   const withLoot = buildRecipeBook(data);
 
   it("lists loot items with effects, A–Z", () => {
-    expect(withLoot.loot.map((l) => l.name)).toEqual([
+    expect(withLoot.loot.map((lootItem) => lootItem.name)).toEqual([
       "Absorbing amulet",
       "Adjustable wrench",
       "Birch skis",
@@ -778,11 +796,11 @@ describe("loot", () => {
     const crafted = structuredClone(data);
 
     crafted.recipes[0]!.itemRewards = { birch_skis: 1 };
-    expect(buildRecipeBook(crafted).loot.map((l) => l.name)).not.toContain("Birch skis");
+    expect(buildRecipeBook(crafted).loot.map((lootItem) => lootItem.name)).not.toContain("Birch skis");
   });
 
   it("keeps each item's tier", () => {
-    expect(withLoot.loot.map((l) => l.quality)).toEqual(["epic", "rare", "common", "uncommon"]);
+    expect(withLoot.loot.map((lootItem) => lootItem.quality)).toEqual(["epic", "rare", "common", "uncommon"]);
   });
 
   it("has no tier for an item missing from the game data", () => {
@@ -821,7 +839,9 @@ describe("loot", () => {
 
     level.rewardItems[0]!.id = "salt_crystal";
     rewarded.rewards.push({ ...structuredClone(level), id: "reward_progress-jarvonia_lvl_4" });
-    expect(buildRecipeBook(rewarded).sources.salt_crystal?.map((s) => s.name)).toEqual(["Faction reputation reward"]);
+    expect(buildRecipeBook(rewarded).sources.salt_crystal?.map((source) => source.name)).toEqual([
+      "Faction reputation reward",
+    ]);
   });
 
   it("skips rewards that aren't items", () => {
@@ -839,12 +859,14 @@ describe("loot", () => {
     const withCollectible = structuredClone(data);
 
     withCollectible.items.push(...(gearItems as unknown as ItemDetail[]));
-    const names = buildRecipeBook(withCollectible).loot.map((l) => l.name);
+    const names = buildRecipeBook(withCollectible).loot.map((lootItem) => lootItem.name);
 
     expect(names).toContain("Ancient ankh");
     expect(names).toContain("99-year-old wine");
     expect(names).not.toContain("Steel hatchet");
-    expect(buildRecipeBook(withCollectible).loot.find((l) => l.id === "ancient_ankh")?.isCollectible).toBe(true);
+    expect(
+      buildRecipeBook(withCollectible).loot.find((lootItem) => lootItem.id === "ancient_ankh")?.isCollectible,
+    ).toBe(true);
   });
 
   it("keeps a collectible with the loot even when a recipe makes it", () => {
@@ -852,7 +874,7 @@ describe("loot", () => {
 
     crafted.items.push(...(gearItems as unknown as ItemDetail[]));
     crafted.recipes[0]!.itemRewards = { ancient_ankh: 1 };
-    expect(buildRecipeBook(crafted).loot.map((l) => l.id)).toContain("ancient_ankh");
+    expect(buildRecipeBook(crafted).loot.map((lootItem) => lootItem.id)).toContain("ancient_ankh");
   });
 
   it("finds a loot item no recipe mentions", () => {
@@ -868,7 +890,7 @@ describe("crafted gear", () => {
   const withGear = buildRecipeBook(data);
 
   it("lists crafted items with effects once, in the gear list", () => {
-    expect(withGear.gear.map((g) => g.id)).toEqual(["steel_hatchet"]);
+    expect(withGear.gear.map((gearItem) => gearItem.id)).toEqual(["steel_hatchet"]);
   });
 
   it("finds a crafted item with its tier effects", () => {
@@ -876,7 +898,7 @@ describe("crafted gear", () => {
   });
 
   it("keeps effects off recipe outputs and materials", () => {
-    const items = withGear.recipes.flatMap((r) => [...r.outputs, ...r.materials.flat()]);
+    const items = withGear.recipes.flatMap((recipe) => [...recipe.outputs, ...recipe.materials.flat()]);
 
     expect(items.some((item) => "effects" in item)).toBe(false);
   });
@@ -888,7 +910,7 @@ describe("crafted gear", () => {
     crafted.recipes[1]!.itemRewards = { adjustable_wrench: 1 };
     const book = buildRecipeBook(crafted);
 
-    expect(book.loot.map((l) => l.id)).not.toContain("adjustable_wrench");
+    expect(book.loot.map((lootItem) => lootItem.id)).not.toContain("adjustable_wrench");
     expect(findItem(book, "adjustable_wrench")?.effects?.effects[0]?.stat).toBe("Work efficiency");
   });
 

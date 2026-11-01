@@ -14,7 +14,11 @@ export function PriorityQuestion({ goals, recommended, onChoose }: PriorityQuest
   const [picked, setPicked] = useState<GoalId[]>([]);
   const toggle = (id: GoalId) =>
     setPicked((current) =>
-      current.includes(id) ? current.filter((g) => g !== id) : current.length < MAX_GOALS ? [...current, id] : current,
+      current.includes(id)
+        ? current.filter((goal) => goal !== id)
+        : current.length < MAX_GOALS
+          ? [...current, id]
+          : current,
     );
 
   return (

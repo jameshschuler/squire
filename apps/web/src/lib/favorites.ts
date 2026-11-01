@@ -17,7 +17,7 @@ export function toggleFavorite(favoriteIds: string[], recipeId: string): string[
 }
 
 export function favoriteRecipes(recipes: RecipeView[], favoriteIds: string[]): RecipeView[] {
-  const byId = new Map(recipes.map((r) => [r.id, r]));
+  const byId = new Map(recipes.map((recipe) => [recipe.id, recipe]));
 
   return favoriteIds.flatMap((id) => byId.get(id) ?? []);
 }

@@ -62,7 +62,7 @@ describe("prefetchIcons", () => {
 
       return new Response(null);
     });
-    const urls = Array.from({ length: 20 }, (_, i) => `/api/icons/${i}.png`);
+    const urls = Array.from({ length: 20 }, (_, index) => `/api/icons/${index}.png`);
 
     await expect(prefetchIcons(urls, fetchIcon)).resolves.toBe(0);
     expect(fetchIcon).toHaveBeenCalledTimes(20);

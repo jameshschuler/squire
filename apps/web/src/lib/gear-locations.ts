@@ -12,7 +12,9 @@ export interface LocationChoice {
 const SHOWN_BONUSES = 2;
 
 export function locationChoices(gear: GearData, profile: PlayerProfile, target: GearTarget): LocationChoice[] {
-  const locations = gear.locations.filter((l) => target.locations.some((t) => t.id === l.id));
+  const locations = gear.locations.filter((location) =>
+    target.locations.some((targetLocation) => targetLocation.id === location.id),
+  );
   const bonusesAt = gearBonusesByLocation(gear, profile, optimizeTarget(target, undefined), locations);
 
   return [

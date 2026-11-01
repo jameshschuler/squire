@@ -15,7 +15,7 @@ function ActivityPage() {
     return <GameDataStatus state={state} />;
   }
 
-  const activity = state.book.activities.find((a) => a.id === activityId);
+  const activity = state.book.activities.find((option) => option.id === activityId);
 
   if (!activity) {
     return <p className="py-8 text-center text-muted-foreground">Activity not found.</p>;

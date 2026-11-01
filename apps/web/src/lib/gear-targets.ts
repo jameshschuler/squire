@@ -30,11 +30,11 @@ export const BEST_LOCATION = "best";
 const SUGGESTION_LIMIT = 8;
 
 export function gearTargets(book: RecipeBook): GearTarget[] {
-  const tiered = new Set(book.gear.filter((g) => g.effects?.tiers.length).map((g) => g.id));
+  const tiered = new Set(book.gear.filter((gearItem) => gearItem.effects?.tiers.length).map((gearItem) => gearItem.id));
   const activities = book.activities.map((activity) => ({
     ...activity,
     key: `activity:${activity.id}`,
-    lootTypes: activity.drops.map((d) => d.lootType),
+    lootTypes: activity.drops.map((drop) => drop.lootType),
     kind: "activity" as const,
     makesTieredGear: false,
     needs: activity.gearNeeds,
@@ -45,34 +45,34 @@ export function gearTargets(book: RecipeBook): GearTarget[] {
     locations: recipe.service?.locations ?? [],
     lootTypes: [],
     kind: "recipe" as const,
-    makesTieredGear: recipe.outputs.some((o) => tiered.has(o.id)),
+    makesTieredGear: recipe.outputs.some((output) => tiered.has(output.id)),
     needs: [],
   }));
 
   return [...activities, ...recipes]
-    .flatMap((t) => {
-      const [skill] = t.skills;
+    .flatMap((entry) => {
+      const [skill] = entry.skills;
 
-      return skill && t.workRequired !== null
+      return skill && entry.workRequired !== null
         ? [
             {
-              key: t.key,
-              name: t.name,
-              icon: t.icon,
+              key: entry.key,
+              name: entry.name,
+              icon: entry.icon,
               skill,
-              workRequired: t.workRequired,
-              maxWorkEfficiency: t.maxWorkEfficiency,
-              locations: t.locations,
-              lootTypes: t.lootTypes,
-              kind: t.kind,
-              makesTieredGear: t.makesTieredGear,
-              needs: t.needs,
-              baseXp: t.xp.find((reward) => reward.id === skill.id)?.amount ?? 0,
+              workRequired: entry.workRequired,
+              maxWorkEfficiency: entry.maxWorkEfficiency,
+              locations: entry.locations,
+              lootTypes: entry.lootTypes,
+              kind: entry.kind,
+              makesTieredGear: entry.makesTieredGear,
+              needs: entry.needs,
+              baseXp: entry.xp.find((reward) => reward.id === skill.id)?.amount ?? 0,
             },
           ]
         : [];
     })
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((left, right) => left.name.localeCompare(right.name));
 }
 
 export function searchGearTargets(targets: GearTarget[], query: string): GearTarget[] {
@@ -85,8 +85,8 @@ export function searchGearTargets(targets: GearTarget[], query: string): GearTar
   return targets.filter((target) => matchesWords(terms, [target.name])).slice(0, SUGGESTION_LIMIT);
 }
 
-export function locationLabel(target: GearTarget, location: string, bestAt: LocationSummary | null): string {
-  const chosen = target.locations.find((l) => l.id === location);
+export function locationLabel(target: GearTarget, locationId: string, bestAt: LocationSummary | null): string {
+  const chosen = target.locations.find((location) => location.id === locationId);
 
   if (chosen) {
     return chosen.name;
@@ -95,19 +95,19 @@ export function locationLabel(target: GearTarget, location: string, bestAt: Loca
   return bestAt ? `Best location: ${bestAt.name}` : "Best location";
 }
 
-export function locationRegion(target: GearTarget, location: string, bestAt: LocationSummary | null): string | null {
-  return target.locations.find((l) => l.id === location)?.region ?? bestAt?.region ?? null;
+export function locationRegion(target: GearTarget, locationId: string, bestAt: LocationSummary | null): string | null {
+  return target.locations.find((location) => location.id === locationId)?.region ?? bestAt?.region ?? null;
 }
 
-export function optimizeTarget(target: GearTarget, location: string | undefined): OptimizeTarget {
-  const pinned = target.locations.find((l) => l.id === location);
+export function optimizeTarget(target: GearTarget, locationId: string | undefined): OptimizeTarget {
+  const pinned = target.locations.find((location) => location.id === locationId);
 
   return {
     skill: target.skill.id,
     level: target.skill.level ?? 1,
     workRequired: target.workRequired,
     maxWorkEfficiency: target.maxWorkEfficiency,
-    locationIds: (pinned ? [pinned] : target.locations).map((l) => l.id),
+    locationIds: (pinned ? [pinned] : target.locations).map((location) => location.id),
     needs: target.needs,
     baseXp: target.baseXp,
   };
@@ -123,7 +123,7 @@ export function goalsFor(target: GearTarget): Goal[] {
 }
 
 export function recommendedGoals(target: GearTarget): GoalId[] {
-  const offered = goalsFor(target).map((g) => g.id);
+  const offered = goalsFor(target).map((goal) => goal.id);
   const preferred: GoalId[] =
     target.kind === "recipe" ? ["steps", "materials", "quality", "xp"] : ["steps", "items", "chests", "xp"];
 

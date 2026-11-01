@@ -149,8 +149,8 @@ export const GOALS: Goal[] = [
 const SIGNIFICANT_DIGITS = 9;
 const MARGIN_TOLERANCE = 1e-9;
 
-export function sameStat(a: GoalStat, b: GoalStat): boolean {
-  return a.stat === b.stat && a.isPercent === b.isPercent;
+export function sameStat(left: GoalStat, right: GoalStat): boolean {
+  return left.stat === right.stat && left.isPercent === right.isPercent;
 }
 
 export function goalOf(id: GoalId): Goal {
@@ -161,17 +161,17 @@ export function goalOf(id: GoalId): Goal {
 export function goalStats(goals: GoalId[]): GoalStat[] {
   const stats = goals.flatMap((id) => goalOf(id).stats);
 
-  return stats.filter((stat, i) => stats.findIndex((other) => sameStat(other, stat)) === i);
+  return stats.filter((stat, index) => stats.findIndex((other) => sameStat(other, stat)) === index);
 }
 
 export function goalValue(goals: GoalId[], id: GoalId, baseXp: number): (goalStats: number[]) => number {
   const stats = goalStats(goals);
   const goal = goalOf(id);
-  const indexes = goal.stats.map((stat) => stats.findIndex((s) => sameStat(s, stat)));
+  const indexes = goal.stats.map((stat) => stats.findIndex((eachStat) => sameStat(eachStat, stat)));
 
   return (goalStats) =>
     goal.value(
-      indexes.map((i) => goalStats[i] ?? 0),
+      indexes.map((index) => goalStats[index] ?? 0),
       baseXp,
     );
 }
@@ -206,8 +206,8 @@ export function marginOf(goals: GoalId[], found: Score, ceiling: Score | null): 
     return null;
   }
 
-  for (const [i, goal] of goals.entries()) {
-    const [have, best] = [rounded(found[i]!), rounded(ceiling[i]!)];
+  for (const [index, goal] of goals.entries()) {
+    const [have, best] = [rounded(found[index]!), rounded(ceiling[index]!)];
 
     if (best !== have) {
       return best < have ? null : { goal, gap: (best - have) / (Math.abs(best) || Math.abs(have)) };
@@ -236,12 +236,12 @@ export function marginHolds(goals: GoalId[], claimed: Margin | null, found: Scor
 }
 
 // Positive when a beats b. Each number is rounded first so floating-point noise never decides a tie.
-export function compareScores(a: Score, b: Score): number {
-  for (let i = 0; i < a.length; i++) {
-    const [x, y] = [rounded(a[i]!), rounded(b[i]!)];
+export function compareScores(left: Score, right: Score): number {
+  for (let index = 0; index < left.length; index++) {
+    const [leftValue, rightValue] = [rounded(left[index]!), rounded(right[index]!)];
 
-    if (x !== y) {
-      return x - y;
+    if (leftValue !== rightValue) {
+      return leftValue - rightValue;
     }
   }
 

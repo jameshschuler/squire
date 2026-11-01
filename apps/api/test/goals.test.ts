@@ -159,16 +159,16 @@ describe("compareScores", () => {
     [0, 1e-300, -1],
     [1e-305, 2e-305, -1],
     [-1.0000000005, 1.0000000005, -1],
-  ])("rounds to 9 significant digits whatever the size or sign (%s vs %s)", (a, b, sign) => {
-    expect(Math.sign(compareScores([a], [b]))).toBe(sign);
+  ])("rounds to 9 significant digits whatever the size or sign (%s vs %s)", (left, right, sign) => {
+    expect(Math.sign(compareScores([left], [right]))).toBe(sign);
   });
 
   it("is transitive, so a chain of near-ties can't drift", () => {
-    const [a, b, c] = [[1], [1 + 4e-10], [1 + 8e-10]];
-    const ab = compareScores(a, b) === 0;
-    const bc = compareScores(b, c) === 0;
+    const [first, second, third] = [[1], [1 + 4e-10], [1 + 8e-10]];
+    const firstTiesSecond = compareScores(first, second) === 0;
+    const secondTiesThird = compareScores(second, third) === 0;
 
-    expect(ab && bc ? compareScores(a, c) : 0).toBe(0);
+    expect(firstTiesSecond && secondTiesThird ? compareScores(first, third) : 0).toBe(0);
   });
 });
 

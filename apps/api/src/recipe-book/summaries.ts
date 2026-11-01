@@ -18,7 +18,7 @@ export function itemSummaries(items: Map<string, ItemDetail>): (id: string) => I
 }
 
 export function regionNames(factions: FactionDetail[]): Map<string, string> {
-  return new Map(factions.map((f) => [f.id, f.name]));
+  return new Map(factions.map((faction) => [faction.id, faction.name]));
 }
 
 export function locationSummary(location: LocationDetail, regions: Map<string, string>): LocationSummary {

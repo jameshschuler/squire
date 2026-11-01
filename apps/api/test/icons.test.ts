@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createIconStore } from "../src/icons.js";
 import { fakeClient } from "./fake-client.js";
 
-const paths = (count: number) => Array.from({ length: count }, (_, i) => `icons/${i}.png`);
+const paths = (count: number) => Array.from({ length: count }, (_, index) => `icons/${index}.png`);
 
 describe("createIconStore", () => {
   it("warms icons in batches of 200", async () => {

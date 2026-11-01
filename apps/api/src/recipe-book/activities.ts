@@ -171,5 +171,5 @@ function dropsOf(activity: ActivityDetail, { summary, tables }: ActivityIndexes)
   return [...byType]
     .filter(([, itemIds]) => itemIds.size > 0)
     .map(([lootType, itemIds]) => ({ lootType, items: [...itemIds].map(summary) }))
-    .sort((a, b) => LOOT_ORDER.indexOf(a.lootType) - LOOT_ORDER.indexOf(b.lootType));
+    .sort((left, right) => LOOT_ORDER.indexOf(left.lootType) - LOOT_ORDER.indexOf(right.lootType));
 }

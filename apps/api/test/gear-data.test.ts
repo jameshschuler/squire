@@ -19,13 +19,13 @@ describe("gear items", () => {
 
   data.items.push(...(gearItems as unknown as ItemDetail[]), ...(lootItems as unknown as ItemDetail[]));
   const gear = buildGearData(data);
-  const hatchet = gear.items.find((g) => g.id === "steel_hatchet")!;
+  const hatchet = gear.items.find((item) => item.id === "steel_hatchet")!;
 
   it("lists every item that can be worn or held, and nothing else", () => {
-    const expected = data.items.filter((i) => "gearType" in i && i.gearType).map((i) => i.id);
+    const expected = data.items.filter((item) => "gearType" in item && item.gearType).map((item) => item.id);
 
-    expect(gear.items.map((g) => g.id).sort()).toEqual(expected.sort());
-    expect(gear.items.map((g) => g.id)).not.toContain("gold_ore");
+    expect(gear.items.map((item) => item.id).sort()).toEqual(expected.sort());
+    expect(gear.items.map((item) => item.id)).not.toContain("gold_ore");
   });
 
   it("gives each its slot, keywords and equip requirements", () => {
@@ -50,7 +50,7 @@ describe("gear items", () => {
 
   it("keeps what each quality tier adds on top", () => {
     expect(Object.keys(hatchet.tierStats).sort()).toEqual(["epic", "ethereal", "legendary", "rare", "uncommon"]);
-    expect(hatchet.tierStats.ethereal?.find((s) => s.stat === "doubleAction")?.value).toBe(0.07);
+    expect(hatchet.tierStats.ethereal?.find((stat) => stat.stat === "doubleAction")?.value).toBe(0.07);
   });
 
   it("gives gear its game id, or none when the game doesn't know the item", () => {
@@ -59,21 +59,23 @@ describe("gear items", () => {
     withIds.gameIds = { steel_hatchet: "a1b2c3d4-0000-4000-8000-000000000002", adjustable_wrench: "adjustable_wrench" };
     const gear = buildGearData(withIds).items;
 
-    expect(gear.find((g) => g.id === "steel_hatchet")?.gameId).toBe("a1b2c3d4-0000-4000-8000-000000000002");
-    expect(gear.find((g) => g.id === "adjustable_wrench")?.gameId).toBeNull();
-    expect(gear.find((g) => g.id === "birch_skis")?.gameId).toBeNull();
+    expect(gear.find((gearItem) => gearItem.id === "steel_hatchet")?.gameId).toBe(
+      "a1b2c3d4-0000-4000-8000-000000000002",
+    );
+    expect(gear.find((gearItem) => gearItem.id === "adjustable_wrench")?.gameId).toBeNull();
+    expect(gear.find((gearItem) => gearItem.id === "birch_skis")?.gameId).toBeNull();
   });
 
   it("gives untiered gear no tier stats", () => {
-    expect(gear.items.find((g) => g.id === "adjustable_wrench")?.tierStats).toEqual({});
+    expect(gear.items.find((item) => item.id === "adjustable_wrench")?.tierStats).toEqual({});
   });
 
   it("skips effects with no stat", () => {
     const withBlank = structuredClone(data);
-    const item = withBlank.items.find((i) => i.id === "steel_hatchet")!;
+    const item = withBlank.items.find((entry) => entry.id === "steel_hatchet")!;
 
     item.itemAttrs = [{ ...item.itemAttrs![0]!, stats: [] }];
-    expect(buildGearData(withBlank).items.find((g) => g.id === "steel_hatchet")?.stats).toEqual([]);
+    expect(buildGearData(withBlank).items.find((entry) => entry.id === "steel_hatchet")?.stats).toEqual([]);
   });
 });
 
@@ -90,7 +92,7 @@ describe("pets", () => {
   });
 
   it("keeps each level's full set of effects as numbers", () => {
-    expect(mummy!.levels.map((l) => l.level)).toEqual([1, 4]);
+    expect(mummy!.levels.map((level) => level.level)).toEqual([1, 4]);
     expect(mummy!.levels[1]!.stats).toContainEqual({
       stat: "stepsRequired",
       value: -3,
@@ -121,11 +123,11 @@ describe("skills and locations", () => {
     const data = structuredClone(sample) as unknown as GameData;
 
     data.skills.reverse();
-    expect(buildGearData(data).skills.map((s) => s.id)).toEqual(["cooking", "smithing"]);
+    expect(buildGearData(data).skills.map((skill) => skill.id)).toEqual(["cooking", "smithing"]);
   });
 
   it("lists each location with its regions and keywords, A–Z", () => {
-    expect(sampleGear.locations.map((l) => l.id)).toEqual([
+    expect(sampleGear.locations.map((location) => location.id)).toEqual([
       "azurazera",
       "bilgemont_port",
       "blackspell_harbour",
@@ -160,12 +162,12 @@ describe("gearDataIcons", () => {
     const data = structuredClone(sample) as unknown as GameData;
 
     data.items.push(...(gearItems as unknown as ItemDetail[]), ...(lootItems as unknown as ItemDetail[]));
-    data.items.find((i) => i.id === "birch_skis")!.icon = "";
+    data.items.find((item) => item.id === "birch_skis")!.icon = "";
     const gear = buildGearData(data);
     const icons = gearDataIcons(gear);
 
     expect(icons).toContain("assets/icons/pets/mummy/adult_basic_mummy_static.png");
-    expect(icons).toContain(gear.items.find((g) => g.id === "steel_hatchet")!.icon);
+    expect(icons).toContain(gear.items.find((item) => item.id === "steel_hatchet")!.icon);
     expect(icons).not.toContain("");
     expect(icons).toHaveLength(new Set(icons).size);
   });

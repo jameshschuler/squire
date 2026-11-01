@@ -213,7 +213,9 @@ export function createClient(options: ClientOptions): WalkScapeClient {
     get: (resource, id) => getJson(`/${resource}/id/${encodeURIComponent(id)}`),
     search: async (resource, filters, detailed) => {
       const query = new URLSearchParams(
-        Object.entries(filters).flatMap(([k, v]): [string, string][] => (v === undefined ? [] : [[k, String(v)]])),
+        Object.entries(filters).flatMap(([key, value]): [string, string][] =>
+          value === undefined ? [] : [[key, String(value)]],
+        ),
       );
 
       if (query.size === 0) {

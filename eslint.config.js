@@ -19,6 +19,7 @@ export default tseslint.config(
   {
     rules: {
       curly: ["error", "all"],
+      "id-length": ["error", { min: 2, exceptions: ["_"], properties: "never" }],
       "padding-line-between-statements": [
         "error",
         { blankLine: "always", prev: "*", next: "return" },
@@ -60,7 +61,7 @@ export default tseslint.config(
   },
   {
     files: ["apps/web/src/components/ui/**"],
-    rules: { "padding-line-between-statements": "off" },
+    rules: { "padding-line-between-statements": "off", "id-length": "off" },
   },
   {
     files: ["apps/web/src/components/ui/**", "apps/web/src/contexts/**", "apps/web/src/routes/**"],

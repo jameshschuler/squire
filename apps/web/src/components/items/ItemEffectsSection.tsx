@@ -38,8 +38,8 @@ export function ItemEffectsSection({ effects }: { effects: ItemEffects }) {
                 </>
               )}
             </tr>
-            {group.map((effect, i) => (
-              <tr key={`${effect.stat}-${i}`}>
+            {group.map((effect, index) => (
+              <tr key={`${effect.stat}-${index}`}>
                 <td className="py-0.5 pr-2">{effect.stat}</td>
                 <td className="py-0.5 text-right tabular-nums">{effect.normal}</td>
                 {hasFine && <td className="py-0.5 text-right tabular-nums">{effect.fine}</td>}

@@ -4,7 +4,9 @@ import { encodeJson, preferredEncoding } from "../src/encoded-json.js";
 
 describe("encodeJson", () => {
   it("produces JSON plus brotli and gzip copies that decode back to it", async () => {
-    const value = { recipes: Array.from({ length: 50 }, (_, i) => ({ id: `recipe_${i}`, name: "Smelt a gold bar" })) };
+    const value = {
+      recipes: Array.from({ length: 50 }, (_, index) => ({ id: `recipe_${index}`, name: "Smelt a gold bar" })),
+    };
     const encoded = await encodeJson(value);
     const json = JSON.stringify(value);
 

@@ -75,7 +75,7 @@ export function statGroups(
     .map((goal) => ({ ...goal, value: 0 }));
   const shown = [...lines, ...missing]
     .filter((line) => STAT_LABELS[line.stat])
-    .sort((a, b) => Number(a.isPercent) - Number(b.isPercent));
+    .sort((left, right) => Number(left.isPercent) - Number(right.isPercent));
 
   return {
     steps: [
@@ -86,7 +86,7 @@ export function statGroups(
     other: shown
       .filter((line) => !STEP_STATS.includes(line.stat))
       .map(tile)
-      .sort((a, b) => rank(a) - rank(b) || a.label.localeCompare(b.label)),
+      .sort((left, right) => rank(left) - rank(right) || left.label.localeCompare(right.label)),
   };
 }
 
@@ -107,7 +107,7 @@ function efficiencyTile(parts: EfficiencyParts): StatTile {
 export function locationTiles(bonuses: SourcedStat[]): StatTile[] {
   const groups = new Map<string, SourcedStat[]>();
 
-  for (const bonus of bonuses.filter((b) => statName(b))) {
+  for (const bonus of bonuses.filter((entry) => statName(entry))) {
     const key = `${bonus.stat}:${bonus.isPercent}`;
 
     groups.set(key, [...(groups.get(key) ?? []), bonus]);
@@ -116,8 +116,11 @@ export function locationTiles(bonuses: SourcedStat[]): StatTile[] {
   return [...groups].map(([key, group]) => ({
     key,
     label: statName(group[0]!)!,
-    value: formatStatValue({ isPercent: group[0]!.isPercent, value: group.reduce((sum, b) => sum + b.value, 0) }),
-    details: [joinNames(group.map((b) => b.source))],
+    value: formatStatValue({
+      isPercent: group[0]!.isPercent,
+      value: group.reduce((sum, bonus) => sum + bonus.value, 0),
+    }),
+    details: [joinNames(group.map((bonus) => bonus.source))],
     highlight: false,
     over: false,
   }));
@@ -125,13 +128,15 @@ export function locationTiles(bonuses: SourcedStat[]): StatTile[] {
 
 function joinNames(names: string[]): string {
   const words = names.map((name) => name.split(" "));
-  const shared = words[0]!.findIndex((word, i) => words.some((w) => w.length <= i + 1 || w[i] !== word));
+  const shared = words[0]!.findIndex((word, index) =>
+    words.some((eachWord) => eachWord.length <= index + 1 || eachWord[index] !== word),
+  );
 
   if (names.length < 2 || shared <= 0) {
     return names.join(", ");
   }
 
-  return `${words[0]!.slice(0, shared).join(" ")} ${words.map((w) => w.slice(shared).join(" ")).join(", ")}`;
+  return `${words[0]!.slice(0, shared).join(" ")} ${words.map((word) => word.slice(shared).join(" ")).join(", ")}`;
 }
 
 export function statName({ stat, isPercent }: Pick<StatLine, "stat" | "isPercent">): string | undefined {

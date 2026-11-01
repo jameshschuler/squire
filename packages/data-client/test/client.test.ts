@@ -125,7 +125,7 @@ describe("createClient", () => {
     const { fetch } = fakeFetch([json({ error: "Unauthorized" }, 401)]);
     const error = await createClient({ apiKey: "bad", fetch })
       .items.list()
-      .catch((e: unknown) => e);
+      .catch((caught: unknown) => caught);
 
     expect(error).toBeInstanceOf(WalkScapeApiError);
     expect((error as WalkScapeApiError).message).toBe("401 /items/: Unauthorized");
@@ -239,15 +239,15 @@ describe("createClient", () => {
     const skills = await createClient({ apiKey: "k", fetch }).skills.loadAll();
 
     expect(skills).toEqual([{ id: "mining", name: "Mining" }]);
-    expect(requests.map((r) => r.url)).toEqual([`${ENVIRONMENTS.prod}/skills/`]);
+    expect(requests.map((request) => request.url)).toEqual([`${ENVIRONMENTS.prod}/skills/`]);
   });
 
   it.each([
-    ["version", (c: WalkScapeClient) => c.version(), "/version/"],
-    ["health", (c: WalkScapeClient) => c.health(), "/health/"],
-    ["get", (c: WalkScapeClient) => c.items.get("gold ore"), "/items/id/gold%20ore"],
-    ["maps", (c: WalkScapeClient) => c.maps(), "/maps"],
-    ["map", (c: WalkScapeClient) => c.map("world map.png"), "/maps/world%20map.png"],
+    ["version", (client: WalkScapeClient) => client.version(), "/version/"],
+    ["health", (client: WalkScapeClient) => client.health(), "/health/"],
+    ["get", (client: WalkScapeClient) => client.items.get("gold ore"), "/items/id/gold%20ore"],
+    ["maps", (client: WalkScapeClient) => client.maps(), "/maps"],
+    ["map", (client: WalkScapeClient) => client.map("world map.png"), "/maps/world%20map.png"],
   ])("calls the documented path for %s", async (_name, call, path) => {
     const { fetch, requests } = fakeFetch([json({})]);
 
