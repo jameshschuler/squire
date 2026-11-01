@@ -43,7 +43,8 @@ function withEffects(book: RecipeBook, effectsById: Record<string, Effect[]>): R
     keywords: [],
     effects: { steps: 1000, tiers: [], effects },
   }));
-  return { ...book, foods: foods.sort((a, b) => a.name.localeCompare(b.name)) };
+
+  return { ...book, foods: foods.sort((left, right) => left.name.localeCompare(right.name)) };
 }
 
 const book = withEffects(base, {
@@ -51,16 +52,17 @@ const book = withEffects(base, {
   bagel: [effect("Work efficiency", "agility")],
   dynamite: [effect("Double rewards", "mining"), effect("Bonus experience", "mining")],
 });
-const ids = (list: { id: string }[]) => list.map((f) => f.id);
+const ids = (list: { id: string }[]) => list.map((entry) => entry.id);
 
 describe("effectFilters", () => {
   it("lists the skills foods help, A–Z, with Travelling last", () => {
-    expect(effectFilters(book.foods).map((f) => f.name)).toEqual(["Agility", "Mining", "Travelling"]);
+    expect(effectFilters(book.foods).map((filter) => filter.name)).toEqual(["Agility", "Mining", "Travelling"]);
   });
 
   it("has no Travelling filter when no food helps while travelling", () => {
     const foods = withEffects(base, { bagel: [effect("Work efficiency", "agility")] }).foods;
-    expect(effectFilters(foods).map((f) => f.id)).toEqual(["agility"]);
+
+    expect(effectFilters(foods).map((filter) => filter.id)).toEqual(["agility"]);
   });
 });
 
@@ -83,7 +85,8 @@ describe("effectsFor", () => {
     const salt = withEffects(base, {
       salt_crystal: [effect("Work efficiency", "mining"), effect("Double rewards", "agility")],
     }).foods[0]!;
-    expect(effectsFor(salt, "mining").map((e) => e.stat)).toEqual(["Work efficiency"]);
+
+    expect(effectsFor(salt, "mining").map((entry) => entry.stat)).toEqual(["Work efficiency"]);
   });
 });
 
@@ -163,8 +166,8 @@ describe("the Collectibles chip", () => {
   const wrench = collectible("wrench", false);
 
   it("comes after the skills, only when there are collectibles", () => {
-    expect(effectFilters([ankh, wrench]).map((f) => f.id)).toEqual(["agility", COLLECTIBLES_FILTER]);
-    expect(effectFilters([wrench]).map((f) => f.id)).toEqual(["agility"]);
+    expect(effectFilters([ankh, wrench]).map((filter) => filter.id)).toEqual(["agility", COLLECTIBLES_FILTER]);
+    expect(effectFilters([wrench]).map((filter) => filter.id)).toEqual(["agility"]);
   });
 
   it("filters to collectibles", () => {

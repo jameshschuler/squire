@@ -7,6 +7,7 @@ export function ServiceLocations({ service }: { service: RecipeService }) {
   if (service.locations.length === 0) {
     return <p className="text-muted-foreground">No known location</p>;
   }
+
   return (
     <ul className="divide-y">
       {sortByRegion(service.locations).map((location) => (

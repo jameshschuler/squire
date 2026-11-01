@@ -77,9 +77,11 @@ const FINE_SUFFIX = "_fine";
 
 const SKILL_XP_BY_LEVEL = Array.from({ length: MAX_LEVEL }, (_, index) => {
   let points = 0;
+
   for (let level = 1; level <= index; level++) {
     points += Math.floor(level + 300 * 2 ** (level / 7));
   }
+
   return Math.floor(points / 4);
 });
 
@@ -97,18 +99,22 @@ export function toolSlots(level: number): number {
 
 export function ownedItem(exportId: string): OwnedItem {
   const quality = QUALITY_SUFFIX.exec(exportId)?.[1] as ItemQuality | undefined;
+
   return quality ? { id: exportId.slice(0, -quality.length - 1), quality } : { id: exportId, quality: null };
 }
 
 export function parseCharacterExport(text: string): Character {
   const data = parseJson(text);
+
   if (!isCharacterExport(data)) {
     throw new Error("That isn't a WalkScape character export.");
   }
+
   const level = characterLevel(data.steps);
   const skillLevels = Object.fromEntries(Object.entries(data.skills).map(([skill, xp]) => [skill, skillLevel(xp)]));
   const equippedIds = EQUIPMENT_SLOTS.flatMap((slot) => (data.gear[slot] ? [[slot, data.gear[slot]] as const] : []));
   const counts = new Map<string, number>();
+
   for (const [id, count] of [
     ...equippedIds.map(([, id]) => [id, 1] as const),
     ...Object.entries(data.bank),
@@ -116,6 +122,7 @@ export function parseCharacterExport(text: string): Character {
   ]) {
     counts.set(id, (counts.get(id) ?? 0) + count);
   }
+
   return {
     name: data.name,
     skillLevels,
@@ -149,6 +156,7 @@ function isCharacterExport(data: unknown): data is CharacterExport {
   if (!isRecord(data)) {
     return false;
   }
+
   return (
     typeof data.name === "string" &&
     typeof data.steps === "number" &&

@@ -7,6 +7,7 @@ export const FAVORITES_FILTER = "favorites";
 export function recipeFilters(recipes: RecipeView[], favoriteIds: string[]): SkillOption[] {
   const favorites =
     favoriteRecipes(recipes, favoriteIds).length > 0 ? [{ id: FAVORITES_FILTER, name: "Favorites" }] : [];
+
   return [...favorites, ...skillOptions(recipes)];
 }
 
@@ -19,5 +20,6 @@ export function filterRecipes(
   if (filter === FAVORITES_FILTER) {
     return searchRecipes(favoriteRecipes(recipes, favoriteIds), query);
   }
+
   return searchRecipes(recipes, query, { skill: filter });
 }

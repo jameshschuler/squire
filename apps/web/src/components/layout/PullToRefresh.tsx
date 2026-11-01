@@ -17,9 +17,11 @@ export function PullToRefresh() {
       </p>
     );
   }
+
   if (pull === 0 && status !== "refreshing") {
     return null;
   }
+
   return (
     <div
       role="status"

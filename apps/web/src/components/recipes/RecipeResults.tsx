@@ -11,6 +11,7 @@ interface RecipeResultsProps {
 
 export function RecipeResults({ recipes, listKey }: RecipeResultsProps) {
   const { visibleItems, hasMore, sentinelRef } = useIncrementalList(recipes, listKey, PAGE_SIZE);
+
   return (
     <>
       <RecipeList recipes={visibleItems} />

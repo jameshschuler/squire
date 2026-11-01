@@ -12,6 +12,7 @@ describe("ChoiceButtons", () => {
     const choices = [
       { value: "tidal_cave", label: "Tidal cave of the forgotten merfolk", hint: "Sunken Isles", detail },
     ];
+
     render(<ChoiceButtons choices={choices} onChoose={() => {}} />);
 
     const button = screen.getByRole("button");

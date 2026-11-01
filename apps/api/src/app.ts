@@ -24,10 +24,13 @@ export function buildApp({ client, logLevel, corsOrigins }: AppOptions): Fastify
     if (!(error instanceof WalkScapeApiError)) {
       return reply.send(error);
     }
+
     if (error.status === HTTP_STATUS.NOT_FOUND) {
       return reply.code(HTTP_STATUS.NOT_FOUND).send({ error: "Not found" });
     }
+
     request.log.error({ err: error }, "WalkScape API request failed");
+
     return reply.code(HTTP_STATUS.BAD_GATEWAY).send({ error: "WalkScape API unavailable" });
   });
 
@@ -46,5 +49,6 @@ export function buildApp({ client, logLevel, corsOrigins }: AppOptions): Fastify
   app.register(healthRoutes);
   app.register(bookRoutes(books));
   app.register(iconRoutes(icons));
+
   return app;
 }

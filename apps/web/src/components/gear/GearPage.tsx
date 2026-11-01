@@ -12,6 +12,7 @@ interface GearPageProps {
 export function GearPage({ search, onSearchChange }: GearPageProps) {
   const book = useGameDataContext();
   const gear = useGearDataContext();
+
   if (book.status === "ready" && gear.status === "ready") {
     return (
       <section className="pt-3">
@@ -19,11 +20,14 @@ export function GearPage({ search, onSearchChange }: GearPageProps) {
       </section>
     );
   }
+
   if (book.status === "error") {
     return <GameDataStatus state={book} />;
   }
+
   if (gear.status === "error") {
     return <GameDataStatus state={gear} />;
   }
+
   return <GameDataStatus state={{ status: "loading" }} />;
 }

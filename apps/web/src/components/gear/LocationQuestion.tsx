@@ -13,5 +13,6 @@ interface LocationQuestionProps {
 
 export function LocationQuestion({ gear, profile, target, onChoose }: LocationQuestionProps) {
   const choices = useMemo(() => locationChoices(gear, profile, target), [gear, profile, target]);
+
   return <ChoiceButtons choices={choices} onChoose={onChoose} />;
 }

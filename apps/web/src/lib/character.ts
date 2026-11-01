@@ -15,11 +15,14 @@ export function readStoredCharacter(stored: string | null): SavedCharacter | nul
   if (!stored) {
     return null;
   }
+
   try {
     const { exportText, savedAt } = JSON.parse(stored) as { exportText?: unknown; savedAt?: unknown };
+
     if (typeof exportText !== "string" || typeof savedAt !== "string" || Number.isNaN(Date.parse(savedAt))) {
       return null;
     }
+
     return { character: parseCharacterExport(exportText), savedAt };
   } catch {
     return null;

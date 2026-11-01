@@ -6,7 +6,7 @@ const pick = (id: string, slot: GearPick["slot"]) => ({ slot, item: { id }, qual
 
 describe("gearCells", () => {
   it("lays out the slots like the game, three across", () => {
-    expect(gearCells([]).map((c) => c.label)).toEqual([
+    expect(gearCells([]).map((cell) => cell.label)).toEqual([
       ...["Cape", "Head", "Back", "Hands", "Chest", "Neck"],
       ...["Primary", "Legs", "Secondary", "Ring 1", "Feet", "Ring 2"],
     ]);
@@ -14,7 +14,8 @@ describe("gearCells", () => {
 
   it("puts each pick in its slot and leaves the rest empty", () => {
     const cells = gearCells([pick("boots", "feet"), pick("ring_a", "ring"), pick("ring_b", "ring")]);
-    const at = (label: string) => cells.find((c) => c.label === label)?.pick?.item.id ?? null;
+    const at = (label: string) => cells.find((cell) => cell.label === label)?.pick?.item.id ?? null;
+
     expect([at("Feet"), at("Ring 1"), at("Ring 2"), at("Head")]).toEqual(["boots", "ring_a", "ring_b", null]);
   });
 });
@@ -22,7 +23,8 @@ describe("gearCells", () => {
 describe("toolCells", () => {
   it("shows one cell per tool slot the character has", () => {
     const cells = toolCells([pick("saw", "tool")], 4);
-    expect(cells.map((c) => [c.label, c.pick?.item.id ?? null])).toEqual([
+
+    expect(cells.map((cell) => [cell.label, cell.pick?.item.id ?? null])).toEqual([
       ["Tool 1", "saw"],
       ["Tool 2", null],
       ["Tool 3", null],
@@ -38,6 +40,7 @@ describe("pickQuality", () => {
     [null, null, null],
   ] as const)("uses the pick's quality %s over the item's %s", (quality, itemQuality, expected) => {
     const gearPick = { slot: "hands", item: { id: "gloves", quality: itemQuality }, quality } as unknown as GearPick;
+
     expect(pickQuality(gearPick)).toBe(expected);
   });
 });

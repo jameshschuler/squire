@@ -18,8 +18,10 @@ export function checkForUpdatesWhileOpen(registration: Pick<ServiceWorkerRegistr
       registration.update().catch(() => undefined);
     }
   };
+
   document.addEventListener("visibilitychange", check);
   const timer = setInterval(check, UPDATE_CHECK_MS);
+
   return () => {
     document.removeEventListener("visibilitychange", check);
     clearInterval(timer);

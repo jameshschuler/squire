@@ -23,12 +23,13 @@ export const GEAR_SLOTS: GearSlot[] = [
 ];
 
 export function copiesAllowed(slot: GearType | "pet"): number {
-  return GEAR_SLOTS.find((s) => s.slot === slot)?.copies ?? 1;
+  return GEAR_SLOTS.find((entry) => entry.slot === slot)?.copies ?? 1;
 }
 
 export function slotCapacity(slot: GearType | "pet", tools: number): number {
   if (slot === "tool") {
     return tools;
   }
-  return GEAR_SLOTS.find((s) => s.slot === slot)?.capacity ?? 1;
+
+  return GEAR_SLOTS.find((entry) => entry.slot === slot)?.capacity ?? 1;
 }

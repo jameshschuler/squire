@@ -27,15 +27,15 @@ export const NO_STATS: StatTotals = {
   goalStats: [],
 };
 
-export function addStats(a: StatTotals, b: StatTotals): StatTotals {
+export function addStats(left: StatTotals, right: StatTotals): StatTotals {
   return {
-    workEfficiency: a.workEfficiency + b.workEfficiency,
-    stepsPercent: a.stepsPercent + b.stepsPercent,
-    stepsFlat: a.stepsFlat + b.stepsFlat,
-    doubleAction: a.doubleAction + b.doubleAction,
+    workEfficiency: left.workEfficiency + right.workEfficiency,
+    stepsPercent: left.stepsPercent + right.stepsPercent,
+    stepsFlat: left.stepsFlat + right.stepsFlat,
+    doubleAction: left.doubleAction + right.doubleAction,
     goalStats: Array.from(
-      { length: Math.max(a.goalStats.length, b.goalStats.length) },
-      (_, i) => (a.goalStats[i] ?? 0) + (b.goalStats[i] ?? 0),
+      { length: Math.max(left.goalStats.length, right.goalStats.length) },
+      (_, index) => (left.goalStats[index] ?? 0) + (right.goalStats[index] ?? 0),
     ),
   };
 }
@@ -44,7 +44,9 @@ const LEVEL_BONUS = 0.0125;
 const MAX_BONUS_LEVELS = 20;
 const MIN_EFFICIENCY = 0.01;
 const MIN_STEPS = 10;
+
 export const STEP_STATS = ["workEfficiency", "stepsRequired", "doubleAction"] as const;
+export const STEP_STAT_SET = new Set<string>(STEP_STATS);
 
 export const MAX_DOUBLE_ACTION = 1;
 // Stops floating-point error from rounding an exact whole number of steps up by one.
@@ -61,6 +63,7 @@ export function stepsPerAction(target: WorkTarget, skillLevel: number, totals: S
   );
   const raw = (target.workRequired / efficiency) * (1 + totals.stepsPercent) + totals.stepsFlat;
   const steps = Math.ceil(Math.max(raw, MIN_STEPS) - ROUNDING_SLACK);
+
   return { efficiency, steps, averageSteps: steps / (1 + Math.min(totals.doubleAction, MAX_DOUBLE_ACTION)) };
 }
 

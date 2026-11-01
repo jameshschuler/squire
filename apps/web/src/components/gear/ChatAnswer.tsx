@@ -15,6 +15,7 @@ export function ChatAnswer({ label, hint, onChange }: ChatAnswerProps) {
       {hint && <span className="ml-1.5 text-xs text-muted-foreground">{hint}</span>}
     </span>
   );
+
   return (
     <div className="flex justify-end">
       {onChange ? (

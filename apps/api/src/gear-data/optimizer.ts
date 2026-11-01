@@ -107,11 +107,13 @@ export function optimizeGear(
   const start = performance.now();
   const deadline = start + timeBudgetMs;
   const checked = goals.slice(0, checkedGoals);
-  const locations = gear.locations.filter((l) => target.locationIds.includes(l.id));
+  const targetLocations = new Set(target.locationIds);
+  const locations = gear.locations.filter((location) => targetLocations.has(location.id));
   const owned = ownedGear(profile, gear.items);
   const capacityOf = (slot: GearType) => slotCapacity(slot, toolSlotsOf(profile));
   const needs = target.needs.filter((need) => canMeetNeed(need, owned, capacityOf));
-  const unowned = target.needs.filter((need) => !needs.includes(need));
+  const meetable = new Set(needs);
+  const unowned = target.needs.filter((need) => !meetable.has(need));
   const plans = distinctLocations(gear, locations).map((location) =>
     planAt(gear, situationFor(gear, profile, target, location, goalStats(goals)), goals, {
       owned,
@@ -121,18 +123,22 @@ export function optimizeGear(
     }),
   );
   let found: Search | null = null;
+
   for (let limit = maxStates; ; limit *= STATES_GROWTH) {
     found = tightest(found, searchRound(plans, goals, limit, deadline));
     const margin = marginOf(checked, found.score, found.ceiling);
+
     if (!margin || margin.gap <= CLOSE_ENOUGH || limit >= MAX_SEARCH_STATES || performance.now() >= deadline) {
       const { ceiling: _ceiling, usable, ...best } = found;
       const worn = best.picks.map((pick) => pick.item);
       const unmet = usable ? [] : needs.filter((need) => !metBy(need, worn));
       const remaining = deadline - performance.now();
+
       // No set met every need at once (their items ban each other or share a slot), so search again
       // without the needs this set misses, in the time left, and name them.
       if (unmet.length > 0 && remaining > 0) {
-        const relaxed = { ...target, needs: target.needs.filter((need) => !unmet.includes(need)) };
+        const missed = new Set(unmet);
+        const relaxed = { ...target, needs: target.needs.filter((need) => !missed.has(need)) };
         const fallback = optimizeGear(gear, profile, relaxed, goals, {
           maxStates,
           timeBudgetMs: remaining,
@@ -182,18 +188,24 @@ function searchRound(plans: LocationPlan[], goals: GoalId[], maxStates: number, 
     found: [],
     firstGoalLimit: Number.POSITIVE_INFINITY,
   }));
-  for (const i of goals.keys()) {
-    live = live.map((progress) => searchPass(progress, i, goals, maxStates, deadline));
-    const leader = live.map((p) => p.found).reduce((a, b) => (compareScores(b, a) > 0 ? b : a));
-    live = live.filter((p) => compareScores(higher(p.found, p.searched.ceiling)!, leader) >= 0);
+
+  for (const pass of goals.keys()) {
+    live = live.map((progress) => searchPass(progress, pass, goals, maxStates, deadline));
+    const leader = live
+      .map((progress) => progress.found)
+      .reduce((best, next) => (compareScores(next, best) > 0 ? next : best));
+
+    live = live.filter((progress) => compareScores(higher(progress.found, progress.searched.ceiling)!, leader) >= 0);
   }
+
   const searches = live.map((progress) => finish(progress, goals));
-  return { ...bestOf(searches), ceiling: searches.map((s) => s.ceiling).reduce(higher) };
+
+  return { ...bestOf(searches), ceiling: searches.map((search) => search.ceiling).reduce(higher) };
 }
 
 function searchPass(
   { plan, searched, firstGoalLimit }: LocationProgress,
-  i: number,
+  pass: number,
   goals: GoalId[],
   maxStates: number,
   deadline: number,
@@ -201,35 +213,38 @@ function searchPass(
   // The pass at index i scores the first i + 1 priorities. Clipping the first priority to the limit the
   // first pass (i = 0) proved keeps later passes' bounds from claiming a better first priority than is possible.
   const passScore = (totals: StatTotals) => {
-    const [first = 0, ...rest] = plan.score(totals).slice(0, i + 1);
+    const [first = 0, ...rest] = plan.score(totals).slice(0, pass + 1);
+
     return [Math.min(first, firstGoalLimit), ...rest];
   };
+
   const next = bestSet(plan.groups, plan.rules, plan.useful, passScore, {
     seed: searched.set,
     maxStates,
-    goalDims: goalStats(goals.slice(0, i + 1)).length,
+    goalDims: goalStats(goals.slice(0, pass + 1)).length,
     primaryValue: plan.primaryValue,
-    repair: i === goals.length - 1,
+    repair: pass === goals.length - 1,
     deadline,
   });
   const found = meetsNeeds(next.set, plan.rules.needs)
     ? passScore(withSetBonuses(next.set))
-    : Array.from({ length: i + 1 }, () => Number.NEGATIVE_INFINITY);
+    : Array.from({ length: pass + 1 }, () => Number.NEGATIVE_INFINITY);
+
   return {
     plan,
     searched: next,
     found,
-    firstGoalLimit: i === 0 ? Math.max(found[0]!, next.ceiling?.[0] ?? Number.NEGATIVE_INFINITY) : firstGoalLimit,
+    firstGoalLimit: pass === 0 ? Math.max(found[0]!, next.ceiling?.[0] ?? Number.NEGATIVE_INFINITY) : firstGoalLimit,
   };
 }
 
 function bestOf(searches: Search[]): Search {
-  return searches.reduce((a, b) => (beats(b, a) ? b : a));
+  return searches.reduce((best, search) => (beats(search, best) ? search : best));
 }
 
 // A usable set beats one missing required gear, whatever their scores.
-function beats(a: Search, b: Search): boolean {
-  return a.usable !== b.usable ? a.usable : compareScores(a.score, b.score) > 0;
+function beats(left: Search, right: Search): boolean {
+  return left.usable !== right.usable ? left.usable : compareScores(left.score, right.score) > 0;
 }
 
 // Combines two rounds: the better set, and the lower ceiling (each ceiling is a true upper bound, so the
@@ -238,24 +253,28 @@ function tightest(previous: Search | null, next: Search): Search {
   if (!previous) {
     return next;
   }
+
   const best = beats(next, previous) ? next : previous;
+
   return { ...best, ceiling: lower(previous.ceiling, next.ceiling) };
 }
 
 // The higher of two ceilings; null (nothing cut) adds no limit of its own.
-function higher(a: Score | null, b: Score | null): Score | null {
-  if (!a || !b) {
-    return a ?? b;
+function higher(left: Score | null, right: Score | null): Score | null {
+  if (!left || !right) {
+    return left ?? right;
   }
-  return compareScores(a, b) >= 0 ? a : b;
+
+  return compareScores(left, right) >= 0 ? left : right;
 }
 
 // The lower of two ceilings; null wins, since a search that cut nothing found the true best.
-function lower(a: Score | null, b: Score | null): Score | null {
-  if (!a || !b) {
+function lower(left: Score | null, right: Score | null): Score | null {
+  if (!left || !right) {
     return null;
   }
-  return compareScores(a, b) <= 0 ? a : b;
+
+  return compareScores(left, right) <= 0 ? left : right;
 }
 
 // The fewest steps possible with the best gear in the game, shown as the "Min" on the steps tile. It
@@ -284,7 +303,7 @@ function planAt(
     owned: entry,
     candidate: withNeedKeywords(gearCandidate(situation, entry), entry.item, needs),
   }));
-  const items = choices.map((c) => c.candidate);
+  const items = choices.map((choice) => choice.candidate);
   const pets = ownedPets(profile, gear.pets).map((pet) => petCandidate(situation, pet));
   const level = skillLevelOf(profile, target.skill);
   const goalScore = goalScorer(goals, baseXp);
@@ -296,18 +315,21 @@ function planAt(
   );
   const slotGroups: SlotGroup[] = GEAR_SLOTS.map(({ slot }) => ({
     capacity: capacityOf(slot),
-    choices: items.filter((c) => c.slot === slot),
+    choices: items.filter((item) => item.slot === slot),
   })).concat({ capacity: 1, choices: pets });
   const useful = usefulEfficiency(target, level, slotGroups);
   const groups = slotGroups
     .map(({ capacity, choices }) => ({
       capacity,
-      choices: prune(choices, capacity, rules, useful).sort((a, b) => compareScores(score(b.best), score(a.best))),
+      choices: prune(choices, capacity, rules, useful).sort((left, right) =>
+        compareScores(score(right.best), score(left.best)),
+      ),
     }))
     .filter((group) => group.choices.length > 0);
   const primary = goals[0];
   const primaryValue =
     primary === undefined || goalOf(primary).stats.length === 0 ? null : goalValue(goals, primary, baseXp);
+
   return { situation, choices, groups, rules, useful, level, score, capacityOf, primaryValue };
 }
 
@@ -315,10 +337,11 @@ function finish({ plan, searched }: LocationProgress, goals: GoalId[]): Search {
   const { situation, choices, capacityOf, rules, score, level } = plan;
   const chosen = fillFreeSlots(situation, searched.set, choices, capacityOf, rules, score);
   const totals = withSetBonuses(chosen);
+
   return {
     location: situation.location,
-    picks: chosen.flatMap((c) => (c.pick ? [c.pick] : [])),
-    pet: chosen.find((c) => c.pet)?.pet ?? null,
+    picks: chosen.flatMap((candidate) => (candidate.pick ? [candidate.pick] : [])),
+    pet: chosen.find((candidate) => candidate.pet)?.pet ?? null,
     totals,
     result: stepsPerAction(situation.target, level, totals),
     goals,
@@ -334,8 +357,12 @@ function finish({ plan, searched }: LocationProgress, goals: GoalId[]): Search {
 // would have made the faster one.
 function usefulEfficiency(target: WorkTarget, level: number, groups: SlotGroup[]): number {
   const penaltyOf = ({ totals, setBonuses }: Candidate) =>
-    [totals, ...setBonuses.map((bonus) => bonus.totals)].reduce((sum, t) => sum + Math.max(-t.workEfficiency, 0), 0);
+    [totals, ...setBonuses.map((bonus) => bonus.totals)].reduce(
+      (sum, part) => sum + Math.max(-part.workEfficiency, 0),
+      0,
+    );
   const penalties = groups.reduce((sum, { capacity, choices }) => sum + topSum(choices.map(penaltyOf), capacity), 0);
+
   return Math.max(efficiencyCap(target) - (stepsPerAction(target, level, NO_STATS).efficiency - 1) + penalties, 0);
 }
 
@@ -345,21 +372,29 @@ function distinctLocations(gear: GearData, locations: LocationView[]): (Location
   if (locations.length === 0) {
     return [null];
   }
+
   const conditions = [
-    ...gear.items.flatMap((i) => [i.stats, ...Object.values(i.tierStats)]),
-    ...gear.pets.flatMap((p) => p.levels.map((l) => l.stats)),
+    ...gear.items.flatMap((item) => [item.stats, ...Object.values(item.tierStats)]),
+    ...gear.pets.flatMap((pet) => pet.levels.map((petLevel) => petLevel.stats)),
   ].flatMap((stats) => stats.flatMap((stat) => stat.conditions));
-  const realms = new Set(conditions.flatMap((c) => (c.type === "realm" ? [c.requirement.realm] : [])));
-  const keywords = new Set(conditions.flatMap((c) => (c.type === "locationHasKeywords" ? c.requirement.keywords : [])));
+  const realms = new Set(
+    conditions.flatMap((condition) => (condition.type === "realm" ? [condition.requirement.realm] : [])),
+  );
+  const keywords = new Set(
+    conditions.flatMap((condition) => (condition.type === "locationHasKeywords" ? condition.requirement.keywords : [])),
+  );
   const bySignature = new Map<string, LocationView>();
+
   for (const location of locations) {
     const signature = JSON.stringify([
-      location.realms.filter((r) => realms.has(r)).sort(),
-      location.keywords.filter((k) => keywords.has(k)).sort(),
+      location.realms.filter((realm) => realms.has(realm)).sort(),
+      location.keywords.filter((keyword) => keywords.has(keyword)).sort(),
     ]);
+
     if (!bySignature.has(signature)) {
       bySignature.set(signature, location);
     }
   }
+
   return [...bySignature.values()];
 }

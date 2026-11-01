@@ -69,6 +69,7 @@ describe("getLootTableItemIds", () => {
       tableRows: [{ rowItemID: "a" }, { rowItemID: null }],
       subTables: [{ tableRows: [{ rowItemID: "b" }] }],
     } as unknown as LootTableDetail;
+
     expect(getLootTableItemIds(table)).toEqual(["a", "b"]);
   });
 });

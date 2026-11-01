@@ -14,8 +14,14 @@ export function PriorityQuestion({ goals, recommended, onChoose }: PriorityQuest
   const [picked, setPicked] = useState<GoalId[]>([]);
   const toggle = (id: GoalId) =>
     setPicked((current) =>
-      current.includes(id) ? current.filter((g) => g !== id) : current.length < MAX_GOALS ? [...current, id] : current,
+      current.includes(id)
+        ? current.filter((goal) => goal !== id)
+        : current.length < MAX_GOALS
+          ? [...current, id]
+          : current,
     );
+  const pickedRank = new Map(picked.map((id, index) => [id, index]));
+
   return (
     <div className="space-y-2">
       <Button
@@ -32,7 +38,8 @@ export function PriorityQuestion({ goals, recommended, onChoose }: PriorityQuest
       <p className="text-xs text-muted-foreground">Or pick your own:</p>
       <ul className="space-y-1">
         {goals.map((goal) => {
-          const rank = picked.indexOf(goal.id) + 1;
+          const rank = (pickedRank.get(goal.id) ?? -1) + 1;
+
           return (
             <li key={goal.id}>
               <button

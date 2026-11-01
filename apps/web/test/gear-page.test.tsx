@@ -19,6 +19,7 @@ import { renderWithRouter } from "./render-with-router";
 vi.mock("@/lib/gear-set-code", () => ({ gearSetCode: vi.fn(async () => "GEAR-SET-CODE") }));
 vi.mock("@/lib/gear-solver", async () => {
   const { solveGear } = await import("@/lib/gear-solution");
+
   return {
     solveInBackground: vi.fn((request: GearRequest) => ({
       result: Promise.resolve(solveGear(request)),
@@ -56,6 +57,7 @@ let gear = withGear([miningGear("journeyman_handwear", "hands", -3), pickaxe]);
 
 function Harness({ initial }: { initial: GearSearch }) {
   const [search, setSearch] = useState(initial);
+
   return <GearPage search={search} onSearchChange={setSearch} />;
 }
 
@@ -76,6 +78,7 @@ async function renderPage(initial: GearSearch = {}, fetchData = serveData) {
 
 async function clickCopy() {
   const button = await screen.findByRole("button", { name: /Copy gear set for WalkScape/ });
+
   await waitFor(() => expect((button as HTMLButtonElement).disabled).toBe(false));
   fireEvent.click(button);
 }
@@ -124,6 +127,7 @@ describe("Gear page", () => {
     const gear = await screen.findByText("journeyman handwear");
     const copy = await screen.findByRole("button", { name: /Copy gear set for WalkScape/ });
     const stats = screen.getByRole("region", { name: "Set stats" });
+
     expect(gear.compareDocumentPosition(copy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(copy.compareDocumentPosition(stats) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
@@ -151,7 +155,7 @@ describe("Gear page", () => {
   });
 
   it("lists the set's bonuses that depend on the location it picked", async () => {
-    const harbour = baseGear.locations.find((l) => l.id === "blackspell_harbour")!;
+    const harbour = baseGear.locations.find((location) => location.id === "blackspell_harbour")!;
     const bakersHat: GearItem = {
       ...miningGear("bakers_hat", "head", 0),
       stats: [
@@ -163,15 +167,18 @@ describe("Gear page", () => {
         },
       ],
     };
+
     gear = withGear([bakersHat]);
     await renderPage({ target: "recipe:bake_a_bagel", location: "blackspell_harbour", goals: "steps" });
     const location = await screen.findByRole("region", { name: "Location" });
+
     expect(location.textContent).toContain(`Blackspell Harbour ${harbour.region}`);
     expect(location.textContent).toContain("+5%Double rewardsbakers hat");
   });
 
   it("shows on each location choice the gear bonuses it unlocks", async () => {
-    const harbour = baseGear.locations.find((l) => l.id === "blackspell_harbour")!;
+    const harbour = baseGear.locations.find((location) => location.id === "blackspell_harbour")!;
+
     gear = withGear([
       {
         ...miningGear("bakers_hat", "head", 0),
@@ -223,6 +230,7 @@ describe("Gear page", () => {
     for (const goal of ["Most chests", "Fastest", "Most XP", "Most items"]) {
       fireEvent.click(screen.getByRole("button", { name: new RegExp(`^${goal}`) }));
     }
+
     expect(screen.getByRole("button", { name: /^1\s*Most chests/ }).getAttribute("aria-pressed")).toBe("true");
     expect(screen.getByRole("button", { name: /^Most items/ }).getAttribute("aria-pressed")).toBe("false");
     fireEvent.click(screen.getByRole("button", { name: "Find gear" }));
@@ -253,6 +261,7 @@ describe("Gear page", () => {
   it("shows steps per action even when fewest steps isn't a priority", async () => {
     await renderPage({ target: "activity:mine_gold_ore", goals: "chests" });
     const stats = await screen.findByRole("region", { name: "Set stats" });
+
     expect(stats.textContent).toMatch(/\d+Steps/);
   });
 
@@ -261,10 +270,12 @@ describe("Gear page", () => {
       ...miningGear("lucky_ring", "ring", 0),
       stats: [{ ...miningGear("lucky_ring", "ring", 0).stats[0]!, stat: "chestFind", value: 0.1, isPercent: true }],
     };
+
     gear = withGear([miningGear("journeyman_handwear", "hands", -3), luckyRing]);
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     expect(await screen.findByRole("link", { name: /Ring 1.*lucky ring/ })).toBeDefined();
     const stats = screen.getByRole("region", { name: "Set stats" });
+
     expect(stats.textContent).toContain("+20%Chest finding");
     expect(stats.textContent).not.toContain("(priority)Chest finding");
   });
@@ -272,6 +283,7 @@ describe("Gear page", () => {
   it("puts steps first in the stats and highlights the priority stats", async () => {
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps,chests" });
     const stats = await screen.findByRole("region", { name: "Set stats" });
+
     expect(stats.textContent).toMatch(/^Steps[\d,]+ \(priority\)Steps/);
     expect(stats.textContent).toMatch(/\+[\d.]+% \(priority\)Chest finding/);
     expect(screen.queryByRole("region", { name: "Summary" })).toBeNull();
@@ -280,6 +292,7 @@ describe("Gear page", () => {
   it("shows the set's stats, with the steps range and total work efficiency against the max", async () => {
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     const stats = await screen.findByRole("region", { name: "Set stats" });
+
     expect(stats.textContent).toMatch(/Steps per actionMin \d+ · Max \d+/);
     expect(stats.textContent).toMatch(/\d+(\.\d)?\/\d+(\.\d)?%Work efficiency/);
     expect(stats.textContent).toContain("−5Steps required (flat)");
@@ -289,6 +302,7 @@ describe("Gear page", () => {
     gear = withGear([{ ...miningGear("journeyman_handwear", "hands", -3), quality: "rare" }]);
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     const hands = await screen.findByRole("link", { name: /Hands.*journeyman handwear\W+rare$/ });
+
     expect(hands.className).toContain("border-teal-400");
   });
 
@@ -324,6 +338,7 @@ describe("Gear page", () => {
 
   it("copies the gear set for WalkScape", async () => {
     const writeText = vi.fn(async () => {});
+
     vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     await clickCopy();
@@ -353,7 +368,9 @@ describe("Gear page", () => {
     await renderPage({}, async (url) => (url.includes("/api/gear") ? new Promise<Response>(() => {}) : serveData(url)));
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(screen.getByText("Loading game data…")).toBeDefined();
-    expect(screen.getAllByRole("paragraph").filter((p) => p.textContent?.includes("Loading"))).toHaveLength(1);
+    expect(
+      screen.getAllByRole("paragraph").filter((paragraph) => paragraph.textContent?.includes("Loading")),
+    ).toHaveLength(1);
     expect(screen.queryByPlaceholderText("Search activities and recipes…")).toBeNull();
   });
 

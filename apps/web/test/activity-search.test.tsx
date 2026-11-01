@@ -30,6 +30,7 @@ describe("ActivitySearch", () => {
   it("lists activities with their skill level, linking to each", async () => {
     await renderSearch("");
     const link = await screen.findByRole("link", { name: /Mine gold ore/ });
+
     expect(link.getAttribute("href")).toBe("/activities/mine_gold_ore");
     expect(link.textContent).toContain("Mining lvl. 40");
   });
@@ -37,6 +38,7 @@ describe("ActivitySearch", () => {
   it("leaves the gear an activity needs off the list", async () => {
     await renderSearch("");
     const link = await screen.findByRole("link", { name: /Mine gold ore/ });
+
     expect(link.textContent).not.toContain("Pickaxe");
   });
 

@@ -15,6 +15,7 @@ import { useCharacterContext } from "@/contexts/character-context";
 
 export function RemoveCharacterButton() {
   const { clearCharacter } = useCharacterContext();
+
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>

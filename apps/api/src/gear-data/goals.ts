@@ -149,8 +149,8 @@ export const GOALS: Goal[] = [
 const SIGNIFICANT_DIGITS = 9;
 const MARGIN_TOLERANCE = 1e-9;
 
-export function sameStat(a: GoalStat, b: GoalStat): boolean {
-  return a.stat === b.stat && a.isPercent === b.isPercent;
+export function sameStat(left: GoalStat, right: GoalStat): boolean {
+  return left.stat === right.stat && left.isPercent === right.isPercent;
 }
 
 export function goalOf(id: GoalId): Goal {
@@ -160,16 +160,18 @@ export function goalOf(id: GoalId): Goal {
 // The stats the goals need, without repeats. Candidates store goal stats in this order.
 export function goalStats(goals: GoalId[]): GoalStat[] {
   const stats = goals.flatMap((id) => goalOf(id).stats);
-  return stats.filter((stat, i) => stats.findIndex((other) => sameStat(other, stat)) === i);
+
+  return stats.filter((stat, index) => stats.findIndex((other) => sameStat(other, stat)) === index);
 }
 
 export function goalValue(goals: GoalId[], id: GoalId, baseXp: number): (goalStats: number[]) => number {
   const stats = goalStats(goals);
   const goal = goalOf(id);
-  const indexes = goal.stats.map((stat) => stats.findIndex((s) => sameStat(s, stat)));
+  const indexes = goal.stats.map((stat) => stats.findIndex((eachStat) => sameStat(eachStat, stat)));
+
   return (goalStats) =>
     goal.value(
-      indexes.map((i) => goalStats[i] ?? 0),
+      indexes.map((index) => goalStats[index] ?? 0),
       baseXp,
     );
 }
@@ -178,12 +180,15 @@ export function goalValue(goals: GoalId[], id: GoalId, baseXp: number): (goalSta
 // faster set earns more per step, and the rest are their value as is.
 export function goalScorer(goals: GoalId[], baseXp: number): (result: StepsResult, totals: StatTotals) => Score {
   const parts = goals.map((id) => ({ goal: goalOf(id), value: goalValue(goals, id, baseXp) }));
+
   return (result, totals) =>
     parts.map(({ goal, value }) => {
       if (goal.stats.length === 0) {
         return -result.averageSteps;
       }
+
       const gained = value(totals.goalStats);
+
       return goal.perStep ? (1 + gained) / result.averageSteps : gained;
     });
 }
@@ -200,12 +205,15 @@ export function marginOf(goals: GoalId[], found: Score, ceiling: Score | null): 
   if (!ceiling) {
     return null;
   }
-  for (const [i, goal] of goals.entries()) {
-    const [have, best] = [rounded(found[i]!), rounded(ceiling[i]!)];
+
+  for (const [index, goal] of goals.entries()) {
+    const [have, best] = [rounded(found[index]!), rounded(ceiling[index]!)];
+
     if (best !== have) {
       return best < have ? null : { goal, gap: (best - have) / (Math.abs(best) || Math.abs(have)) };
     }
   }
+
   return null;
 }
 
@@ -213,24 +221,30 @@ export function marginOf(goals: GoalId[], found: Score, ceiling: Score | null): 
 // It fails if the real gap is on an earlier priority than claimed, or wider on the same one.
 export function marginHolds(goals: GoalId[], claimed: Margin | null, found: Score, best: Score): boolean {
   const real = marginOf(goals, found, best);
+
   if (!real) {
     return true;
   }
+
   if (!claimed) {
     return false;
   }
+
   const [claimedAt, realAt] = [goals.indexOf(claimed.goal), goals.indexOf(real.goal)];
+
   return claimedAt < realAt || (claimedAt === realAt && real.gap <= claimed.gap + MARGIN_TOLERANCE);
 }
 
 // Positive when a beats b. Each number is rounded first so floating-point noise never decides a tie.
-export function compareScores(a: Score, b: Score): number {
-  for (let i = 0; i < a.length; i++) {
-    const [x, y] = [rounded(a[i]!), rounded(b[i]!)];
-    if (x !== y) {
-      return x - y;
+export function compareScores(left: Score, right: Score): number {
+  for (let index = 0; index < left.length; index++) {
+    const [leftValue, rightValue] = [rounded(left[index]!), rounded(right[index]!)];
+
+    if (leftValue !== rightValue) {
+      return leftValue - rightValue;
     }
   }
+
   return 0;
 }
 
@@ -240,10 +254,13 @@ function rounded(value: number): number {
   if (value === 0 || !Number.isFinite(value)) {
     return value;
   }
+
   const size = Math.abs(value);
   const scale = 10 ** (SIGNIFICANT_DIGITS - 1 - Math.floor(Math.log10(size)));
+
   if (!Number.isFinite(scale)) {
     return Number(value.toPrecision(SIGNIFICANT_DIGITS));
   }
+
   return (Math.sign(value) * Math.round(size * scale)) / scale;
 }

@@ -8,4 +8,5 @@ const app = buildApp({
   logLevel: env.logLevel,
   corsOrigins: env.corsOrigins,
 });
+
 await app.listen({ port: env.port, host: "0.0.0.0" });

@@ -15,21 +15,27 @@ export async function prefetchIcons(urls: string[], fetchIcon: (url: string) => 
         (res) => res.ok,
         () => false,
       );
+
       if (!ok) {
         failed++;
       }
     }
   };
+
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, urls.length) }, worker));
+
   return failed;
 }
 
 export async function prefetchRecipeBookIcons(book: RecipeBook): Promise<void> {
   const prefetchedKey = `${book.schema}-${book.version}`;
+
   if (!navigator.serviceWorker?.controller || localStorage.getItem(ICONS_PREFETCHED_KEY) === prefetchedKey) {
     return;
   }
+
   const failed = await prefetchIcons(recipeBookIcons(book).map(iconUrl), (url) => fetch(url));
+
   if (failed === 0) {
     localStorage.setItem(ICONS_PREFETCHED_KEY, prefetchedKey);
   }

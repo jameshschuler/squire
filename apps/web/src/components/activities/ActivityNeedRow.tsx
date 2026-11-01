@@ -11,6 +11,7 @@ export function ActivityNeedRow({ need }: { need: ActivityNeed }) {
       {need.level && <span className="text-sm text-muted-foreground">{formatSkillLevel(need.level)}</span>}
     </>
   );
+
   if (need.item) {
     return (
       <Link to="/items/$itemId" params={{ itemId: need.item.id }} className="flex items-center gap-3 py-2">
@@ -19,6 +20,7 @@ export function ActivityNeedRow({ need }: { need: ActivityNeed }) {
       </Link>
     );
   }
+
   return (
     <div className="flex items-center gap-3 py-2">
       <Check className="mx-1.5 size-5 shrink-0 text-muted-foreground" />

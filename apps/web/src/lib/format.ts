@@ -14,9 +14,11 @@ export function percentPoints(ratio: number, decimals: number): number {
 
 export function formatSteps(workRequired: number, maxWorkEfficiency: number | null): string {
   const baseSteps = `${workRequired} base steps`;
+
   if (maxWorkEfficiency === null || maxWorkEfficiency <= 1) {
     return baseSteps;
   }
+
   return `${baseSteps} · ${Math.ceil(workRequired / maxWorkEfficiency)} min steps`;
 }
 
@@ -47,8 +49,10 @@ const MINOR_WORDS = new Set(["a", "an", "and", "at", "for", "in", "of", "on", "t
 export function formatTitle(text: string): string {
   return text
     .split(" ")
-    .map((word, i) =>
-      i > 0 && MINOR_WORDS.has(word.toLowerCase()) ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1),
+    .map((word, index) =>
+      index > 0 && MINOR_WORDS.has(word.toLowerCase())
+        ? word.toLowerCase()
+        : word.charAt(0).toUpperCase() + word.slice(1),
     )
     .join(" ");
 }

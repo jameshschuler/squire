@@ -23,6 +23,7 @@ export function GearDataProvider({ children }: { children: ReactNode }) {
     if (loading.current) {
       return;
     }
+
     loading.current = true;
     setState({ status: "loading" });
     fetchGearData()
@@ -34,15 +35,20 @@ export function GearDataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(() => ({ state, load }), [state, load]);
+
   return <GearDataContext.Provider value={value}>{children}</GearDataContext.Provider>;
 }
 
 export function useGearDataContext(): GearDataState {
   const value = useContext(GearDataContext);
+
   if (!value) {
     throw new Error("useGearDataContext must be used inside GearDataProvider");
   }
+
   const { state, load } = value;
+
   useEffect(load, [load]);
+
   return state;
 }

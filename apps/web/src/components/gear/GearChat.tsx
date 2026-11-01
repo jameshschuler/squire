@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { RotateCcw } from "lucide-react";
 import type { RecipeBook } from "@squire/api/recipe-book";
-import { BEST_IN_GAME, type GearData, type PlayerProfile } from "@squire/api/gear-data";
+import { BEST_IN_GAME, goalOf, type GearData, type PlayerProfile } from "@squire/api/gear-data";
 import { Button } from "@/components/ui/button";
 import { useCharacterContext } from "@/contexts/character-context";
 import { useGearSuggestion } from "@/hooks/useGearSuggestion";
@@ -32,10 +32,10 @@ interface GearChatProps {
 export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) {
   const { character } = useCharacterContext();
   const targets = useMemo(() => gearTargets(book), [book]);
-  const target = targets.find((t) => t.key === search.target);
+  const target = targets.find((option) => option.key === search.target);
   const askLocation = (target?.locations.length ?? 0) > 1;
   const location =
-    search.location === BEST_LOCATION || target?.locations.some((l) => l.id === search.location)
+    search.location === BEST_LOCATION || target?.locations.some((option) => option.id === search.location)
       ? search.location
       : undefined;
   const locationAnswered = !askLocation || location !== undefined;
@@ -44,7 +44,7 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
     () =>
       parseGoals(
         search.goals,
-        allowedGoals.map((g) => g.id),
+        allowedGoals.map((allowedGoal) => allowedGoal.id),
       ),
     [search.goals, allowedGoals],
   );
@@ -111,7 +111,7 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
           </ChatMessage>
           {goals.length > 0 && (
             <ChatAnswer
-              label={goals.map((id) => allowedGoals.find((g) => g.id === id)!.label).join(" › ")}
+              label={goals.map((id) => goalOf(id).label).join(" › ")}
               onChange={() => update({ goals: undefined })}
             />
           )}

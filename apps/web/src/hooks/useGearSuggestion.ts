@@ -29,6 +29,7 @@ export function useGearSuggestion(
     if (!target) {
       return;
     }
+
     let active = true;
     const job = solveInBackground({ gear, profile, target, goals, tieBreakers });
     const settle = (solution: GearSolution | null) => {
@@ -36,7 +37,9 @@ export function useGearSuggestion(
         setSolved({ target, profile, goals, tieBreakers, solution });
       }
     };
+
     job.result.then(settle, () => settle(null));
+
     return () => {
       active = false;
       job.cancel();
@@ -50,5 +53,6 @@ export function useGearSuggestion(
     solved.tieBreakers === tieBreakers
       ? solved
       : null;
+
   return { solution: current?.solution ?? null, failed: current !== null && current.solution === null };
 }

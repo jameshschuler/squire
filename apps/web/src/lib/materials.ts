@@ -25,16 +25,19 @@ export interface MaterialSearchOptions {
 }
 
 export function listMaterials(book: RecipeBook): Material[] {
-  const crafted = new Set(book.recipes.flatMap((r) => r.outputs.map((o) => o.id)));
+  const crafted = new Set(book.recipes.flatMap((recipe) => recipe.outputs.map((output) => output.id)));
   const items = new Map<string, ItemSummary>();
-  for (const { amount: _amount, ...item } of book.recipes.flatMap((r) => r.materials.flat())) {
+
+  for (const { amount: _amount, ...item } of book.recipes.flatMap((recipe) => recipe.materials.flat())) {
     if (!items.has(item.id)) {
       items.set(item.id, item);
     }
   }
+
   return [...items.values()]
     .map((item) => {
       const sources = book.sources[item.id] ?? [];
+
       return {
         item,
         sources,
@@ -42,16 +45,17 @@ export function listMaterials(book: RecipeBook): Material[] {
         isCrafted: crafted.has(item.id),
       };
     })
-    .sort((a, b) => a.item.name.localeCompare(b.item.name));
+    .sort((left, right) => left.item.name.localeCompare(right.item.name));
 }
 
 export function materialFilters(materials: Material[]): SkillOption[] {
-  const hasSource = (kind: ItemSource["kind"]) => materials.some((m) => hasSourceKind(m, kind));
+  const hasSource = (kind: ItemSource["kind"]) => materials.some((material) => hasSourceKind(material, kind));
+
   return [
-    ...uniqueSkills(materials.flatMap((m) => m.skills)),
+    ...uniqueSkills(materials.flatMap((material) => material.skills)),
     ...(hasSource("chest") ? [{ id: CHESTS_FILTER, name: "Chests" }] : []),
     ...(hasSource("shop") ? [{ id: SHOPS_FILTER, name: "Shops" }] : []),
-    ...(materials.some((m) => m.isCrafted) ? [{ id: CRAFTED_FILTER, name: "Crafted" }] : []),
+    ...(materials.some((material) => material.isCrafted) ? [{ id: CRAFTED_FILTER, name: "Crafted" }] : []),
   ];
 }
 
@@ -61,8 +65,11 @@ export function searchMaterials(
   { filter }: MaterialSearchOptions = {},
 ): Material[] {
   const terms = words(query);
+
   return materials.filter(
-    (m) => (!filter || matchesFilter(m, filter)) && matchesWords(terms, [m.item.name, ...m.item.keywords]),
+    (material) =>
+      (!filter || matchesFilter(material, filter)) &&
+      matchesWords(terms, [material.item.name, ...material.item.keywords]),
   );
 }
 
@@ -70,17 +77,20 @@ function matchesFilter(material: Material, filter: string): boolean {
   if (filter === CHESTS_FILTER) {
     return hasSourceKind(material, "chest");
   }
+
   if (filter === SHOPS_FILTER) {
     return hasSourceKind(material, "shop");
   }
+
   if (filter === CRAFTED_FILTER) {
     return material.isCrafted;
   }
-  return material.skills.some((s) => s.id === filter);
+
+  return material.skills.some((skill) => skill.id === filter);
 }
 
 function hasSourceKind(material: Material, kind: ItemSource["kind"]): boolean {
-  return material.sources.some((s) => s.kind === kind);
+  return material.sources.some((source) => source.kind === kind);
 }
 
 function sourceSkills(source: ItemSource): SkillLevel[] {

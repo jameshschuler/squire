@@ -19,13 +19,16 @@ export async function encodeJson(value: unknown): Promise<EncodedJson> {
     }),
     gzipAsync(identity, { level: constants.Z_BEST_COMPRESSION }),
   ]);
+
   return { br, gzip: gz, identity };
 }
 
 export function preferredEncoding(acceptEncoding: string | undefined): Encoding {
   const accepted = (acceptEncoding ?? "").split(",").map((part) => part.trim().split(";")[0]);
+
   if (accepted.includes("br")) {
     return "br";
   }
+
   return accepted.includes("gzip") ? "gzip" : "identity";
 }

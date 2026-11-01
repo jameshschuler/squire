@@ -34,6 +34,7 @@ describe("stepsPerAction", () => {
 
   it("has no cap when the activity has no max efficiency", () => {
     const uncapped = { ...hutJumping, maxWorkEfficiency: null };
+
     expect(stepsPerAction(uncapped, 25, stats({ workEfficiency: 1 })).efficiency).toBe(2);
   });
 

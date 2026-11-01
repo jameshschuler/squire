@@ -31,16 +31,16 @@ export function ActivityDetail({ activity }: { activity: ActivityView }) {
 
       {activity.needs.length > 0 && (
         <Section title="Needs">
-          {activity.needs.map((need, i) => (
-            <ActivityNeedRow key={i} need={need} />
+          {activity.needs.map((need, index) => (
+            <ActivityNeedRow key={index} need={need} />
           ))}
         </Section>
       )}
 
       {activity.uses.length > 0 && (
         <Section title="Uses">
-          {activity.uses.map((use, i) => (
-            <ActivityNeedRow key={i} need={use} />
+          {activity.uses.map((use, index) => (
+            <ActivityNeedRow key={index} need={use} />
           ))}
         </Section>
       )}

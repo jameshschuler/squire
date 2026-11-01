@@ -60,8 +60,13 @@ export function bestSet(
   const setScore = (set: Candidate[]) => (usable(set) ? score(withSetBonuses(set)) : unusable);
   const compatible = (chosen: Candidate[], next: Candidate) =>
     !chosen.some((other) => other === next || conflicts(rules, other, next));
-  const needed = neededStart(groups, rules.needs, compatible, (candidate) => score(candidate.best));
-  const greedySet = greedy(groups, compatible, setScore, needed);
+  const slots: Slots = {
+    groups,
+    groupOf: new Map(groups.flatMap((group) => group.choices.map((choice) => [choice, group] as const))),
+    compatible,
+  };
+  const needed = neededStart(slots, rules.needs, (candidate) => score(candidate.best));
+  const greedySet = greedy(slots, setScore, needed);
   let best = compareScores(setScore(seed), setScore(greedySet)) > 0 ? seed : greedySet;
   let bestScore = setScore(best);
 
@@ -70,10 +75,10 @@ export function bestSet(
   // ahead[g][i][n]: tops[g][i][n] plus rest[g + 1], everything a partial set could still add.
   const tops = groups.map(({ choices, capacity }) => topSums(choices, capacity, useful));
   const rest = tops.reduceRight<StatTotals[]>(
-    (sums, top, g) => [addStats(top[0]![groups[g]!.capacity]!, sums[0]!), ...sums],
+    (sums, top, index) => [addStats(top[0]![groups[index]!.capacity]!, sums[0]!), ...sums],
     [NO_STATS],
   );
-  const ahead = tops.map((top, g) => top.map((byCount) => byCount.map((sum) => addStats(sum, rest[g + 1]!))));
+  const ahead = tops.map((top, index) => top.map((byCount) => byCount.map((sum) => addStats(sum, rest[index + 1]!))));
   const reach = needReach(groups, rules.needs);
   const masks = banMasks(rules);
   const stats = dominanceStats(useful, goalDims);
@@ -83,60 +88,74 @@ export function bestSet(
   const raise = (bound: Score) => {
     ceiling = ceiling && compareScores(ceiling, bound) >= 0 ? ceiling : bound;
   };
-  search: for (const [g, { choices, capacity }] of groups.entries()) {
+
+  search: for (const [groupIndex, { choices, capacity }] of groups.entries()) {
     states = states.map((state) => ({ ...state, used: 0 }));
-    for (const [i, next] of choices.entries()) {
+    for (const [itemIndex, next] of choices.entries()) {
       // The best score `state` could still reach if items `from` onward in this group, and every later
       // group, are added. A state that can no longer wear enough of some required gear can't win.
       const canMeetNeeds = (state: PartialSet, from: number) =>
         rules.needs.every(
-          (need, k) => state.setItems[need.group]!.length + reach(k, g, from, capacity - state.used) >= need.count,
+          (need, needIndex) =>
+            state.setItems[need.group]!.length + reach(needIndex, groupIndex, from, capacity - state.used) >=
+            need.count,
         );
       const bound = (state: PartialSet, from: number) =>
         canMeetNeeds(state, from)
-          ? score(addStats(state.optimistic, ahead[g]![from]![capacity - state.used]!))
+          ? score(addStats(state.optimistic, ahead[groupIndex]![from]![capacity - state.used]!))
           : unusable;
+
       // Out of time: every unfinished partial set might still have led to the best set, so their
       // bounds join the ceiling and the margin stays honest.
       if (performance.now() > deadline) {
-        states.forEach((state) => raise(bound(state, i)));
+        states.forEach((state) => raise(bound(state, itemIndex)));
         break search;
       }
+
       const nextBans = masks(next);
-      const nextGroups = setGroupsOf(rules, next);
+      const nextGroups = new Set(setGroupsOf(rules, next));
       const grown = states.flatMap((state) =>
         state.used < capacity && !clashes(state.bans, nextBans) ? [grow(state, next, nextBans, nextGroups)] : [],
       );
-      const bounded = (state: PartialSet) => ({ state, bound: bound(state, i + 1) });
+      const bounded = (state: PartialSet) => ({ state, bound: bound(state, itemIndex + 1) });
       const promising = (list: PartialSet[]) =>
         list.map(bounded).filter(({ bound }) => compareScores(bound, bestScore) > 0);
       const [old, added] = [promising(states), promising(grown)];
       const merge = (base: Scored[], more: Scored[]) => {
         const signed = withSignatures([...base, ...more], stats);
+
         return frontier(signed.slice(0, base.length), signed.slice(base.length), covers);
       };
+
       // Old states were already compared with each other, so only new ones need comparing, except at
       // the start of a group, where resetting `used` can make one old state dominate another.
-      const kept: Scored[] = i === 0 ? merge([], [...old, ...added]) : added.length > 0 ? merge(old, added) : old;
+      const kept: Scored[] =
+        itemIndex === 0 ? merge([], [...old, ...added]) : added.length > 0 ? merge(old, added) : old;
+
       // Keep the most promising; the best bound among those cut is the highest any of them could reach.
       if (kept.length > maxStates) {
-        kept.sort((a, b) => compareScores(b.bound, a.bound));
+        kept.sort((left, right) => compareScores(right.bound, left.bound));
         raise(kept[maxStates]!.bound);
       }
+
       states = kept.slice(0, maxStates).map(({ state }) => state);
     }
   }
+
   for (const { chosen } of states) {
     const candidateScore = setScore(chosen);
+
     if (compareScores(candidateScore, bestScore) > 0) {
       best = chosen;
       bestScore = candidateScore;
     }
   }
+
   // Repair could strip an unusable set down to nothing, since every unusable set scores the same.
   if (!repair || !usable(best)) {
     return { set: best, ceiling };
   }
+
   // Swap repair fixes small misses the search can make while cutting. When the first priority isn't
   // speed, it also starts from a greedy set built for that priority alone. Both stop at the deadline.
   const starts =
@@ -145,80 +164,110 @@ export function bestSet(
       : [
           best,
           greedy(
-            groups,
-            compatible,
-            (set) => [primaryValue(set.reduce((sum, c) => addStats(sum, c.best), NO_STATS).goalStats)],
+            slots,
+            (set) => [primaryValue(set.reduce((sum, candidate) => addStats(sum, candidate.best), NO_STATS).goalStats)],
             needed,
           ),
         ];
   const winner = starts
-    .map((start) => improveBySwaps(groups, start, compatible, setScore, deadline))
-    .reduce((a, b) => (compareScores(setScore(b), setScore(a)) > 0 ? b : a));
+    .map((start) => improveBySwaps(slots, start, setScore, deadline))
+    .reduce((leader, next) => (compareScores(setScore(next), setScore(leader)) > 0 ? next : leader));
+
   return { set: withoutIdlePicks(winner, setScore), ceiling };
 }
 
-// Tries every single change (add an item, or swap one for another in the same group) and keeps any that
-// raises the score, sweeping again until a full sweep finds nothing better.
+// The slot groups, which group each candidate is in, and whether a candidate can join a set: what
+// the greedy start, swap repair and the needed-gear start all work with.
+interface Slots {
+  groups: SlotGroup[];
+  groupOf: Map<Candidate, SlotGroup>;
+  compatible: (chosen: Candidate[], next: Candidate) => boolean;
+}
+
+// Tries every single change (add an item, or swap one for another in the same group) and keeps the
+// best one in each group that raises the score, sweeping again until a full sweep finds nothing better.
 function improveBySwaps(
-  groups: SlotGroup[],
+  slots: Slots,
   start: Candidate[],
-  compatible: (chosen: Candidate[], next: Candidate) => boolean,
   setScore: (set: Candidate[]) => Score,
   deadline: number,
 ): Candidate[] {
   let best = start;
-  let bestScore = setScore(best);
+
   for (let improved = true; improved && performance.now() <= deadline;) {
-    improved = false;
-    for (const { capacity, choices } of groups) {
-      const inGroup = best.filter((c) => choices.includes(c));
-      const options = [
-        ...(inGroup.length < capacity ? [best] : []),
-        ...inGroup.map((out) => best.filter((c) => c !== out)),
-      ];
-      for (const base of options) {
-        for (const next of choices) {
-          if (!compatible(base, next)) {
-            continue;
-          }
-          const trial = [...base, next];
-          const trialScore = setScore(trial);
-          if (compareScores(trialScore, bestScore) > 0) {
-            best = trial;
-            bestScore = trialScore;
-            improved = true;
-          }
-        }
-      }
+    const before = best;
+
+    for (const group of slots.groups) {
+      best = bestChangeIn(slots, group, best, setScore);
     }
+
+    improved = best !== before;
   }
+
   return best;
+}
+
+// The best set one change in `group` away from `best`: one of its items added, or swapped in for one
+// already worn from it. Returns `best` itself when no change scores higher.
+function bestChangeIn(
+  { groupOf, compatible }: Slots,
+  group: SlotGroup,
+  best: Candidate[],
+  setScore: (set: Candidate[]) => Score,
+): Candidate[] {
+  const inGroup = best.filter((candidate) => groupOf.get(candidate) === group);
+  const bases = [
+    ...(inGroup.length < group.capacity ? [best] : []),
+    ...inGroup.map((out) => best.filter((candidate) => candidate !== out)),
+  ];
+  const trials = bases.flatMap((base) =>
+    group.choices.filter((next) => compatible(base, next)).map((next) => [...base, next]),
+  );
+
+  return trials.reduce(
+    (winner, trial) => {
+      const score = setScore(trial);
+
+      return compareScores(score, winner.score) > 0 ? { set: trial, score } : winner;
+    },
+    { set: best, score: setScore(best) },
+  ).set;
 }
 
 // Keeps adding whichever item raises the score most until none does. Fast and usually close; it gives
 // the search a good set to beat from the start.
 function greedy(
-  groups: SlotGroup[],
-  compatible: (chosen: Candidate[], next: Candidate) => boolean,
+  { groups, groupOf, compatible }: Slots,
   setScore: (set: Candidate[]) => Score,
   start: Candidate[],
 ): Candidate[] {
   let chosen = start;
   let current = setScore(chosen);
+
   for (;;) {
-    const options = groups.flatMap(({ capacity, choices }) =>
-      chosen.filter((c) => choices.includes(c)).length < capacity ? choices.filter((c) => compatible(chosen, c)) : [],
+    const used = new Map<SlotGroup, number>();
+
+    for (const candidate of chosen) {
+      const group = groupOf.get(candidate)!;
+
+      used.set(group, (used.get(group) ?? 0) + 1);
+    }
+
+    const options = groups.flatMap((group) =>
+      (used.get(group) ?? 0) < group.capacity ? group.choices.filter((choice) => compatible(chosen, choice)) : [],
     );
     const top = options
-      .map((c) => ({ c, score: setScore([...chosen, c]) }))
-      .reduce<{ c: Candidate; score: Score } | undefined>(
-        (a, b) => (!a || compareScores(b.score, a.score) > 0 ? b : a),
+      .map((option) => ({ candidate: option, score: setScore([...chosen, option]) }))
+      .reduce<{ candidate: Candidate; score: Score } | undefined>(
+        (best, next) => (!best || compareScores(next.score, best.score) > 0 ? next : best),
         undefined,
       );
+
     if (!top || compareScores(top.score, current) <= 0) {
       return chosen;
     }
-    chosen = [...chosen, top.c];
+
+    chosen = [...chosen, top.candidate];
     current = top.score;
   }
 }
@@ -226,21 +275,22 @@ function greedy(
 // The best items that fill each need, until each has enough different items, so greedy starts from a
 // set the activity allows.
 function neededStart(
-  groups: SlotGroup[],
+  { groupOf, compatible }: Slots,
   needs: NeedRule[],
-  compatible: (chosen: Candidate[], next: Candidate) => boolean,
   value: (candidate: Candidate) => Score,
 ): Candidate[] {
-  const groupOf = new Map(groups.flatMap((group) => group.choices.map((choice) => [choice, group] as const)));
   const fits = (chosen: Candidate[], next: Candidate) => {
     const group = groupOf.get(next)!;
 
-    return compatible(chosen, next) && chosen.filter((c) => groupOf.get(c) === group).length < group.capacity;
+    return (
+      compatible(chosen, next) && chosen.filter((candidate) => groupOf.get(candidate) === group).length < group.capacity
+    );
   };
+
   const addFor = (chosen: Candidate[], { keyword, count }: NeedRule) =>
     [...groupOf.keys()]
       .filter((candidate) => candidate.keywords.includes(keyword))
-      .sort((a, b) => compareScores(value(b), value(a)))
+      .sort((left, right) => compareScores(value(right), value(left)))
       .reduce((set, candidate) => {
         const short = setCount(set, [keyword]) < count;
         const adds = setCount([...set, candidate], [keyword]) > setCount(set, [keyword]);
@@ -260,12 +310,13 @@ function needReach(
   const fillers = needs.map(({ keyword }) => groups.map(({ choices }) => fillersFrom(choices, keyword)));
   const later = fillers.map((byGroup) =>
     byGroup.reduceRight<number[]>(
-      (sums, counts, g) => [Math.min(groups[g]!.capacity, counts[0]!) + sums[0]!, ...sums],
+      (sums, counts, index) => [Math.min(groups[index]!.capacity, counts[0]!) + sums[0]!, ...sums],
       [0],
     ),
   );
 
-  return (k, g, from, free) => Math.min(free, fillers[k]![g]![from]!) + later[k]![g + 1]!;
+  return (needIndex, groupIndex, from, free) =>
+    Math.min(free, fillers[needIndex]![groupIndex]![from]!) + later[needIndex]![groupIndex + 1]!;
 }
 
 // counts[i]: how many of choices i onward carry the keyword.
@@ -287,14 +338,14 @@ function emptySet(setGroupCount: number): PartialSet {
   };
 }
 
-function grow(state: PartialSet, next: Candidate, nextBans: BanMasks, groups: number[]): PartialSet {
+function grow(state: PartialSet, next: Candidate, nextBans: BanMasks, groups: Set<number>): PartialSet {
   return {
     chosen: [...state.chosen, next],
     guaranteed: addStats(state.guaranteed, next.worst),
     optimistic: addStats(state.optimistic, next.best),
     used: state.used + 1,
     bans: state.bans | nextBans.keys,
-    setItems: state.setItems.map((ids, i) => (groups.includes(i) ? [...new Set([...ids, itemId(next)])] : ids)),
+    setItems: state.setItems.map((ids, index) => (groups.has(index) ? [...new Set([...ids, itemId(next)])] : ids)),
   };
 }
 
@@ -313,11 +364,11 @@ interface Bounded extends Scored {
 // The stats dominance compares, each turned so that higher is better and capped where more stops helping.
 function dominanceStats(useful: number, goalDims: number): ((totals: StatTotals) => number)[] {
   return [
-    (t) => Math.min(t.workEfficiency, useful),
-    (t) => -t.stepsPercent,
-    (t) => -t.stepsFlat,
-    (t) => Math.min(t.doubleAction, MAX_DOUBLE_ACTION),
-    ...Array.from({ length: goalDims }, (_, i) => (t: StatTotals) => t.goalStats[i] ?? 0),
+    (totals) => Math.min(totals.workEfficiency, useful),
+    (totals) => -totals.stepsPercent,
+    (totals) => -totals.stepsFlat,
+    (totals) => Math.min(totals.doubleAction, MAX_DOUBLE_ACTION),
+    ...Array.from({ length: goalDims }, (_, index) => (totals: StatTotals) => totals.goalStats[index] ?? 0),
   ];
 }
 
@@ -332,12 +383,17 @@ const SIGNATURE_BITS = 30;
 function withSignatures(entries: Scored[], stats: ((t: StatTotals) => number)[]): Bounded[] {
   const perStat = Math.floor(SIGNATURE_BITS / stats.length);
   const levels = stats.flatMap((stat) => {
-    const values = entries.map(({ state }) => stat(state.optimistic)).sort((a, b) => a - b);
-    const at = Array.from({ length: perStat }, (_, k) => values[Math.floor(((k + 1) * values.length) / (perStat + 1))]);
+    const values = entries.map(({ state }) => stat(state.optimistic)).sort((left, right) => left - right);
+    const at = Array.from(
+      { length: perStat },
+      (_, level) => values[Math.floor(((level + 1) * values.length) / (perStat + 1))],
+    );
+
     return [...new Set(at)].flatMap((value) => (value === undefined ? [] : [{ stat, value }]));
   });
   const bitsOf = (totals: StatTotals) =>
-    levels.reduce((bits, { stat, value }, i) => (stat(totals) >= value ? bits | (1 << i) : bits), 0);
+    levels.reduce((bits, { stat, value }, index) => (stat(totals) >= value ? bits | (1 << index) : bits), 0);
+
   return entries.map((entry) => ({
     ...entry,
     haveBits: bitsOf(entry.state.guaranteed),
@@ -353,27 +409,31 @@ function coverage(
   goalDims: number,
   cappedSetGroups: Set<number>,
 ): (a: PartialSet, b: PartialSet) => boolean {
-  return (a, b) => {
-    const have = a.guaranteed;
-    const could = b.optimistic;
+  return (state, other) => {
+    const have = state.guaranteed;
+    const could = other.optimistic;
+
     if (
-      a.used > b.used ||
+      state.used > other.used ||
       have.stepsPercent > could.stepsPercent ||
       have.stepsFlat > could.stepsFlat ||
       Math.min(have.workEfficiency, useful) < Math.min(could.workEfficiency, useful) ||
       Math.min(have.doubleAction, MAX_DOUBLE_ACTION) < Math.min(could.doubleAction, MAX_DOUBLE_ACTION) ||
-      (a.bans & ~b.bans) !== 0n
+      (state.bans & ~other.bans) !== 0n
     ) {
       return false;
     }
-    for (let i = 0; i < goalDims; i++) {
-      if ((have.goalStats[i] ?? 0) < (could.goalStats[i] ?? 0)) {
+
+    for (let index = 0; index < goalDims; index++) {
+      if ((have.goalStats[index] ?? 0) < (could.goalStats[index] ?? 0)) {
         return false;
       }
     }
-    return a.setItems.every((ids, i) => {
-      const other = b.setItems[i]!.length;
-      return cappedSetGroups.has(i) ? ids.length === other : ids.length >= other;
+
+    return state.setItems.every((ids, index) => {
+      const otherCount = other.setItems[index]!.length;
+
+      return cappedSetGroups.has(index) ? ids.length === otherCount : ids.length >= otherCount;
     });
   };
 }
@@ -385,21 +445,25 @@ function frontier(kept: Bounded[], added: Bounded[], covers: (a: PartialSet, b: 
   const result = [...kept];
   const haves = result.map((entry) => entry.haveBits);
   const coulds = result.map((entry) => entry.couldBits);
+
   for (const entry of added) {
     if (isCovered(result, haves, entry, covers)) {
       continue;
     }
-    for (let i = result.length - 1; i >= 0; i--) {
-      if ((coulds[i]! & ~entry.haveBits) === 0 && covers(entry.state, result[i]!.state)) {
-        result.splice(i, 1);
-        haves.splice(i, 1);
-        coulds.splice(i, 1);
+
+    for (let index = result.length - 1; index >= 0; index--) {
+      if ((coulds[index]! & ~entry.haveBits) === 0 && covers(entry.state, result[index]!.state)) {
+        result.splice(index, 1);
+        haves.splice(index, 1);
+        coulds.splice(index, 1);
       }
     }
+
     result.push(entry);
     haves.push(entry.haveBits);
     coulds.push(entry.couldBits);
   }
+
   return result;
 }
 
@@ -409,46 +473,51 @@ function isCovered(
   entry: Bounded,
   covers: (a: PartialSet, b: PartialSet) => boolean,
 ): boolean {
-  for (let i = 0; i < list.length; i++) {
-    if ((entry.couldBits & ~haves[i]!) === 0 && covers(list[i]!.state, entry.state)) {
+  for (let index = 0; index < list.length; index++) {
+    if ((entry.couldBits & ~haves[index]!) === 0 && covers(list[index]!.state, entry.state)) {
       return true;
     }
   }
+
   return false;
 }
 
 // For each starting index and pick count, the best total of each stat on its own. One item can't give
 // the best of everything at once, so this overshoots, which is what makes it a safe bound.
 function topSums(choices: Candidate[], capacity: number, useful: number): StatTotals[][] {
-  const goalCount = Math.max(0, ...choices.map((c) => c.best.goalStats.length));
+  const goalCount = Math.max(0, ...choices.map((choice) => choice.best.goalStats.length));
+
   return Array.from({ length: choices.length + 1 }, (_, start) => {
-    const rest = choices.slice(start).map((c) => c.best);
+    const rest = choices.slice(start).map((choice) => choice.best);
     const best = (value: (totals: StatTotals) => number, picks: number) => topSum(rest.map(value), picks);
+
     return Array.from({ length: capacity + 1 }, (_, picks) => ({
       workEfficiency: Math.min(
-        best((t) => t.workEfficiency, picks),
+        best((totals) => totals.workEfficiency, picks),
         useful,
       ),
-      stepsPercent: -best((t) => -t.stepsPercent, picks),
-      stepsFlat: -best((t) => -t.stepsFlat, picks),
-      doubleAction: best((t) => t.doubleAction, picks),
-      goalStats: Array.from({ length: goalCount }, (_, i) => best((t) => t.goalStats[i] ?? 0, picks)),
+      stepsPercent: -best((totals) => -totals.stepsPercent, picks),
+      stepsFlat: -best((totals) => -totals.stepsFlat, picks),
+      doubleAction: best((totals) => totals.doubleAction, picks),
+      goalStats: Array.from({ length: goalCount }, (_, index) => best((totals) => totals.goalStats[index] ?? 0, picks)),
     }));
   });
 }
 
 export function topSum(values: number[], picks: number): number {
   return values
-    .filter((v) => v > 0)
-    .sort((a, b) => b - a)
+    .filter((value) => value > 0)
+    .sort((left, right) => right - left)
     .slice(0, picks)
-    .reduce((total, v) => total + v, 0);
+    .reduce((total, value) => total + value, 0);
 }
 
 function withoutIdlePicks(chosen: Candidate[], setScore: (set: Candidate[]) => Score): Candidate[] {
   const target = setScore(chosen);
-  return chosen.reduce((kept, c) => {
-    const without = kept.filter((other) => other !== c);
+
+  return chosen.reduce((kept, candidate) => {
+    const without = kept.filter((other) => other !== candidate);
+
     return compareScores(setScore(without), target) >= 0 ? without : kept;
   }, chosen);
 }

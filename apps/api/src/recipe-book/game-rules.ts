@@ -8,6 +8,7 @@ import type {
 import type { LootType } from "./types.js";
 
 export const SERVICE_TIERS = ["basic", "advanced", "expert"] as const satisfies readonly ServiceTier[];
+const SERVICE_TIER_RANK = new Map<string, number>(SERVICE_TIERS.map((tier, index) => [tier, index]));
 
 export function isSkillLevelRequirement(requirement: { type: string }): requirement is SkillLevelRequirement {
   return requirement.type === "skillLevel";
@@ -19,24 +20,28 @@ export function isServiceRequirement(requirement: { type: string }): requirement
 
 export function getServiceKeywords(requirement: ServiceRequirement): string[] {
   const { serviceKeyword, keywords } = requirement.requirement;
+
   if (keywords?.length) {
     return keywords;
   }
+
   return serviceKeyword ? [serviceKeyword] : [];
 }
 
 export function meetsServiceTier(serviceTier: ServiceTier, requiredTier: string): boolean {
-  return SERVICE_TIERS.indexOf(serviceTier) >= SERVICE_TIERS.indexOf(requiredTier as ServiceTier);
+  return (SERVICE_TIER_RANK.get(serviceTier) ?? -1) >= (SERVICE_TIER_RANK.get(requiredTier) ?? -1);
 }
 
 export function getLootTableItemIds(table: LootTableDetail): string[] {
   const rows = [...(table.tableRows ?? []), ...(table.subTables ?? []).flatMap((sub) => sub.tableRows ?? [])];
+
   return rows.flatMap((row) => (row.rowItemID ? [row.rowItemID] : []));
 }
 
 export function itemsIn(ref: LootTable, tables: Map<string, LootTableDetail>): string[] {
   return ref.tables.flatMap((id) => {
     const table = tables.get(id);
+
     return table ? getLootTableItemIds(table) : [];
   });
 }

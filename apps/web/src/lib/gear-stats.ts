@@ -41,6 +41,7 @@ const STAT_LABELS: Partial<Record<StatType, string>> = {
   rollSpecialTable: "Special loot rolls",
 };
 const STEP_STATS: StatType[] = ["stepsRequired", "doubleAction"];
+const STEP_STAT_SET = new Set(STEP_STATS);
 
 const TILE_LABELS: Partial<Record<`${StatType}:${boolean}`, string>> = {
   "workEfficiency:true": "Work efficiency",
@@ -55,25 +56,24 @@ export function statGroups(
   highlighted: GoalStat[],
   steps: StatTile,
 ): StatGroups {
-  const highlightKeys = highlighted.map(({ stat, isPercent }) => `${stat}:${isPercent}`);
+  const highlightRank = new Map(highlighted.map(({ stat, isPercent }, index) => [`${stat}:${isPercent}`, index]));
   const tile = (line: StatLine): StatTile => ({
     key: `${line.stat}:${line.isPercent}`,
     value: formatStatValue(line),
     label: statName(line)!,
     details: [],
-    highlight: highlightKeys.includes(`${line.stat}:${line.isPercent}`),
+    highlight: highlightRank.has(`${line.stat}:${line.isPercent}`),
     over: false,
   });
-  const rank = (tile: StatTile) => {
-    const index = highlightKeys.indexOf(tile.key);
-    return index === -1 ? highlightKeys.length : index;
-  };
+  const rank = (tile: StatTile) => highlightRank.get(tile.key) ?? highlightRank.size;
+
   const missing = highlighted
     .filter((goal) => !lines.some((line) => sameStat(line, goal)))
     .map((goal) => ({ ...goal, value: 0 }));
   const shown = [...lines, ...missing]
     .filter((line) => STAT_LABELS[line.stat])
-    .sort((a, b) => Number(a.isPercent) - Number(b.isPercent));
+    .sort((left, right) => Number(left.isPercent) - Number(right.isPercent));
+
   return {
     steps: [
       steps,
@@ -81,15 +81,16 @@ export function statGroups(
       ...STEP_STATS.flatMap((stat) => shown.filter((line) => line.stat === stat).map(tile)),
     ],
     other: shown
-      .filter((line) => !STEP_STATS.includes(line.stat))
+      .filter((line) => !STEP_STAT_SET.has(line.stat))
       .map(tile)
-      .sort((a, b) => rank(a) - rank(b) || a.label.localeCompare(b.label)),
+      .sort((left, right) => rank(left) - rank(right) || left.label.localeCompare(right.label)),
   };
 }
 
 function efficiencyTile(parts: EfficiencyParts): StatTile {
   const total = BASE_EFFICIENCY + parts.level + parts.gear;
   const max = BASE_EFFICIENCY + parts.cap;
+
   return {
     key: "workEfficiency",
     value: Number.isFinite(max) ? formatPercentOf(total, max, 1) : formatPercent(total, 1),
@@ -102,15 +103,21 @@ function efficiencyTile(parts: EfficiencyParts): StatTile {
 
 export function locationTiles(bonuses: SourcedStat[]): StatTile[] {
   const groups = new Map<string, SourcedStat[]>();
-  for (const bonus of bonuses.filter((b) => statName(b))) {
+
+  for (const bonus of bonuses.filter((entry) => statName(entry))) {
     const key = `${bonus.stat}:${bonus.isPercent}`;
+
     groups.set(key, [...(groups.get(key) ?? []), bonus]);
   }
+
   return [...groups].map(([key, group]) => ({
     key,
     label: statName(group[0]!)!,
-    value: formatStatValue({ isPercent: group[0]!.isPercent, value: group.reduce((sum, b) => sum + b.value, 0) }),
-    details: [joinNames(group.map((b) => b.source))],
+    value: formatStatValue({
+      isPercent: group[0]!.isPercent,
+      value: group.reduce((sum, bonus) => sum + bonus.value, 0),
+    }),
+    details: [joinNames(group.map((bonus) => bonus.source))],
     highlight: false,
     over: false,
   }));
@@ -118,11 +125,15 @@ export function locationTiles(bonuses: SourcedStat[]): StatTile[] {
 
 function joinNames(names: string[]): string {
   const words = names.map((name) => name.split(" "));
-  const shared = words[0]!.findIndex((word, i) => words.some((w) => w.length <= i + 1 || w[i] !== word));
+  const shared = words[0]!.findIndex((word, index) =>
+    words.some((eachWord) => eachWord.length <= index + 1 || eachWord[index] !== word),
+  );
+
   if (names.length < 2 || shared <= 0) {
     return names.join(", ");
   }
-  return `${words[0]!.slice(0, shared).join(" ")} ${words.map((w) => w.slice(shared).join(" ")).join(", ")}`;
+
+  return `${words[0]!.slice(0, shared).join(" ")} ${words.map((word) => word.slice(shared).join(" ")).join(", ")}`;
 }
 
 export function statName({ stat, isPercent }: Pick<StatLine, "stat" | "isPercent">): string | undefined {
@@ -132,8 +143,10 @@ export function statName({ stat, isPercent }: Pick<StatLine, "stat" | "isPercent
 export function formatStatValue({ value, isPercent }: Pick<StatLine, "value" | "isPercent">): string {
   const sign = value < 0 ? "−" : "+";
   const amount = Math.abs(value);
+
   if (isPercent) {
     return `${sign}${formatPercent(amount, 1)}`;
   }
+
   return `${sign}${Number(amount.toFixed(2))}`;
 }

@@ -33,10 +33,10 @@ export function fillsNeed(need: GearNeed, item: GearItem): boolean {
   }
 
   const { level } = need;
+  const keywords = new Set(item.keywords);
 
   return (
-    need.keywords.some((keyword) => item.keywords.includes(keyword)) &&
-    (!level || equipLevel(item, level.skill) >= level.level)
+    need.keywords.some((keyword) => keywords.has(keyword)) && (!level || equipLevel(item, level.skill) >= level.level)
   );
 }
 
@@ -44,6 +44,7 @@ export function fillsNeed(need: GearNeed, item: GearItem): boolean {
 // many per slot as the slot holds.
 export function canMeetNeed(need: GearNeed, owned: OwnedGear[], capacityOf: (slot: GearType) => number): boolean {
   const idsBySlot = new Map<GearType, Set<string>>();
+
   for (const { item } of owned.filter((entry) => fillsNeed(need, entry.item))) {
     idsBySlot.set(item.slot, (idsBySlot.get(item.slot) ?? new Set()).add(item.id));
   }

@@ -22,6 +22,7 @@ describe("ServiceLocations", () => {
       />,
     );
     const row = (name: string) => screen.getByText(name, { exact: false }).closest("li")!;
+
     expect(row("City").textContent).toBe("City (Syrenthia)advanced");
     expect(row("Town").textContent).toBe("Town (Jarvonia)");
   });

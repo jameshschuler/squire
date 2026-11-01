@@ -34,9 +34,11 @@ export async function loadGameData(client: WalkScapeClient): Promise<GameData> {
     client.pets.loadAll(),
     client.keywords.loadAll(),
   ]);
+
   if (!version) {
     throw new Error("The API's /version/ response has no version");
   }
+
   return {
     version,
     recipes,
@@ -60,6 +62,7 @@ async function loadItems(client: WalkScapeClient) {
   const items = await client.items.loadAll();
   const gearIds = items.filter(isGear).map((item) => item.id);
   const gameIds = gearIds.length > 0 ? await loadGameIds(client, gearIds) : {};
+
   return { items, gameIds };
 }
 

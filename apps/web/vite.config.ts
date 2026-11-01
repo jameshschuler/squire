@@ -47,10 +47,13 @@ export default defineConfig({
                   fetchDidSucceed: async ({ request, response }) => {
                     if (response.ok) {
                       const url = new URL(request.url);
+
                       url.searchParams.delete("fresh");
                       const cache = await caches.open("recipe-book");
+
                       await cache.put(url.href, response.clone());
                     }
+
                     return response;
                   },
                 },

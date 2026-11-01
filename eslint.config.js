@@ -19,6 +19,14 @@ export default tseslint.config(
   {
     rules: {
       curly: ["error", "all"],
+      "id-length": ["error", { min: 2, exceptions: ["_"], properties: "never" }],
+      "padding-line-between-statements": [
+        "error",
+        { blankLine: "always", prev: "*", next: "return" },
+        { blankLine: "always", prev: ["const", "let"], next: "*" },
+        { blankLine: "any", prev: ["const", "let"], next: ["const", "let"] },
+        { blankLine: "always", prev: "block-like", next: "*" },
+      ],
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
     },
   },
@@ -50,6 +58,10 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": ["error", { allowConstantExport: true }],
     },
+  },
+  {
+    files: ["apps/web/src/components/ui/**"],
+    rules: { "padding-line-between-statements": "off", "id-length": "off" },
   },
   {
     files: ["apps/web/src/components/ui/**", "apps/web/src/contexts/**", "apps/web/src/routes/**"],

@@ -10,8 +10,8 @@ const searchWordsCache = new WeakMap<object, string[][]>();
 export function searchRecipes(recipes: RecipeView[], query: string, options: SkillSearchOptions = {}): RecipeView[] {
   return search(recipes, query, options, byLevel, (recipe) => [
     words(recipe.name),
-    recipe.outputs.flatMap((o) => words(o.name)),
-    recipe.materials.flat().flatMap((m) => words(m.name)),
+    recipe.outputs.flatMap((output) => words(output.name)),
+    recipe.materials.flat().flatMap((material) => words(material.name)),
   ]);
 }
 
@@ -22,7 +22,7 @@ export function searchActivities(
 ): ActivityView[] {
   return search(activities, query, options, byActivityLevel, (activity) => [
     words(activity.name),
-    activity.drops.flatMap((d) => d.items.flatMap((i) => words(i.name))),
+    activity.drops.flatMap((drop) => drop.items.flatMap((item) => words(item.name))),
   ]);
 }
 
@@ -42,35 +42,43 @@ function search<T extends { skills: SkillLevel[] }>(
   order: (a: T, b: T) => number,
   wordGroups: (entry: T) => string[][],
 ): T[] {
-  const pool = skill ? entries.filter((e) => e.skills.some((s) => s.id === skill)) : entries;
+  const pool = skill ? entries.filter((entry) => entry.skills.some((eachSkill) => eachSkill.id === skill)) : entries;
   const terms = words(query);
+
   if (terms.length === 0) {
     return pool;
   }
+
   return pool
     .map((entry) => ({ entry, score: searchScore(cachedWordGroups(entry, wordGroups), terms) }))
-    .filter((s) => s.score > 0)
-    .sort((a, b) => b.score - a.score || order(a.entry, b.entry))
-    .map((s) => s.entry);
+    .filter((scored) => scored.score > 0)
+    .sort((left, right) => right.score - left.score || order(left.entry, right.entry))
+    .map((scored) => scored.entry);
 }
 
 function cachedWordGroups<T extends object>(entry: T, wordGroups: (entry: T) => string[][]): string[][] {
   let cached = searchWordsCache.get(entry);
+
   if (!cached) {
     cached = wordGroups(entry);
     searchWordsCache.set(entry, cached);
   }
+
   return cached;
 }
 
 function searchScore(groups: string[][], terms: string[]): number {
   let score = 0;
+
   for (const term of terms) {
-    const index = groups.findIndex((group) => group.some((w) => w.startsWith(term)));
+    const index = groups.findIndex((group) => group.some((word) => word.startsWith(term)));
+
     if (index === -1) {
       return 0;
     }
+
     score += groups.length - index;
   }
+
   return (groups[0] ?? []).join(" ").startsWith(terms.join(" ")) ? score + 1 : score;
 }

@@ -7,9 +7,10 @@ export interface CollectibleEntry {
 
 export function collectionOf(loot: ItemWithEffects[], ownedIds: string[]): CollectibleEntry[] {
   const owned = new Set(ownedIds);
+
   return loot
     .filter((item) => item.isCollectible)
-    .sort((a, b) => a.name.localeCompare(b.name))
+    .sort((left, right) => left.name.localeCompare(right.name))
     .map((item) => ({ item, owned: owned.has(item.id) }));
 }
 

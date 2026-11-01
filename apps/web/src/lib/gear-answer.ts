@@ -45,12 +45,13 @@ export function gearAnswer(
   const level = skillLevelOf(profile, optimize.skill);
   const parts = {
     cap: efficiencyCap(optimize),
-    gear: lines.find((l) => l.stat === "workEfficiency" && l.isPercent)?.value ?? 0,
+    gear: lines.find((line) => line.stat === "workEfficiency" && line.isPercent)?.value ?? 0,
     level: levelBonus(optimize, level),
   };
   const noGear = stepsPerAction(optimize, level, NO_STATS);
   const { location } = suggestion;
   const tiles = locationTiles(locationBonuses(gear, profile, optimize, suggestion));
+
   return {
     suggestion,
     location: location && tiles.length > 0 ? { name: location.name, region: location.region, tiles } : null,
@@ -82,9 +83,11 @@ export function answerNotes(suggestion: GearSuggestion, target: GearTarget, skil
 
 export function marginNote({ margin, goals }: GearSuggestion): string {
   const first = goalOf(goals[0] ?? "steps").label;
+
   if (margin) {
     return `Within ${formatPercent(Math.ceil(margin.gap * 1000) / 1000, 1)} of the best possible for ${first}.`;
   }
+
   return goals.length > 1 ? `Proven best for ${first}.` : "Proven best set for this gear.";
 }
 

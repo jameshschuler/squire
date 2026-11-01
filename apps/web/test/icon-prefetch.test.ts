@@ -59,9 +59,11 @@ describe("prefetchIcons", () => {
       peak = Math.max(peak, inFlight);
       await new Promise((resolve) => setTimeout(resolve, 1));
       inFlight--;
+
       return new Response(null);
     });
-    const urls = Array.from({ length: 20 }, (_, i) => `/api/icons/${i}.png`);
+    const urls = Array.from({ length: 20 }, (_, index) => `/api/icons/${index}.png`);
+
     await expect(prefetchIcons(urls, fetchIcon)).resolves.toBe(0);
     expect(fetchIcon).toHaveBeenCalledTimes(20);
     expect(peak).toBe(6);
@@ -69,11 +71,13 @@ describe("prefetchIcons", () => {
 
   it("counts failed responses and network errors", async () => {
     const replies = [ok(), Promise.resolve(new Response(null, { status: 502 })), Promise.reject(new Error("offline"))];
+
     await expect(prefetchIcons(["a", "b", "c"], () => replies.shift()!)).resolves.toBe(2);
   });
 
   it("does nothing for an empty list", async () => {
     const fetchIcon = vi.fn(ok);
+
     await expect(prefetchIcons([], fetchIcon)).resolves.toBe(0);
     expect(fetchIcon).not.toHaveBeenCalled();
   });

@@ -21,7 +21,9 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
         setSaved(readCharacter());
       }
     };
+
     addEventListener("storage", onStorage);
+
     return () => removeEventListener("storage", onStorage);
   }, []);
 
@@ -31,11 +33,13 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
     saveCharacter: (exportText) => {
       const character = parseCharacterExport(exportText);
       const savedAt = new Date();
+
       try {
         localStorage.setItem(CHARACTER_STORAGE_KEY, storeCharacter(exportText, savedAt));
       } catch {
         throw new Error("Couldn't save your character on this device. Check that site storage is allowed.");
       }
+
       setSaved({ character, savedAt: savedAt.toISOString() });
     },
     clearCharacter: () => {
@@ -49,8 +53,10 @@ export function CharacterProvider({ children }: { children: ReactNode }) {
 
 export function useCharacterContext(): CharacterContextValue {
   const value = useContext(CharacterContext);
+
   if (!value) {
     throw new Error("useCharacterContext must be used inside CharacterProvider");
   }
+
   return value;
 }

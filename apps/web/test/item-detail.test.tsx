@@ -13,7 +13,7 @@ async function renderItem(itemId: string) {
   await renderWithRouter(<ItemDetail item={findItem(book, itemId)!} book={book} />);
 }
 
-const sectionTitles = () => screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
+const sectionTitles = () => screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent);
 
 function section(title: string) {
   return within(screen.getByRole("heading", { name: title }).parentElement!);
@@ -33,6 +33,7 @@ describe("ItemDetail", () => {
     await renderItem("gold_ore");
     expect(sectionTitles()).toEqual(["Keywords", "Used in", "Where to get it"]);
     const sources = section("Where to get it");
+
     expect(sources.getByText("Mine gold ore")).toBeDefined();
     expect(sources.getByText("Mining lvl. 40")).toBeDefined();
     expect(sources.getByText("Crown of Cinders").textContent).toBe("Crown of Cinders (Wrentmark)");
@@ -56,6 +57,7 @@ describe("ItemDetail", () => {
 
   it("tags a collectible", async () => {
     const goldBar = findItem(book, "gold_bar")!;
+
     await renderWithRouter(<ItemDetail item={{ ...goldBar, isCollectible: true }} book={book} />);
     expect(screen.getByText("Collectible")).toBeDefined();
   });
@@ -63,6 +65,7 @@ describe("ItemDetail", () => {
   it("leaves out the tier badge on crafted gear, whose tiers are picked under Effects", async () => {
     const goldBar = findItem(book, "gold_bar")!;
     const tier = { quality: "uncommon" as const, effects: [] };
+
     await renderWithRouter(
       <ItemDetail item={{ ...goldBar, effects: { steps: null, effects: [], tiers: [tier] } }} book={book} />,
     );
@@ -85,11 +88,13 @@ describe("ItemDetail", () => {
         },
       ],
     };
+
     await renderWithRouter(<ItemDetail item={{ ...goldBar, effects }} book={book} />);
     expect(sectionTitles().slice(0, 2)).toEqual(["Keywords", "Effects · 1,000 steps"]);
     const rows = section("Effects · 1,000 steps")
       .getAllByRole("row")
       .map((row) => [...row.children].map((cell) => cell.textContent));
+
     expect(rows).toEqual([
       ["While doing Woodcutting", "Normal", "Fine"],
       ["Work efficiency", "+7%", "+14%"],
@@ -98,6 +103,7 @@ describe("ItemDetail", () => {
 
   it("shows keywords with spaces instead of underscores", async () => {
     const goldBar = findItem(book, "gold_bar")!;
+
     await renderWithRouter(<ItemDetail item={{ ...goldBar, keywords: ["cooked_fish"] }} book={book} />);
     expect(section("Keywords").getByText("cooked fish")).toBeDefined();
   });

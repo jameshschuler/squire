@@ -15,6 +15,7 @@ import { useFavoritesContext } from "@/contexts/favorites-context";
 
 export function ClearFavoritesButton({ onCleared }: { onCleared: () => void }) {
   const { clearFavorites } = useFavoritesContext();
+
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>

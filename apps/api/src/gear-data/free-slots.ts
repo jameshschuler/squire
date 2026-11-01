@@ -3,7 +3,7 @@ import { conditionHolds, withSetBonuses, type Candidate, type Situation } from "
 import { compareScores, type Score } from "./goals.js";
 import type { OwnedGear } from "./profile.js";
 import { conflicts, type KeywordRules } from "./pruning.js";
-import { STEP_STATS, type StatTotals } from "./steps.js";
+import { STEP_STAT_SET, type StatTotals } from "./steps.js";
 import { copiesAllowed } from "./slots.js";
 import type { GearStat } from "./types.js";
 
@@ -25,24 +25,27 @@ export function fillFreeSlots(
 ): Candidate[] {
   const target = score(withSetBonuses(chosen));
   const fits = (filled: Candidate[], { candidate, owned }: FreeSlotChoice) =>
-    filled.filter((c) => c.slot === owned.item.slot).length < capacityOf(owned.item.slot) &&
-    filled.filter((c) => c.pick?.item.id === owned.item.id).length < copiesAllowed(owned.item.slot) &&
+    filled.filter((worn) => worn.slot === owned.item.slot).length < capacityOf(owned.item.slot) &&
+    filled.filter((worn) => worn.pick?.item.id === owned.item.id).length < copiesAllowed(owned.item.slot) &&
     !filled.some((other) => other === candidate || conflicts(rules, other, candidate));
+
   return choices
     .filter(({ candidate }) => costsNoSteps(candidate.totals))
     .map((choice) => ({ choice, bonus: otherBonuses(situation, choice.owned.stats) }))
     .filter(({ bonus }) => bonus.length > 0 && bonus.every((stat) => stat.value > 0))
     .sort(
-      (a, b) =>
-        b.bonus.length - a.bonus.length ||
-        total(b.bonus, true) - total(a.bonus, true) ||
-        total(b.bonus, false) - total(a.bonus, false),
+      (left, right) =>
+        right.bonus.length - left.bonus.length ||
+        total(right.bonus, true) - total(left.bonus, true) ||
+        total(right.bonus, false) - total(left.bonus, false),
     )
     .reduce((filled, { choice }) => {
       if (!fits(filled, choice)) {
         return filled;
       }
+
       const next = [...filled, choice.candidate];
+
       return compareScores(score(withSetBonuses(next)), target) >= 0 ? next : filled;
     }, chosen);
 }
@@ -54,8 +57,10 @@ function costsNoSteps({ workEfficiency, stepsPercent, stepsFlat, doubleAction }:
 function otherBonuses(situation: Situation, stats: GearStat[]): GearStat[] {
   return stats.filter(
     (stat) =>
-      !(STEP_STATS as readonly string[]).includes(stat.stat) &&
-      stat.conditions.every((c) => c.type !== "distinctKeywordItemsEquipped" && conditionHolds(situation, c)),
+      !STEP_STAT_SET.has(stat.stat) &&
+      stat.conditions.every(
+        (condition) => condition.type !== "distinctKeywordItemsEquipped" && conditionHolds(situation, condition),
+      ),
   );
 }
 

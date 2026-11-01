@@ -20,22 +20,27 @@ async function renderAt(initialEntries: string[]) {
     routeTree: rootRoute.addChildren([page("/"), page("/materials"), page("/recipes/$recipeId")]),
     history: createMemoryHistory({ initialEntries }),
   });
+
   render(<RouterProvider router={router} />);
   await router.load();
+
   return router;
 }
 
 describe("BackButton", () => {
   it("goes back to the previous page", async () => {
     const router = await renderAt(["/materials"]);
+
     await router.navigate({ to: "/recipes/$recipeId", params: { recipeId: "bake_bread" } });
     const back = await screen.findByRole("button", { name: "Back" });
+
     fireEvent.click(back);
     await waitFor(() => expect(router.state.location.pathname).toBe("/materials"));
   });
 
   it("goes to search when there's no page to go back to", async () => {
     const router = await renderAt(["/recipes/bake_bread"]);
+
     fireEvent.click(screen.getByRole("button", { name: "Back" }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/"));
   });

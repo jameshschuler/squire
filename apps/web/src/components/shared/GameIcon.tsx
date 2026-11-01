@@ -22,6 +22,7 @@ export function GameIcon({ path, size = 32, className }: GameIconProps) {
       />
     );
   }
+
   return (
     <img
       key={path}

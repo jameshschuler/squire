@@ -11,10 +11,11 @@ export function petViews(pets: PetDetail[]): PetView[] {
       icon: adultSprite(pet),
       levels: pet.levels.map(({ level, attributes }) => ({ level, stats: gearStats(attributes) })),
     }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((left, right) => left.name.localeCompare(right.name));
 }
 
 function adultSprite(pet: PetDetail): string {
   const sprites = pet.looks[0]?.sprites ?? [];
-  return (sprites.find((s) => s.stage === "adult") ?? sprites[0])?.sprite ?? "";
+
+  return (sprites.find((sprite) => sprite.stage === "adult") ?? sprites[0])?.sprite ?? "";
 }

@@ -27,6 +27,7 @@ describe("ActivityDetail", () => {
         { label: "Light source", level: { id: "mining", name: "Mining", level: 50 }, item: null },
       ],
     };
+
     await renderWithRouter(<ActivityDetail activity={activity} />);
     expect(screen.getByText("Pickaxe")).toBeDefined();
     expect(screen.getByText("Light source").parentElement!.textContent).toBe("Light sourceMining lvl. 50");
@@ -57,13 +58,15 @@ describe("ActivityDetail", () => {
 
   it("shows two needs with the same name", async () => {
     const pickaxe = goldOre.needs[0]!;
+
     await renderWithRouter(<ActivityDetail activity={{ ...goldOre, needs: [pickaxe, pickaxe] }} />);
     expect(screen.getAllByText("Pickaxe")).toHaveLength(2);
   });
 
   it("lists drops under the main loot, then each kind of extra find", async () => {
     await renderWithRouter(<ActivityDetail activity={goldOre} />);
-    const headings = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
+    const headings = screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent);
+
     expect(headings).toEqual(["Needs", "Where", "Drops", "Gem find", "Chest"]);
     expect(screen.getByRole("link", { name: "Gold ore" }).getAttribute("href")).toBe("/items/gold_ore");
   });

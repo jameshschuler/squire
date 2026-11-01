@@ -4,21 +4,22 @@ import { FAVORITES_FILTER, filterRecipes, recipeFilters } from "@/lib/recipe-fil
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
 const { recipes } = buildRecipeBook(sample as unknown as GameData);
-const ids = (list: { id: string }[]) => list.map((r) => r.id);
+const ids = (list: { id: string }[]) => list.map((recipe) => recipe.id);
 const favorites = ["smelt_a_gold_bar"];
 
 describe("recipeFilters", () => {
   it("puts Favorites before the skills once something is starred", () => {
     const filters = recipeFilters(recipes, favorites);
+
     expect(filters[0]).toEqual({ id: FAVORITES_FILTER, name: "Favorites" });
-    expect(filters.slice(1).map((f) => f.id)).toEqual(recipeFilters(recipes, []).map((f) => f.id));
+    expect(filters.slice(1).map((filter) => filter.id)).toEqual(recipeFilters(recipes, []).map((filter) => filter.id));
   });
 
   it.each([
     ["nothing is starred", []],
     ["the starred recipe no longer exists", ["gone"]],
   ])("has no Favorites chip when %s", (_, starred) => {
-    expect(recipeFilters(recipes, starred).map((f) => f.id)).not.toContain(FAVORITES_FILTER);
+    expect(recipeFilters(recipes, starred).map((filter) => filter.id)).not.toContain(FAVORITES_FILTER);
   });
 });
 
@@ -29,6 +30,7 @@ describe("filterRecipes", () => {
 
   it("lists favorites newest first", () => {
     const starred = ["assemble_dynamite", "smelt_a_gold_bar"];
+
     expect(ids(filterRecipes(recipes, "", FAVORITES_FILTER, starred))).toEqual(starred);
   });
 
@@ -39,8 +41,9 @@ describe("filterRecipes", () => {
 
   it("filters by skill when a skill is picked", () => {
     const smithing = filterRecipes(recipes, "", "smithing", favorites);
+
     expect(smithing.length).toBeGreaterThan(0);
-    expect(smithing.every((r) => r.skills.some((s) => s.id === "smithing"))).toBe(true);
+    expect(smithing.every((recipe) => recipe.skills.some((skill) => skill.id === "smithing"))).toBe(true);
   });
 
   it("lists every recipe with no filter", () => {

@@ -6,7 +6,9 @@ import { FavoritesProvider } from "@/contexts/favorites-context";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 import { renderWithRouter } from "./render-with-router";
 
-const goldBar = buildRecipeBook(sample as unknown as GameData).recipes.find((r) => r.id === "smelt_a_gold_bar")!;
+const goldBar = buildRecipeBook(sample as unknown as GameData).recipes.find(
+  (recipe) => recipe.id === "smelt_a_gold_bar",
+)!;
 
 afterEach(cleanup);
 

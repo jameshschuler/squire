@@ -29,7 +29,8 @@ describe("favoriteRecipes", () => {
 
   it("returns recipes in favorite order and skips ids no longer in the game", () => {
     const recipes = [recipe("a"), recipe("b"), recipe("c")];
-    expect(favoriteRecipes(recipes, ["c", "gone", "a"]).map((r) => r.id)).toEqual(["c", "a"]);
+
+    expect(favoriteRecipes(recipes, ["c", "gone", "a"]).map((entry) => entry.id)).toEqual(["c", "a"]);
   });
 
   it("returns nothing without favorites", () => {

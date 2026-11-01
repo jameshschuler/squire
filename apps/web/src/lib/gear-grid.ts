@@ -32,7 +32,7 @@ export function toolCells(picks: GearPick[], toolSlots: number): GearCell[] {
 }
 
 function cell(label: string, slot: Slot, index: number, picks: GearPick[]): GearCell {
-  return { label, pick: picks.filter((p) => p.slot === slot)[index] ?? null };
+  return { label, pick: picks.filter((pick) => pick.slot === slot)[index] ?? null };
 }
 
 export function pickQuality(pick: GearPick): ItemQuality | null {

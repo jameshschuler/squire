@@ -31,6 +31,7 @@ async function freshSolver() {
   FakeWorker.created = [];
   vi.stubGlobal("Worker", FakeWorker);
   const { solveInBackground } = await import("@/lib/gear-solver");
+
   return solveInBackground;
 }
 
@@ -43,6 +44,7 @@ describe("solveInBackground", () => {
     const solve = await freshSolver();
     const job = solve(request);
     const [worker] = FakeWorker.created;
+
     expect(worker!.posted).toEqual([request]);
     worker!.reply({ fewestSteps: 10 });
     await expect(job.result).resolves.toEqual({ fewestSteps: 10 });
@@ -51,6 +53,7 @@ describe("solveInBackground", () => {
   it("reuses the worker for the next request once the last one is done", async () => {
     const solve = await freshSolver();
     const first = solve(request);
+
     FakeWorker.created[0]!.reply({ fewestSteps: 10 });
     await first.result;
     first.cancel();
@@ -61,6 +64,7 @@ describe("solveInBackground", () => {
 
   it("stops a search still running when cancelled, and starts a new worker next time", async () => {
     const solve = await freshSolver();
+
     solve(request).cancel();
     expect(FakeWorker.created[0]!.terminated).toBe(true);
     solve(request);
@@ -69,6 +73,7 @@ describe("solveInBackground", () => {
 
   it("stops the search still running when a new one starts", async () => {
     const solve = await freshSolver();
+
     solve(request);
     solve(request);
     expect(FakeWorker.created[0]!.terminated).toBe(true);
@@ -78,6 +83,7 @@ describe("solveInBackground", () => {
   it("fails the job when the worker throws", async () => {
     const solve = await freshSolver();
     const job = solve(request);
+
     FakeWorker.created[0]!.fail("boom");
     await expect(job.result).rejects.toThrow("boom");
   });
@@ -85,10 +91,12 @@ describe("solveInBackground", () => {
   it("starts a new worker after one fails, so a broken worker never gets reused", async () => {
     const solve = await freshSolver();
     const failed = solve(request);
+
     FakeWorker.created[0]!.fail("could not load");
     await expect(failed.result).rejects.toThrow("could not load");
 
     const retry = solve(request);
+
     FakeWorker.created[1]!.reply({ fewestSteps: 10 });
 
     expect(FakeWorker.created[0]!.terminated).toBe(true);

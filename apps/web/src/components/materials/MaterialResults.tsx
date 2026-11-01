@@ -11,6 +11,7 @@ interface MaterialResultsProps {
 
 export function MaterialResults({ materials, listKey }: MaterialResultsProps) {
   const { visibleItems, hasMore, sentinelRef } = useIncrementalList(materials, listKey, PAGE_SIZE);
+
   return (
     <>
       <ul className="divide-y">

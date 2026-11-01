@@ -59,6 +59,7 @@ describe("ItemSources", () => {
       icon: "",
       skills: [{ id: "woodcutting", name: "Woodcutting", level: 1 }],
     };
+
     await renderWithRouter(<ItemSources sources={[chest]} />);
     expect(screen.getByText("Woodcutting chest")).toBeDefined();
     expect(screen.getByRole("listitem").textContent).toBe("Woodcutting chest");
@@ -72,6 +73,7 @@ describe("ItemSources", () => {
       icon: "",
       locations: [{ id: "granfiddich", name: "Granfiddich", region: "Grand Duchy of Trellin-Erdwise" }],
     };
+
     await renderWithRouter(<ItemSources sources={[shop]} />);
     expect(screen.getByText("Granfiddich Tool Stall")).toBeDefined();
     expect(screen.getByText("Shop")).toBeDefined();
@@ -93,6 +95,7 @@ describe("ItemSources", () => {
       />,
     );
     const rows = screen.getAllByRole("listitem").map((li) => li.textContent);
+
     expect(rows).toEqual(["My Back HurtsAchievement", "Achievement points reward"]);
   });
 });

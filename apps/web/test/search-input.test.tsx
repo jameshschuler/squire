@@ -7,6 +7,7 @@ afterEach(cleanup);
 
 function ControlledSearch({ initial }: { initial: string }) {
   const [value, setValue] = useState(initial);
+
   return <SearchInput value={value} placeholder="Search" onChange={setValue} />;
 }
 
@@ -42,6 +43,7 @@ describe("SearchInput", () => {
     render(<ControlledSearch initial="hatchet" />);
     fireEvent.click(screen.getByRole("button", { name: "Clear search" }));
     const input = screen.getByRole("searchbox");
+
     expect((input as HTMLInputElement).value).toBe("");
     expect(document.activeElement).toBe(input);
     expect(screen.queryByRole("button", { name: "Clear search" })).toBeNull();

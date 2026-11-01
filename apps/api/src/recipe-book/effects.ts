@@ -1,7 +1,7 @@
 import type { Attribute, ItemDetail, Requirement, SkillDetail } from "@walkscape-community/data-api-client";
 import { capitalize, spaced } from "./text.js";
 import {
-  QUALITIES,
+  QUALITY_RANK,
   type Effect,
   type EffectTarget,
   type ItemEffects,
@@ -28,6 +28,7 @@ export function itemEffects(item: ItemDetail, names: EffectNames): ItemEffects |
   if (item.type === "consumable") {
     return foodEffects(item, names);
   }
+
   const gearEffects = (attributes: Attribute[]) =>
     attributes.flatMap((attribute) => effectLine(attribute, null, names));
   const base = item.itemAttrs ?? [];
@@ -36,6 +37,7 @@ export function itemEffects(item: ItemDetail, names: EffectNames): ItemEffects |
     quality,
     effects: gearEffects(attributes).map(({ condition, stat, normal, fine }) => ({ condition, stat, normal, fine })),
   }));
+
   return effects.length > 0 || tiers.length > 0 ? { steps: null, effects, tiers } : null;
 }
 
@@ -47,52 +49,67 @@ function qualityTotals(
   const add = (attributes: Attribute[]) => {
     for (const attribute of attributes) {
       const key = attributeKey(attribute);
+
       totals.set(key, addStats(totals.get(key), attribute));
     }
   };
+
   add(base);
+
   return [...tiers]
-    .sort((a, b) => QUALITIES.indexOf(a.quality) - QUALITIES.indexOf(b.quality))
+    .sort((left, right) => (QUALITY_RANK.get(left.quality) ?? -1) - (QUALITY_RANK.get(right.quality) ?? -1))
     .map(({ quality, attributes }) => {
       add(attributes ?? []);
+
       return { quality, attributes: [...totals.values()] };
     });
 }
 
 function attributeKey(attribute: Attribute): string {
   const stat = statValue(attribute);
+
   return JSON.stringify([stat?.stat, stat?.isPercent, attribute.customText, attribute.requirements ?? []]);
 }
 
 function addStats(total: Attribute | undefined, attribute: Attribute): Attribute {
   const stat = statValue(attribute);
   const totalStat = total && statValue(total);
+
   if (!stat || !totalStat) {
     return attribute;
   }
+
   return { ...attribute, stats: [{ ...stat, value: totalStat.value + stat.value }] };
 }
 
 function foodEffects(item: Extract<ItemDetail, { type: "consumable" }>, names: EffectNames): ItemEffects | null {
   const buff = item.buffs?.[0];
+
   if (!buff) {
     return null;
   }
+
   const effects = buff.data.flatMap((data) =>
     data.buffs.flatMap((group) =>
-      group.attributes.flatMap((attribute, i) => effectLine(attribute, group.fineAttributes[i] ?? attribute, names)),
+      group.attributes.flatMap((attribute, index) =>
+        effectLine(attribute, group.fineAttributes[index] ?? attribute, names),
+      ),
     ),
   );
+
   return { steps: "steps" in buff.duration ? buff.duration.steps : null, effects, tiers: [] };
 }
 
 function effectLine(attribute: Attribute, fine: Attribute | null, names: EffectNames): Effect[] {
   const stat = statValue(attribute);
+
   if (!stat) {
     return [];
   }
+
   const isChance = attribute.customText !== "";
   const format = (value: StatValue) => (isChance ? formatAmount(value) : formatSigned(value));
+
   return [
     {
       ...effectScope(attribute, names),
@@ -110,19 +127,24 @@ function statValue(attribute: Attribute): StatValue | undefined {
 function effectScope(attribute: Attribute, names: EffectNames): Pick<Effect, "condition" | "scope" | "appliesTo"> {
   const everything = [...names.skills.map(skillTarget), TRAVELLING];
   const requirements = attribute.requirements ?? [];
+
   if (requirements.length === 0) {
     return { condition: "Global", scope: "Global", appliesTo: everything };
   }
+
   const known = requirements.flatMap((requirement) => {
     const named = describeRequirement(requirement, names);
+
     if (!named) {
       return [];
     }
+
     const not = requirement.opposite ? "not " : "";
     const narrowed = named.narrows && {
       ids: new Set(named.narrows.targets.map((target) => target.id)),
       scope: named.narrows.scope,
     };
+
     return [
       {
         label: `${not}${named.label}`,
@@ -131,11 +153,14 @@ function effectScope(attribute: Attribute, names: EffectNames): Pick<Effect, "co
       },
     ];
   });
+
   if (known.length === 0) {
     return { condition: "Under certain conditions", scope: null, appliesTo: [] };
   }
+
   const others = known.length < requirements.length ? OTHER_CONDITIONS : "";
   const scopes = known.flatMap((part) => (part.scope ? [part.scope] : []));
+
   return {
     condition: `While ${known.map((part) => part.label).join(" and ")}${others}`,
     scope: scopes.length > 0 ? capitalize(scopes.join(" and ")) : "Global",
@@ -154,17 +179,22 @@ function describeRequirement(
 ): RequirementDescription | undefined {
   const skillName = (id: string) => skills.find((skill) => skill.id === id)?.name ?? id;
   const region = (id: string) => regions.get(id) ?? id;
+
   switch (type) {
     case "mainSkill": {
       const name = skillName(requirement.skill);
       const targets = skills.filter((skill) => skill.id === requirement.skill).map(skillTarget);
+
       return { label: `doing ${name}`, narrows: { scope: name, targets } };
     }
+
     case "mainSkillType": {
       const scope = `${requirement.type} skills`;
       const targets = skills.filter((skill) => skill.type === requirement.type).map(skillTarget);
+
       return { label: `doing ${scope}`, narrows: { scope, targets } };
     }
+
     case "traveling":
       return { label: "travelling", narrows: { scope: "travelling", targets: [TRAVELLING] } };
     case "realm":
@@ -175,8 +205,10 @@ function describeRequirement(
       return { label: `at ${requirement.keywords.map(spaced).join(" or ")} locations` };
     case "distinctKeywordItemsEquipped": {
       const noun = requirement.quantity === 1 ? "item" : "items";
+
       return { label: `wearing ${requirement.quantity} ${requirement.keywords.map(spaced).join(" or ")} ${noun}` };
     }
+
     case "distinctKeywordItemInInventory":
       return { label: `carrying ${requirement.keywords.map(spaced).join(" or ")}` };
     case "collectiblesOwned":
@@ -210,9 +242,11 @@ function describeHistory({
   if (category === "actionCompleted" && data) {
     return { label: `having done ${spaced(data)} ${value.toLocaleString("en-US")} times` };
   }
+
   if (category === "stepsWalkedTraveling") {
     return { label: `having travelled ${value.toLocaleString("en-US")} steps` };
   }
+
   return undefined;
 }
 

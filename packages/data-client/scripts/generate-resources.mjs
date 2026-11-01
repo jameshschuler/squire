@@ -6,25 +6,33 @@ const spec = await response.json();
 const resources = [];
 const searchable = [];
 const searchValues = {};
+
 for (const path of Object.keys(spec.paths)) {
   const resource = /^\/(\w+)\/id\/\{id\}$/.exec(path)?.[1];
+
   if (resource) {
     resources.push(resource);
   }
 }
+
 for (const resource of resources) {
   const filters = (spec.paths[`/${resource}/search`]?.get.parameters ?? []).filter(({ name }) => name !== "detailed");
+
   if (filters.length > 0) {
     searchable.push(resource);
   }
+
   for (const { name, schema } of filters) {
     if (schema.enum) {
-      const isBoolean = schema.enum.length === 2 && schema.enum.every((v) => v === "true" || v === "false");
+      const isBoolean = schema.enum.length === 2 && schema.enum.every((value) => value === "true" || value === "false");
+
       (searchValues[resource] ??= {})[name] = isBoolean ? [true, false] : schema.enum;
     }
   }
 }
+
 const constant = (name, value) => `export const ${name} = ${JSON.stringify(value, null, 2)} as const;\n`;
+
 writeFileSync(
   out,
   [

@@ -17,7 +17,7 @@ interface CharacterSummaryProps {
 export function CharacterSummary({ character, savedAt, onUpdate }: CharacterSummaryProps) {
   const gameData = useGameDataContext();
   const collection = gameData.status === "ready" ? collectionOf(gameData.book.loot, character.collectibles) : null;
-  const skills = Object.entries(character.skillLevels).sort(([a], [b]) => a.localeCompare(b));
+  const skills = Object.entries(character.skillLevels).sort(([left], [right]) => left.localeCompare(right));
   const stats = [
     { label: "Character level", value: formatNumber(character.characterLevel) },
     { label: "Steps walked", value: formatNumber(character.lifetimeSteps) },
@@ -27,6 +27,7 @@ export function CharacterSummary({ character, savedAt, onUpdate }: CharacterSumm
     },
     { label: "Achievement points", value: formatNumber(character.achievementPoints) },
   ];
+
   return (
     <article className="space-y-6">
       <header>
