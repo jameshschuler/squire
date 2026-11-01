@@ -48,6 +48,13 @@ describe("answerNotes", () => {
     expect(answerNotes(suggestion(80, 0), target, null)).toEqual(["No gear helps with this."]);
   });
 
+  it("only says no gear was found, with the margin, when an empty set isn't proven", () => {
+    expect(answerNotes(suggestion(80, 0, { goal: "steps", gap: 0.02 }), target, null)).toEqual([
+      "No gear found that helps.",
+      "Within 2% of the best possible for Fastest.",
+    ]);
+  });
+
   it("says both when the level is too low and no gear helps", () => {
     expect(answerNotes(suggestion(80, 0), target, 20)).toEqual([
       "You need Mining level 40 for this. Here's the set for when you get there.",

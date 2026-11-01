@@ -81,4 +81,17 @@ describe("solveInBackground", () => {
     FakeWorker.created[0]!.fail("boom");
     await expect(job.result).rejects.toThrow("boom");
   });
+
+  it("starts a new worker after one fails, so a broken worker never gets reused", async () => {
+    const solve = await freshSolver();
+    const failed = solve(request);
+    FakeWorker.created[0]!.fail("could not load");
+    await expect(failed.result).rejects.toThrow("could not load");
+
+    const retry = solve(request);
+    FakeWorker.created[1]!.reply({ fewestSteps: 10 });
+
+    expect(FakeWorker.created[0]!.terminated).toBe(true);
+    await expect(retry.result).resolves.toEqual({ fewestSteps: 10 });
+  });
 });

@@ -14,13 +14,18 @@ export function solveInBackground(request: GearRequest): GearJob {
     type: "module",
   }));
   let done = false;
+  const stop = () => {
+    done = true;
+    current.terminate();
+    worker = null;
+  };
   const result = new Promise<GearSolution>((resolve, reject) => {
     current.onmessage = (event: MessageEvent<GearSolution>) => {
       done = true;
       resolve(event.data);
     };
     current.onerror = (event) => {
-      done = true;
+      stop();
       reject(new Error(event.message));
     };
   });
@@ -29,9 +34,7 @@ export function solveInBackground(request: GearRequest): GearJob {
     result,
     cancel: () => {
       if (!done) {
-        done = true;
-        current.terminate();
-        worker = null;
+        stop();
       }
     },
   };

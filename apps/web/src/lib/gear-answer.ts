@@ -67,7 +67,9 @@ export function answerNotes(suggestion: GearSuggestion, target: GearTarget, skil
       ? [`You need ${target.skill.name} level ${required} for this. Here's the set for when you get there.`]
       : [];
   if (suggestion.picks.length === 0 && !suggestion.pet) {
-    return [...tooLow, "No gear helps with this."];
+    return suggestion.margin
+      ? [...tooLow, "No gear found that helps.", marginNote(suggestion)]
+      : [...tooLow, "No gear helps with this."];
   }
   return [...tooLow, marginNote(suggestion)];
 }

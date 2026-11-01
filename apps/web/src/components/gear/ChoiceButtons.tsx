@@ -15,9 +15,8 @@ export function ChoiceButtons({ choices, onChoose }: ChoiceButtonsProps) {
           size="sm"
           variant="outline"
           className={cn(
-            "rounded-full bg-background",
-            choice.detail &&
-              "h-auto max-w-full flex-col items-start gap-0 rounded-2xl py-1.5 text-left whitespace-normal",
+            "h-auto min-h-8 max-w-full shrink rounded-lg bg-background text-left whitespace-normal",
+            choice.detail && "flex-col items-start gap-0 py-1.5",
           )}
           onClick={() => onChoose(choice.value)}
         >
