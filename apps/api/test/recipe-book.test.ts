@@ -312,6 +312,41 @@ describe("activities", () => {
     ]);
   });
 
+  it("turns the gear an activity needs into rules the gear optimizer can check", () => {
+    const [activity] = activitiesWith((data) => {
+      data.activities[0]!.requirements!.push(
+        {
+          type: "keywordWithLevelEquipped",
+          name: "",
+          opposite: false,
+          requirement: { keyword: "light_source", skill: "mining", level: 50 },
+        },
+        {
+          type: "distinctKeywordItemsEquipped",
+          name: null,
+          opposite: false,
+          requirement: { quantity: 3, keywords: ["diving_gear"] },
+        },
+        { type: "itemEquipped", name: "", opposite: false, requirement: { item: "gold_bar" } },
+        { type: "itemAnywhereWithYou", name: "", opposite: false, requirement: { item: "wheat" } },
+        { type: "keywordEquipped", name: "", opposite: true, requirement: { keyword: "hatchet" } },
+      );
+    });
+
+    expect(activity!.gearNeeds).toEqual([
+      { label: "Pickaxe", keywords: ["pickaxe"], count: 1, level: null, itemId: null },
+      {
+        label: "Light source (Mining 50)",
+        keywords: ["light_source"],
+        count: 1,
+        level: { skill: "mining", level: 50 },
+        itemId: null,
+      },
+      { label: "3 different diving gear items", keywords: ["diving_gear"], count: 3, level: null, itemId: null },
+      { label: "Gold bar", keywords: [], count: 1, level: null, itemId: "gold_bar" },
+    ]);
+  });
+
   it("skips requirements a player can't act on: hidden ones, opposites and game history", () => {
     expect(
       needs((data) => {

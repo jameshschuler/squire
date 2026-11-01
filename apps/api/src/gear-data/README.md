@@ -13,6 +13,7 @@ The web app runs the optimizer in a Web Worker (`apps/web/src/workers/gear-solve
 | `steps.ts`                                    | The game's step formula.                                                                                                                                              |
 | `goals.ts`                                    | The priorities, how a set is scored against them, and the margin math.                                                                                                |
 | `candidates.ts`                               | One owned item, boiled down to the numbers the search needs.                                                                                                          |
+| `needs.ts`                                    | Gear the activity requires (a pickaxe, 3 diving gear items, a specific item), and whether the player owns enough of it.                                               |
 | `pruning.ts`                                  | Drops items that can never be worth wearing, and the keyword ban rules.                                                                                               |
 | `search.ts`                                   | The search for the best set for one location and one scoring pass.                                                                                                    |
 | `free-slots.ts`                               | Fills slots the search left empty with items that help other things.                                                                                                  |
@@ -60,6 +61,14 @@ Each owned item becomes a `Candidate` for the current situation (activity, locat
 - `best`: `totals` plus every helpful part of its set bonuses. This is what the item could give at most, and it's what makes the search's bounds safe.
 
 Goal stats (chest finding, bonus XP…) go into `goalStats`, in the order `goalStats(goals)` lists them.
+
+## Required gear
+
+Some activities can't be done without certain gear: a pickaxe, a pickaxe that takes Mining 50 to wear, 3 different diving gear items, or one specific item. The recipe book lists these as `gearNeeds`, and the target passes them in as `needs`.
+
+- First, `canMeetNeed` checks whether the player owns enough different items for each need, counting only as many per slot as the slot holds. Needs they can't meet come back as `missingNeeds`, and the search ignores them, so the player still gets a set, and the answer names the gear they're missing.
+- Each item that fills a need gets a hidden keyword (`need:0`, `need:1`…), and each need becomes a keyword group, like a set bonus's. That reuses what set pieces already get: pruning never drops them, dominance compares how many each partial set has, and two copies of one item count once.
+- A set that misses a need scores below every usable set (`unusable` in `bestSet`), and the greedy start begins with the best items that fill each need (`neededStart`), so the search always has a usable set to beat.
 
 ## Pruning items
 

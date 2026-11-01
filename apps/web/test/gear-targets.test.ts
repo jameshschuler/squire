@@ -54,13 +54,14 @@ describe("searchGearTargets", () => {
 describe("optimizeTarget", () => {
   const gold = byKey("activity:mine_gold_ore");
 
-  it("takes the skill, level and work from the target", () => {
+  it("takes the skill, level, work and required gear from the target", () => {
     expect(optimizeTarget(gold, undefined)).toEqual({
       skill: "mining",
       level: 40,
       workRequired: 68,
       maxWorkEfficiency: 1.7,
       locationIds: ["crown_of_cinders"],
+      needs: [{ label: "Pickaxe", keywords: ["pickaxe"], count: 1, level: null, itemId: null }],
     });
   });
 

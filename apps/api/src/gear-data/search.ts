@@ -1,4 +1,5 @@
-import { itemId, withSetBonuses, type Candidate } from "./candidates.js";
+import { itemId, setCount, withSetBonuses, type Candidate } from "./candidates.js";
+import { meetsNeeds, type NeedRule } from "./needs.js";
 import { banMasks, clashes, conflicts, setGroupsOf, type BanMasks, type KeywordRules } from "./pruning.js";
 import { compareScores, type Score } from "./goals.js";
 import { MAX_DOUBLE_ACTION, NO_STATS, addStats, type StatTotals } from "./steps.js";
@@ -53,10 +54,14 @@ export function bestSet(
   score: (totals: StatTotals) => Score,
   { seed, maxStates, goalDims, primaryValue, repair, deadline }: SearchOptions,
 ): SearchResult {
-  const setScore = (set: Candidate[]) => score(withSetBonuses(set));
+  // A set missing gear the activity requires can't be used, so it scores below every usable set.
+  const unusable = score(NO_STATS).map(() => Number.NEGATIVE_INFINITY);
+  const usable = (set: Candidate[]) => meetsNeeds(set, rules.needs);
+  const setScore = (set: Candidate[]) => (usable(set) ? score(withSetBonuses(set)) : unusable);
   const compatible = (chosen: Candidate[], next: Candidate) =>
     !chosen.some((other) => other === next || conflicts(rules, other, next));
-  const greedySet = greedy(groups, compatible, setScore);
+  const needed = neededStart(groups, rules.needs, compatible, (candidate) => score(candidate.best));
+  const greedySet = greedy(groups, compatible, setScore, needed);
   let best = compareScores(setScore(seed), setScore(greedySet)) > 0 ? seed : greedySet;
   let bestScore = setScore(best);
 
@@ -69,6 +74,7 @@ export function bestSet(
     [NO_STATS],
   );
   const ahead = tops.map((top, g) => top.map((byCount) => byCount.map((sum) => addStats(sum, rest[g + 1]!))));
+  const reach = needReach(groups, rules.needs);
   const masks = banMasks(rules);
   const stats = dominanceStats(useful, goalDims);
   const covers = coverage(useful, goalDims, rules.cappedSetGroups);
@@ -80,9 +86,16 @@ export function bestSet(
   search: for (const [g, { choices, capacity }] of groups.entries()) {
     states = states.map((state) => ({ ...state, used: 0 }));
     for (const [i, next] of choices.entries()) {
-      // The best score `state` could still reach if items `from` onward in this group, and every later group, are added.
+      // The best score `state` could still reach if items `from` onward in this group, and every later
+      // group, are added. A state that can no longer wear enough of some required gear can't win.
+      const canMeetNeeds = (state: PartialSet, from: number) =>
+        rules.needs.every(
+          (need, k) => state.setItems[need.group]!.length + reach(k, g, from, capacity - state.used) >= need.count,
+        );
       const bound = (state: PartialSet, from: number) =>
-        score(addStats(state.optimistic, ahead[g]![from]![capacity - state.used]!));
+        canMeetNeeds(state, from)
+          ? score(addStats(state.optimistic, ahead[g]![from]![capacity - state.used]!))
+          : unusable;
       // Out of time: every unfinished partial set might still have led to the best set, so their
       // bounds join the ceiling and the margin stays honest.
       if (performance.now() > deadline) {
@@ -120,7 +133,8 @@ export function bestSet(
       bestScore = candidateScore;
     }
   }
-  if (!repair) {
+  // Repair could strip an unusable set down to nothing, since every unusable set scores the same.
+  if (!repair || !usable(best)) {
     return { set: best, ceiling };
   }
   // Swap repair fixes small misses the search can make while cutting. When the first priority isn't
@@ -130,9 +144,12 @@ export function bestSet(
       ? [best]
       : [
           best,
-          greedy(groups, compatible, (set) => [
-            primaryValue(set.reduce((sum, c) => addStats(sum, c.best), NO_STATS).goalStats),
-          ]),
+          greedy(
+            groups,
+            compatible,
+            (set) => [primaryValue(set.reduce((sum, c) => addStats(sum, c.best), NO_STATS).goalStats)],
+            needed,
+          ),
         ];
   const winner = starts
     .map((start) => improveBySwaps(groups, start, compatible, setScore, deadline))
@@ -184,8 +201,9 @@ function greedy(
   groups: SlotGroup[],
   compatible: (chosen: Candidate[], next: Candidate) => boolean,
   setScore: (set: Candidate[]) => Score,
+  start: Candidate[],
 ): Candidate[] {
-  let chosen: Candidate[] = [];
+  let chosen = start;
   let current = setScore(chosen);
   for (;;) {
     const options = groups.flatMap(({ capacity, choices }) =>
@@ -203,6 +221,59 @@ function greedy(
     chosen = [...chosen, top.c];
     current = top.score;
   }
+}
+
+// The best items that fill each need, until each has enough different items, so greedy starts from a
+// set the activity allows.
+function neededStart(
+  groups: SlotGroup[],
+  needs: NeedRule[],
+  compatible: (chosen: Candidate[], next: Candidate) => boolean,
+  value: (candidate: Candidate) => Score,
+): Candidate[] {
+  const groupOf = new Map(groups.flatMap((group) => group.choices.map((choice) => [choice, group] as const)));
+  const fits = (chosen: Candidate[], next: Candidate) => {
+    const group = groupOf.get(next)!;
+
+    return compatible(chosen, next) && chosen.filter((c) => groupOf.get(c) === group).length < group.capacity;
+  };
+  const addFor = (chosen: Candidate[], { keyword, count }: NeedRule) =>
+    [...groupOf.keys()]
+      .filter((candidate) => candidate.keywords.includes(keyword))
+      .sort((a, b) => compareScores(value(b), value(a)))
+      .reduce((set, candidate) => {
+        const short = setCount(set, [keyword]) < count;
+        const adds = setCount([...set, candidate], [keyword]) > setCount(set, [keyword]);
+
+        return short && adds && fits(set, candidate) ? [...set, candidate] : set;
+      }, chosen);
+
+  return needs.reduce(addFor, []);
+}
+
+// How many more items that fill need `k` a partial set could still add from item `from` of group `g`
+// onward, with `free` places left in group g. Copies count separately, so this never undercounts.
+function needReach(
+  groups: SlotGroup[],
+  needs: NeedRule[],
+): (k: number, g: number, from: number, free: number) => number {
+  const fillers = needs.map(({ keyword }) => groups.map(({ choices }) => fillersFrom(choices, keyword)));
+  const later = fillers.map((byGroup) =>
+    byGroup.reduceRight<number[]>(
+      (sums, counts, g) => [Math.min(groups[g]!.capacity, counts[0]!) + sums[0]!, ...sums],
+      [0],
+    ),
+  );
+
+  return (k, g, from, free) => Math.min(free, fillers[k]![g]![from]!) + later[k]![g + 1]!;
+}
+
+// counts[i]: how many of choices i onward carry the keyword.
+function fillersFrom(choices: Candidate[], keyword: string): number[] {
+  return choices.reduceRight<number[]>(
+    (counts, choice) => [counts[0]! + (choice.keywords.includes(keyword) ? 1 : 0), ...counts],
+    [0],
+  );
 }
 
 function emptySet(setGroupCount: number): PartialSet {

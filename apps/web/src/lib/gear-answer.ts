@@ -66,12 +66,18 @@ export function answerNotes(suggestion: GearSuggestion, target: GearTarget, skil
     skillLevel !== null && skillLevel < required
       ? [`You need ${target.skill.name} level ${required} for this. Here's the set for when you get there.`]
       : [];
+  const missing = suggestion.missingNeeds.map((need) => need.label);
+  const lacking =
+    missing.length > 0 ? [`You don't have the gear this needs: ${missing.join(", ")}. The set leaves it out.`] : [];
+  const before = [...tooLow, ...lacking];
+
   if (suggestion.picks.length === 0 && !suggestion.pet) {
     return suggestion.margin
-      ? [...tooLow, "No gear found that helps.", marginNote(suggestion)]
-      : [...tooLow, "No gear helps with this."];
+      ? [...before, "No gear found that helps.", marginNote(suggestion)]
+      : [...before, "No gear helps with this."];
   }
-  return [...tooLow, marginNote(suggestion)];
+
+  return [...before, marginNote(suggestion)];
 }
 
 export function marginNote({ margin, goals }: GearSuggestion): string {

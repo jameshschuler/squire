@@ -6,7 +6,14 @@ import gearItems from "../../../fixtures/api/gear.json";
 import { solveGear } from "@/lib/gear-solution";
 
 const gear: GearData = buildGearData({ ...sample, items: [...sample.items, ...gearItems] } as unknown as GameData);
-const woodcutting = { skill: "woodcutting", level: 1, workRequired: 100, maxWorkEfficiency: 2, locationIds: [] };
+const woodcutting = {
+  skill: "woodcutting",
+  level: 1,
+  workRequired: 100,
+  maxWorkEfficiency: 2,
+  locationIds: [],
+  needs: [],
+};
 
 describe("solveGear", () => {
   it("finds the set for the goals and the fewest steps possible", () => {

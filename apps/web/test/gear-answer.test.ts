@@ -14,6 +14,7 @@ const target: GearTarget = {
   lootTypes: [],
   kind: "activity",
   makesTieredGear: false,
+  needs: [],
 };
 const steps = (averageSteps: number): StepsResult => ({ efficiency: 1, steps: Math.ceil(averageSteps), averageSteps });
 const suggestion = (
@@ -30,6 +31,7 @@ const suggestion = (
     result: steps(averageSteps),
     goals,
     margin,
+    missingNeeds: [],
   }) as unknown as GearSuggestion;
 
 describe("answerNotes", () => {
@@ -52,6 +54,18 @@ describe("answerNotes", () => {
     expect(answerNotes(suggestion(80, 0, { goal: "steps", gap: 0.02 }), target, null)).toEqual([
       "No gear found that helps.",
       "Within 2% of the best possible for Fastest.",
+    ]);
+  });
+
+  it("names the required gear the character doesn't have", () => {
+    const missingNeeds = [
+      { label: "Pickaxe (Mining 50)", keywords: ["pickaxe"], count: 1, level: null, itemId: null },
+      { label: "Light source", keywords: ["light_source"], count: 1, level: null, itemId: null },
+    ];
+
+    expect(answerNotes({ ...suggestion(30), missingNeeds }, target, 50)).toEqual([
+      "You don't have the gear this needs: Pickaxe (Mining 50), Light source. The set leaves it out.",
+      "Proven best set for this gear.",
     ]);
   });
 

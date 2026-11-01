@@ -14,6 +14,7 @@ import {
   ownedPets,
   skillLevelOf,
   toolSlotsOf,
+  type OwnedGear,
   type OwnedPetView,
   type PlayerProfile,
 } from "./profile.js";
@@ -41,11 +42,15 @@ import {
   type WorkTarget,
 } from "./steps.js";
 import type { GearData, LocationView } from "./types.js";
+import { canMeetNeed, meetsNeeds, metBy, withNeedKeywords } from "./needs.js";
+import type { GearNeed } from "../recipe-book/types.js";
 
 export type { GearPick } from "./candidates.js";
 
 export interface OptimizeTarget extends WorkTarget {
   locationIds: string[];
+  // Gear the activity can't be done without.
+  needs: GearNeed[];
 }
 
 // The chosen set and how sure the search is about it.
@@ -59,11 +64,17 @@ export interface GearSuggestion {
   score: Score;
   // How far the set could be from the best possible; null means it's proven best.
   margin: Margin | null;
+  // Required gear the character doesn't have enough of; the set leaves it out.
+  missingNeeds: GearNeed[];
   searchMs: number;
 }
 
 // A finished search before the margin is worked out; `ceiling` bounds every set it didn't fully check.
-type Search = Omit<GearSuggestion, "margin" | "searchMs"> & { ceiling: Score | null };
+// `usable` is false when the set misses required gear, which only happens when no usable set turned up.
+type Search = Omit<GearSuggestion, "margin" | "missingNeeds" | "searchMs"> & {
+  ceiling: Score | null;
+  usable: boolean;
+};
 
 // Each retry keeps STATES_GROWTH times more partial sets, until the count reaches MAX_SEARCH_STATES.
 // The search stops early once the set is proven within CLOSE_ENOUGH of the best possible, or at the deadline.
@@ -95,16 +106,23 @@ export function optimizeGear(
   const deadline = start + timeBudgetMs;
   const checked = goals.slice(0, checkedGoals);
   const locations = gear.locations.filter((l) => target.locationIds.includes(l.id));
+  const owned = ownedGear(profile, gear.items);
+  const capacityOf = (slot: GearType) => slotCapacity(slot, toolSlotsOf(profile));
+  const needs = target.needs.filter((need) => canMeetNeed(need, owned, capacityOf));
+  const unowned = target.needs.filter((need) => !needs.includes(need));
   const plans = distinctLocations(gear, locations).map((location) =>
-    planAt(gear, situationFor(gear, profile, target, location, goalStats(goals)), goals),
+    planAt(gear, situationFor(gear, profile, target, location, goalStats(goals)), goals, { owned, needs, capacityOf }),
   );
   let found: Search | null = null;
   for (let limit = maxStates; ; limit *= STATES_GROWTH) {
     found = tightest(found, searchRound(plans, goals, limit, deadline));
     const margin = marginOf(checked, found.score, found.ceiling);
     if (!margin || margin.gap <= CLOSE_ENOUGH || limit >= MAX_SEARCH_STATES || performance.now() >= deadline) {
-      const { ceiling: _ceiling, ...best } = found;
-      return { ...best, margin, searchMs: Math.round(performance.now() - start) };
+      const { ceiling: _ceiling, usable, ...best } = found;
+      const worn = best.picks.map((pick) => pick.item);
+      const unmet = usable ? [] : needs.filter((need) => !metBy(need, worn));
+
+      return { ...best, margin, missingNeeds: [...unowned, ...unmet], searchMs: Math.round(performance.now() - start) };
     }
   }
 }
@@ -170,7 +188,9 @@ function searchPass(
     repair: i === goals.length - 1,
     deadline,
   });
-  const found = passScore(withSetBonuses(next.set));
+  const found = meetsNeeds(next.set, plan.rules.needs)
+    ? passScore(withSetBonuses(next.set))
+    : Array.from({ length: i + 1 }, () => Number.NEGATIVE_INFINITY);
   return {
     plan,
     searched: next,
@@ -180,7 +200,12 @@ function searchPass(
 }
 
 function bestOf(searches: Search[]): Search {
-  return searches.reduce((a, b) => (compareScores(b.score, a.score) > 0 ? b : a));
+  return searches.reduce((a, b) => (beats(b, a) ? b : a));
+}
+
+// A usable set beats one missing required gear, whatever their scores.
+function beats(a: Search, b: Search): boolean {
+  return a.usable !== b.usable ? a.usable : compareScores(a.score, b.score) > 0;
 }
 
 // Combines two rounds: the better set, and the lower ceiling (each ceiling is a true upper bound, so the
@@ -189,7 +214,7 @@ function tightest(previous: Search | null, next: Search): Search {
   if (!previous) {
     return next;
   }
-  const best = compareScores(next.score, previous.score) > 0 ? next : previous;
+  const best = beats(next, previous) ? next : previous;
   return { ...best, ceiling: lower(previous.ceiling, next.ceiling) };
 }
 
@@ -217,20 +242,29 @@ export function fewestSteps(gear: GearData, target: OptimizeTarget): number {
 }
 
 // Builds a location's candidates and slot groups. Each group's items are pruned and then sorted best
-// first, so good sets turn up early and bounds start cutting sooner.
-function planAt(gear: GearData, situation: Situation, goals: GoalId[]): LocationPlan {
+// first, so good sets turn up early and bounds start cutting sooner. `needs` are the required gear the
+// owned items can meet; items that fill one carry its need keyword.
+function planAt(
+  gear: GearData,
+  situation: Situation,
+  goals: GoalId[],
+  { owned, needs, capacityOf }: { owned: OwnedGear[]; needs: GearNeed[]; capacityOf: (slot: GearType) => number },
+): LocationPlan {
   const { profile, target } = situation;
-  const choices = ownedGear(profile, gear.items).map((owned) => ({
-    owned,
-    candidate: gearCandidate(situation, owned),
+  const choices = owned.map((entry) => ({
+    owned: entry,
+    candidate: withNeedKeywords(gearCandidate(situation, entry), entry.item, needs),
   }));
   const items = choices.map((c) => c.candidate);
   const pets = ownedPets(profile, gear.pets).map((pet) => petCandidate(situation, pet));
   const level = skillLevelOf(profile, target.skill);
   const goalScore = goalScorer(goals);
   const score = (totals: StatTotals) => goalScore(stepsPerAction(target, level, totals), totals);
-  const rules = keywordRules(gear.bannedKeywords, [...items, ...pets]);
-  const capacityOf = (slot: GearType) => slotCapacity(slot, toolSlotsOf(profile));
+  const rules = keywordRules(
+    gear.bannedKeywords,
+    [...items, ...pets],
+    needs.map((need) => need.count),
+  );
   const slotGroups: SlotGroup[] = GEAR_SLOTS.map(({ slot }) => ({
     capacity: capacityOf(slot),
     choices: items.filter((c) => c.slot === slot),
@@ -260,6 +294,7 @@ function finish({ plan, searched }: LocationProgress, goals: GoalId[]): Search {
     goals,
     score: score(totals),
     ceiling: searched.ceiling,
+    usable: meetsNeeds(chosen, rules.needs),
   };
 }
 

@@ -1,4 +1,11 @@
-import { words, type LocationSummary, type LootType, type RecipeBook, type SkillLevel } from "@squire/api/recipe-book";
+import {
+  words,
+  type GearNeed,
+  type LocationSummary,
+  type LootType,
+  type RecipeBook,
+  type SkillLevel,
+} from "@squire/api/recipe-book";
 import { GOALS, type Goal, type GoalId, type OptimizeTarget } from "@squire/api/gear-data";
 import { MAX_GOALS } from "./gear-search";
 import { matchesWords } from "./match";
@@ -14,6 +21,7 @@ export interface GearTarget {
   lootTypes: LootType[];
   kind: "activity" | "recipe";
   makesTieredGear: boolean;
+  needs: GearNeed[];
 }
 
 export const BEST_LOCATION = "best";
@@ -28,6 +36,7 @@ export function gearTargets(book: RecipeBook): GearTarget[] {
     lootTypes: activity.drops.map((d) => d.lootType),
     kind: "activity" as const,
     makesTieredGear: false,
+    needs: activity.gearNeeds,
   }));
   const recipes = book.recipes.map((recipe) => ({
     ...recipe,
@@ -36,6 +45,7 @@ export function gearTargets(book: RecipeBook): GearTarget[] {
     lootTypes: [],
     kind: "recipe" as const,
     makesTieredGear: recipe.outputs.some((o) => tiered.has(o.id)),
+    needs: [],
   }));
   return [...activities, ...recipes]
     .flatMap((t) => {
@@ -53,6 +63,7 @@ export function gearTargets(book: RecipeBook): GearTarget[] {
               lootTypes: t.lootTypes,
               kind: t.kind,
               makesTieredGear: t.makesTieredGear,
+              needs: t.needs,
             },
           ]
         : [];
@@ -88,6 +99,7 @@ export function optimizeTarget(target: GearTarget, location: string | undefined)
     workRequired: target.workRequired,
     maxWorkEfficiency: target.maxWorkEfficiency,
     locationIds: (pinned ? [pinned] : target.locations).map((l) => l.id),
+    needs: target.needs,
   };
 }
 

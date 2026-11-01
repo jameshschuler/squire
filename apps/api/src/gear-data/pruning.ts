@@ -1,24 +1,39 @@
 import { itemId, type Candidate } from "./candidates.js";
+import { needKeyword, type NeedRule } from "./needs.js";
 import { MAX_DOUBLE_ACTION, type StatTotals } from "./steps.js";
 
-// `banKeys` are every keyword that takes part in a ban. `setGroups` are the keyword lists set bonuses
-// count, and `cappedSetGroups` the ones with a "fewer than N pieces" bonus, where more pieces can hurt.
+// `banKeys` are every keyword that takes part in a ban. `setGroups` are the keyword lists the search
+// counts distinct items for: set bonuses, then needs. `cappedSetGroups` are the set groups with a
+// "fewer than N pieces" bonus, where more pieces can hurt. `needs` are the gear the activity requires.
 export interface KeywordRules {
   bannedKeywords: Record<string, string[]>;
   banKeys: Set<string>;
   setGroups: string[][];
   cappedSetGroups: Set<number>;
+  needs: NeedRule[];
 }
 
-export function keywordRules(bannedKeywords: Record<string, string[]>, candidates: Candidate[]): KeywordRules {
+// `needCounts` are how many different items each need requires; candidates that fill need i carry needKeyword(i).
+export function keywordRules(
+  bannedKeywords: Record<string, string[]>,
+  candidates: Candidate[],
+  needCounts: number[],
+): KeywordRules {
   const conditions = candidates.flatMap((c) => c.setBonuses.flatMap((b) => b.conditions));
   const groups = [...new Set(conditions.map((s) => JSON.stringify(s.requirement.keywords)))];
   const capped = new Set(conditions.filter((s) => s.opposite).map((s) => JSON.stringify(s.requirement.keywords)));
+  const needs = needCounts.map((count, index) => ({
+    keyword: needKeyword(index),
+    count,
+    group: groups.length + index,
+  }));
+
   return {
     bannedKeywords,
     banKeys: new Set([...Object.keys(bannedKeywords), ...Object.values(bannedKeywords).flat()]),
-    setGroups: groups.map((group) => JSON.parse(group) as string[]),
+    setGroups: [...groups.map((group) => JSON.parse(group) as string[]), ...needs.map((need) => [need.keyword])],
     cappedSetGroups: new Set(groups.flatMap((group, i) => (capped.has(group) ? [i] : []))),
+    needs,
   };
 }
 

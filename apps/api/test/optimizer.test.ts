@@ -3,6 +3,7 @@ import { stepsPerAction } from "../src/gear-data/steps.js";
 import tailoringGear from "../../../fixtures/gear/tailoring.json";
 import type { GearType } from "@walkscape-community/data-api-client";
 import type { Character } from "../src/character/index.js";
+import type { GearNeed } from "../src/recipe-book/types.js";
 import {
   BEST_IN_GAME,
   fewestSteps,
@@ -98,8 +99,9 @@ const mining: OptimizeTarget = {
   workRequired: 100,
   maxWorkEfficiency: 1.5,
   locationIds: [],
+  needs: [],
 };
-const picked = (gear: GearData, profile: PlayerProfile, target = mining) =>
+const picked = (gear: GearData, profile: PlayerProfile, target: OptimizeTarget = mining) =>
   optimizeGear(gear, profile, target)
     .picks.map((p) => (p.quality ? `${p.item.id}@${p.quality}` : p.item.id))
     .sort();
@@ -497,6 +499,103 @@ describe("optimizeGear", () => {
   });
 });
 
+describe("required gear", () => {
+  const need = (fields: Partial<GearNeed>): GearNeed => ({
+    label: "Pickaxe",
+    keywords: ["pickaxe"],
+    count: 1,
+    level: null,
+    itemId: null,
+    ...fields,
+  });
+  const withNeeds = (...needs: GearNeed[]) => ({ ...mining, needs });
+  const miningLevel = (level: number) => ({
+    type: "skillLevel" as const,
+    opposite: false,
+    requirement: { skill: "mining", level },
+  });
+
+  it("wears a required tool even when it adds nothing", () => {
+    const gear = gearData([
+      item("light_gloves", "hands", [flatSteps(-5)]),
+      item("rusty_pickaxe", "tool", [], { keywords: ["pickaxe"] }),
+    ]);
+
+    expect(picked(gear, BEST_IN_GAME, withNeeds(need({})))).toEqual(["light_gloves", "rusty_pickaxe"]);
+  });
+
+  it("wears enough different items for a need, over better items that don't count", () => {
+    const diving = (id: string, slot: GearType) => item(id, slot, [], { keywords: ["diving_gear"] });
+    const gear = gearData([
+      diving("diving_helm", "head"),
+      diving("diving_boots", "feet"),
+      diving("diving_gloves", "hands"),
+      item("fast_hat", "head", [flatSteps(-4)]),
+      item("fast_boots", "feet", [flatSteps(-4)]),
+      item("fast_gloves", "hands", [flatSteps(-4)]),
+    ]);
+    const divingGear = need({ label: "2 different diving gear items", keywords: ["diving_gear"], count: 2 });
+
+    const worn = picked(gear, BEST_IN_GAME, withNeeds(divingGear));
+
+    expect(worn.filter((id) => id.startsWith("diving_"))).toHaveLength(2);
+    expect(worn.filter((id) => id.startsWith("fast_"))).toHaveLength(1);
+  });
+
+  it("wears a tool of the required level, over a better lower-level one", () => {
+    const gear = gearData([
+      item("swift_pickaxe", "tool", [flatSteps(-8)], { keywords: ["pickaxe"], requirements: [miningLevel(20)] }),
+      item("adamant_pickaxe", "tool", [flatSteps(-2)], { keywords: ["pickaxe"], requirements: [miningLevel(50)] }),
+    ]);
+    const leveled = need({ label: "Pickaxe (Mining 50)", level: { skill: "mining", level: 50 } });
+    const owned = character(["swift_pickaxe", "adamant_pickaxe"], { skillLevels: { mining: 60 } });
+
+    expect(picked(gear, owned, withNeeds(leveled))).toContain("adamant_pickaxe");
+  });
+
+  it("wears a required item", () => {
+    const gear = gearData([item("spectral_saw", "tool", []), item("fast_saw", "tool", [flatSteps(-5)])]);
+    const owned = character(["spectral_saw", "fast_saw"]);
+
+    expect(
+      picked(gear, owned, withNeeds(need({ label: "Spectral saw", keywords: [], itemId: "spectral_saw" }))),
+    ).toEqual(["fast_saw", "spectral_saw"]);
+  });
+
+  it("names required gear the character doesn't have, and still suggests a set without it", () => {
+    const gear = gearData([
+      item("light_gloves", "hands", [flatSteps(-5)]),
+      item("rusty_pickaxe", "tool", [], { keywords: ["pickaxe"] }),
+    ]);
+    const suggestion = optimizeGear(gear, character(["light_gloves"]), withNeeds(need({})));
+
+    expect(suggestion.missingNeeds.map((n) => n.label)).toEqual(["Pickaxe"]);
+    expect(suggestion.picks.map((p) => p.item.id)).toEqual(["light_gloves"]);
+  });
+
+  it("names the needs a set can't meet together, instead of stripping the set", () => {
+    const gear = gearData(
+      [
+        item("rusty_pickaxe", "tool", [], { keywords: ["pickaxe"] }),
+        item("rusty_hatchet", "tool", [], { keywords: ["hatchet"] }),
+      ],
+      { bannedKeywords: { pickaxe: ["hatchet"] } },
+    );
+    const hatchet = need({ label: "Hatchet", keywords: ["hatchet"] });
+    const suggestion = optimizeGear(gear, character(["rusty_pickaxe", "rusty_hatchet"]), withNeeds(need({}), hatchet));
+
+    expect(suggestion.picks.map((p) => p.item.id)).toEqual(["rusty_pickaxe"]);
+    expect(suggestion.missingNeeds).toEqual([hatchet]);
+  });
+
+  it("counts two copies of a ring as one item toward a need", () => {
+    const gear = gearData([item("glow_ring", "ring", [], { keywords: ["light_source"] })]);
+    const lights = need({ label: "2 different light source items", keywords: ["light_source"], count: 2 });
+
+    expect(optimizeGear(gear, character(["glow_ring*2"]), withNeeds(lights)).missingNeeds).toEqual([lights]);
+  });
+});
+
 describe("free slots", () => {
   const otherSkill = { type: "mainSkill", opposite: false, requirement: { skill: "fishing" } } as const;
 
@@ -795,6 +894,7 @@ describe("search size", () => {
       workRequired: 280,
       maxWorkEfficiency: 2.1,
       locationIds: ["azurazera"],
+      needs: [],
     };
     const gear = tailoringGear as unknown as GearData;
     const found = optimizeGear(gear, BEST_IN_GAME, tailoring, ["steps"], { maxStates: 100_000, timeBudgetMs: 50 });
@@ -809,6 +909,7 @@ describe("search size", () => {
       workRequired: 280,
       maxWorkEfficiency: 2.1,
       locationIds: ["azurazera"],
+      needs: [],
     };
     const start = performance.now();
     const suggestion = optimizeGear(tailoringGear as unknown as GearData, BEST_IN_GAME, tailoring);
@@ -915,7 +1016,13 @@ describe("optimizeGear against every possible set", { timeout: 30_000 }, () => {
     };
   }
 
-  function bruteForce(gear: GearData, target: OptimizeTarget, level: number, goals: GoalId[]): Score {
+  function bruteForce(
+    gear: GearData,
+    target: OptimizeTarget,
+    level: number,
+    goals: GoalId[],
+    allowed: (set: GearItem[]) => boolean = () => true,
+  ): Score {
     const bySlot = (slot: GearType) => gear.items.filter((i) => i.slot === slot);
     const subsets = (items: GearItem[], max: number): GearItem[][] =>
       items.reduce<GearItem[][]>(
@@ -932,7 +1039,7 @@ describe("optimizeGear against every possible set", { timeout: 30_000 }, () => {
       [[]],
     );
     return combos
-      .filter((set) => set.filter((it) => it.keywords.includes("hatchet")).length <= 1)
+      .filter((set) => set.filter((it) => it.keywords.includes("hatchet")).length <= 1 && allowed(set))
       .map((set) => {
         const setCount = set.filter((it) => it.keywords.includes("set")).length;
         const totals = set
@@ -966,6 +1073,26 @@ describe("optimizeGear against every possible set", { timeout: 30_000 }, () => {
       const found = optimizeGear(gear, profile, target, goals).score;
       expect(compareScores(found, bruteForce(gear, target, level, goals)), `run ${run}`).toBe(0);
     }
+  });
+
+  it("finds the best set that wears 2 different set items when the activity needs them", () => {
+    const next = random(17);
+    const setPieces: GearNeed = { label: "2 set items", keywords: ["set"], count: 2, level: null, itemId: null };
+    const wearsTwo = (set: GearItem[]) => set.filter((it) => it.keywords.includes("set")).length >= 2;
+    let checked = 0;
+    for (let run = 0; run < 200; run++) {
+      const { gear, level, target, profile } = randomCase(next);
+      const found = optimizeGear(gear, profile, { ...target, needs: [setPieces] }, ["steps"]);
+      if (found.missingNeeds.length > 0) {
+        continue;
+      }
+
+      checked++;
+      expect(wearsTwo(found.picks.map((p) => p.item)), `run ${run}`).toBe(true);
+      expect(compareScores(found.score, bruteForce(gear, target, level, ["steps"], wearsTwo)), `run ${run}`).toBe(0);
+    }
+
+    expect(checked).toBeGreaterThan(100);
   });
 
   it("finds the best set without the search limit too, which is what the check script compares against", () => {
