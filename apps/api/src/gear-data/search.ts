@@ -66,8 +66,28 @@ export function bestSet(
     groupOf: new Map(groups.flatMap((group) => group.choices.map((choice) => [choice, group] as const))),
     compatible,
   };
-  const needed = neededStart(slots, rules.needs, (candidate) => score(candidate.best));
-  const greedySet = greedy(slots, setScore, needed);
+  const value = (candidate: Candidate) => score(candidate.best);
+  // Putting needed items in first can take slots better items need. So with needs, also start from the
+  // best set ignoring them, add needed items where places are still free, and keep whichever start wins.
+  const greedyStarts =
+    rules.needs.length > 0
+      ? [
+          neededStart(slots, rules.needs, value, []),
+          neededStart(
+            slots,
+            rules.needs,
+            value,
+            greedy(slots, (set) => score(withSetBonuses(set)), []),
+          ),
+        ]
+      : [[]];
+  const { start: needed, set: greedySet } = greedyStarts
+    .map((start) => {
+      const set = greedy(slots, setScore, start);
+
+      return { start, set, score: setScore(set) };
+    })
+    .reduce((leader, next) => (compareScores(next.score, leader.score) > 0 ? next : leader));
   let best = compareScores(setScore(seed), setScore(greedySet)) > 0 ? seed : greedySet;
   let bestScore = setScore(best);
 
@@ -273,12 +293,13 @@ function greedy(
   }
 }
 
-// The best items that fill each need, until each has enough different items, so greedy starts from a
-// set the activity allows.
+// Adds to `start` the best items that fill each need, where they fit, until each has enough different
+// items, so greedy starts from a set the activity allows.
 function neededStart(
   { groupOf, compatible }: Slots,
   needs: NeedRule[],
   value: (candidate: Candidate) => Score,
+  start: Candidate[],
 ): Candidate[] {
   const fits = (chosen: Candidate[], next: Candidate) => {
     const group = groupOf.get(next)!;
@@ -299,7 +320,7 @@ function neededStart(
         return short && adds && fits(set, candidate) ? [...set, candidate] : set;
       }, chosen);
 
-  return needs.reduce(addFor, []);
+  return needs.reduce(addFor, start);
 }
 
 // How many more items that fill need `k` a partial set could still add from item `from` of group `g`

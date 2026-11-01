@@ -70,7 +70,7 @@ Some activities can't be done without certain gear: a pickaxe, a pickaxe that ta
 
 - First, `canMeetNeed` checks whether the player owns enough different items for each need, counting only as many per slot as the slot holds. Needs they can't meet come back as `missingNeeds`, and the search ignores them, so the player still gets a set, and the answer names the gear they're missing.
 - Each item that fills a need gets a hidden keyword (`need:0`, `need:1`…), and each need becomes a keyword group, like a set bonus's. That reuses what set pieces already get: pruning never drops them, dominance compares how many each partial set has (only up to the number the need requires, since extra pieces change nothing), and two copies of one item count once.
-- A set that misses a need scores below every usable set (`unusable` in `bestSet`), and the greedy start begins with the best items that fill each need (`neededStart`), so the search always has a usable set to beat.
+- A set that misses a need scores below every usable set (`unusable` in `bestSet`), and the greedy start begins with the best items that fill each need (`neededStart`), so the search always has a usable set to beat. Putting needed items in first can take a slot a better item needs (a candle hat instead of a mining hat), so there's a second start: the best set ignoring needs, with needed items added where places are still free (often spare tool slots). The better of the two wins.
 - If no set can meet every need at once (their items ban each other, or need the same slot), `optimizeGear` searches again without the needs its set missed, within the same deadline, and adds them to `missingNeeds`.
 
 ## Pruning items
