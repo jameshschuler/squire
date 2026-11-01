@@ -32,8 +32,9 @@ export interface SlotGroup {
 
 // A set still being built. `guaranteed` is the least its stats could be (every harmful set bonus
 // counted, no helpful one); `optimistic` adds every helpful set bonus as if it will be met. `used` is
-// how many places in the current slot group are filled. `bans` holds the ban-keyword bits of what's worn, and `setItems` the distinct items per set group.
-interface PartialSet {
+// how many places in the current slot group are filled. `bans` holds the ban-keyword bits of what's
+// worn, and `setItems` the distinct items per set group.
+export interface PartialSet {
   chosen: Candidate[];
   guaranteed: StatTotals;
   optimistic: StatTotals;
@@ -82,7 +83,7 @@ export function bestSet(
   const reach = needReach(groups, rules.needs);
   const masks = banMasks(rules);
   const stats = dominanceStats(useful, goalDims);
-  const covers = coverage(useful, goalDims, rules.cappedSetGroups);
+  const covers = coverage(useful, goalDims, rules);
   let states: PartialSet[] = [emptySet(rules.setGroups.length)];
   let ceiling: Score | null = null;
   const raise = (bound: Score) => {
@@ -403,11 +404,13 @@ function withSignatures(entries: Scored[], stats: ((t: StatTotals) => number)[])
 
 // a covers b when anything b could become, a could become at least as well: a's guaranteed stats are
 // at least b's optimistic ones, a has no more places used, a's bans are a subset of b's, and a has at
-// least as many set pieces. A set group with a "fewer than N pieces" bonus must match exactly, since more pieces can hurt.
-function coverage(
+// least as many set pieces. A set group with a "fewer than N pieces" bonus must match exactly, since more
+// pieces can hurt. Pieces past a group's cap (the most any bonus or need asks for) change nothing, so
+// counts are compared only up to it.
+export function coverage(
   useful: number,
   goalDims: number,
-  cappedSetGroups: Set<number>,
+  { cappedSetGroups, pieceCaps }: KeywordRules,
 ): (a: PartialSet, b: PartialSet) => boolean {
   return (state, other) => {
     const have = state.guaranteed;
@@ -432,8 +435,11 @@ function coverage(
 
     return state.setItems.every((ids, index) => {
       const otherCount = other.setItems[index]!.length;
+      const cap = pieceCaps[index]!;
 
-      return cappedSetGroups.has(index) ? ids.length === otherCount : ids.length >= otherCount;
+      return cappedSetGroups.has(index)
+        ? ids.length === otherCount
+        : Math.min(ids.length, cap) >= Math.min(otherCount, cap);
     });
   };
 }

@@ -8,6 +8,7 @@ const rules: KeywordRules = {
   banKeys: new Set(["fishing_rod", "fishing_net", "needle"]),
   setGroups: [],
   cappedSetGroups: new Set(),
+  pieceCaps: [],
   needs: [],
 };
 const item = (...keywords: string[]) => ({ keywords }) as Candidate;
