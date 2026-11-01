@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { loadGameData } from "../src/game-data.js";
 import gearItems from "../../../fixtures/api/gear.json";
+import { GAME_DATA_CACHE_SCHEMA } from "../src/game-data-cache.js";
 import { fakeClient } from "./fake-client.js";
 
 describe("loadGameData", () => {
@@ -11,6 +12,31 @@ describe("loadGameData", () => {
     expect(data.recipes.map((recipe) => recipe.id)).toContain("smelt_a_gold_bar");
     expect(data.lootTables.map((lootTable) => lootTable.id)).toContain("mining_chest_table");
     expect(data.shops.map((shop) => shop.id)).toEqual(["granfiddich_tool_stall"]);
+  });
+
+  it("pins what it loads to the saved game data's schema, so changing it means bumping the schema", async () => {
+    const data = await loadGameData(fakeClient().client);
+
+    expect({ schema: GAME_DATA_CACHE_SCHEMA, resources: Object.keys(data).sort() }).toEqual({
+      schema: 1,
+      resources: [
+        "achievements",
+        "activities",
+        "factions",
+        "gameIds",
+        "items",
+        "keywords",
+        "locations",
+        "lootTables",
+        "pets",
+        "recipes",
+        "rewards",
+        "services",
+        "shops",
+        "skills",
+        "version",
+      ],
+    });
   });
 
   it("loads crafting services with one search, since the recipe book uses no others", async () => {

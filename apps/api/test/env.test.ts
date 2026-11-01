@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ENVIRONMENTS } from "@walkscape-community/data-api-client";
+import { DEFAULT_GAME_DATA_CACHE_PATH } from "../src/game-data-cache.js";
 import { readEnv } from "../src/env.js";
 
 describe("readEnv", () => {
@@ -10,7 +11,20 @@ describe("readEnv", () => {
       port: 3000,
       logLevel: "info",
       corsOrigins: [],
+      gameDataCachePath: DEFAULT_GAME_DATA_CACHE_PATH,
     });
+  });
+
+  it("uses the default cache path when GAME_DATA_CACHE_PATH is set but empty, as in .env.example", () => {
+    expect(readEnv({ WALKSCAPE_API_KEY: "k", GAME_DATA_CACHE_PATH: "" }).gameDataCachePath).toBe(
+      DEFAULT_GAME_DATA_CACHE_PATH,
+    );
+  });
+
+  it("saves game data where GAME_DATA_CACHE_PATH says", () => {
+    expect(readEnv({ WALKSCAPE_API_KEY: "k", GAME_DATA_CACHE_PATH: "/var/data/game.json" }).gameDataCachePath).toBe(
+      "/var/data/game.json",
+    );
   });
 
   it("uses the dev environment and port when set", () => {

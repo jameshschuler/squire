@@ -24,13 +24,14 @@ Other commands: `pnpm test`, `pnpm typecheck`, `pnpm build`.
 
 API (`.env`):
 
-| Variable            | Default |                                                                                                                                              |
-| ------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `WALKSCAPE_API_KEY` |         | Required                                                                                                                                     |
-| `WALKSCAPE_ENV`     | `prod`  | `prod` or `dev`                                                                                                                              |
-| `PORT`              | `3000`  |                                                                                                                                              |
-| `LOG_LEVEL`         | `info`  | `debug`, `info`, `warn`, `error`, `silent`                                                                                                   |
-| `CORS_ORIGINS`      | none    | Comma-separated origins allowed to call the API, e.g. `https://squire.example`. Only needed when the web app is hosted on a different domain |
+| Variable               | Default                                              |                                                                                                                                              |
+| ---------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `WALKSCAPE_API_KEY`    |                                                      | Required                                                                                                                                     |
+| `WALKSCAPE_ENV`        | `prod`                                               | `prod` or `dev`                                                                                                                              |
+| `PORT`                 | `3000`                                               |                                                                                                                                              |
+| `LOG_LEVEL`            | `info`                                               | `debug`, `info`, `warn`, `error`, `silent`                                                                                                   |
+| `CORS_ORIGINS`         | none                                                 | Comma-separated origins allowed to call the API, e.g. `https://squire.example`. Only needed when the web app is hosted on a different domain |
+| `GAME_DATA_CACHE_PATH` | `apps/api/node_modules/.cache/squire/game-data.json` | Where the API saves game data. On startup it checks `/version/` once and refetches everything only when the game data changed                |
 
 Web: set `VITE_API_URL` at build time when the API is on a different domain. Leave it unset to call `/api` on the same domain.
 
@@ -53,7 +54,7 @@ In Render, pick **New → Blueprint** and point it at this repo. Render asks for
 
 You only know the URLs after the first deploy, so set `CORS_ORIGINS` and `VITE_API_URL` then and redeploy both. `VITE_API_URL` is baked in at build time.
 
-The API is on the free plan, which sleeps after 15 minutes idle. The first request after that takes a while: Render wakes the service, then the API loads game data (about 4 seconds).
+The API is on the free plan, which sleeps after 15 minutes idle. The first request after that takes a while: Render wakes the service, then the API loads game data. It starts loading as soon as it's up, not on the first request. The free plan's disk is wiped on every restart, so the saved game data only speeds up local restarts (and hosts with a persistent disk).
 
 Want to help? See [CONTRIBUTING.md](CONTRIBUTING.md).
 

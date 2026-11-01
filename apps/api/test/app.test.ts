@@ -1,6 +1,6 @@
 import { brotliDecompressSync, gunzipSync } from "node:zlib";
 import { WalkScapeApiError } from "@walkscape-community/data-api-client";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { GEAR_DATA_SCHEMA, type GearData } from "../src/gear-data/index.js";
 import { RECIPE_BOOK_SCHEMA, type RecipeBook } from "../src/recipe-book/index.js";
 import { buildApp } from "../src/app.js";
@@ -178,5 +178,27 @@ describe("CORS", () => {
     const res = await app().inject({ url: "/api/health", headers: { origin: "https://squire.example" } });
 
     expect(res.headers["access-control-allow-origin"]).toBeUndefined();
+  });
+});
+
+describe("warming game data at startup", () => {
+  it("starts loading game data once the server is ready, before anyone asks", async () => {
+    const fake = fakeClient();
+    const server = buildApp({ client: fake.client, logLevel: "silent", corsOrigins: [], warmOnStart: true });
+
+    await server.ready();
+
+    await vi.waitFor(() => expect(fake.calls.lists).toBeGreaterThan(0));
+    await server.close();
+  });
+
+  it("waits for the first request when warming is off", async () => {
+    const fake = fakeClient();
+    const server = buildApp({ client: fake.client, logLevel: "silent", corsOrigins: [] });
+
+    await server.ready();
+
+    expect(fake.calls.lists).toBe(0);
+    await server.close();
   });
 });

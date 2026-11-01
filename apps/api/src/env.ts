@@ -1,4 +1,5 @@
 import { ENVIRONMENTS, type Environment } from "@walkscape-community/data-api-client";
+import { DEFAULT_GAME_DATA_CACHE_PATH } from "./game-data-cache.js";
 
 export interface Env {
   apiKey: string;
@@ -6,6 +7,7 @@ export interface Env {
   port: number;
   logLevel: string;
   corsOrigins: string[];
+  gameDataCachePath: string;
 }
 
 export function readEnv(source: NodeJS.ProcessEnv = process.env): Env {
@@ -30,5 +32,6 @@ export function readEnv(source: NodeJS.ProcessEnv = process.env): Env {
       .split(",")
       .map((origin) => origin.trim())
       .filter(Boolean),
+    gameDataCachePath: source.GAME_DATA_CACHE_PATH || DEFAULT_GAME_DATA_CACHE_PATH,
   };
 }

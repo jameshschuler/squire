@@ -7,6 +7,7 @@ import { recipeBookIcons } from "./recipe-book/index.js";
 import { HTTP_STATUS } from "./http-status.js";
 import { createIconStore } from "./icons.js";
 import { createBookSource } from "./book-source.js";
+import type { GameDataCache } from "./game-data-cache.js";
 import { healthRoutes } from "./routes/health.js";
 import { iconRoutes } from "./routes/icons.js";
 import { bookRoutes } from "./routes/books.js";
@@ -15,9 +16,11 @@ export interface AppOptions {
   client: WalkScapeClient;
   logLevel: string;
   corsOrigins: string[];
+  cache?: GameDataCache;
+  warmOnStart?: boolean;
 }
 
-export function buildApp({ client, logLevel, corsOrigins }: AppOptions): FastifyInstance {
+export function buildApp({ client, logLevel, corsOrigins, cache, warmOnStart = false }: AppOptions): FastifyInstance {
   const app = Fastify({ logger: { level: logLevel } });
 
   app.setErrorHandler((error, request, reply) => {
@@ -36,6 +39,7 @@ export function buildApp({ client, logLevel, corsOrigins }: AppOptions): Fastify
 
   const icons = createIconStore(client);
   const books = createBookSource(client, app.log, {
+    cache,
     onLoad: ({ recipeBook, gearData }) => {
       icons
         .warm([...new Set([...recipeBookIcons(recipeBook), ...gearDataIcons(gearData)])])
@@ -43,6 +47,12 @@ export function buildApp({ client, logLevel, corsOrigins }: AppOptions): Fastify
         .catch((err: unknown) => app.log.warn({ err }, "Failed to warm icon cache"));
     },
   });
+
+  if (warmOnStart) {
+    app.addHook("onReady", async () => {
+      books().catch((err: unknown) => app.log.error({ err }, "Failed to load game data at startup"));
+    });
+  }
 
   app.register(compress, { encodings: ["br", "gzip"] });
   app.register(cors, { origin: corsOrigins.length > 0 ? corsOrigins : false, methods: ["GET"] });
