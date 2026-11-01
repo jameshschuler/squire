@@ -1,5 +1,5 @@
 import { MAX_LEVEL, toolSlots, type Character, type OwnedPet } from "../character/character.js";
-import { QUALITIES, type ItemQuality } from "../recipe-book/types.js";
+import { QUALITIES, QUALITY_RANK, type ItemQuality } from "../recipe-book/types.js";
 import { stackedStats } from "./items.js";
 import { copiesAllowed } from "./slots.js";
 import type { GearCondition, GearItem, GearStat, PetView } from "./types.js";
@@ -42,7 +42,7 @@ export function ownedGear(profile: PlayerProfile, items: GearItem[]): OwnedGear[
 
   const byId = new Map(items.map((item) => [item.id, item]));
   const worn = new Map<string, number>();
-  const rank = (quality: ItemQuality | null) => (quality ? QUALITIES.indexOf(quality) : -1);
+  const rank = (quality: ItemQuality | null) => (quality ? (QUALITY_RANK.get(quality) ?? -1) : -1);
 
   return [...profile.character.owned]
     .sort((left, right) => rank(right.quality) - rank(left.quality))

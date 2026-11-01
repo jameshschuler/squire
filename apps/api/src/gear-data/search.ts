@@ -60,8 +60,13 @@ export function bestSet(
   const setScore = (set: Candidate[]) => (usable(set) ? score(withSetBonuses(set)) : unusable);
   const compatible = (chosen: Candidate[], next: Candidate) =>
     !chosen.some((other) => other === next || conflicts(rules, other, next));
-  const needed = neededStart(groups, rules.needs, compatible, (candidate) => score(candidate.best));
-  const greedySet = greedy(groups, compatible, setScore, needed);
+  const slots: Slots = {
+    groups,
+    groupOf: new Map(groups.flatMap((group) => group.choices.map((choice) => [choice, group] as const))),
+    compatible,
+  };
+  const needed = neededStart(slots, rules.needs, (candidate) => score(candidate.best));
+  const greedySet = greedy(slots, setScore, needed);
   let best = compareScores(setScore(seed), setScore(greedySet)) > 0 ? seed : greedySet;
   let bestScore = setScore(best);
 
@@ -108,7 +113,7 @@ export function bestSet(
       }
 
       const nextBans = masks(next);
-      const nextGroups = setGroupsOf(rules, next);
+      const nextGroups = new Set(setGroupsOf(rules, next));
       const grown = states.flatMap((state) =>
         state.used < capacity && !clashes(state.bans, nextBans) ? [grow(state, next, nextBans, nextGroups)] : [],
       );
@@ -159,67 +164,80 @@ export function bestSet(
       : [
           best,
           greedy(
-            groups,
-            compatible,
+            slots,
             (set) => [primaryValue(set.reduce((sum, candidate) => addStats(sum, candidate.best), NO_STATS).goalStats)],
             needed,
           ),
         ];
   const winner = starts
-    .map((start) => improveBySwaps(groups, start, compatible, setScore, deadline))
+    .map((start) => improveBySwaps(slots, start, setScore, deadline))
     .reduce((leader, next) => (compareScores(setScore(next), setScore(leader)) > 0 ? next : leader));
 
   return { set: withoutIdlePicks(winner, setScore), ceiling };
 }
 
-// Tries every single change (add an item, or swap one for another in the same group) and keeps any that
-// raises the score, sweeping again until a full sweep finds nothing better.
+// The slot groups, which group each candidate is in, and whether a candidate can join a set: what
+// the greedy start, swap repair and the needed-gear start all work with.
+interface Slots {
+  groups: SlotGroup[];
+  groupOf: Map<Candidate, SlotGroup>;
+  compatible: (chosen: Candidate[], next: Candidate) => boolean;
+}
+
+// Tries every single change (add an item, or swap one for another in the same group) and keeps the
+// best one in each group that raises the score, sweeping again until a full sweep finds nothing better.
 function improveBySwaps(
-  groups: SlotGroup[],
+  slots: Slots,
   start: Candidate[],
-  compatible: (chosen: Candidate[], next: Candidate) => boolean,
   setScore: (set: Candidate[]) => Score,
   deadline: number,
 ): Candidate[] {
   let best = start;
-  let bestScore = setScore(best);
 
   for (let improved = true; improved && performance.now() <= deadline;) {
-    improved = false;
-    for (const { capacity, choices } of groups) {
-      const inGroup = best.filter((candidate) => choices.includes(candidate));
-      const options = [
-        ...(inGroup.length < capacity ? [best] : []),
-        ...inGroup.map((out) => best.filter((candidate) => candidate !== out)),
-      ];
+    const before = best;
 
-      for (const base of options) {
-        for (const next of choices) {
-          if (!compatible(base, next)) {
-            continue;
-          }
-
-          const trial = [...base, next];
-          const trialScore = setScore(trial);
-
-          if (compareScores(trialScore, bestScore) > 0) {
-            best = trial;
-            bestScore = trialScore;
-            improved = true;
-          }
-        }
-      }
+    for (const group of slots.groups) {
+      best = bestChangeIn(slots, group, best, setScore);
     }
+
+    improved = best !== before;
   }
 
   return best;
 }
 
+// The best set one change in `group` away from `best`: one of its items added, or swapped in for one
+// already worn from it. Returns `best` itself when no change scores higher.
+function bestChangeIn(
+  { groupOf, compatible }: Slots,
+  group: SlotGroup,
+  best: Candidate[],
+  setScore: (set: Candidate[]) => Score,
+): Candidate[] {
+  const inGroup = best.filter((candidate) => groupOf.get(candidate) === group);
+  const bases = [
+    ...(inGroup.length < group.capacity ? [best] : []),
+    ...inGroup.map((out) => best.filter((candidate) => candidate !== out)),
+  ];
+  const trials = bases.flatMap((base) =>
+    group.choices.filter((next) => compatible(base, next)).map((next) => [...base, next]),
+  );
+
+  return trials.reduce(
+    (winner, trial) => {
+      const score = setScore(trial);
+
+      return compareScores(score, winner.score) > 0 ? { set: trial, score } : winner;
+    },
+    { set: best, score: setScore(best) },
+  ).set;
+}
+
 // Keeps adding whichever item raises the score most until none does. Fast and usually close; it gives
 // the search a good set to beat from the start.
 function greedy(
-  groups: SlotGroup[],
-  compatible: (chosen: Candidate[], next: Candidate) => boolean,
+  { groups, groupOf, compatible }: Slots,
   setScore: (set: Candidate[]) => Score,
   start: Candidate[],
 ): Candidate[] {
@@ -227,10 +245,16 @@ function greedy(
   let current = setScore(chosen);
 
   for (;;) {
-    const options = groups.flatMap(({ capacity, choices }) =>
-      chosen.filter((candidate) => choices.includes(candidate)).length < capacity
-        ? choices.filter((choice) => compatible(chosen, choice))
-        : [],
+    const used = new Map<SlotGroup, number>();
+
+    for (const candidate of chosen) {
+      const group = groupOf.get(candidate)!;
+
+      used.set(group, (used.get(group) ?? 0) + 1);
+    }
+
+    const options = groups.flatMap((group) =>
+      (used.get(group) ?? 0) < group.capacity ? group.choices.filter((choice) => compatible(chosen, choice)) : [],
     );
     const top = options
       .map((option) => ({ candidate: option, score: setScore([...chosen, option]) }))
@@ -251,12 +275,10 @@ function greedy(
 // The best items that fill each need, until each has enough different items, so greedy starts from a
 // set the activity allows.
 function neededStart(
-  groups: SlotGroup[],
+  { groupOf, compatible }: Slots,
   needs: NeedRule[],
-  compatible: (chosen: Candidate[], next: Candidate) => boolean,
   value: (candidate: Candidate) => Score,
 ): Candidate[] {
-  const groupOf = new Map(groups.flatMap((group) => group.choices.map((choice) => [choice, group] as const)));
   const fits = (chosen: Candidate[], next: Candidate) => {
     const group = groupOf.get(next)!;
 
@@ -316,14 +338,14 @@ function emptySet(setGroupCount: number): PartialSet {
   };
 }
 
-function grow(state: PartialSet, next: Candidate, nextBans: BanMasks, groups: number[]): PartialSet {
+function grow(state: PartialSet, next: Candidate, nextBans: BanMasks, groups: Set<number>): PartialSet {
   return {
     chosen: [...state.chosen, next],
     guaranteed: addStats(state.guaranteed, next.worst),
     optimistic: addStats(state.optimistic, next.best),
     used: state.used + 1,
     bans: state.bans | nextBans.keys,
-    setItems: state.setItems.map((ids, index) => (groups.includes(index) ? [...new Set([...ids, itemId(next)])] : ids)),
+    setItems: state.setItems.map((ids, index) => (groups.has(index) ? [...new Set([...ids, itemId(next)])] : ids)),
   };
 }
 

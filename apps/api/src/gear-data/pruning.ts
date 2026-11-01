@@ -52,15 +52,19 @@ export function banMasks({ banKeys, bannedKeywords }: KeywordRules): (candidate:
   const bits = new Map([...banKeys].map((key, index) => [key, 1n << BigInt(index)]));
   const maskOf = (keywords: string[]) => keywords.reduce((mask, keyword) => mask | (bits.get(keyword) ?? 0n), 0n);
 
-  return ({ keywords }) => ({
-    keys: maskOf(keywords),
-    clashes: maskOf([
-      ...keywords.flatMap((keyword) => bannedKeywords[keyword] ?? []),
-      ...Object.entries(bannedKeywords).flatMap(([key, banned]) =>
-        banned.some((bannedKeyword) => keywords.includes(bannedKeyword)) ? [key] : [],
-      ),
-    ]),
-  });
+  return ({ keywords }) => {
+    const own = new Set(keywords);
+
+    return {
+      keys: maskOf(keywords),
+      clashes: maskOf([
+        ...keywords.flatMap((keyword) => bannedKeywords[keyword] ?? []),
+        ...Object.entries(bannedKeywords).flatMap(([key, banned]) =>
+          banned.some((bannedKeyword) => own.has(bannedKeyword)) ? [key] : [],
+        ),
+      ]),
+    };
+  };
 }
 
 export function clashes(wornKeys: bigint, next: BanMasks): boolean {
@@ -68,9 +72,9 @@ export function clashes(wornKeys: bigint, next: BanMasks): boolean {
 }
 
 export function setGroupsOf({ setGroups }: KeywordRules, candidate: Candidate): number[] {
-  return setGroups.flatMap((keywords, index) =>
-    candidate.keywords.some((keyword) => keywords.includes(keyword)) ? [index] : [],
-  );
+  const own = new Set(candidate.keywords);
+
+  return setGroups.flatMap((keywords, index) => (keywords.some((keyword) => own.has(keyword)) ? [index] : []));
 }
 
 export function conflicts(
@@ -78,8 +82,11 @@ export function conflicts(
   left: Pick<Candidate, "keywords">,
   right: Pick<Candidate, "keywords">,
 ): boolean {
-  const bans = (from: string[], to: string[]) =>
-    from.some((keyword) => bannedKeywords[keyword]?.some((banned) => to.includes(banned)));
+  const bans = (from: string[], to: string[]) => {
+    const targets = new Set(to);
+
+    return from.some((keyword) => bannedKeywords[keyword]?.some((banned) => targets.has(banned)));
+  };
 
   return bans(left.keywords, right.keywords) || bans(right.keywords, left.keywords);
 }
@@ -92,6 +99,7 @@ export function prune(choices: Candidate[], capacity: number, rules: KeywordRule
       choice,
       {
         ban: choice.keywords.filter((keyword) => rules.banKeys.has(keyword)),
+        banned: new Set(choice.keywords.filter((keyword) => rules.banKeys.has(keyword))),
         set: new Set(setGroupsOf(rules, choice)),
       },
     ]),
@@ -110,7 +118,7 @@ export function prune(choices: Candidate[], capacity: number, rules: KeywordRule
       Math.min(candidate.worst.doubleAction, MAX_DOUBLE_ACTION) >=
         Math.min(other.best.doubleAction, MAX_DOUBLE_ACTION) &&
       other.best.goalStats.every((value, index) => (candidate.worst.goalStats[index] ?? 0) >= value) &&
-      candidateKeys.ban.every((keyword) => otherKeys.ban.includes(keyword)) &&
+      candidateKeys.ban.every((keyword) => otherKeys.banned.has(keyword)) &&
       [...otherKeys.set].every((group) => candidateKeys.set.has(group)) &&
       [...rules.cappedSetGroups].every(
         (cappedSetGroup) => candidateKeys.set.has(cappedSetGroup) === otherKeys.set.has(cappedSetGroup),

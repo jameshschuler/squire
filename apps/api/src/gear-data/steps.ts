@@ -46,6 +46,7 @@ const MIN_EFFICIENCY = 0.01;
 const MIN_STEPS = 10;
 
 export const STEP_STATS = ["workEfficiency", "stepsRequired", "doubleAction"] as const;
+export const STEP_STAT_SET = new Set<string>(STEP_STATS);
 
 export const MAX_DOUBLE_ACTION = 1;
 // Stops floating-point error from rounding an exact whole number of steps up by one.

@@ -114,24 +114,28 @@ export function optimizeTarget(target: GearTarget, locationId: string | undefine
 }
 
 export function goalsFor(target: GearTarget): Goal[] {
+  const lootTypes = new Set(target.lootTypes);
+
   return GOALS.filter(
     (goal) =>
       (goal.kind === "any" || goal.kind === target.kind) &&
-      (!goal.lootType || target.lootTypes.includes(goal.lootType)) &&
+      (!goal.lootType || lootTypes.has(goal.lootType)) &&
       (goal.id !== "quality" || target.makesTieredGear),
   );
 }
 
 export function recommendedGoals(target: GearTarget): GoalId[] {
-  const offered = goalsFor(target).map((goal) => goal.id);
+  const offered = new Set(goalsFor(target).map((goal) => goal.id));
   const preferred: GoalId[] =
     target.kind === "recipe" ? ["steps", "materials", "quality", "xp"] : ["steps", "items", "chests", "xp"];
 
-  return preferred.filter((id) => offered.includes(id)).slice(0, MAX_GOALS);
+  return preferred.filter((id) => offered.has(id)).slice(0, MAX_GOALS);
 }
 
 export function tieBreakersFor(target: GearTarget, goals: GoalId[]): GoalId[] {
+  const picked = new Set(goals);
+
   return recommendedGoals(target)
-    .filter((id) => !goals.includes(id))
+    .filter((id) => !picked.has(id))
     .slice(0, MAX_GOALS - goals.length);
 }

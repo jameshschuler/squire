@@ -107,11 +107,13 @@ export function optimizeGear(
   const start = performance.now();
   const deadline = start + timeBudgetMs;
   const checked = goals.slice(0, checkedGoals);
-  const locations = gear.locations.filter((location) => target.locationIds.includes(location.id));
+  const targetLocations = new Set(target.locationIds);
+  const locations = gear.locations.filter((location) => targetLocations.has(location.id));
   const owned = ownedGear(profile, gear.items);
   const capacityOf = (slot: GearType) => slotCapacity(slot, toolSlotsOf(profile));
   const needs = target.needs.filter((need) => canMeetNeed(need, owned, capacityOf));
-  const unowned = target.needs.filter((need) => !needs.includes(need));
+  const meetable = new Set(needs);
+  const unowned = target.needs.filter((need) => !meetable.has(need));
   const plans = distinctLocations(gear, locations).map((location) =>
     planAt(gear, situationFor(gear, profile, target, location, goalStats(goals)), goals, {
       owned,
@@ -135,7 +137,8 @@ export function optimizeGear(
       // No set met every need at once (their items ban each other or share a slot), so search again
       // without the needs this set misses, in the time left, and name them.
       if (unmet.length > 0 && remaining > 0) {
-        const relaxed = { ...target, needs: target.needs.filter((need) => !unmet.includes(need)) };
+        const missed = new Set(unmet);
+        const relaxed = { ...target, needs: target.needs.filter((need) => !missed.has(need)) };
         const fallback = optimizeGear(gear, profile, relaxed, goals, {
           maxStates,
           timeBudgetMs: remaining,

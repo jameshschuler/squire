@@ -37,7 +37,7 @@ interface Run {
 
 type Outcome = "same" | "missed" | "wrong margin" | "exact worse" | "timed out" | "failed";
 
-const FAILING: Outcome[] = ["wrong margin", "exact worse", "failed"];
+const FAILING = new Set<Outcome>(["wrong margin", "exact worse", "failed"]);
 
 // The app claims a margin for the first priority only, so that's the claim checked here.
 const CHECKED_GOALS = 1;
@@ -94,7 +94,7 @@ async function main() {
   const results = await runAll(jobs, { gear, profiles }, lanes, timeoutMs);
 
   report(results);
-  process.exitCode = results.some((result) => FAILING.includes(result.outcome)) ? 1 : 0;
+  process.exitCode = results.some((result) => FAILING.has(result.outcome)) ? 1 : 0;
 }
 
 async function load<T>(api: string, path: string): Promise<T> {

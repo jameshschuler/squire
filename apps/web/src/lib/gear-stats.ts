@@ -41,6 +41,7 @@ const STAT_LABELS: Partial<Record<StatType, string>> = {
   rollSpecialTable: "Special loot rolls",
 };
 const STEP_STATS: StatType[] = ["stepsRequired", "doubleAction"];
+const STEP_STAT_SET = new Set(STEP_STATS);
 
 const TILE_LABELS: Partial<Record<`${StatType}:${boolean}`, string>> = {
   "workEfficiency:true": "Work efficiency",
@@ -55,20 +56,16 @@ export function statGroups(
   highlighted: GoalStat[],
   steps: StatTile,
 ): StatGroups {
-  const highlightKeys = highlighted.map(({ stat, isPercent }) => `${stat}:${isPercent}`);
+  const highlightRank = new Map(highlighted.map(({ stat, isPercent }, index) => [`${stat}:${isPercent}`, index]));
   const tile = (line: StatLine): StatTile => ({
     key: `${line.stat}:${line.isPercent}`,
     value: formatStatValue(line),
     label: statName(line)!,
     details: [],
-    highlight: highlightKeys.includes(`${line.stat}:${line.isPercent}`),
+    highlight: highlightRank.has(`${line.stat}:${line.isPercent}`),
     over: false,
   });
-  const rank = (tile: StatTile) => {
-    const index = highlightKeys.indexOf(tile.key);
-
-    return index === -1 ? highlightKeys.length : index;
-  };
+  const rank = (tile: StatTile) => highlightRank.get(tile.key) ?? highlightRank.size;
 
   const missing = highlighted
     .filter((goal) => !lines.some((line) => sameStat(line, goal)))
@@ -84,7 +81,7 @@ export function statGroups(
       ...STEP_STATS.flatMap((stat) => shown.filter((line) => line.stat === stat).map(tile)),
     ],
     other: shown
-      .filter((line) => !STEP_STATS.includes(line.stat))
+      .filter((line) => !STEP_STAT_SET.has(line.stat))
       .map(tile)
       .sort((left, right) => rank(left) - rank(right) || left.label.localeCompare(right.label)),
   };

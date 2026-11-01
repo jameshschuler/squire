@@ -21,6 +21,7 @@ import type {
 } from "./types.js";
 
 const LOOT_ORDER: LootType[] = ["main", "secondary", "gem", "birdNest", "chestTable", "collectible", "petEgg"];
+const LOOT_RANK = new Map(LOOT_ORDER.map((lootType, index) => [lootType, index]));
 
 export interface ActivityIndexes {
   summary: (id: string) => ItemSummary;
@@ -171,5 +172,5 @@ function dropsOf(activity: ActivityDetail, { summary, tables }: ActivityIndexes)
   return [...byType]
     .filter(([, itemIds]) => itemIds.size > 0)
     .map(([lootType, itemIds]) => ({ lootType, items: [...itemIds].map(summary) }))
-    .sort((left, right) => LOOT_ORDER.indexOf(left.lootType) - LOOT_ORDER.indexOf(right.lootType));
+    .sort((left, right) => (LOOT_RANK.get(left.lootType) ?? -1) - (LOOT_RANK.get(right.lootType) ?? -1));
 }

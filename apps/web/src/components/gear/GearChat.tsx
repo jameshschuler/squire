@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { RotateCcw } from "lucide-react";
 import type { RecipeBook } from "@squire/api/recipe-book";
-import { BEST_IN_GAME, type GearData, type PlayerProfile } from "@squire/api/gear-data";
+import { BEST_IN_GAME, goalOf, type GearData, type PlayerProfile } from "@squire/api/gear-data";
 import { Button } from "@/components/ui/button";
 import { useCharacterContext } from "@/contexts/character-context";
 import { useGearSuggestion } from "@/hooks/useGearSuggestion";
@@ -111,7 +111,7 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
           </ChatMessage>
           {goals.length > 0 && (
             <ChatAnswer
-              label={goals.map((id) => allowedGoals.find((allowedGoal) => allowedGoal.id === id)!.label).join(" › ")}
+              label={goals.map((id) => goalOf(id).label).join(" › ")}
               onChange={() => update({ goals: undefined })}
             />
           )}

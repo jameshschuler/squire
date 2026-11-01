@@ -3,7 +3,7 @@ import { conditionHolds, withSetBonuses, type Candidate, type Situation } from "
 import { compareScores, type Score } from "./goals.js";
 import type { OwnedGear } from "./profile.js";
 import { conflicts, type KeywordRules } from "./pruning.js";
-import { STEP_STATS, type StatTotals } from "./steps.js";
+import { STEP_STAT_SET, type StatTotals } from "./steps.js";
 import { copiesAllowed } from "./slots.js";
 import type { GearStat } from "./types.js";
 
@@ -57,7 +57,7 @@ function costsNoSteps({ workEfficiency, stepsPercent, stepsFlat, doubleAction }:
 function otherBonuses(situation: Situation, stats: GearStat[]): GearStat[] {
   return stats.filter(
     (stat) =>
-      !(STEP_STATS as readonly string[]).includes(stat.stat) &&
+      !STEP_STAT_SET.has(stat.stat) &&
       stat.conditions.every(
         (condition) => condition.type !== "distinctKeywordItemsEquipped" && conditionHolds(situation, condition),
       ),

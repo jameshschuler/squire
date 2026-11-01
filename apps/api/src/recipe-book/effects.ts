@@ -1,7 +1,7 @@
 import type { Attribute, ItemDetail, Requirement, SkillDetail } from "@walkscape-community/data-api-client";
 import { capitalize, spaced } from "./text.js";
 import {
-  QUALITIES,
+  QUALITY_RANK,
   type Effect,
   type EffectTarget,
   type ItemEffects,
@@ -57,7 +57,7 @@ function qualityTotals(
   add(base);
 
   return [...tiers]
-    .sort((left, right) => QUALITIES.indexOf(left.quality) - QUALITIES.indexOf(right.quality))
+    .sort((left, right) => (QUALITY_RANK.get(left.quality) ?? -1) - (QUALITY_RANK.get(right.quality) ?? -1))
     .map(({ quality, attributes }) => {
       add(attributes ?? []);
 

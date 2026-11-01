@@ -33,6 +33,7 @@ export interface ItemEffects {
 export type ItemQuality = ItemDetail["quality"];
 
 export const QUALITIES: ItemQuality[] = ["common", "uncommon", "rare", "epic", "legendary", "ethereal"];
+export const QUALITY_RANK = new Map(QUALITIES.map((quality, index) => [quality, index]));
 
 export interface ItemSummary {
   id: string;

@@ -250,12 +250,15 @@ function serviceView(
   const { tier } = req.requirement;
   const keywords = getServiceKeywords(req);
   const offers = services
-    .filter(
-      (service) =>
+    .filter((service) => {
+      const offered = new Set(service.keywords);
+
+      return (
         service.serviceType === "crafting" &&
         meetsServiceTier(service.tier, tier) &&
-        keywords.every((keyword) => service.keywords.includes(keyword)),
-    )
+        keywords.every((keyword) => offered.has(keyword))
+      );
+    })
     .flatMap((service) =>
       (locationsByService.get(service.id) ?? []).map((location) => ({ ...location, tier: service.tier })),
     );

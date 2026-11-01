@@ -1,5 +1,5 @@
 import type { Attribute, GearType, ItemDetail, StatType } from "@walkscape-community/data-api-client";
-import { QUALITIES, type ItemQuality, type ItemSummary } from "../recipe-book/types.js";
+import { QUALITIES, QUALITY_RANK, type ItemQuality, type ItemSummary } from "../recipe-book/types.js";
 import type { GearCondition, GearItem, GearStat } from "./types.js";
 
 type GearDetail = Extract<ItemDetail, { gearType: GearType }>;
@@ -20,7 +20,7 @@ export function ownedKey({ id, quality }: { id: string; quality: ItemQuality | n
 }
 
 export function stackedStats(item: GearItem, quality: ItemQuality | null): GearStat[] {
-  const tiers = quality ? QUALITIES.slice(0, QUALITIES.indexOf(quality) + 1) : [];
+  const tiers = quality ? QUALITIES.slice(0, (QUALITY_RANK.get(quality) ?? -1) + 1) : [];
 
   return [...item.stats, ...tiers.flatMap((tier) => item.tierStats[tier] ?? [])];
 }

@@ -33,10 +33,10 @@ export function fillsNeed(need: GearNeed, item: GearItem): boolean {
   }
 
   const { level } = need;
+  const keywords = new Set(item.keywords);
 
   return (
-    need.keywords.some((keyword) => item.keywords.includes(keyword)) &&
-    (!level || equipLevel(item, level.skill) >= level.level)
+    need.keywords.some((keyword) => keywords.has(keyword)) && (!level || equipLevel(item, level.skill) >= level.level)
   );
 }
 

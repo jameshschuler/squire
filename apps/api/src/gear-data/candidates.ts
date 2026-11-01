@@ -111,9 +111,10 @@ export function itemId(candidate: Candidate): string {
 
 // Distinct items worn with any of the keywords. Two copies of one ring count once, as in the game.
 export function setCount(chosen: Candidate[], keywords: string[]): number {
-  return new Set(
-    chosen.filter((candidate) => candidate.keywords.some((keyword) => keywords.includes(keyword))).map(itemId),
-  ).size;
+  const counted = new Set(keywords);
+
+  return new Set(chosen.filter((candidate) => candidate.keywords.some((keyword) => counted.has(keyword))).map(itemId))
+    .size;
 }
 
 // A finished set's real stats, with each set bonus added only when its piece count holds.
@@ -165,8 +166,12 @@ function situationHolds({ target, skillType, location }: Situation, condition: G
       return false;
     case "realm":
       return location?.realms.includes(condition.requirement.realm) ?? false;
-    case "locationHasKeywords":
-      return condition.requirement.keywords.some((keyword) => location?.keywords.includes(keyword) ?? false);
+    case "locationHasKeywords": {
+      const here = new Set(location?.keywords);
+
+      return condition.requirement.keywords.some((keyword) => here.has(keyword));
+    }
+
     default:
       return undefined;
   }
