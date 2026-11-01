@@ -1,7 +1,7 @@
 import type { ItemDetail, ServiceTier } from "@walkscape-community/data-api-client";
 
 // Bump whenever the RecipeBook shape changes, so cached copies on devices refresh.
-export const RECIPE_BOOK_SCHEMA = 27;
+export const RECIPE_BOOK_SCHEMA = 28;
 
 export interface EffectTarget {
   id: string;
@@ -71,6 +71,12 @@ export interface SkillLevel {
   level: number | null;
 }
 
+export interface XpReward {
+  id: string;
+  name: string;
+  amount: number;
+}
+
 export interface RecipeView {
   id: string;
   name: string;
@@ -79,7 +85,7 @@ export interface RecipeView {
   service: RecipeService | null;
   materials: RecipeItem[][];
   outputs: RecipeItem[];
-  xp: { skill: string; amount: number }[];
+  xp: XpReward[];
   workRequired: number | null;
   maxWorkEfficiency: number | null;
 }
@@ -117,6 +123,7 @@ export interface ActivityView {
   gearNeeds: GearNeed[];
   uses: ActivityNeed[];
   drops: ActivityDrops[];
+  xp: XpReward[];
   workRequired: number | null;
   maxWorkEfficiency: number | null;
 }

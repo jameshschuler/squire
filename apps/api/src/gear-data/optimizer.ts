@@ -51,6 +51,8 @@ export interface OptimizeTarget extends WorkTarget {
   locationIds: string[];
   // Gear the activity can't be done without.
   needs: GearNeed[];
+  // Base XP per action for the main skill, which "Most XP" weighs flat bonus XP against.
+  baseXp: number;
 }
 
 // The chosen set and how sure the search is about it.
@@ -111,7 +113,12 @@ export function optimizeGear(
   const needs = target.needs.filter((need) => canMeetNeed(need, owned, capacityOf));
   const unowned = target.needs.filter((need) => !needs.includes(need));
   const plans = distinctLocations(gear, locations).map((location) =>
-    planAt(gear, situationFor(gear, profile, target, location, goalStats(goals)), goals, { owned, needs, capacityOf }),
+    planAt(gear, situationFor(gear, profile, target, location, goalStats(goals)), goals, {
+      owned,
+      needs,
+      capacityOf,
+      baseXp: target.baseXp,
+    }),
   );
   let found: Search | null = null;
   for (let limit = maxStates; ; limit *= STATES_GROWTH) {
@@ -248,7 +255,12 @@ function planAt(
   gear: GearData,
   situation: Situation,
   goals: GoalId[],
-  { owned, needs, capacityOf }: { owned: OwnedGear[]; needs: GearNeed[]; capacityOf: (slot: GearType) => number },
+  {
+    owned,
+    needs,
+    capacityOf,
+    baseXp,
+  }: { owned: OwnedGear[]; needs: GearNeed[]; capacityOf: (slot: GearType) => number; baseXp: number },
 ): LocationPlan {
   const { profile, target } = situation;
   const choices = owned.map((entry) => ({
@@ -258,7 +270,7 @@ function planAt(
   const items = choices.map((c) => c.candidate);
   const pets = ownedPets(profile, gear.pets).map((pet) => petCandidate(situation, pet));
   const level = skillLevelOf(profile, target.skill);
-  const goalScore = goalScorer(goals);
+  const goalScore = goalScorer(goals, baseXp);
   const score = (totals: StatTotals) => goalScore(stepsPerAction(target, level, totals), totals);
   const rules = keywordRules(
     gear.bannedKeywords,
@@ -277,7 +289,8 @@ function planAt(
     }))
     .filter((group) => group.choices.length > 0);
   const primary = goals[0];
-  const primaryValue = primary === undefined || goalOf(primary).stats.length === 0 ? null : goalValue(goals, primary);
+  const primaryValue =
+    primary === undefined || goalOf(primary).stats.length === 0 ? null : goalValue(goals, primary, baseXp);
   return { situation, choices, groups, rules, useful, level, score, capacityOf, primaryValue };
 }
 

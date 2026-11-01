@@ -13,6 +13,7 @@ const woodcutting = {
   maxWorkEfficiency: 2,
   locationIds: [],
   needs: [],
+  baseXp: 20,
 };
 
 describe("solveGear", () => {

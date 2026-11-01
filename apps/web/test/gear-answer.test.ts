@@ -15,6 +15,7 @@ const target: GearTarget = {
   kind: "activity",
   makesTieredGear: false,
   needs: [],
+  baseXp: 20,
 };
 const steps = (averageSteps: number): StepsResult => ({ efficiency: 1, steps: Math.ceil(averageSteps), averageSteps });
 const suggestion = (

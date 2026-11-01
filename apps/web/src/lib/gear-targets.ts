@@ -22,6 +22,7 @@ export interface GearTarget {
   kind: "activity" | "recipe";
   makesTieredGear: boolean;
   needs: GearNeed[];
+  baseXp: number;
 }
 
 export const BEST_LOCATION = "best";
@@ -64,6 +65,7 @@ export function gearTargets(book: RecipeBook): GearTarget[] {
               kind: t.kind,
               makesTieredGear: t.makesTieredGear,
               needs: t.needs,
+              baseXp: t.xp.find((reward) => reward.id === skill.id)?.amount ?? 0,
             },
           ]
         : [];
@@ -100,6 +102,7 @@ export function optimizeTarget(target: GearTarget, location: string | undefined)
     maxWorkEfficiency: target.maxWorkEfficiency,
     locationIds: (pinned ? [pinned] : target.locations).map((l) => l.id),
     needs: target.needs,
+    baseXp: target.baseXp,
   };
 }
 

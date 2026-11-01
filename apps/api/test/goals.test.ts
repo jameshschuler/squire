@@ -11,36 +11,37 @@ import {
 import type { GoalId } from "../src/gear-data/goals.js";
 import { NO_STATS } from "../src/gear-data/steps.js";
 
+const BASE_XP = 22;
 const result = (averageSteps: number) => ({ efficiency: 1, steps: Math.ceil(averageSteps), averageSteps });
 
 describe("goalScorer", () => {
   it("scores fewest steps so that fewer steps is higher", () => {
-    expect(goalScorer(["steps"])(result(40), NO_STATS)).toEqual([-40]);
+    expect(goalScorer(["steps"], BASE_XP)(result(40), NO_STATS)).toEqual([-40]);
   });
 
   it("scores other goals as their stat per step, so steps still count", () => {
     const totals = { ...NO_STATS, goalStats: [0.5] };
-    expect(goalScorer(["chests"])(result(30), totals)).toEqual([1.5 / 30]);
+    expect(goalScorer(["chests"], BASE_XP)(result(30), totals)).toEqual([1.5 / 30]);
   });
 
   it("gives each goal its own stat, in the order they were picked", () => {
     const totals = { ...NO_STATS, goalStats: [0.2, 0.4] };
-    expect(goalScorer(["items", "steps", "xp"])(result(10), totals)).toEqual([1.2 / 10, -10, 1.4 / 10]);
+    expect(goalScorer(["items", "steps", "xp"], BASE_XP)(result(10), totals)).toEqual([1.2 / 10, -10, 1.4 / 10]);
   });
 });
 
 describe("crafting goals", () => {
   it("score saving materials as outputs per material and quality by the stat, neither per step", () => {
     const totals = { ...NO_STATS, goalStats: [0.2, 0.1, 40] };
-    expect(goalScorer(["materials", "quality"])(result(30), totals)).toEqual([1.2 / 0.9, 40]);
+    expect(goalScorer(["materials", "quality"], BASE_XP)(result(30), totals)).toEqual([1.2 / 0.9, 40]);
   });
 
   it.each([
     ["a refund", [0, 0.2]],
     ["a doubled craft", [0.25, 0]],
   ])("counts %s as saving materials", (_, goalStats) => {
-    const nothing = goalScorer(["materials"])(result(30), { ...NO_STATS, goalStats: [0, 0] });
-    const saved = goalScorer(["materials"])(result(30), { ...NO_STATS, goalStats });
+    const nothing = goalScorer(["materials"], BASE_XP)(result(30), { ...NO_STATS, goalStats: [0, 0] });
+    const saved = goalScorer(["materials"], BASE_XP)(result(30), { ...NO_STATS, goalStats });
     expect(compareScores(saved, nothing)).toBeGreaterThan(0);
     expect(saved).toEqual([1.25]);
   });
@@ -55,11 +56,31 @@ describe("crafting goals", () => {
 
 describe("goalValue", () => {
   it("values a goal from its own stats, wherever they sit among the chosen goals", () => {
-    expect(goalValue(["chests", "materials"], "materials")([0.5, 0.2, 0.1])).toBeCloseTo(1.2 / 0.9);
+    expect(goalValue(["chests", "materials"], "materials", BASE_XP)([0.5, 0.2, 0.1])).toBeCloseTo(1.2 / 0.9);
+  });
+
+  it.each([
+    ["flat bonus XP adds to the base", [0, 2], 24 / 22 - 1],
+    ["percent bonus XP multiplies it", [0.06, 0], 0.06],
+    ["both, with the percent applied to the flat bonus too", [0.06, 2], (24 * 1.06) / 22 - 1],
+  ])("values most XP as the XP over base: %s", (_, stats, bonus) => {
+    expect(goalValue(["xp"], "xp", BASE_XP)(stats)).toBeCloseTo(bonus);
+  });
+
+  it("counts only the percent bonus when the action has no base XP", () => {
+    expect(goalValue(["xp"], "xp", 0)([0.06, 2])).toBe(0.06);
+  });
+
+  it("weighs +2 flat XP above +6% on a 22 XP action, like the game", () => {
+    const xp = goalScorer(["xp"], BASE_XP);
+    const flat = xp(result(30), { ...NO_STATS, goalStats: [0, 2] });
+    const percent = xp(result(30), { ...NO_STATS, goalStats: [0.06, 0] });
+
+    expect(compareScores(flat, percent)).toBeGreaterThan(0);
   });
 
   it("isn't divided by steps for a per-step goal", () => {
-    expect(goalValue(["xp"], "xp")([0.4])).toBe(0.4);
+    expect(goalValue(["xp"], "xp", BASE_XP)([0.4])).toBeCloseTo(0.4);
   });
 });
 

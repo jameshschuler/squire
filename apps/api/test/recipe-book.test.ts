@@ -231,6 +231,10 @@ describe("activities", () => {
     });
   });
 
+  it("lists the base XP an action gives each skill", () => {
+    expect(goldOre.xp).toEqual([{ id: "mining", name: "Mining", amount: 48 }]);
+  });
+
   it("groups drops by loot type: main loot, then gems, then chests", () => {
     expect(goldOre.drops.map((d) => [d.lootType, ids(d.items)])).toEqual([
       ["main", ["gold_ore"]],

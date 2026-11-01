@@ -100,6 +100,7 @@ const mining: OptimizeTarget = {
   maxWorkEfficiency: 1.5,
   locationIds: [],
   needs: [],
+  baseXp: 20,
 };
 const picked = (gear: GearData, profile: PlayerProfile, target: OptimizeTarget = mining) =>
   optimizeGear(gear, profile, target)
@@ -490,6 +491,19 @@ describe("optimizeGear", () => {
     const suggestion = optimizeGear(gear, BEST_IN_GAME, mining, ["quality", "steps"]);
     expect(suggestion.picks.map((p) => p.item.id)).toEqual(["fine_apron"]);
     expect(suggestion.score[0]).toBe(25);
+  });
+
+  it.each([
+    [22, "tutor_gloves"],
+    [100, "scholar_gloves"],
+  ])("weighs flat bonus XP against the action's base XP (base %d wears %s)", (baseXp, wears) => {
+    const gear = gearData([
+      item("scholar_gloves", "hands", [stat("bonusExperience", 0.06, true)]),
+      item("tutor_gloves", "hands", [stat("bonusExperience", 2, false)]),
+    ]);
+    const suggestion = optimizeGear(gear, BEST_IN_GAME, { ...mining, baseXp }, ["xp"]);
+
+    expect(suggestion.picks.map((p) => p.item.id)).toEqual([wears]);
   });
 
   it("suggests nothing when no gear helps", () => {
@@ -895,6 +909,7 @@ describe("search size", () => {
       maxWorkEfficiency: 2.1,
       locationIds: ["azurazera"],
       needs: [],
+      baseXp: 40,
     };
     const gear = tailoringGear as unknown as GearData;
     const found = optimizeGear(gear, BEST_IN_GAME, tailoring, ["steps"], { maxStates: 100_000, timeBudgetMs: 50 });
@@ -910,6 +925,7 @@ describe("search size", () => {
       maxWorkEfficiency: 2.1,
       locationIds: ["azurazera"],
       needs: [],
+      baseXp: 40,
     };
     const start = performance.now();
     const suggestion = optimizeGear(tailoringGear as unknown as GearData, BEST_IN_GAME, tailoring);
@@ -1057,7 +1073,7 @@ describe("optimizeGear against every possible set", { timeout: 30_000 }, () => {
             }),
             { workEfficiency: 0, stepsPercent: 0, stepsFlat: 0, doubleAction: 0, goalStats: [0] },
           );
-        return goalScorer(goals)(stepsPerAction(target, level, totals), totals);
+        return goalScorer(goals, target.baseXp)(stepsPerAction(target, level, totals), totals);
       })
       .reduce((best, next) => (compareScores(next, best) > 0 ? next : best));
   }

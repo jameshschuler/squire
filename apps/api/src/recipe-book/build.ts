@@ -13,7 +13,7 @@ import { activityViews } from "./activities.js";
 import { itemEffects } from "./effects.js";
 import type { GameData } from "./game-data.js";
 import { getServiceKeywords, isServiceRequirement, itemsIn, meetsServiceTier } from "./game-rules.js";
-import { activityItems, lowestSkillLevels, skillLevels, sourceKey } from "./lookup.js";
+import { activityItems, lowestSkillLevels, skillLevels, sourceKey, xpRewards } from "./lookup.js";
 import { humanize } from "./text.js";
 import { byLevel, minLevel } from "./order.js";
 import { itemSummaries, locationSummary, regionNames } from "./summaries.js";
@@ -68,7 +68,7 @@ export function buildRecipeBook(data: GameData): RecipeBook {
       service: service ? serviceView(service, data.services, locationsByService) : null,
       materials: recipe.materials.map((m) => m.options.map((o) => item(o.item, o.amount))),
       outputs: Object.entries(recipe.itemRewards).map(([id, amount]) => item(id, amount)),
-      xp: Object.entries(recipe.xpRewards ?? {}).map(([skill, amount]) => ({ skill: skillName(skill), amount })),
+      xp: xpRewards(recipe.xpRewards, skillName),
       workRequired: recipe.workRequired,
       maxWorkEfficiency: recipe.maxWorkEfficiency,
     };

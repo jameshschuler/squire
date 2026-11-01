@@ -32,6 +32,11 @@ describe("gearTargets", () => {
     expect(byKey("recipe:smelt_a_gold_bar").locations.length).toBeGreaterThan(0);
   });
 
+  it("takes the main skill's base XP for activities and recipes", () => {
+    expect(byKey("activity:mine_gold_ore").baseXp).toBe(48);
+    expect(byKey("recipe:smelt_a_gold_bar").baseXp).toBe(160);
+  });
+
   it("leaves out recipes without steps", () => {
     const noSteps = { ...book, recipes: book.recipes.map((r) => ({ ...r, workRequired: null })) };
     expect(gearTargets(noSteps).map((t) => t.key)).toEqual(["activity:mine_gold_ore"]);
@@ -54,7 +59,7 @@ describe("searchGearTargets", () => {
 describe("optimizeTarget", () => {
   const gold = byKey("activity:mine_gold_ore");
 
-  it("takes the skill, level, work and required gear from the target", () => {
+  it("takes the skill, level, work, required gear and base XP from the target", () => {
     expect(optimizeTarget(gold, undefined)).toEqual({
       skill: "mining",
       level: 40,
@@ -62,6 +67,7 @@ describe("optimizeTarget", () => {
       maxWorkEfficiency: 1.7,
       locationIds: ["crown_of_cinders"],
       needs: [{ label: "Pickaxe", keywords: ["pickaxe"], count: 1, level: null, itemId: null }],
+      baseXp: 48,
     });
   });
 

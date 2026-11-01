@@ -6,7 +6,7 @@ import type {
   SpecificInput,
 } from "@walkscape-community/data-api-client";
 import { itemsIn, lootTypeOf } from "./game-rules.js";
-import { skillLevels } from "./lookup.js";
+import { skillLevels, xpRewards } from "./lookup.js";
 import { byActivityLevel } from "./order.js";
 import { humanize, spaced } from "./text.js";
 import type {
@@ -50,6 +50,7 @@ function activityView(activity: ActivityDetail, indexes: ActivityIndexes): Activ
       option.type === "inputActivity" ? option.inputs.map((input) => useOf(input, indexes)) : [],
     ),
     drops: dropsOf(activity, indexes),
+    xp: xpRewards(activity.xpRewardsMap, indexes.skillName),
     workRequired: activity.workRequired,
     maxWorkEfficiency: activity.maxWorkEfficiency,
   };

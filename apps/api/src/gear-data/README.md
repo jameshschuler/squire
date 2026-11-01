@@ -41,12 +41,13 @@ Two things follow from this and shape the whole search:
 
 A set's score is a list of numbers, one per priority, compared in order: the first number decides, and later numbers only break ties (`compareScores`). Higher is always better.
 
-| Priority                                   | Number                                                                           |
-| ------------------------------------------ | -------------------------------------------------------------------------------- |
-| Fastest                                    | `−average steps`                                                                 |
-| A per-step goal (items, XP, chests, gems…) | `(1 + bonus) / average steps`, so faster sets get more of it per step            |
-| Save materials                             | `(1 + double rewards) / (1 − no materials consumed)`: outputs per material spent |
-| Best quality                               | the quality outcome stat                                                         |
+| Priority                               | Number                                                                                   |
+| -------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Fastest                                | `−average steps`                                                                         |
+| A per-step goal (items, chests, gems…) | `(1 + bonus) / average steps`, so faster sets get more of it per step                    |
+| Most XP                                | the same, with bonus = `(base + flat) × (1 + percent) / base − 1`, as the game counts XP |
+| Save materials                         | `(1 + double rewards) / (1 − no materials consumed)`: outputs per material spent         |
+| Best quality                           | the quality outcome stat                                                                 |
 
 Numbers are rounded to 9 significant digits before comparing, so floating-point noise never makes two equal sets look different.
 

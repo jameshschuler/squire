@@ -17,7 +17,8 @@ export interface Goal {
   label: string;
   description: string;
   stats: GoalStat[];
-  value: (stats: number[]) => number;
+  // The goal's bonus from its stats, as a fraction over no gear.
+  value: (stats: number[], baseXp: number) => number;
   perStep: boolean;
   kind: GoalKind;
   lootType: LootType | null;
@@ -35,6 +36,11 @@ const single = ([value]: number[]) => value ?? 0;
 // material spent is (1 + double rewards) / (1 − no materials consumed).
 const outputsPerMaterial = ([doubleRewards, noMaterialsConsumed]: number[]) =>
   (1 + (doubleRewards ?? 0)) / Math.max(1 - (noMaterialsConsumed ?? 0), MIN_MATERIAL_USE);
+// Flat bonus XP adds to the base XP before the percent bonus multiplies it, so XP per action is
+// (base + flat) × (1 + percent), a bonus over base of (1 + flat / base) × (1 + percent) − 1.
+// Without a base, only the percent counts.
+const bonusXp = ([percentBonus, flatBonus]: number[], baseXp: number) =>
+  baseXp > 0 ? (1 + (flatBonus ?? 0) / baseXp) * (1 + (percentBonus ?? 0)) - 1 : (percentBonus ?? 0);
 
 export const GOALS: Goal[] = [
   {
@@ -60,9 +66,9 @@ export const GOALS: Goal[] = [
   {
     id: "xp",
     label: "Most XP",
-    description: "Bonus XP from each action",
-    stats: [percent("bonusExperience")],
-    value: single,
+    description: "Bonus XP from each action, flat and percent",
+    stats: [percent("bonusExperience"), { stat: "bonusExperience", isPercent: false }],
+    value: bonusXp,
     perStep: true,
     kind: "any",
     lootType: null,
@@ -157,17 +163,21 @@ export function goalStats(goals: GoalId[]): GoalStat[] {
   return stats.filter((stat, i) => stats.findIndex((other) => sameStat(other, stat)) === i);
 }
 
-export function goalValue(goals: GoalId[], id: GoalId): (goalStats: number[]) => number {
+export function goalValue(goals: GoalId[], id: GoalId, baseXp: number): (goalStats: number[]) => number {
   const stats = goalStats(goals);
   const goal = goalOf(id);
   const indexes = goal.stats.map((stat) => stats.findIndex((s) => sameStat(s, stat)));
-  return (goalStats) => goal.value(indexes.map((i) => goalStats[i] ?? 0));
+  return (goalStats) =>
+    goal.value(
+      indexes.map((i) => goalStats[i] ?? 0),
+      baseXp,
+    );
 }
 
 // Scores a set: "Fastest" is −average steps, per-step goals are (1 + bonus) / average steps so a
 // faster set earns more per step, and the rest are their value as is.
-export function goalScorer(goals: GoalId[]): (result: StepsResult, totals: StatTotals) => Score {
-  const parts = goals.map((id) => ({ goal: goalOf(id), value: goalValue(goals, id) }));
+export function goalScorer(goals: GoalId[], baseXp: number): (result: StepsResult, totals: StatTotals) => Score {
+  const parts = goals.map((id) => ({ goal: goalOf(id), value: goalValue(goals, id, baseXp) }));
   return (result, totals) =>
     parts.map(({ goal, value }) => {
       if (goal.stats.length === 0) {
