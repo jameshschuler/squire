@@ -21,7 +21,8 @@ export interface SetBonus {
 
 // One owned item (or pet) reduced to what the search needs for the current situation. `totals` are the
 // stats that always apply here; `setBonuses` depend on how many set pieces end up worn; `best` is
-// `totals` plus every helpful set bonus, the most this item could ever add.
+// `totals` plus every helpful set bonus, the most this item could ever add, and `worst` is `totals`
+// plus every harmful one, the least it could add. Pruning and dominance compare `worst` with `best`.
 export interface Candidate {
   id: string;
   slot: GearType | "pet";
@@ -31,6 +32,7 @@ export interface Candidate {
   totals: StatTotals;
   setBonuses: SetBonus[];
   best: StatTotals;
+  worst: StatTotals;
 }
 
 export interface Situation {
@@ -41,7 +43,7 @@ export interface Situation {
   goalStats: GoalStat[];
 }
 
-type CandidateBase = Omit<Candidate, "totals" | "setBonuses" | "best">;
+type CandidateBase = Omit<Candidate, "totals" | "setBonuses" | "best" | "worst">;
 
 export function situationFor(
   gear: GearData,
@@ -91,7 +93,9 @@ export function toCandidate(situation: Situation, base: CandidateBase, stats: Ge
     }
   }
   const best = setBonuses.reduce((sum, bonus) => addStats(sum, gains(bonus.totals)), totals);
-  return { ...base, totals, setBonuses, best };
+  const worst = setBonuses.reduce((sum, bonus) => addStats(sum, losses(bonus.totals)), totals);
+
+  return { ...base, totals, setBonuses, best, worst };
 }
 
 export function itemId(candidate: Candidate): string {
@@ -150,6 +154,17 @@ function situationHolds({ target, skillType, location }: Situation, condition: G
     default:
       return undefined;
   }
+}
+
+// Only the harmful part of a set bonus, for the pessimistic `worst` stats.
+function losses(totals: StatTotals): StatTotals {
+  return {
+    workEfficiency: Math.min(totals.workEfficiency, 0),
+    stepsPercent: Math.max(totals.stepsPercent, 0),
+    stepsFlat: Math.max(totals.stepsFlat, 0),
+    doubleAction: Math.min(totals.doubleAction, 0),
+    goalStats: totals.goalStats.map((value) => Math.min(value, 0)),
+  };
 }
 
 // Only the helpful part of a set bonus, for the optimistic `best` stats.

@@ -30,9 +30,9 @@ export interface SlotGroup {
   choices: Candidate[];
 }
 
-// A set still being built. `guaranteed` counts only stats that always apply; `optimistic` adds every
-// helpful set bonus as if it will be met. `used` is how many places in the current slot group are filled.
-// `bans` holds the ban-keyword bits of what's worn, and `setItems` the distinct items per set group.
+// A set still being built. `guaranteed` is the least its stats could be (every harmful set bonus
+// counted, no helpful one); `optimistic` adds every helpful set bonus as if it will be met. `used` is
+// how many places in the current slot group are filled. `bans` holds the ban-keyword bits of what's worn, and `setItems` the distinct items per set group.
 interface PartialSet {
   chosen: Candidate[];
   guaranteed: StatTotals;
@@ -290,7 +290,7 @@ function emptySet(setGroupCount: number): PartialSet {
 function grow(state: PartialSet, next: Candidate, nextBans: BanMasks, groups: number[]): PartialSet {
   return {
     chosen: [...state.chosen, next],
-    guaranteed: addStats(state.guaranteed, next.totals),
+    guaranteed: addStats(state.guaranteed, next.worst),
     optimistic: addStats(state.optimistic, next.best),
     used: state.used + 1,
     bans: state.bans | nextBans.keys,

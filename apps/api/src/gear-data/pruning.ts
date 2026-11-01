@@ -90,11 +90,11 @@ export function prune(choices: Candidate[], capacity: number, rules: KeywordRule
   const covers = (a: Candidate, b: Candidate) => {
     const [aKeys, bKeys] = [keys.get(a)!, keys.get(b)!];
     return (
-      efficiency(a.totals.workEfficiency) >= efficiency(b.best.workEfficiency) &&
-      a.totals.stepsPercent <= b.best.stepsPercent &&
-      a.totals.stepsFlat <= b.best.stepsFlat &&
-      Math.min(a.totals.doubleAction, MAX_DOUBLE_ACTION) >= Math.min(b.best.doubleAction, MAX_DOUBLE_ACTION) &&
-      b.best.goalStats.every((value, i) => (a.totals.goalStats[i] ?? 0) >= value) &&
+      efficiency(a.worst.workEfficiency) >= efficiency(b.best.workEfficiency) &&
+      a.worst.stepsPercent <= b.best.stepsPercent &&
+      a.worst.stepsFlat <= b.best.stepsFlat &&
+      Math.min(a.worst.doubleAction, MAX_DOUBLE_ACTION) >= Math.min(b.best.doubleAction, MAX_DOUBLE_ACTION) &&
+      b.best.goalStats.every((value, i) => (a.worst.goalStats[i] ?? 0) >= value) &&
       aKeys.ban.every((k) => bKeys.ban.includes(k)) &&
       [...bKeys.set].every((k) => aKeys.set.has(k)) &&
       [...rules.cappedSetGroups].every((g) => aKeys.set.has(g) === bKeys.set.has(g))

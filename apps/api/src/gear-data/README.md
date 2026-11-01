@@ -60,6 +60,7 @@ Each owned item becomes a `Candidate` for the current situation (activity, locat
 - `totals`: the stats it always gives here. Stats whose conditions don't hold (wrong skill, wrong location, too few collectibles…) are dropped.
 - `setBonuses`: stats that depend on how many items from a keyword set are worn. These are only known once the whole set is chosen; `withSetBonuses` adds them up for a finished set.
 - `best`: `totals` plus every helpful part of its set bonuses. This is what the item could give at most, and it's what makes the search's bounds safe.
+- `worst`: `totals` plus every harmful part of its set bonuses, the least it could give. Pruning and dominance compare one item's `worst` with another's `best`. No set bonus in the game hurts today, so `worst` equals `totals`, but this keeps them safe if one ever does.
 
 Goal stats (chest finding, bonus XP…) go into `goalStats`, in the order `goalStats(goals)` lists them.
 
@@ -70,6 +71,7 @@ Some activities can't be done without certain gear: a pickaxe, a pickaxe that ta
 - First, `canMeetNeed` checks whether the player owns enough different items for each need, counting only as many per slot as the slot holds. Needs they can't meet come back as `missingNeeds`, and the search ignores them, so the player still gets a set, and the answer names the gear they're missing.
 - Each item that fills a need gets a hidden keyword (`need:0`, `need:1`…), and each need becomes a keyword group, like a set bonus's. That reuses what set pieces already get: pruning never drops them, dominance compares how many each partial set has, and two copies of one item count once.
 - A set that misses a need scores below every usable set (`unusable` in `bestSet`), and the greedy start begins with the best items that fill each need (`neededStart`), so the search always has a usable set to beat.
+- If no set can meet every need at once (their items ban each other, or need the same slot), `optimizeGear` searches again without the needs its set missed, within the same deadline, and adds them to `missingNeeds`.
 
 ## Pruning items
 

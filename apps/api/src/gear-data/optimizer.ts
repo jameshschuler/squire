@@ -128,6 +128,23 @@ export function optimizeGear(
       const { ceiling: _ceiling, usable, ...best } = found;
       const worn = best.picks.map((pick) => pick.item);
       const unmet = usable ? [] : needs.filter((need) => !metBy(need, worn));
+      const remaining = deadline - performance.now();
+      // No set met every need at once (their items ban each other or share a slot), so search again
+      // without the needs this set misses, in the time left, and name them.
+      if (unmet.length > 0 && remaining > 0) {
+        const relaxed = { ...target, needs: target.needs.filter((need) => !unmet.includes(need)) };
+        const fallback = optimizeGear(gear, profile, relaxed, goals, {
+          maxStates,
+          timeBudgetMs: remaining,
+          checkedGoals,
+        });
+
+        return {
+          ...fallback,
+          missingNeeds: [...fallback.missingNeeds, ...unmet],
+          searchMs: Math.round(performance.now() - start),
+        };
+      }
 
       return { ...best, margin, missingNeeds: [...unowned, ...unmet], searchMs: Math.round(performance.now() - start) };
     }

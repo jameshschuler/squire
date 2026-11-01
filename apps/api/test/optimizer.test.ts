@@ -326,6 +326,21 @@ describe("optimizeGear", () => {
     expect(picked(gear, owned)).toEqual(["gem_hat", "opal_ring", "ruby_ring"]);
   });
 
+  it("never prunes an item for one whose set bonus can make it worse", () => {
+    const curse = flatSteps(8, {
+      type: "distinctKeywordItemsEquipped",
+      opposite: false,
+      requirement: { quantity: 2, keywords: ["cursed_set"] },
+    });
+    const gear = gearData([
+      item("cursed_hat", "head", [flatSteps(-5), curse], { keywords: ["cursed_set"] }),
+      item("plain_hat", "head", [flatSteps(-4)]),
+      item("cursed_boots", "feet", [flatSteps(-3)], { keywords: ["cursed_set"] }),
+    ]);
+
+    expect(picked(gear, BEST_IN_GAME)).toEqual(["cursed_boots", "plain_hat"]);
+  });
+
   it("keeps a plain set piece when a later slot's set bonus needs it", () => {
     const gear = gearData([
       item("set_helm", "head", [], { keywords: ["miner_set"] }),
@@ -587,18 +602,20 @@ describe("required gear", () => {
     expect(suggestion.picks.map((p) => p.item.id)).toEqual(["light_gloves"]);
   });
 
-  it("names the needs a set can't meet together, instead of stripping the set", () => {
+  it("names the needs no set can meet together, and still picks the best set for the rest", () => {
     const gear = gearData(
       [
         item("rusty_pickaxe", "tool", [], { keywords: ["pickaxe"] }),
         item("rusty_hatchet", "tool", [], { keywords: ["hatchet"] }),
+        item("light_gloves", "hands", [flatSteps(-10)]),
       ],
       { bannedKeywords: { pickaxe: ["hatchet"] } },
     );
     const hatchet = need({ label: "Hatchet", keywords: ["hatchet"] });
-    const suggestion = optimizeGear(gear, character(["rusty_pickaxe", "rusty_hatchet"]), withNeeds(need({}), hatchet));
+    const owned = character(["rusty_pickaxe", "rusty_hatchet", "light_gloves"]);
+    const suggestion = optimizeGear(gear, owned, withNeeds(need({}), hatchet));
 
-    expect(suggestion.picks.map((p) => p.item.id)).toEqual(["rusty_pickaxe"]);
+    expect(suggestion.picks.map((p) => p.item.id).sort()).toEqual(["light_gloves", "rusty_pickaxe"]);
     expect(suggestion.missingNeeds).toEqual([hatchet]);
   });
 
