@@ -11,6 +11,7 @@ interface ActivityResultsProps {
 
 export function ActivityResults({ activities, listKey }: ActivityResultsProps) {
   const { visibleItems, hasMore, sentinelRef } = useIncrementalList(activities, listKey, PAGE_SIZE);
+
   return (
     <>
       <ul className="divide-y">

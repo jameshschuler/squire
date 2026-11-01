@@ -92,6 +92,7 @@ describe("Character page", () => {
         stat.querySelector("dd")?.textContent,
       ]),
     );
+
     expect(stats).toEqual({
       "Character level": "80",
       Collectibles: "2",
@@ -194,6 +195,7 @@ describe("Character page", () => {
     localStorage.setItem(CHARACTER_STORAGE_KEY, saved);
     await renderPage();
     const list = await screen.findByRole("list", { name: "Collectibles" });
+
     expect(
       [...list.querySelectorAll("a")].map((link) => [link.getAttribute("aria-label"), link.getAttribute("href")]),
     ).toEqual([

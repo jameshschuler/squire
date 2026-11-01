@@ -10,6 +10,7 @@ const favorites = ["smelt_a_gold_bar"];
 describe("recipeFilters", () => {
   it("puts Favorites before the skills once something is starred", () => {
     const filters = recipeFilters(recipes, favorites);
+
     expect(filters[0]).toEqual({ id: FAVORITES_FILTER, name: "Favorites" });
     expect(filters.slice(1).map((f) => f.id)).toEqual(recipeFilters(recipes, []).map((f) => f.id));
   });
@@ -29,6 +30,7 @@ describe("filterRecipes", () => {
 
   it("lists favorites newest first", () => {
     const starred = ["assemble_dynamite", "smelt_a_gold_bar"];
+
     expect(ids(filterRecipes(recipes, "", FAVORITES_FILTER, starred))).toEqual(starred);
   });
 
@@ -39,6 +41,7 @@ describe("filterRecipes", () => {
 
   it("filters by skill when a skill is picked", () => {
     const smithing = filterRecipes(recipes, "", "smithing", favorites);
+
     expect(smithing.length).toBeGreaterThan(0);
     expect(smithing.every((r) => r.skills.some((s) => s.id === "smithing"))).toBe(true);
   });

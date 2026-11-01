@@ -15,6 +15,7 @@ export function GameDataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const keepNewer = (next: GameDataState) => setState((current) => (current.status === "ready" ? current : next));
+
     fetchRecipeBook()
       .then((book) => {
         keepNewer({ status: "ready", book });
@@ -25,18 +26,22 @@ export function GameDataProvider({ children }: { children: ReactNode }) {
 
   const refresh = useCallback(async () => {
     const book = await fetchRecipeBook({ fresh: true });
+
     setState({ status: "ready", book });
     void prefetchRecipeBookIcons(book);
   }, []);
 
   const value = useMemo(() => ({ ...state, refresh }), [state, refresh]);
+
   return <GameDataContext.Provider value={value}>{children}</GameDataContext.Provider>;
 }
 
 export function useGameDataContext(): GameDataContextValue {
   const value = useContext(GameDataContext);
+
   if (!value) {
     throw new Error("useGameDataContext must be used inside GameDataProvider");
   }
+
   return value;
 }

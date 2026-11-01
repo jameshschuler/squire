@@ -86,6 +86,7 @@ describe("answerNotes", () => {
 
   it("claims proof only for the first priority when the player picked several", () => {
     const notes = answerNotes(suggestion(30, 1, null, ["steps", "chests", "materials"]), target, null);
+
     expect(notes).toEqual(["Proven best for Fastest."]);
   });
 });
@@ -120,6 +121,7 @@ describe("stepsTile", () => {
   it("formats large step counts", () => {
     const long = { result: { efficiency: 1, steps: 5547, averageSteps: 5547 }, goals: [] } as unknown as GearSuggestion;
     const bare = { efficiency: 1, steps: 12400, averageSteps: 12400 };
+
     expect(stepsTile(long, bare, 4100)).toMatchObject({ value: "5,547", details: ["Min 4,100 · Max 12,400"] });
   });
 });

@@ -32,6 +32,7 @@ const pick = (
 describe("gearSetEntries", () => {
   it("lists every slot in the game's order, with empty slots as null", () => {
     const entries = gearSetEntries([]);
+
     expect(entries.map((e) => (e.index === undefined ? e.type : `${e.type}${e.index}`))).toEqual([
       ...["head", "cape", "back", "chest", "primary", "secondary", "hands", "legs", "neck", "feet"],
       ...["ring0", "ring1", "tool0", "tool1", "tool2", "tool3", "tool4", "tool5"],
@@ -44,6 +45,7 @@ describe("gearSetEntries", () => {
       pick("oven_mittens", "hands", "uncommon"),
       pick("cape_of_half_achiever", "cape", null, { quality: "legendary" }),
     ]);
+
     expect(entries.find((e) => e.type === "hands")?.item).toBe(
       JSON.stringify({ id: "game-oven_mittens", quality: "uncommon", tag: null }),
     );
@@ -57,6 +59,7 @@ describe("gearSetEntries", () => {
       pick("saw", "tool", null),
     ]);
     const ids = entries.map((e) => (e.item === "null" ? null : (JSON.parse(e.item) as { id: string }).id));
+
     expect(ids.slice(10, 13)).toEqual(["game-ring_a", "game-ring_b", "game-saw"]);
   });
 
@@ -70,6 +73,7 @@ describe("gearSetCode", () => {
     const picks = [pick("oven_mittens", "hands", "uncommon")];
     const code = await gearSetCode(picks);
     const decoded = JSON.parse(gunzipSync(Buffer.from(code, "base64")).toString("utf8")) as unknown;
+
     expect(decoded).toEqual({ items: gearSetEntries(picks) });
   });
 });

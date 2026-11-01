@@ -7,6 +7,7 @@ describe("encodeJson", () => {
     const value = { recipes: Array.from({ length: 50 }, (_, i) => ({ id: `recipe_${i}`, name: "Smelt a gold bar" })) };
     const encoded = await encodeJson(value);
     const json = JSON.stringify(value);
+
     expect(encoded.identity.toString()).toBe(json);
     expect(brotliDecompressSync(encoded.br).toString()).toBe(json);
     expect(gunzipSync(encoded.gzip).toString()).toBe(json);

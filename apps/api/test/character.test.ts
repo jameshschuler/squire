@@ -64,6 +64,7 @@ describe("ownedItem", () => {
 describe("parseCharacterExport", () => {
   it("reads the player's levels and progress", () => {
     const character = parseCharacterExport(fixtureText);
+
     expect(character).toMatchObject({
       name: "Test Walker",
       skillLevels: { agility: 85, cooking: 71, fishing: 1, mining: 99 },
@@ -88,6 +89,7 @@ describe("parseCharacterExport", () => {
 
   it("lists each item equipped, banked or carried with how many, leaving out fine materials", () => {
     const owned = parseCharacterExport(fixtureText).owned;
+
     expect(owned).toHaveLength(9);
     expect(owned).toEqual(
       expect.arrayContaining([
@@ -112,6 +114,7 @@ describe("parseCharacterExport", () => {
 
   it("reads an export with no pet out", () => {
     const text = JSON.stringify({ ...exportFixture, pets: { pet: null } });
+
     expect(parseCharacterExport(text).pets).toEqual([
       { species: "silky_mummy", level: 2 },
       { species: "camel", level: 1 },
@@ -120,6 +123,7 @@ describe("parseCharacterExport", () => {
 
   it("has no pets when the export lists none", () => {
     const { pets: _pets, available_pets: _available, ...withoutPets } = exportFixture;
+
     expect(parseCharacterExport(JSON.stringify(withoutPets)).pets).toEqual([]);
   });
 
@@ -129,6 +133,7 @@ describe("parseCharacterExport", () => {
       bank: { ...exportFixture.bank, gold_ethernite_ring_epic: 1, silver_ring: 0 },
     });
     const owned = parseCharacterExport(text).owned;
+
     expect(owned.find((item) => item.id === "gold_ethernite_ring" && item.quality === "epic")?.count).toBe(2);
     expect(owned.some((item) => item.id === "silver_ring")).toBe(false);
   });

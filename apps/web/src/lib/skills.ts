@@ -5,6 +5,7 @@ export interface SkillOption {
 
 export function uniqueSkills(skills: SkillOption[]): SkillOption[] {
   const byId = new Map(skills.map((s) => [s.id, s.name]));
+
   return [...byId].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
 }
 

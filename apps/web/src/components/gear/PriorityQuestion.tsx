@@ -16,6 +16,7 @@ export function PriorityQuestion({ goals, recommended, onChoose }: PriorityQuest
     setPicked((current) =>
       current.includes(id) ? current.filter((g) => g !== id) : current.length < MAX_GOALS ? [...current, id] : current,
     );
+
   return (
     <div className="space-y-2">
       <Button
@@ -33,6 +34,7 @@ export function PriorityQuestion({ goals, recommended, onChoose }: PriorityQuest
       <ul className="space-y-1">
         {goals.map((goal) => {
           const rank = picked.indexOf(goal.id) + 1;
+
           return (
             <li key={goal.id}>
               <button

@@ -7,6 +7,7 @@ const exportText = JSON.stringify(exportFixture);
 describe("readStoredCharacter", () => {
   it("reads back a stored export and when it was imported", () => {
     const stored = storeCharacter(exportText, new Date("2026-10-24T21:41:00Z"));
+
     expect(readStoredCharacter(stored)).toMatchObject({
       character: { name: "Test Walker", toolSlots: 6 },
       savedAt: "2026-10-24T21:41:00.000Z",

@@ -60,6 +60,7 @@ export function buildRecipeBook(data: GameData): RecipeBook {
 
   const recipes = data.recipes.map((recipe): RecipeView => {
     const service = recipe.requirements.find(isServiceRequirement);
+
     return {
       id: recipe.id,
       name: recipe.name,
@@ -95,6 +96,7 @@ export function buildRecipeBook(data: GameData): RecipeBook {
     ...gear.map((g) => g.id),
     ...activityItems(activities).map((i) => i.id),
   ]);
+
   return {
     schema: RECIPE_BOOK_SCHEMA,
     version: data.version,
@@ -124,34 +126,42 @@ function itemSources(
   const drops = [...activityDrops, ...chestDrops, ...shopDrops, ...rewardDrops].filter((drop) =>
     itemIds.has(drop.itemId),
   );
+
   return Object.fromEntries(groupDrops(drops));
 }
 
 function groupDrops(drops: Drop[]): Map<string, ItemSource[]> {
   const byItem = new Map<string, ItemSource[]>();
   const seen = new Set<string>();
+
   for (const { itemId, source } of drops) {
     const key = `${itemId}|${sourceKey(source)}`;
+
     if (seen.has(key)) {
       continue;
     }
+
     seen.add(key);
     const list = byItem.get(itemId);
+
     if (list) {
       list.push(source);
     } else {
       byItem.set(itemId, [source]);
     }
   }
+
   for (const list of byItem.values()) {
     list.sort(bySource);
   }
+
   return byItem;
 }
 
 function dropsFromActivity({ id, name, icon, skills, locations, drops }: ActivityView): Drop[] {
   return drops.flatMap(({ lootType, items }) => {
     const source: ActivitySource = { kind: "activity", id, name, icon, skills, lootType, locations };
+
     return items.map((item) => ({ itemId: item.id, source }));
   });
 }
@@ -164,6 +174,7 @@ function dropsFromChest(chest: ItemDetail, foundBy: ItemSource[], tables: Map<st
     icon: chest.icon,
     skills: lowestSkillLevels(foundBy.flatMap((s) => ("skills" in s ? s.skills : []))),
   };
+
   return (chest.tables ?? []).flatMap((ref) => itemsIn(ref, tables).map((itemId) => ({ itemId, source })));
 }
 
@@ -175,11 +186,13 @@ function dropsFromShop(shop: ShopDetail, locationsByBuilding: Map<string, Locati
     icon: "",
     locations: locationsByBuilding.get(shop.id) ?? [],
   };
+
   return shop.soldItems.map((itemId) => ({ itemId, source }));
 }
 
 function dropsFromAchievement(achievement: AchievementDetail): Drop[] {
   const source: AchievementSource = { kind: "achievement", id: achievement.id, name: achievement.name, icon: "" };
+
   return rewardedItems(achievement.itemRewards).map((itemId) => ({ itemId, source }));
 }
 
@@ -190,6 +203,7 @@ const REWARD_NAMES: Record<RewardDetail["type"], string> = {
 
 function dropsFromReward(reward: RewardDetail): Drop[] {
   const source: RewardSource = { kind: "reward", id: reward.type, name: REWARD_NAMES[reward.type], icon: "" };
+
   return rewardedItems(reward.rewardItems).map((itemId) => ({ itemId, source }));
 }
 
@@ -212,6 +226,7 @@ function sourceRank(source: ItemSource): number {
   if (source.kind === "activity") {
     return source.lootType === "main" ? 0 : 1;
   }
+
   return SOURCE_RANKS[source.kind];
 }
 
@@ -238,14 +253,18 @@ function serviceView(
     .flatMap((s) => (locationsByService.get(s.id) ?? []).map((location) => ({ ...location, tier: s.tier })));
 
   const lowestByLocation = new Map<string, RecipeLocation>();
+
   for (const offer of offers) {
     const current = lowestByLocation.get(offer.id);
+
     if (!current || !meetsServiceTier(offer.tier, current.tier)) {
       lowestByLocation.set(offer.id, offer);
     }
   }
+
   const locations = [...lowestByLocation.values()].sort((a, b) => a.name.localeCompare(b.name));
   const [primary = "service", ...modifiers] = keywords;
+
   return { label: `${humanize([...modifiers, primary].join(" "))} (${tier})`, tier, locations };
 }
 
@@ -255,10 +274,13 @@ function indexLocations(
   keysOf: (location: LocationDetail) => string[] | undefined,
 ): Map<string, LocationSummary[]> {
   const index = new Map<string, LocationSummary[]>();
+
   for (const location of [...locations].sort((a, b) => a.name.localeCompare(b.name))) {
     const summary = locationSummary(location, regions);
+
     for (const key of keysOf(location) ?? []) {
       const list = index.get(key);
+
       if (list) {
         list.push(summary);
       } else {
@@ -266,5 +288,6 @@ function indexLocations(
       }
     }
   }
+
   return index;
 }

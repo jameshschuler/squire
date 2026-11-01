@@ -38,6 +38,7 @@ describe("listMaterials", () => {
 
   it("lists each material once", () => {
     const materials = ids(listMaterials(bookWithGoldBarAsMaterial));
+
     expect(materials).toHaveLength(new Set(materials).size);
   });
 
@@ -47,11 +48,13 @@ describe("listMaterials", () => {
 
   it("includes crafted items that other recipes use, marked as crafted", () => {
     const goldBarMaterial = listMaterials(bookWithGoldBarAsMaterial).find((m) => m.item.id === "gold_bar");
+
     expect(goldBarMaterial?.isCrafted).toBe(true);
   });
 
   it("leaves out crafted items no recipe uses", () => {
     const materials = ids(listMaterials(book));
+
     expect(materials).not.toContain("gold_bar");
     expect(materials).not.toContain("dynamite");
     expect(materials).not.toContain("bagel");
@@ -59,6 +62,7 @@ describe("listMaterials", () => {
 
   it("sorts materials A–Z by name", () => {
     const names = listMaterials(book).map((m) => m.item.name);
+
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
   });
 
@@ -69,6 +73,7 @@ describe("listMaterials", () => {
         gold_ore: [source("a", "mining", 40), source("b", "mining", 20), source("c", "foraging", 5)],
       },
     }).find((m) => m.item.id === "gold_ore");
+
     expect(ore?.skills.map((s) => [s.id, s.level])).toEqual([
       ["foraging", 5],
       ["mining", 20],
@@ -85,6 +90,7 @@ describe("materialFilters", () => {
         salt_crystal: [source("b", "mining", 2), source("c", "foraging", 3)],
       },
     });
+
     expect(materialFilters(materials).map((s) => s.id)).toEqual(["foraging", "mining"]);
   });
 });
@@ -101,6 +107,7 @@ describe("materialFilters with chests and shops", () => {
         ],
       },
     });
+
     expect(materialFilters(materials).map((f) => [f.id, f.name])).toEqual([
       ["mining", "mining"],
       [CHESTS_FILTER, "Chests"],
@@ -151,6 +158,7 @@ describe("searchMaterials", () => {
         ],
       },
     }).find((m) => m.item.id === "gold_ore");
+
     expect(ore?.skills.map((s) => s.id)).toEqual(["mining"]);
   });
 
@@ -163,6 +171,7 @@ describe("searchMaterials", () => {
     const accented = materials.map((m) =>
       m.item.id === "salt_crystal" ? { ...m, item: { ...m.item, name: "Jalapeño salt" } } : m,
     );
+
     expect(ids(searchMaterials(accented, "jalapeno"))).toEqual(["salt_crystal"]);
   });
 
@@ -172,6 +181,7 @@ describe("searchMaterials", () => {
 
   it("filters to crafted materials, and keeps one no activity drops out of skill filters", () => {
     const withGoldBar = listMaterials(bookWithGoldBarAsMaterial);
+
     expect(ids(searchMaterials(withGoldBar, "", { filter: CRAFTED_FILTER }))).toEqual(["gold_bar"]);
     expect(ids(searchMaterials(withGoldBar, "", { filter: "mining" }))).toEqual(["gold_ore"]);
     expect(ids(searchMaterials(withGoldBar, "gold bar"))).toEqual(["gold_bar"]);
@@ -191,6 +201,7 @@ describe("searchMaterials", () => {
         ],
       },
     });
+
     expect(ids(searchMaterials(sourced, "", { filter }))).toEqual(["salt_crystal"]);
   });
 });

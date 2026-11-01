@@ -15,6 +15,7 @@ describe("groupByCondition", () => {
     const shark = effect("While doing Woodcutting", "Steps required");
     const rewards = effect("While doing Woodcutting", "Double rewards");
     const global = effect("Global", "Bonus experience");
+
     expect(groupByCondition([shark, global, rewards])).toEqual([
       ["While doing Woodcutting", [shark, rewards]],
       ["Global", [global]],

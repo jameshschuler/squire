@@ -54,6 +54,7 @@ describe("types", () => {
       expectTypeOf(client.items.search({ type: "material" })).resolves.toEqualTypeOf<ItemListItem[]>();
       expectTypeOf(client.items.search({ canBeSold: true }, { detailed: true })).resolves.toEqualTypeOf<ItemDetail[]>();
     };
+
     expectTypeOf(check).toBeFunction();
   });
 

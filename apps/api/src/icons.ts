@@ -21,14 +21,19 @@ export function createIconStore(client: WalkScapeClient): IconStore {
       if (!known.has(path)) {
         return undefined;
       }
+
       const cached = icons.get(path);
+
       if (cached) {
         return cached;
       }
+
       const res = await client.icon(path);
       const bytes = await res.arrayBuffer();
       const icon = { type: res.headers.get("Content-Type") ?? "image/png", body: Buffer.from(bytes) };
+
       icons.set(path, icon);
+
       return icon;
     },
 
@@ -36,8 +41,10 @@ export function createIconStore(client: WalkScapeClient): IconStore {
       known = new Set(paths);
       const missing = paths.filter((path) => !icons.has(path));
       let loaded = 0;
+
       for (let i = 0; i < missing.length; i += BATCH_SIZE) {
         const batch = await client.icons(missing.slice(i, i + BATCH_SIZE));
+
         for (const [path, dataUri] of Object.entries(batch)) {
           if (dataUri) {
             icons.set(path, decodeDataUri(dataUri));
@@ -45,6 +52,7 @@ export function createIconStore(client: WalkScapeClient): IconStore {
           }
         }
       }
+
       return loaded;
     },
   };
@@ -52,5 +60,6 @@ export function createIconStore(client: WalkScapeClient): IconStore {
 
 function decodeDataUri(dataUri: string): Icon {
   const [header = "", data = ""] = dataUri.split(",", 2);
+
   return { type: header.slice("data:".length).split(";")[0] || "image/png", body: Buffer.from(data, "base64") };
 }

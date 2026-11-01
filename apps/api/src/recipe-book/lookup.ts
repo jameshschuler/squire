@@ -15,13 +15,17 @@ export function findItem(book: RecipeBook, itemId: string): ItemWithEffects | un
     book.foods.find((item) => item.id === itemId) ??
     book.loot.find((item) => item.id === itemId) ??
     book.gear.find((item) => item.id === itemId);
+
   if (listed) {
     return listed;
   }
+
   const found = [...recipeItems(book.recipes), ...activityItems(book.activities)].find((i) => i.id === itemId);
+
   if (!found) {
     return undefined;
   }
+
   return { ...found, effects: null };
 }
 
@@ -48,6 +52,7 @@ export function recipeBookIcons(book: RecipeBook): string[] {
   const recipeIcons = [...book.recipes, ...recipeItems(book.recipes)];
   const activityIcons = [...book.activities, ...activityItems(book.activities)];
   const sourceIcons = Object.values(book.sources).flat();
+
   return [
     ...new Set(
       [...recipeIcons, ...activityIcons, ...book.foods, ...book.loot, ...book.gear, ...sourceIcons]
@@ -63,12 +68,15 @@ export function sourceKey(source: ItemSource): string {
 
 export function lowestSkillLevels(skills: SkillLevel[]): SkillLevel[] {
   const lowest = new Map<string, SkillLevel>();
+
   for (const skill of skills) {
     const current = lowest.get(skill.id);
+
     if (!current || (skill.level ?? 0) < (current.level ?? 0)) {
       lowest.set(skill.id, skill);
     }
   }
+
   return [...lowest.values()].sort((a, b) => (a.level ?? 0) - (b.level ?? 0));
 }
 
@@ -84,5 +92,6 @@ export function skillLevels(
   const levels = new Map(
     requirements.filter(isSkillLevelRequirement).map((r) => [r.requirement.skill, r.requirement.level]),
   );
+
   return skillIds.map((id) => ({ id, name: skillName(id), level: levels.get(id) ?? null }));
 }

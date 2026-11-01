@@ -18,6 +18,7 @@ describe("AppHeader", () => {
       </ThemeProvider>,
     );
     const home = screen.getByRole("link", { name: "Squire" });
+
     expect(home.getAttribute("href")).toBe("/");
     expect(home.textContent).toBe("Squire");
   });

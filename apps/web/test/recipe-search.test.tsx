@@ -51,9 +51,11 @@ describe("RecipeSearch favorites", () => {
   it("drops the chip and the filter after clearing favorites", async () => {
     localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(["smelt_a_gold_bar"]));
     const onSkillChange = vi.fn();
+
     await renderSearch(FAVORITES_FILTER, onSkillChange);
     fireEvent.click(screen.getByRole("button", { name: "Clear all" }));
     const dialog = await screen.findByRole("alertdialog");
+
     fireEvent.click(within(dialog).getByRole("button", { name: "Clear all" }));
     expect(screen.queryByRole("button", { name: "Favorites" })).toBeNull();
     expect(onSkillChange).toHaveBeenCalledWith(undefined);

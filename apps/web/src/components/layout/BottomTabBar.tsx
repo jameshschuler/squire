@@ -17,9 +17,11 @@ export function BottomTabBar() {
   const [lastItemPage, setLastItemPage] = useState<ItemPage>("/materials");
   const activeTab = tabFor(pathname, lastTab);
   const currentItemPage = itemPage(pathname);
+
   if (activeTab && activeTab !== lastTab) {
     setLastTab(activeTab);
   }
+
   if (currentItemPage && currentItemPage !== lastItemPage) {
     setLastItemPage(currentItemPage);
   }

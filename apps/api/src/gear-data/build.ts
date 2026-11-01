@@ -9,6 +9,7 @@ const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompar
 
 export function buildGearData(data: GameData): GearData {
   const regions = regionNames(data.factions);
+
   return {
     schema: GEAR_DATA_SCHEMA,
     version: data.version,

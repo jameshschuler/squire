@@ -10,6 +10,7 @@ export function ItemEffectsSection({ effects }: { effects: ItemEffects }) {
   const [quality, setQuality] = useState<ItemQuality>("common");
   const shown = effects.tiers.find((tier) => tier.quality === quality)?.effects ?? effects.effects;
   const hasFine = shown.some((effect) => effect.fine !== null);
+
   return (
     <Section title={title}>
       {effects.tiers.length > 0 && (

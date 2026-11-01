@@ -33,6 +33,7 @@ export function createBookSource(
     const startedAt = now();
     const data = await loadGameData(client);
     const loaded = { recipeBook: buildRecipeBook(data), gearData: buildGearData(data) };
+
     log.info(
       {
         version: data.version,
@@ -43,6 +44,7 @@ export function createBookSource(
       "Loaded game data",
     );
     onLoad?.(loaded);
+
     return loaded;
   }
 
@@ -51,12 +53,15 @@ export function createBookSource(
       books = await load();
     } else {
       const { version } = await client.version();
+
       if (version !== books.recipeBook.version) {
         log.info({ from: books.recipeBook.version, to: version }, "Game data changed");
         books = await load();
       }
     }
+
     checkedAt = now();
+
     return books;
   }
 
@@ -64,9 +69,11 @@ export function createBookSource(
     if (books && now() - checkedAt < VERSION_CHECK_INTERVAL_MS) {
       return Promise.resolve(books);
     }
+
     pending ??= refresh().finally(() => {
       pending = undefined;
     });
+
     return pending;
   };
 }

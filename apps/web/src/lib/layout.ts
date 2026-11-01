@@ -20,17 +20,22 @@ export function activeTab(pathname: string, previousTab: Tab): Tab | undefined {
   if (DETAIL_PAGE.test(pathname)) {
     return previousTab;
   }
+
   if (isAt(pathname, "/about") || isAt(pathname, "/character")) {
     return undefined;
   }
+
   if (itemPage(pathname)) {
     return "items";
   }
+
   if (isAt(pathname, "/activities")) {
     return "activities";
   }
+
   if (isAt(pathname, "/gear")) {
     return "gear";
   }
+
   return "recipes";
 }

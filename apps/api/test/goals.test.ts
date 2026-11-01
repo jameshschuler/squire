@@ -21,11 +21,13 @@ describe("goalScorer", () => {
 
   it("scores other goals as their stat per step, so steps still count", () => {
     const totals = { ...NO_STATS, goalStats: [0.5] };
+
     expect(goalScorer(["chests"], BASE_XP)(result(30), totals)).toEqual([1.5 / 30]);
   });
 
   it("gives each goal its own stat, in the order they were picked", () => {
     const totals = { ...NO_STATS, goalStats: [0.2, 0.4] };
+
     expect(goalScorer(["items", "steps", "xp"], BASE_XP)(result(10), totals)).toEqual([1.2 / 10, -10, 1.4 / 10]);
   });
 });
@@ -33,6 +35,7 @@ describe("goalScorer", () => {
 describe("crafting goals", () => {
   it("score saving materials as outputs per material and quality by the stat, neither per step", () => {
     const totals = { ...NO_STATS, goalStats: [0.2, 0.1, 40] };
+
     expect(goalScorer(["materials", "quality"], BASE_XP)(result(30), totals)).toEqual([1.2 / 0.9, 40]);
   });
 
@@ -42,6 +45,7 @@ describe("crafting goals", () => {
   ])("counts %s as saving materials", (_, goalStats) => {
     const nothing = goalScorer(["materials"], BASE_XP)(result(30), { ...NO_STATS, goalStats: [0, 0] });
     const saved = goalScorer(["materials"], BASE_XP)(result(30), { ...NO_STATS, goalStats });
+
     expect(compareScores(saved, nothing)).toBeGreaterThan(0);
     expect(saved).toEqual([1.25]);
   });
@@ -94,6 +98,7 @@ describe("marginOf", () => {
     ["the best possible is zero", [-40, -0.5], [-40, 0], { goal: "chests", gap: 1 }],
   ] as const)("when %s", (_, found, ceiling, margin) => {
     const result = marginOf(["steps", "chests"], [...found], ceiling && [...ceiling]);
+
     if (margin) {
       expect(result?.goal).toBe(margin.goal);
       expect(result?.gap).toBeCloseTo(margin.gap);
@@ -109,6 +114,7 @@ describe("marginOf", () => {
 
 describe("marginHolds", () => {
   const goals: GoalId[] = ["steps", "chests"];
+
   it.each([
     ["the set is the best", null, [-40, 0.2], [-40, 0.2], true],
     ["a proven set is beaten", null, [-40, 0.2], [-38, 0.2], false],
@@ -161,6 +167,7 @@ describe("compareScores", () => {
     const [a, b, c] = [[1], [1 + 4e-10], [1 + 8e-10]];
     const ab = compareScores(a, b) === 0;
     const bc = compareScores(b, c) === 0;
+
     expect(ab && bc ? compareScores(a, c) : 0).toBe(0);
   });
 });

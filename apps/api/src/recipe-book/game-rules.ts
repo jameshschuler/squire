@@ -19,9 +19,11 @@ export function isServiceRequirement(requirement: { type: string }): requirement
 
 export function getServiceKeywords(requirement: ServiceRequirement): string[] {
   const { serviceKeyword, keywords } = requirement.requirement;
+
   if (keywords?.length) {
     return keywords;
   }
+
   return serviceKeyword ? [serviceKeyword] : [];
 }
 
@@ -31,12 +33,14 @@ export function meetsServiceTier(serviceTier: ServiceTier, requiredTier: string)
 
 export function getLootTableItemIds(table: LootTableDetail): string[] {
   const rows = [...(table.tableRows ?? []), ...(table.subTables ?? []).flatMap((sub) => sub.tableRows ?? [])];
+
   return rows.flatMap((row) => (row.rowItemID ? [row.rowItemID] : []));
 }
 
 export function itemsIn(ref: LootTable, tables: Map<string, LootTableDetail>): string[] {
   return ref.tables.flatMap((id) => {
     const table = tables.get(id);
+
     return table ? getLootTableItemIds(table) : [];
   });
 }

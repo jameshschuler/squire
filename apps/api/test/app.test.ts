@@ -12,6 +12,7 @@ const app = (client = fakeClient().client, corsOrigins: string[] = []) =>
 describe("GET /api/recipes", () => {
   it("returns the recipe book with the data version as ETag", async () => {
     const res = await app().inject("/api/recipes");
+
     expect(res.statusCode).toBe(200);
     expect(res.headers.etag).toBe(`"${RECIPE_BOOK_SCHEMA}-v1"`);
     expect(res.json<RecipeBook>().recipes.map((r) => r.id)).toEqual([
@@ -23,16 +24,20 @@ describe("GET /api/recipes", () => {
 
   it("answers 304 when the client already has this version", async () => {
     const res = await app().inject({ url: "/api/recipes", headers: { "if-none-match": `"${RECIPE_BOOK_SCHEMA}-v1"` } });
+
     expect(res.statusCode).toBe(304);
     expect(res.body).toBe("");
   });
 
   it("answers 502 when the WalkScape API fails", async () => {
     const { client } = fakeClient();
+
     client.version = async () => {
       throw new WalkScapeApiError(503, "/version", "down");
     };
+
     const res = await app(client).inject("/api/recipes");
+
     expect(res.statusCode).toBe(502);
   });
 });
@@ -40,6 +45,7 @@ describe("GET /api/recipes", () => {
 describe("GET /api/gear", () => {
   it("returns the gear data with its own schema and the data version as ETag", async () => {
     const res = await app().inject("/api/gear");
+
     expect(res.statusCode).toBe(200);
     expect(res.headers.etag).toBe(`"${GEAR_DATA_SCHEMA}-v1"`);
     expect(res.json<GearData>().pets.map((p) => p.id)).toEqual(["mummy"]);
@@ -47,12 +53,14 @@ describe("GET /api/gear", () => {
 
   it("answers 304 when the client already has this version", async () => {
     const res = await app().inject({ url: "/api/gear", headers: { "if-none-match": `"${GEAR_DATA_SCHEMA}-v1"` } });
+
     expect(res.statusCode).toBe(304);
   });
 
   it("shares one game data load with the recipe book", async () => {
     const { client, calls } = fakeClient();
     const server = app(client);
+
     await server.inject("/api/recipes");
     await server.inject("/api/gear");
     expect(calls.paths.filter((path) => path === "/items/")).toHaveLength(1);
@@ -60,6 +68,7 @@ describe("GET /api/gear", () => {
 
   it("leaves gear data out of the recipe book", async () => {
     const res = await app().inject("/api/recipes");
+
     expect(Object.keys(res.json<RecipeBook>())).not.toContain("pets");
   });
 });
@@ -70,6 +79,7 @@ describe("compression", () => {
     ["br, gzip", "br"],
   ])("compresses the recipe book when the client accepts %s", async (acceptEncoding, expected) => {
     const res = await app().inject({ url: "/api/recipes", headers: { "accept-encoding": acceptEncoding } });
+
     expect(res.headers["content-encoding"]).toBe(expected);
   });
 
@@ -79,6 +89,7 @@ describe("compression", () => {
   ])("sends a %s body that decodes to the recipe book, compressed once", async (encoding, decode) => {
     const res = await app().inject({ url: "/api/recipes", headers: { "accept-encoding": encoding } });
     const book = JSON.parse(decode(res.rawPayload).toString()) as RecipeBook;
+
     expect(book.version).toBe("v1");
     expect(res.headers["content-type"]).toBe("application/json; charset=utf-8");
     expect(res.headers.vary).toContain("Accept-Encoding");
@@ -86,16 +97,19 @@ describe("compression", () => {
 
   it("sends the recipe book uncompressed when the client accepts no encoding", async () => {
     const res = await app().inject("/api/recipes");
+
     expect(res.headers["content-encoding"]).toBeUndefined();
   });
 
   it("doesn't compress icons, which are already compressed images", async () => {
     const server = app();
+
     await server.inject("/api/recipes");
     const res = await server.inject({
       url: "/api/icons/assets/icons/items/materials/food/bagel.png",
       headers: { "accept-encoding": "gzip" },
     });
+
     expect(res.statusCode).toBe(200);
     expect(res.headers["content-encoding"]).toBeUndefined();
   });
@@ -104,24 +118,30 @@ describe("compression", () => {
 describe("GET /api/icons/*", () => {
   it("serves an icon the recipe book uses", async () => {
     const server = app();
+
     await server.inject("/api/recipes");
     const res = await server.inject("/api/icons/assets/icons/items/materials/food/bagel.png");
+
     expect(res.statusCode).toBe(200);
     expect(res.headers["cache-control"]).toBe("public, max-age=604800");
   });
 
   it("serves a pet icon from the gear data", async () => {
     const server = app();
+
     await server.inject("/api/gear");
     const res = await server.inject("/api/icons/assets/icons/pets/mummy/adult_basic_mummy_static.png");
+
     expect(res.statusCode).toBe(200);
   });
 
   it("answers 404 for an icon the recipe book doesn't use, without asking WalkScape", async () => {
     const { client, calls } = fakeClient();
     const server = app(client);
+
     await server.inject("/api/recipes");
     const res = await server.inject("/api/icons/assets/made_up.png");
+
     expect(res.statusCode).toBe(404);
     expect(calls.icon).toBe(0);
   });
@@ -130,6 +150,7 @@ describe("GET /api/icons/*", () => {
 describe("GET /api/health", () => {
   it("reports ok", async () => {
     const res = await app().inject("/api/health");
+
     expect(res.json()).toEqual({ ok: true });
   });
 });
@@ -140,6 +161,7 @@ describe("CORS", () => {
       url: "/api/health",
       headers: { origin: "https://squire.example" },
     });
+
     expect(res.headers["access-control-allow-origin"]).toBe("https://squire.example");
   });
 
@@ -148,11 +170,13 @@ describe("CORS", () => {
       url: "/api/health",
       headers: { origin: "https://evil.example" },
     });
+
     expect(res.headers["access-control-allow-origin"]).toBeUndefined();
   });
 
   it("sends no CORS headers when no origins are configured", async () => {
     const res = await app().inject({ url: "/api/health", headers: { origin: "https://squire.example" } });
+
     expect(res.headers["access-control-allow-origin"]).toBeUndefined();
   });
 });

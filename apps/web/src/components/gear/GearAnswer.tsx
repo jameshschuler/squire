@@ -8,6 +8,7 @@ import { LocationBonuses } from "./LocationBonuses";
 export function GearAnswer(props: GearAnswerView) {
   const { suggestion, location, notes, stats, toolSlots } = props;
   const { picks, pet } = suggestion;
+
   return (
     <ChatMessage wide>
       {notes.length > 0 && (

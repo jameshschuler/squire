@@ -27,6 +27,7 @@ describe("MaterialListItem", () => {
       </ul>,
     );
     const link = screen.getByRole("link");
+
     expect(link.getAttribute("href")).toBe("/items/bones");
     expect(link.textContent).toBe("Bones");
   });

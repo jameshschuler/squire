@@ -43,6 +43,7 @@ function withEffects(book: RecipeBook, effectsById: Record<string, Effect[]>): R
     keywords: [],
     effects: { steps: 1000, tiers: [], effects },
   }));
+
   return { ...book, foods: foods.sort((a, b) => a.name.localeCompare(b.name)) };
 }
 
@@ -60,6 +61,7 @@ describe("effectFilters", () => {
 
   it("has no Travelling filter when no food helps while travelling", () => {
     const foods = withEffects(base, { bagel: [effect("Work efficiency", "agility")] }).foods;
+
     expect(effectFilters(foods).map((f) => f.id)).toEqual(["agility"]);
   });
 });
@@ -83,6 +85,7 @@ describe("effectsFor", () => {
     const salt = withEffects(base, {
       salt_crystal: [effect("Work efficiency", "mining"), effect("Double rewards", "agility")],
     }).foods[0]!;
+
     expect(effectsFor(salt, "mining").map((e) => e.stat)).toEqual(["Work efficiency"]);
   });
 });

@@ -28,6 +28,7 @@ export function fillFreeSlots(
     filled.filter((c) => c.slot === owned.item.slot).length < capacityOf(owned.item.slot) &&
     filled.filter((c) => c.pick?.item.id === owned.item.id).length < copiesAllowed(owned.item.slot) &&
     !filled.some((other) => other === candidate || conflicts(rules, other, candidate));
+
   return choices
     .filter(({ candidate }) => costsNoSteps(candidate.totals))
     .map((choice) => ({ choice, bonus: otherBonuses(situation, choice.owned.stats) }))
@@ -42,7 +43,9 @@ export function fillFreeSlots(
       if (!fits(filled, choice)) {
         return filled;
       }
+
       const next = [...filled, choice.candidate];
+
       return compareScores(score(withSetBonuses(next)), target) >= 0 ? next : filled;
     }, chosen);
 }

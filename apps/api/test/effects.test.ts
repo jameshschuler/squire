@@ -37,9 +37,11 @@ const NAMES = {
 const withUnknownRequirement = (opposite: boolean) => {
   const pie = structuredClone(food("salmon_pie"));
   const buffs = pie.type === "consumable" ? pie.buffs! : [];
+
   buffs[0]!.data[0]!.buffs[0]!.attributes[0]!.requirements = [
     { type: "gameData", name: null, opposite, requirement: {} },
   ] as never;
+
   return pie;
 };
 
@@ -74,6 +76,7 @@ describe("itemEffects", () => {
   it("ignores the game's effect text, which can contradict the stats", () => {
     const bagel = structuredClone(food("bagel"));
     const buffs = bagel.type === "consumable" ? bagel.buffs! : [];
+
     buffs[0]!.data[0]!.buffs[0]!.attributes[0]!.text = "Chance to find <hl>1</hl> fishing bait";
     expect(itemEffects(bagel, NAMES)?.effects).toMatchObject([effect("While doing Agility", "Work efficiency", "+5%")]);
   });
@@ -87,6 +90,7 @@ describe("itemEffects", () => {
   ])("shortens a chance effect and names what it finds: %s", (text, stat) => {
     const bagel = structuredClone(food("bagel"));
     const buffs = bagel.type === "consumable" ? bagel.buffs! : [];
+
     buffs[0]!.data[0]!.buffs[0]!.attributes[0]!.customText = text;
     expect(itemEffects(bagel, NAMES)!.effects[0]!.stat).toBe(stat);
   });
@@ -102,16 +106,19 @@ describe("itemEffects", () => {
     ["beef_stew", [...ALL_SKILLS, "travelling"]],
   ])("says which skills %s's effect applies to", (id, expected) => {
     const [effect] = itemEffects(food(id), NAMES)!.effects;
+
     expect(effect!.appliesTo.map((target) => target.id)).toEqual(expected);
   });
 
   it("names the skills an effect applies to", () => {
     const [effect] = itemEffects(food("salmon_pie"), NAMES)!.effects;
+
     expect(effect!.appliesTo).toEqual([{ id: "woodcutting", name: "Woodcutting" }]);
   });
 
   it("doesn't treat an effect with a requirement it doesn't recognize as global", () => {
     const [effect] = itemEffects(withUnknownRequirement(false), NAMES)!.effects;
+
     expect(effect!.condition).toBe("Under certain conditions");
     expect(effect!.scope).toBeNull();
     expect(effect!.appliesTo).toEqual([]);
@@ -121,9 +128,12 @@ describe("itemEffects", () => {
     const item = structuredClone(food(id));
     const buffs = item.type === "consumable" ? item.buffs! : [];
     const requirement = buffs[0]!.data[0]!.buffs[0]!.attributes[0]!.requirements![0]!;
+
     requirement.opposite = true;
+
     return item;
   };
+
   const appliesTo = (item: ItemDetail) => itemEffects(item, NAMES)!.effects[0]!.appliesTo.map((target) => target.id);
 
   it("applies a negated skill requirement to every other skill and travelling", () => {
@@ -169,6 +179,7 @@ describe("itemEffects for loot", () => {
 
   it("reads gear effects, with no duration and no fine version", () => {
     const wrench = effectsOf("Adjustable wrench");
+
     expect(wrench.steps).toBeNull();
     expect(wrench.effects[0]).toEqual({
       condition: "While doing Crafting",
@@ -189,6 +200,7 @@ describe("itemEffects for loot", () => {
     ["Bogwood boots", 2, "While in Grand Duchy of Trellin-Erdwise and doing Carpentry", "Carpentry", ["carpentry"]],
   ])("labels %s's place requirement next to its skill", (name, index, condition, scope, appliesTo) => {
     const effect = effectsOf(name).effects[index]!;
+
     expect(effect.condition).toBe(condition);
     expect(effect.scope).toBe(scope);
     expect(effect.appliesTo.map((t) => t.id)).toEqual(appliesTo);
@@ -197,11 +209,13 @@ describe("itemEffects for loot", () => {
   it("combines several known requirements", () => {
     const skis = structuredClone(loot("Birch skis"));
     const attribute = skis.type === "loot" ? skis.itemAttrs![0]! : undefined;
+
     attribute!.requirements = [
       { type: "mainSkillType", name: null, opposite: false, requirement: { type: "gathering" } },
       { type: "mainSkill", name: null, opposite: true, requirement: { skill: "fishing" } },
     ] as never;
     const [effect] = itemEffects(skis, NAMES)!.effects;
+
     expect(effect!.condition).toBe("While doing gathering skills and not doing Fishing");
     expect(effect!.scope).toBe("Gathering skills and not Fishing");
     expect(effect!.appliesTo.map((t) => t.id)).toEqual(["foraging", "hunting", "mining", "woodcutting"]);
@@ -210,9 +224,12 @@ describe("itemEffects for loot", () => {
   const withRequirements = (...requirements: object[]) => {
     const skis = structuredClone(loot("Birch skis"));
     const attribute = skis.type === "loot" ? skis.itemAttrs![0]! : undefined;
+
     attribute!.requirements = requirements as never;
+
     return itemEffects(skis, NAMES)!.effects[0]!;
   };
+
   const requirement = (type: string, payload: object, opposite = false) => ({
     type,
     name: null,
@@ -253,6 +270,7 @@ describe("itemEffects for loot", () => {
     ],
   ])("labels a %s requirement and applies it everywhere", (type, payload, condition) => {
     const effect = withRequirements(requirement(type, payload));
+
     expect(effect.condition).toBe(condition);
     expect(effect.scope).toBe("Global");
     expect(effect.appliesTo.map((t) => t.id)).toEqual([...ALL_SKILLS, "travelling"]);
@@ -260,6 +278,7 @@ describe("itemEffects for loot", () => {
 
   it("applies a negated place requirement everywhere", () => {
     const effect = withRequirements(requirement("locationHasKeywords", { keywords: ["underwater"] }, true));
+
     expect(effect.condition).toBe("While not at underwater locations");
     expect(effect.appliesTo).toHaveLength(ALL_SKILLS.length + 1);
   });
@@ -269,6 +288,7 @@ describe("itemEffects for loot", () => {
       requirement("mainSkill", { skill: "fishing" }),
       requirement("historyData", { category: "somethingNew", value: 1, distinct: false }),
     );
+
     expect(effect.condition).toBe("While doing Fishing (with other conditions)");
     expect(effect.scope).toBe("Fishing");
     expect(effect.appliesTo.map((t) => t.id)).toEqual(["fishing"]);
@@ -323,12 +343,14 @@ describe("itemEffects for crafted gear", () => {
       statText: "Bonus experience",
       stats: [{ ...gear.itemAttrs![0]!.stats[0]!, stat: "bonus_experience", value, isPercent }],
     });
+
     gear.itemAttrs = [bonus(5, false)];
     gear.itemQualityAttrs = [
       { quality: "uncommon", attributes: [bonus(0.02, true)] },
       { quality: "rare", attributes: [bonus(1, false), bonus(0.01, true)] },
     ];
     const tiers = itemEffects(gear, NAMES)!.tiers.map((t) => t.effects.map((e) => `${e.stat} ${e.normal}`));
+
     expect(tiers).toEqual([
       ["Bonus experience +5", "Bonus experience +2%"],
       ["Bonus experience +6", "Bonus experience +3%"],
@@ -342,14 +364,17 @@ describe("itemEffects for crafted gear", () => {
       statText: "Steps required",
       stats: [{ ...gear.itemAttrs![0]!.stats[0]!, stat: "steps_required", value, isPercent: false }],
     });
+
     gear.itemAttrs = [steps(0.1), steps(0.2)];
     gear.itemQualityAttrs = [{ quality: "uncommon", attributes: [steps(1)] }];
     const [uncommon] = itemEffects(gear, NAMES)!.tiers;
+
     expect(uncommon!.effects.map((e) => e.normal)).toEqual(["+1.3"]);
   });
 
   it("gives gear without tiers an empty tier list", () => {
     const ankh = (gearItems as unknown as ItemDetail[]).find((item) => item.id === "ancient_ankh")!;
+
     expect(itemEffects(ankh, NAMES)!.tiers).toEqual([]);
   });
 });

@@ -44,6 +44,7 @@ const LEVEL_BONUS = 0.0125;
 const MAX_BONUS_LEVELS = 20;
 const MIN_EFFICIENCY = 0.01;
 const MIN_STEPS = 10;
+
 export const STEP_STATS = ["workEfficiency", "stepsRequired", "doubleAction"] as const;
 
 export const MAX_DOUBLE_ACTION = 1;
@@ -61,6 +62,7 @@ export function stepsPerAction(target: WorkTarget, skillLevel: number, totals: S
   );
   const raw = (target.workRequired / efficiency) * (1 + totals.stepsPercent) + totals.stepsFlat;
   const steps = Math.ceil(Math.max(raw, MIN_STEPS) - ROUNDING_SLACK);
+
   return { efficiency, steps, averageSteps: steps / (1 + Math.min(totals.doubleAction, MAX_DOUBLE_ACTION)) };
 }
 

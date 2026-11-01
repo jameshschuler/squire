@@ -27,6 +27,7 @@ export function CharacterSummary({ character, savedAt, onUpdate }: CharacterSumm
     },
     { label: "Achievement points", value: formatNumber(character.achievementPoints) },
   ];
+
   return (
     <article className="space-y-6">
       <header>

@@ -11,7 +11,9 @@ function stubSystemTheme(dark: boolean) {
     addEventListener: (_: string, fn: () => void) => listeners.add(fn),
     removeEventListener: (_: string, fn: () => void) => listeners.delete(fn),
   };
+
   vi.stubGlobal("matchMedia", () => query);
+
   return (nowDark: boolean) => {
     query.matches = nowDark;
     listeners.forEach((fn) => fn());
@@ -46,6 +48,7 @@ describe("ThemeToggle", () => {
 
   it("follows the OS live while on system", () => {
     const setSystemDark = stubSystemTheme(false);
+
     renderToggle();
     setSystemDark(true);
     expect(isDark()).toBe(true);
@@ -65,6 +68,7 @@ describe("ThemeToggle", () => {
 
   it("restores a saved choice and ignores the OS", () => {
     const setSystemDark = stubSystemTheme(true);
+
     localStorage.setItem(THEME_STORAGE_KEY, "light");
     renderToggle();
     setSystemDark(true);

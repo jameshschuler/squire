@@ -13,6 +13,7 @@ interface EffectItemResultsProps {
 
 export function EffectItemResults({ items, filter, listKey, showQuality }: EffectItemResultsProps) {
   const { visibleItems, hasMore, sentinelRef } = useIncrementalList(items, listKey, PAGE_SIZE);
+
   return (
     <>
       <ul className="divide-y">

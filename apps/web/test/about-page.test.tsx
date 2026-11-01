@@ -19,6 +19,7 @@ describe("AboutPage", () => {
   ])("links to %s in a new tab", async (name, href) => {
     await renderWithRouter(<AboutPage />);
     const link = screen.getByRole("link", { name });
+
     expect(link.getAttribute("href")).toBe(href);
     expect(link.getAttribute("target")).toBe("_blank");
     expect(link.getAttribute("rel")).toBe("noopener noreferrer");

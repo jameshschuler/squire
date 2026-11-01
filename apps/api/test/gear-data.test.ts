@@ -16,12 +16,14 @@ describe("buildGearData", () => {
 
 describe("gear items", () => {
   const data = structuredClone(sample) as unknown as GameData;
+
   data.items.push(...(gearItems as unknown as ItemDetail[]), ...(lootItems as unknown as ItemDetail[]));
   const gear = buildGearData(data);
   const hatchet = gear.items.find((g) => g.id === "steel_hatchet")!;
 
   it("lists every item that can be worn or held, and nothing else", () => {
     const expected = data.items.filter((i) => "gearType" in i && i.gearType).map((i) => i.id);
+
     expect(gear.items.map((g) => g.id).sort()).toEqual(expected.sort());
     expect(gear.items.map((g) => g.id)).not.toContain("gold_ore");
   });
@@ -53,8 +55,10 @@ describe("gear items", () => {
 
   it("gives gear its game id, or none when the game doesn't know the item", () => {
     const withIds = structuredClone(data);
+
     withIds.gameIds = { steel_hatchet: "a1b2c3d4-0000-4000-8000-000000000002", adjustable_wrench: "adjustable_wrench" };
     const gear = buildGearData(withIds).items;
+
     expect(gear.find((g) => g.id === "steel_hatchet")?.gameId).toBe("a1b2c3d4-0000-4000-8000-000000000002");
     expect(gear.find((g) => g.id === "adjustable_wrench")?.gameId).toBeNull();
     expect(gear.find((g) => g.id === "birch_skis")?.gameId).toBeNull();
@@ -67,6 +71,7 @@ describe("gear items", () => {
   it("skips effects with no stat", () => {
     const withBlank = structuredClone(data);
     const item = withBlank.items.find((i) => i.id === "steel_hatchet")!;
+
     item.itemAttrs = [{ ...item.itemAttrs![0]!, stats: [] }];
     expect(buildGearData(withBlank).items.find((g) => g.id === "steel_hatchet")?.stats).toEqual([]);
   });
@@ -114,6 +119,7 @@ describe("skills and locations", () => {
 
   it("sorts skills A–Z whatever order the game lists them in", () => {
     const data = structuredClone(sample) as unknown as GameData;
+
     data.skills.reverse();
     expect(buildGearData(data).skills.map((s) => s.id)).toEqual(["cooking", "smithing"]);
   });
@@ -136,12 +142,14 @@ describe("skills and locations", () => {
 
   it("puts a location's sub-regions after its region", () => {
     const data = structuredClone(sample) as unknown as GameData;
+
     data.locations[0]!.subFactions = ["herberts_guiding_grounds"];
     expect(buildGearData(data).locations[0]?.realms).toEqual(["jarvonia", "herberts_guiding_grounds"]);
   });
 
   it("gives a location without keywords an empty list", () => {
     const data = structuredClone(sample) as unknown as GameData;
+
     delete (data.locations[0] as { keywords?: string[] }).keywords;
     expect(buildGearData(data).locations[0]?.keywords).toEqual([]);
   });
@@ -150,10 +158,12 @@ describe("skills and locations", () => {
 describe("gearDataIcons", () => {
   it("lists every gear and pet icon once, skipping blanks", () => {
     const data = structuredClone(sample) as unknown as GameData;
+
     data.items.push(...(gearItems as unknown as ItemDetail[]), ...(lootItems as unknown as ItemDetail[]));
     data.items.find((i) => i.id === "birch_skis")!.icon = "";
     const gear = buildGearData(data);
     const icons = gearDataIcons(gear);
+
     expect(icons).toContain("assets/icons/pets/mummy/adult_basic_mummy_static.png");
     expect(icons).toContain(gear.items.find((g) => g.id === "steel_hatchet")!.icon);
     expect(icons).not.toContain("");

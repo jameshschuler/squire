@@ -12,6 +12,7 @@ describe("skillOptions", () => {
         { id: "smithing", name: "Smithing" },
       ]),
     ];
+
     expect(skillOptions(recipes)).toEqual([
       { id: "cooking", name: "Cooking" },
       { id: "smithing", name: "Smithing" },

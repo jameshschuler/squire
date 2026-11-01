@@ -33,6 +33,7 @@ export function setStats(
   suggestion: GearSuggestion,
 ): StatLine[] {
   const { pieces, holds } = worn(gear, profile, target, suggestion);
+
   return sumLines(pieces.flatMap((p) => p.stats).filter((s) => s.conditions.every(holds)));
 }
 
@@ -45,6 +46,7 @@ export function locationBonuses(
 ): SourcedStat[] {
   const { pieces, holds } = worn(gear, profile, target, suggestion);
   const applies = (s: GearStat) => s.conditions.some(isLocationCondition) && s.conditions.every(holds);
+
   return pieces.flatMap((piece) =>
     sumLines(piece.stats.filter(applies)).map((line) => ({ ...line, source: piece.name })),
   );
@@ -80,6 +82,7 @@ export function gearBonusesByLocation(
     kept.filter((k) => k.slot === piece.slot).length < slotCapacity(piece.slot, tools) &&
     kept.filter((k) => k.id === piece.id).length < copiesAllowed(piece.slot) &&
     !kept.some((k) => conflicts(gear, k, piece));
+
   return new Map(
     locations.map((location) => {
       const situation = situationFor(gear, profile, target, location);
@@ -88,6 +91,7 @@ export function gearBonusesByLocation(
       const choices = pieces
         .map((piece) => {
           const applying = piece.stats.filter((s) => s.conditions.every(holds));
+
           return {
             piece,
             bonuses: sumLines(applying.filter((s) => s.conditions.some(isLocationCondition))),
@@ -107,6 +111,7 @@ export function gearBonusesByLocation(
         [],
       );
       const bonuses = sumLines(worn.flatMap(({ bonuses }) => bonuses.map((line) => ({ ...line, conditions: [] }))));
+
       return [
         location.id,
         bonuses.sort(
@@ -123,6 +128,7 @@ export function gearBonusesByLocation(
 function compareBonuses(a: StatLine[], b: StatLine[]): number {
   const total = (lines: StatLine[], isPercent: boolean) =>
     lines.filter((line) => line.isPercent === isPercent).reduce((sum, line) => sum + gain(line), 0);
+
   return (
     total(a.filter(isStepStat), true) - total(b.filter(isStepStat), true) ||
     total(a.filter(isStepStat), false) - total(b.filter(isStepStat), false) ||
@@ -163,6 +169,7 @@ function worn(gear: GearData, profile: PlayerProfile, target: WorkTarget, sugges
     condition.type === "distinctKeywordItemsEquipped"
       ? count(condition.requirement.keywords) >= condition.requirement.quantity !== condition.opposite
       : conditionHolds(situation, condition);
+
   return { pieces, holds };
 }
 
@@ -178,10 +185,13 @@ function isLocationCondition({ type, opposite }: GearCondition): boolean {
 
 function sumLines(stats: GearStat[]): StatLine[] {
   const totals = new Map<string, StatLine>();
+
   for (const { stat, isPercent, value } of stats) {
     const key = `${stat}:${isPercent}`;
     const total = totals.get(key);
+
     totals.set(key, { stat, isPercent, value: (total?.value ?? 0) + value });
   }
+
   return [...totals.values()].filter((line) => Math.abs(line.value) > 1e-9);
 }

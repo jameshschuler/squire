@@ -27,6 +27,7 @@ function versionedJsonRoute(
     if (encoded?.version !== json.version) {
       encoded = { version: json.version, body: encodeJson(json) };
     }
+
     return encoded.body;
   }
 
@@ -34,16 +35,20 @@ function versionedJsonRoute(
     const loaded = await books();
     const json = pick(loaded);
     const etag = `"${json.schema}-${json.version}"`;
+
     reply.header("ETag", etag).header("Cache-Control", "no-cache").header("Vary", "Accept-Encoding");
     if (request.headers["if-none-match"] === etag) {
       return reply.code(HTTP_STATUS.NOT_MODIFIED).send();
     }
+
     const encoding = preferredEncoding(request.headers["accept-encoding"]);
     const encodings = await encodedBody(json);
     const body = encodings[encoding];
+
     if (encoding !== "identity") {
       reply.header("Content-Encoding", encoding);
     }
+
     return reply.type("application/json; charset=utf-8").send(body);
   });
 }

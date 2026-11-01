@@ -12,6 +12,7 @@ const failFresh = async (input: RequestInfo | URL) =>
 
 function Version() {
   const state = useGameDataContext();
+
   return <p>{state.status === "ready" ? state.book.version : state.status}</p>;
 }
 
@@ -77,6 +78,7 @@ describe("PullToRefresh", () => {
   it("ignores a drag inside a dialog", async () => {
     await renderWith(async () => book("v1"));
     const dialog = document.body.appendChild(document.createElement("div"));
+
     dialog.setAttribute("role", "alertdialog");
     drag(200, { target: dialog });
     dialog.remove();
@@ -125,11 +127,14 @@ describe("PullToRefresh", () => {
 
   it("keeps spinning when pulled again right after a failure", async () => {
     let calls = 0;
+
     await renderWith(async (input) => {
       if (!String(input).includes("fresh=1")) {
         return book("v1");
       }
+
       calls += 1;
+
       return calls === 1 ? new Response(null, { status: 502 }) : new Promise<Response>(() => {});
     });
     vi.useFakeTimers();
@@ -147,6 +152,7 @@ describe("PullToRefresh", () => {
 
   it("keeps a refresh that finishes before the first load", async () => {
     let finishFirst: (response: Response) => void = () => {};
+
     renderApp(async (input) =>
       String(input).includes("fresh=1") ? book("v2") : new Promise<Response>((resolve) => (finishFirst = resolve)),
     );

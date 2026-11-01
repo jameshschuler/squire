@@ -44,9 +44,11 @@ function search<T extends { skills: SkillLevel[] }>(
 ): T[] {
   const pool = skill ? entries.filter((e) => e.skills.some((s) => s.id === skill)) : entries;
   const terms = words(query);
+
   if (terms.length === 0) {
     return pool;
   }
+
   return pool
     .map((entry) => ({ entry, score: searchScore(cachedWordGroups(entry, wordGroups), terms) }))
     .filter((s) => s.score > 0)
@@ -56,21 +58,27 @@ function search<T extends { skills: SkillLevel[] }>(
 
 function cachedWordGroups<T extends object>(entry: T, wordGroups: (entry: T) => string[][]): string[][] {
   let cached = searchWordsCache.get(entry);
+
   if (!cached) {
     cached = wordGroups(entry);
     searchWordsCache.set(entry, cached);
   }
+
   return cached;
 }
 
 function searchScore(groups: string[][], terms: string[]): number {
   let score = 0;
+
   for (const term of terms) {
     const index = groups.findIndex((group) => group.some((w) => w.startsWith(term)));
+
     if (index === -1) {
       return 0;
     }
+
     score += groups.length - index;
   }
+
   return (groups[0] ?? []).join(" ").startsWith(terms.join(" ")) ? score + 1 : score;
 }

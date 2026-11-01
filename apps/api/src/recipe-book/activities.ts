@@ -38,6 +38,7 @@ export function activityViews(activities: ActivityDetail[], indexes: ActivityInd
 
 function activityView(activity: ActivityDetail, indexes: ActivityIndexes): ActivityView {
   const requirements = activity.requirements ?? [];
+
   return {
     id: activity.id,
     name: activity.name,
@@ -66,30 +67,41 @@ function needOf(requirement: ActivitiesRequirement, { summary, skillName }: Acti
   if (requirement.opposite) {
     return [];
   }
+
   switch (requirement.type) {
     case "keywordEquipped":
       return [need(humanize(requirement.requirement.keyword))];
     case "keywordWithLevelEquipped": {
       const { keyword, skill, level } = requirement.requirement;
+
       return [need(humanize(keyword), { id: skill, name: skillName(skill), level })];
     }
+
     case "distinctKeywordItemsEquipped": {
       const { quantity, keywords } = requirement.requirement;
       const kinds = keywords.join(" or ");
+
       return [need(quantity > 1 ? `${quantity} different ${spaced(kinds)} items` : humanize(kinds))];
     }
+
     case "itemEquipped": {
       const item = summary(requirement.requirement.item);
+
       return [need(item.name, null, item)];
     }
+
     case "itemAnywhereWithYou": {
       const item = summary(requirement.requirement.item);
+
       return [need(`${item.name} with you`, null, item)];
     }
+
     case "achievementPoint": {
       const { value, isPercentage } = requirement.requirement;
+
       return [need(isPercentage ? `${value}% of achievement points` : `${value} achievement points`)];
     }
+
     default:
       return [];
   }
@@ -97,12 +109,14 @@ function needOf(requirement: ActivitiesRequirement, { summary, skillName }: Acti
 
 function gearNeedOf(requirement: ActivitiesRequirement, indexes: ActivityIndexes): GearNeed[] {
   const [shown] = needOf(requirement, indexes);
+
   if (!shown) {
     return [];
   }
 
   const label = shown.level ? `${shown.label} (${shown.level.name} ${shown.level.level})` : shown.label;
   const gear = (need: Omit<GearNeed, "label">): GearNeed[] => [{ label, ...need }];
+
   switch (requirement.type) {
     case "keywordEquipped":
       return gear({ keywords: [requirement.requirement.keyword], count: 1, level: null, itemId: null });
@@ -111,11 +125,13 @@ function gearNeedOf(requirement: ActivitiesRequirement, indexes: ActivityIndexes
 
       return gear({ keywords: [keyword], count: 1, level: { skill, level }, itemId: null });
     }
+
     case "distinctKeywordItemsEquipped": {
       const { keywords, quantity } = requirement.requirement;
 
       return gear({ keywords, count: quantity, level: null, itemId: null });
     }
+
     case "itemEquipped":
       return gear({ keywords: [], count: 1, level: null, itemId: requirement.requirement.item });
     default:
@@ -126,25 +142,32 @@ function gearNeedOf(requirement: ActivitiesRequirement, indexes: ActivityIndexes
 function useOf(input: KeywordInput | SpecificInput, { summary, skillName }: ActivityIndexes): ActivityNeed {
   if (input.type === "specific") {
     const item = summary(input.item);
+
     return need(`${input.quantity} × ${item.name}`, null, item);
   }
+
   const [tier] = input.requirements ?? [];
   const level = tier
     ? { id: tier.requirement.skill, name: skillName(tier.requirement.skill), level: tier.requirement.level }
     : null;
+
   return need(humanize(input.keyword), level);
 }
 
 function dropsOf(activity: ActivityDetail, { summary, tables }: ActivityIndexes): ActivityDrops[] {
   const byType = new Map<LootType, Set<string>>();
+
   for (const ref of activity.tables ?? []) {
     const lootType = lootTypeOf(ref);
     const itemIds = byType.get(lootType) ?? new Set<string>();
+
     for (const itemId of itemsIn(ref, tables)) {
       itemIds.add(itemId);
     }
+
     byType.set(lootType, itemIds);
   }
+
   return [...byType]
     .filter(([, itemIds]) => itemIds.size > 0)
     .map(([lootType, itemIds]) => ({ lootType, items: [...itemIds].map(summary) }))

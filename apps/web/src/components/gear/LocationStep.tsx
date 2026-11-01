@@ -15,9 +15,11 @@ interface LocationStepProps {
 
 export function LocationStep({ gear, profile, target, location, bestAt, onChoose }: LocationStepProps) {
   const [only, ...others] = target.locations;
+
   if (!only) {
     return null;
   }
+
   if (others.length === 0) {
     return (
       <>
@@ -28,6 +30,7 @@ export function LocationStep({ gear, profile, target, location, bestAt, onChoose
       </>
     );
   }
+
   return (
     <>
       <ChatMessage>

@@ -32,6 +32,7 @@ export function GearSlotCell({ label, name, icon, itemId, quality = null }: Gear
     "flex min-h-24 flex-col items-center gap-1 rounded-lg border bg-background p-1.5 text-center",
     quality && GEAR_TIER_STYLES[quality],
   );
+
   return itemId ? (
     <Link to="/items/$itemId" params={{ itemId }} className={className}>
       {body}

@@ -28,6 +28,7 @@ describe("banMasks", () => {
 
   it("clashes with worn gear once any piece bans the next item, or the next item bans a piece", () => {
     const worn = masks(item("needle")).keys | masks(item("fishing_net")).keys;
+
     expect(clashes(worn, masks(item("fishing_rod")))).toBe(true);
     expect(clashes(masks(item("fishing_rod")).keys, masks(item("needle", "fishing_net")))).toBe(true);
     expect(clashes(worn, masks(item("ring")))).toBe(false);

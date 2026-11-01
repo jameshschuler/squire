@@ -4,6 +4,7 @@ import type { Material } from "@/lib/materials";
 
 export function MaterialListItem({ material }: { material: Material }) {
   const { item } = material;
+
   return (
     <li>
       <Link to="/items/$itemId" params={{ itemId: item.id }} className="flex items-center gap-3 py-2.5">

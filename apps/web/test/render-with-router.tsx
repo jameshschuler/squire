@@ -10,6 +10,8 @@ export async function renderWithRouter(ui: ReactNode) {
     history: createMemoryHistory(),
   });
   const result = render(<RouterProvider router={router} />);
+
   await router.load();
+
   return result;
 }

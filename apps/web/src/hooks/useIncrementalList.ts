@@ -15,9 +15,11 @@ export function useIncrementalList<T>(items: T[], listKey: string, pageSize: num
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
+
     if (!sentinel || !hasMore) {
       return;
     }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry?.isIntersecting) {
@@ -26,7 +28,9 @@ export function useIncrementalList<T>(items: T[], listKey: string, pageSize: num
       },
       { rootMargin: "600px" },
     );
+
     observer.observe(sentinel);
+
     return () => observer.disconnect();
   }, [hasMore, pageSize, visibleCount]);
 

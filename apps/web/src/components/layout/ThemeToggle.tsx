@@ -12,6 +12,7 @@ const THEME_UI: Record<Theme, { label: string; Icon: typeof Sun }> = {
 export function ThemeToggle() {
   const { theme, setTheme } = useThemeContext();
   const { label, Icon } = THEME_UI[theme];
+
   return (
     <Button
       variant="ghost"

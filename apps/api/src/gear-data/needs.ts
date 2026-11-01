@@ -44,6 +44,7 @@ export function fillsNeed(need: GearNeed, item: GearItem): boolean {
 // many per slot as the slot holds.
 export function canMeetNeed(need: GearNeed, owned: OwnedGear[], capacityOf: (slot: GearType) => number): boolean {
   const idsBySlot = new Map<GearType, Set<string>>();
+
   for (const { item } of owned.filter((entry) => fillsNeed(need, entry.item))) {
     idsBySlot.set(item.slot, (idsBySlot.get(item.slot) ?? new Set()).add(item.id));
   }

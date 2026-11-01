@@ -7,6 +7,7 @@ import { SourceLocations } from "./SourceLocations";
 
 export function ActivitySourceRow({ source }: { source: ActivitySource }) {
   const label = lootTypeLabel(source.lootType);
+
   return (
     <>
       <Link to="/activities/$activityId" params={{ activityId: source.id }} className="flex items-center gap-3">

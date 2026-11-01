@@ -21,6 +21,7 @@ export function GearResult({ gear, profile, target, optimize, solution, failed }
     () => solution && gearAnswer(gear, profile, target, optimize, solution),
     [gear, profile, target, optimize, solution],
   );
+
   if (failed) {
     return (
       <ChatMessage>
@@ -28,6 +29,7 @@ export function GearResult({ gear, profile, target, optimize, solution, failed }
       </ChatMessage>
     );
   }
+
   if (!answer) {
     return (
       <ChatMessage>
@@ -38,5 +40,6 @@ export function GearResult({ gear, profile, target, optimize, solution, failed }
       </ChatMessage>
     );
   }
+
   return <GearAnswer {...answer} />;
 }

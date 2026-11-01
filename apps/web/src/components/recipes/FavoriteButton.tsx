@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 export function FavoriteButton({ recipeId }: { recipeId: string }) {
   const { isFavorite, toggleFavorite } = useFavoritesContext();
   const favorite = isFavorite(recipeId);
+
   return (
     <Button
       variant="ghost"

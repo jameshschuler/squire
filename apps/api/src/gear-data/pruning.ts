@@ -47,6 +47,7 @@ export interface BanMasks {
 export function banMasks({ banKeys, bannedKeywords }: KeywordRules): (candidate: Candidate) => BanMasks {
   const bits = new Map([...banKeys].map((key, i) => [key, 1n << BigInt(i)]));
   const maskOf = (keywords: string[]) => keywords.reduce((mask, k) => mask | (bits.get(k) ?? 0n), 0n);
+
   return ({ keywords }) => ({
     keys: maskOf(keywords),
     clashes: maskOf([
@@ -70,6 +71,7 @@ export function conflicts(
   b: Pick<Candidate, "keywords">,
 ): boolean {
   const bans = (from: string[], to: string[]) => from.some((k) => bannedKeywords[k]?.some((x) => to.includes(x)));
+
   return bans(a.keywords, b.keywords) || bans(b.keywords, a.keywords);
 }
 
@@ -89,6 +91,7 @@ export function prune(choices: Candidate[], capacity: number, rules: KeywordRule
   const kept = choices.filter((c) => c.setBonuses.length > 0 || keys.get(c)!.set.size > 0 || helps(c.best, useful));
   const covers = (a: Candidate, b: Candidate) => {
     const [aKeys, bKeys] = [keys.get(a)!, keys.get(b)!];
+
     return (
       efficiency(a.worst.workEfficiency) >= efficiency(b.best.workEfficiency) &&
       a.worst.stepsPercent <= b.best.stepsPercent &&
@@ -100,6 +103,7 @@ export function prune(choices: Candidate[], capacity: number, rules: KeywordRule
       [...rules.cappedSetGroups].every((g) => aKeys.set.has(g) === bKeys.set.has(g))
     );
   };
+
   const dominates = (a: Candidate, b: Candidate) => covers(a, b) && (!covers(b, a) || a.id < b.id);
 
   // Set bonuses count distinct items, so two copies of one ring are only one set piece: a set piece is

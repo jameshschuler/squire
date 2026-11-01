@@ -53,6 +53,7 @@ export function situationFor(
   goalStats: GoalStat[] = [],
 ): Situation {
   const skillType = gear.skills.find((s) => s.id === target.skill)?.type ?? "";
+
   return { target, skillType, location, profile, goalStats };
 }
 
@@ -79,19 +80,23 @@ export function petCandidate(situation: Situation, pet: OwnedPetView): Candidate
 export function toCandidate(situation: Situation, base: CandidateBase, stats: GearStat[]): Candidate {
   let totals = NO_STATS;
   const setBonuses: SetBonus[] = [];
+
   for (const stat of stats) {
     const contribution = statTotals(stat, situation.goalStats);
     const setConditions = stat.conditions.filter((c): c is SetCondition => c.type === "distinctKeywordItemsEquipped");
     const others = stat.conditions.filter((c) => c.type !== "distinctKeywordItemsEquipped");
+
     if (contribution === NO_STATS || !others.every((condition) => conditionHolds(situation, condition))) {
       continue;
     }
+
     if (setConditions.length > 0) {
       setBonuses.push({ conditions: setConditions, totals: contribution });
     } else {
       totals = addStats(totals, contribution);
     }
   }
+
   const best = setBonuses.reduce((sum, bonus) => addStats(sum, gains(bonus.totals)), totals);
   const worst = setBonuses.reduce((sum, bonus) => addStats(sum, losses(bonus.totals)), totals);
 
@@ -113,15 +118,18 @@ export function withSetBonuses(chosen: Candidate[]): StatTotals {
     const active = c.setBonuses.filter((bonus) =>
       bonus.conditions.every((s) => setCount(chosen, s.requirement.keywords) >= s.requirement.quantity !== s.opposite),
     );
+
     return active.reduce((total, bonus) => addStats(total, bonus.totals), addStats(sum, c.totals));
   }, NO_STATS);
 }
 
 function statTotals(stat: GearStat, goalStats: GoalStat[]): StatTotals {
   const goal = goalStats.findIndex((g) => sameStat(g, stat));
+
   if (goal >= 0) {
     return { ...NO_STATS, goalStats: goalStats.map((_, i) => (i === goal ? stat.value : 0)) };
   }
+
   switch (stat.stat) {
     case "workEfficiency":
       return { ...NO_STATS, workEfficiency: stat.value };
@@ -136,6 +144,7 @@ function statTotals(stat: GearStat, goalStats: GoalStat[]): StatTotals {
 
 export function conditionHolds(situation: Situation, condition: GearCondition): boolean {
   const holds = situationHolds(situation, condition) ?? playerConditionHolds(situation.profile, condition);
+
   return (holds ?? false) !== condition.opposite;
 }
 

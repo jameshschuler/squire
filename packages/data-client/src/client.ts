@@ -160,6 +160,7 @@ export function createClient(options: ClientOptions): WalkScapeClient {
   async function send(path: string, request: SendOptions = {}): Promise<Response> {
     for (let attempt = 0; ; attempt++) {
       const res = await fetchFn(`${baseUrl}${path}`, { ...request, headers: headers(request.headers) });
+
       if (
         (res.status === HTTP_STATUS.TOO_MANY_REQUESTS || res.status >= HTTP_STATUS.INTERNAL_SERVER_ERROR) &&
         attempt < maxRetries
@@ -168,10 +169,13 @@ export function createClient(options: ClientOptions): WalkScapeClient {
         await sleep(retryDelayMs(res, attempt));
         continue;
       }
+
       if (!res.ok && res.status !== HTTP_STATUS.NOT_MODIFIED) {
         const message = await errorMessage(res);
+
         throw new WalkScapeApiError(res.status, path, message);
       }
+
       return res;
     }
   }
@@ -179,14 +183,18 @@ export function createClient(options: ClientOptions): WalkScapeClient {
   async function getJson<T>(path: string): Promise<T> {
     const cached = cache.get(path);
     const res = await send(path, cached ? { headers: { "If-None-Match": cached.etag } } : {});
+
     if (res.status === HTTP_STATUS.NOT_MODIFIED && cached) {
       return cached.body as T;
     }
+
     const body = (await res.json()) as T;
     const etag = res.headers.get("ETag");
+
     if (etag) {
       cache.set(path, { etag, body });
     }
+
     return body;
   }
 
@@ -196,6 +204,7 @@ export function createClient(options: ClientOptions): WalkScapeClient {
       body: JSON.stringify(body),
       headers: { "Content-Type": "application/json" },
     });
+
     return (await res.json()) as T;
   }
 
@@ -206,12 +215,15 @@ export function createClient(options: ClientOptions): WalkScapeClient {
       const query = new URLSearchParams(
         Object.entries(filters).flatMap(([k, v]): [string, string][] => (v === undefined ? [] : [[k, String(v)]])),
       );
+
       if (query.size === 0) {
         throw new Error(`${resourceKey(resource)}.search() needs at least one filter`);
       }
+
       if (detailed) {
         query.set("detailed", "true");
       }
+
       return getJson(`/${resource}/search?${query}`);
     },
   };
@@ -244,19 +256,24 @@ export function createClient(options: ClientOptions): WalkScapeClient {
 
 function retryDelayMs(res: Response, attempt: number): number {
   const retryAfter = Number(res.headers.get("Retry-After"));
+
   if (retryAfter > 0) {
     return retryAfter * 1000;
   }
+
   const resetSeconds = Number(/\bt=(\d+)/.exec(res.headers.get("RateLimit") ?? "")?.[1]);
+
   if (res.status === HTTP_STATUS.TOO_MANY_REQUESTS && resetSeconds > 0) {
     return resetSeconds * 1000;
   }
+
   return RETRY_BASE_DELAY_MS * 2 ** attempt;
 }
 
 async function errorMessage(res: Response): Promise<string> {
   try {
     const body = (await res.json()) as { error?: string };
+
     return body.error ?? res.statusText;
   } catch {
     return res.statusText;

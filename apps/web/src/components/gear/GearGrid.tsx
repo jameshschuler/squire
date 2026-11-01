@@ -19,6 +19,7 @@ export function GearGrid({ picks, pet, toolSlots }: GearGridProps) {
       quality={cell.pick && pickQuality(cell.pick)}
     />
   );
+
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-3 gap-1.5">{gearCells(picks).map(render)}</div>

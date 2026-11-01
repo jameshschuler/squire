@@ -37,14 +37,19 @@ export function fakeClient(version = "v1", extraItems: Record<string, unknown>[]
 
   const fetch: typeof globalThis.fetch = async (input, init) => {
     const url = new URL(String(input));
+
     calls.paths.push(url.pathname + url.search);
     if (url.pathname === "/version/") {
       calls.version++;
+
       return json({ version: state.version, details: { api: "", assets: "", locales: "" } });
     }
+
     if (url.pathname === "/icons/batch") {
       const { iconPaths } = JSON.parse(String(init?.body)) as { iconPaths: string[] };
+
       calls.iconBatches.push(iconPaths.length);
+
       return json(
         Object.fromEntries(
           iconPaths.map((p) => [
@@ -54,38 +59,52 @@ export function fakeClient(version = "v1", extraItems: Record<string, unknown>[]
         ),
       );
     }
+
     if (url.pathname.startsWith("/icons/")) {
       calls.icon++;
       if (url.pathname.includes("missing")) {
         return json({ error: "Not found" }, HTTP_STATUS.NOT_FOUND);
       }
+
       return new Response(new Uint8Array([1, 2, 3]), { headers: { "Content-Type": "image/png" } });
     }
+
     if (url.pathname === "/items/ids") {
       const { ids } = JSON.parse(String(init?.body)) as { ids: string[] };
+
       calls.idRequests.push(ids);
+
       return json(Object.fromEntries(ids.map((id) => [id, GAME_IDS[id] ?? id])));
     }
+
     const [, resource = "", endpoint, id] = url.pathname.split("/");
     const entries = resources[resource];
+
     if (!entries) {
       return json({ error: "Not found" }, HTTP_STATUS.NOT_FOUND);
     }
+
     if (endpoint === "") {
       calls.lists++;
+
       return json(entries);
     }
+
     if (endpoint === "id") {
       const found = entries.find((entry) => entry.id === decodeURIComponent(id ?? ""));
+
       return found ? json(found) : json({ error: "Not found" }, HTTP_STATUS.NOT_FOUND);
     }
+
     const filters = [...url.searchParams].filter(([field]) => field !== "detailed");
     const found = entries.filter((entry) => filters.every(([field, value]) => matches(entry[field], value)));
     const detailed = url.searchParams.get("detailed") === "true";
+
     return json(detailed ? found : found.map(({ id, name, icon }) => ({ id, name, icon })));
   };
 
   const client = createClient({ apiKey: "test", fetch, maxRetries: 0 });
+
   return { client, calls, state };
 }
 

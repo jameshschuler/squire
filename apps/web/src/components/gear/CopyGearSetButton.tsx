@@ -16,10 +16,12 @@ export function CopyGearSetButton({ picks }: { picks: GearPick[] }) {
 
   useEffect(() => {
     let active = true;
+
     gearSetCode(picks).then(
       (next) => active && setBuilt({ picks, code: next }),
       () => active && setBuilt({ picks, code: null }),
     );
+
     return () => {
       active = false;
     };
@@ -29,7 +31,9 @@ export function CopyGearSetButton({ picks }: { picks: GearPick[] }) {
     if (state === "ready") {
       return;
     }
+
     const timer = setTimeout(() => setState("ready"), RESET_MS);
+
     return () => clearTimeout(timer);
   }, [state]);
 

@@ -7,6 +7,7 @@ export const COLLECTIBLES_FILTER = "collectibles";
 
 export function effectFilters(items: ItemWithEffects[]): SkillOption[] {
   const targets = items.flatMap((item) => effectsOf(item).flatMap((effect) => effect.appliesTo));
+
   return [
     ...uniqueSkills(targets.filter((target) => target.id !== TRAVELLING.id)),
     ...(targets.some((target) => target.id === TRAVELLING.id) ? [TRAVELLING] : []),
@@ -24,12 +25,15 @@ export function itemSubtitle(item: ItemWithEffects, filter: string | undefined):
 
 export function summarizeEffects(item: ItemWithEffects, filter: string): string {
   const [first, ...rest] = effectsFor(item, filter);
+
   if (!first) {
     return "";
   }
+
   if (rest.length === 0) {
     return formatEffect(first);
   }
+
   return `${formatEffect(first)} · +${rest.length} other ${rest.length === 1 ? "effect" : "effects"}`;
 }
 
@@ -39,6 +43,7 @@ export function searchEffectItems(
   { filter }: { filter?: string } = {},
 ): ItemWithEffects[] {
   const terms = words(query);
+
   return items.filter(
     (item) => (!filter || matchesFilter(item, filter)) && matchesWords(terms, [item.name, ...item.keywords]),
   );
@@ -46,10 +51,13 @@ export function searchEffectItems(
 
 export function whereItemApplies(item: ItemWithEffects): string {
   const effects = effectsOf(item);
+
   if (effects.length === 0) {
     return "No effects";
   }
+
   const scopes = new Set(effects.flatMap((effect) => (effect.scope ? [effect.scope] : [])));
+
   return scopes.has("Global") ? "Global" : [...scopes].join(" · ") || "Under certain conditions";
 }
 

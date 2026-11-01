@@ -9,6 +9,7 @@ export function ItemSources({ sources }: { sources: ItemSource[] }) {
   if (sources.length === 0) {
     return <p className="text-muted-foreground">No known source yet.</p>;
   }
+
   return (
     <ul className="divide-y">
       {sources.map((source) => (

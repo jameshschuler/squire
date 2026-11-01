@@ -13,6 +13,7 @@ describe("sortByRegion", () => {
       location("Blackspell Harbour", "Grand Duchy of Trellin-Erdwise"),
       location("Vastalume", "Syrenthia"),
     ]);
+
     expect(sorted.map((l) => l.name)).toEqual([
       "Blackspell Harbour",
       "Salsfirth",
@@ -25,6 +26,7 @@ describe("sortByRegion", () => {
 
   it("leaves the list it was given unchanged", () => {
     const locations = [location("B", "Jarvonia"), location("A", "Jarvonia")];
+
     sortByRegion(locations);
     expect(locations.map((l) => l.name)).toEqual(["B", "A"]);
   });

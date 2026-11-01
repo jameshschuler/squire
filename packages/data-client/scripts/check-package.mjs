@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 const tarball = process.argv[2];
+
 if (!tarball) {
   console.error("Usage: node scripts/check-package.mjs <path to packed .tgz>");
   process.exit(1);
@@ -56,13 +57,16 @@ const tsconfig = {
 };
 
 const dir = mkdtempSync(join(tmpdir(), "data-client-consumer-"));
+
 try {
   writeFileSync(join(dir, "package.json"), JSON.stringify({ private: true, type: "module" }));
   writeFileSync(join(dir, "tsconfig.json"), JSON.stringify(tsconfig));
   writeFileSync(join(dir, "consumer.ts"), consumer);
   const run = (command, args) => execFileSync(command, args, { cwd: dir, stdio: "inherit" });
+
   run("npm", ["install", resolve(tarball), "--ignore-scripts", "--no-audit", "--no-fund"]);
   const tsc = createRequire(import.meta.url).resolve("typescript/bin/tsc");
+
   run(process.execPath, [tsc, "-p", "."]);
   run(process.execPath, ["out/consumer.js"]);
 } finally {

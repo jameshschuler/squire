@@ -14,9 +14,11 @@ export function percentPoints(ratio: number, decimals: number): number {
 
 export function formatSteps(workRequired: number, maxWorkEfficiency: number | null): string {
   const baseSteps = `${workRequired} base steps`;
+
   if (maxWorkEfficiency === null || maxWorkEfficiency <= 1) {
     return baseSteps;
   }
+
   return `${baseSteps} · ${Math.ceil(workRequired / maxWorkEfficiency)} min steps`;
 }
 

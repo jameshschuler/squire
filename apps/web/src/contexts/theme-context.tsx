@@ -16,11 +16,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const query = darkQuery();
     const apply = () => {
       const resolved = resolveTheme(theme, query.matches);
+
       document.documentElement.classList.toggle("dark", resolved === "dark");
       document.querySelector('meta[name="theme-color"]')?.setAttribute("content", THEME_COLORS[resolved]);
     };
+
     apply();
     query.addEventListener("change", apply);
+
     return () => query.removeEventListener("change", apply);
   }, [theme]);
 
@@ -34,8 +37,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
 export function useThemeContext(): ThemeContextValue {
   const value = useContext(ThemeContext);
+
   if (!value) {
     throw new Error("useThemeContext must be used inside ThemeProvider");
   }
+
   return value;
 }

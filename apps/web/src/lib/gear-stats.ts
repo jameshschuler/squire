@@ -66,14 +66,17 @@ export function statGroups(
   });
   const rank = (tile: StatTile) => {
     const index = highlightKeys.indexOf(tile.key);
+
     return index === -1 ? highlightKeys.length : index;
   };
+
   const missing = highlighted
     .filter((goal) => !lines.some((line) => sameStat(line, goal)))
     .map((goal) => ({ ...goal, value: 0 }));
   const shown = [...lines, ...missing]
     .filter((line) => STAT_LABELS[line.stat])
     .sort((a, b) => Number(a.isPercent) - Number(b.isPercent));
+
   return {
     steps: [
       steps,
@@ -90,6 +93,7 @@ export function statGroups(
 function efficiencyTile(parts: EfficiencyParts): StatTile {
   const total = BASE_EFFICIENCY + parts.level + parts.gear;
   const max = BASE_EFFICIENCY + parts.cap;
+
   return {
     key: "workEfficiency",
     value: Number.isFinite(max) ? formatPercentOf(total, max, 1) : formatPercent(total, 1),
@@ -102,10 +106,13 @@ function efficiencyTile(parts: EfficiencyParts): StatTile {
 
 export function locationTiles(bonuses: SourcedStat[]): StatTile[] {
   const groups = new Map<string, SourcedStat[]>();
+
   for (const bonus of bonuses.filter((b) => statName(b))) {
     const key = `${bonus.stat}:${bonus.isPercent}`;
+
     groups.set(key, [...(groups.get(key) ?? []), bonus]);
   }
+
   return [...groups].map(([key, group]) => ({
     key,
     label: statName(group[0]!)!,
@@ -119,9 +126,11 @@ export function locationTiles(bonuses: SourcedStat[]): StatTile[] {
 function joinNames(names: string[]): string {
   const words = names.map((name) => name.split(" "));
   const shared = words[0]!.findIndex((word, i) => words.some((w) => w.length <= i + 1 || w[i] !== word));
+
   if (names.length < 2 || shared <= 0) {
     return names.join(", ");
   }
+
   return `${words[0]!.slice(0, shared).join(" ")} ${words.map((w) => w.slice(shared).join(" ")).join(", ")}`;
 }
 
@@ -132,8 +141,10 @@ export function statName({ stat, isPercent }: Pick<StatLine, "stat" | "isPercent
 export function formatStatValue({ value, isPercent }: Pick<StatLine, "value" | "isPercent">): string {
   const sign = value < 0 ? "−" : "+";
   const amount = Math.abs(value);
+
   if (isPercent) {
     return `${sign}${formatPercent(amount, 1)}`;
   }
+
   return `${sign}${Number(amount.toFixed(2))}`;
 }

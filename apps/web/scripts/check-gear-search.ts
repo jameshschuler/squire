@@ -75,9 +75,11 @@ async function main() {
     load<RecipeBook>(values.api, "/api/recipes"),
   ]);
   const timeoutMs = Number(values.timeout) * 1000;
+
   if (!(timeoutMs > 0)) {
     throw new Error(`--timeout takes a number of seconds, not "${values.timeout}"`);
   }
+
   const characterPath = values.character ?? (existsSync(DEFAULT_CHARACTER) ? DEFAULT_CHARACTER : null);
   const profiles: Record<string, PlayerProfile> = {
     "best in game": BEST_IN_GAME,
@@ -87,25 +89,31 @@ async function main() {
   };
   const jobs = buildJobs(book, Object.keys(profiles));
   const lanes = Math.max(availableParallelism() - 1, 1);
+
   console.log(`Checking ${jobs.length} searches on ${lanes} threads, ${values.timeout}s limit each…`);
   const results = await runAll(jobs, { gear, profiles }, lanes, timeoutMs);
+
   report(results);
   process.exitCode = results.some((r) => FAILING.includes(r.outcome)) ? 1 : 0;
 }
 
 async function load<T>(api: string, path: string): Promise<T> {
   const response = await fetch(new URL(path, api));
+
   if (!response.ok) {
     throw new Error(`${path} answered ${response.status}. Is the API running at ${api}?`);
   }
+
   return (await response.json()) as T;
 }
 
 function buildJobs(book: RecipeBook, profiles: string[]): Job[] {
   const goalSets = (target: ReturnType<typeof gearTargets>[number]): GoalId[][] => {
     const recommended = recommendedGoals(target);
+
     return recommended.join() === "steps" ? [["steps"]] : [["steps"], recommended];
   };
+
   return gearTargets(book)
     .flatMap((target) =>
       profiles.flatMap((profile) =>
@@ -127,19 +135,25 @@ async function runAll(jobs: Job[], shared: Shared, lanes: number, timeoutMs: num
   const spawn = () => new Worker(new URL(import.meta.url), { workerData: shared, execArgv: process.execArgv });
   const lane = async () => {
     let worker = spawn();
+
     for (let job = queue.shift(); job; job = queue.shift()) {
       const result = await runJob(worker, job, timeoutMs);
+
       if (result.outcome === "timed out" || result.outcome === "failed") {
         await worker.terminate();
         worker = spawn();
       }
+
       results.push(result);
       process.stdout.write(`\r${results.length}/${jobs.length}`);
     }
+
     await worker.terminate();
   };
+
   await Promise.all(Array.from({ length: lanes }, lane));
   process.stdout.write("\n");
+
   return results.sort((a, b) => a.job.id - b.job.id);
 }
 
@@ -153,15 +167,20 @@ function runJob(worker: Worker, job: Job, timeoutMs: number): Promise<Result> {
       worker.off("exit", onError);
       resolve({ job, outcome, fast, exact });
     };
+
     const onRun = (run: Run) => {
       if (!fast) {
         fast = run;
+
         return;
       }
+
       finish(outcomeOf(job.goals, fast, run), run);
     };
+
     const onError = () => finish("failed", null);
     const timer = setTimeout(() => finish("timed out", null), timeoutMs);
+
     worker.on("message", onRun);
     worker.on("error", onError);
     worker.on("exit", onError);
@@ -171,9 +190,11 @@ function runJob(worker: Worker, job: Job, timeoutMs: number): Promise<Result> {
 
 function outcomeOf(goals: GoalId[], fast: Run, exact: Run): Outcome {
   const comparison = compareScores(exact.score, fast.score);
+
   if (comparison > 0) {
     return marginHolds(goals.slice(0, CHECKED_GOALS), fast.margin, fast.score, exact.score) ? "missed" : "wrong margin";
   }
+
   return comparison < 0 ? "exact worse" : "same";
 }
 
@@ -182,8 +203,10 @@ function serve({ gear, profiles }: Shared) {
     const run = (limits: SearchLimits): Run => {
       const goals = [...job.goals, ...job.tieBreakers];
       const found = optimizeGear(gear, profiles[job.profile]!, job.target, goals, limits);
+
       return { steps: found.result.steps, score: found.score, margin: found.margin, ms: found.searchMs };
     };
+
     parentPort!.postMessage(run({ checkedGoals: CHECKED_GOALS }));
     parentPort!.postMessage(run({ maxStates: Number.POSITIVE_INFINITY, timeBudgetMs: Number.POSITIVE_INFINITY }));
   });
@@ -191,23 +214,29 @@ function serve({ gear, profiles }: Shared) {
 
 function report(results: Result[]) {
   const describe = ({ job }: Result) => `${job.name} · ${job.profile} · ${job.goals.join(" › ")}`;
+
   for (const result of results.filter((r) => r.outcome !== "same")) {
     const { fast, exact } = result;
     const claim = fast?.margin ? `within ${(fast.margin.gap * 100).toFixed(1)}% on ${fast.margin.goal}` : "proven";
     const limited = fast && `limited ${fast.steps} steps, ${claim}`;
     const detail = limited ? ` (${limited}, ${exact ? `exact ${exact.steps} steps` : "exact didn't finish"})` : "";
+
     console.log(`${result.outcome.toUpperCase()}: ${describe(result)}${detail}`);
   }
+
   const counts = new Map<Outcome, number>();
+
   for (const { outcome } of results) {
     counts.set(outcome, (counts.get(outcome) ?? 0) + 1);
   }
+
   const slowest = results
     .flatMap((r) => (r.exact ? [{ result: r, ms: r.exact.ms }] : []))
     .sort((a, b) => b.ms - a.ms)
     .slice(0, 3)
     .map(({ result, ms }) => `${describe(result)} ${ms} ms`);
   const proven = results.filter((r) => r.fast && !r.fast.margin).length;
+
   console.log([...counts].map(([outcome, count]) => `${count} ${outcome}`).join(", "));
   console.log(`${proven} of ${results.length} searches proved their own set is the best`);
   console.log(`Slowest exact searches: ${slowest.join("; ")}`);

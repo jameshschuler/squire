@@ -16,5 +16,6 @@ export function petViews(pets: PetDetail[]): PetView[] {
 
 function adultSprite(pet: PetDetail): string {
   const sprites = pet.looks[0]?.sprites ?? [];
+
   return (sprites.find((s) => s.stage === "adult") ?? sprites[0])?.sprite ?? "";
 }

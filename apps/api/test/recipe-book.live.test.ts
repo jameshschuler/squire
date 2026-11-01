@@ -11,11 +11,14 @@ describe.skipIf(!apiKey)("recipe book from the live dev API", () => {
     let requests = 0;
     const countingFetch: typeof fetch = async (input, init) => {
       const res = await fetch(input, init);
+
       if (res.status !== HTTP_STATUS.TOO_MANY_REQUESTS) {
         requests++;
       }
+
       return res;
     };
+
     const data = await loadGameData(createClient({ apiKey: apiKey!, baseUrl: ENVIRONMENTS.dev, fetch: countingFetch }));
     const book = buildRecipeBook(data);
 

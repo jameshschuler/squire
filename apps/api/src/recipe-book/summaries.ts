@@ -5,6 +5,7 @@ import type { ItemSummary, LocationSummary } from "./types.js";
 export function itemSummaries(items: Map<string, ItemDetail>): (id: string) => ItemSummary {
   return (id) => {
     const found = items.get(id);
+
     return {
       id,
       name: found?.name ?? humanize(id),

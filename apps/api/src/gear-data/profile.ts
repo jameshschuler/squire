@@ -35,22 +35,29 @@ export function ownedGear(profile: PlayerProfile, items: GearItem[]): OwnedGear[
   if (profile.kind === "best") {
     return items.flatMap((item) => {
       const quality = bestQuality(item);
+
       return copies({ item, quality, stats: stackedStats(item, quality) }, Number.POSITIVE_INFINITY);
     });
   }
+
   const byId = new Map(items.map((item) => [item.id, item]));
   const worn = new Map<string, number>();
   const rank = (quality: ItemQuality | null) => (quality ? QUALITIES.indexOf(quality) : -1);
+
   return [...profile.character.owned]
     .sort((a, b) => rank(b.quality) - rank(a.quality))
     .flatMap(({ id, quality, count }) => {
       const item = byId.get(id);
+
       if (!item || !meetsRequirements(profile.character, item.requirements)) {
         return [];
       }
+
       const already = worn.get(id) ?? 0;
       const kept = Math.min(count, copiesAllowed(item.slot) - already);
+
       worn.set(id, already + kept);
+
       return Array.from({ length: kept }, () => ({ item, quality, stats: stackedStats(item, quality) }));
     });
 }
@@ -63,15 +70,18 @@ export function ownedPets(profile: PlayerProfile, pets: PetView[]): OwnedPetView
   if (profile.kind === "best") {
     return pets.flatMap((pet) => {
       const top = pet.levels.at(-1);
+
       return top ? [{ pet, level: top.level, stats: top.stats }] : [];
     });
   }
+
   return profile.character.pets.flatMap((owned) => petAt(pets, owned) ?? []);
 }
 
 export function petAt(pets: PetView[], { species, level }: OwnedPet): OwnedPetView | undefined {
   const pet = pets.find((p) => p.id === species || p.rareId === species);
   const reached = pet?.levels.filter((l) => l.level <= level).at(-1);
+
   return pet && reached ? { pet, level: reached.level, stats: reached.stats } : undefined;
 }
 
@@ -82,7 +92,9 @@ export function playerConditionHolds(profile: PlayerProfile, condition: GearCond
   if (profile.kind === "best") {
     return true;
   }
+
   const { character } = profile;
+
   switch (condition.type) {
     case "collectiblesOwned":
       return character.collectibles.length >= condition.requirement.amount;
@@ -105,8 +117,10 @@ export function playerConditionHolds(profile: PlayerProfile, condition: GearCond
 
 function meetsRequirements(character: Character, requirements: GearCondition[]): boolean {
   const profile: PlayerProfile = { kind: "character", character };
+
   return requirements.every((requirement) => {
     const holds = playerConditionHolds(profile, requirement);
+
     return holds === undefined || holds !== requirement.opposite;
   });
 }

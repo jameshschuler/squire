@@ -12,6 +12,7 @@ interface TargetQuestionProps {
 export function TargetQuestion({ targets, onChoose }: TargetQuestionProps) {
   const [query, setQuery] = useState("");
   const suggestions = useMemo(() => searchGearTargets(targets, query), [targets, query]);
+
   return (
     <div className="space-y-2">
       <SearchInput value={query} placeholder="Search activities and recipes…" onChange={setQuery} />

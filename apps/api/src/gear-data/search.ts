@@ -83,6 +83,7 @@ export function bestSet(
   const raise = (bound: Score) => {
     ceiling = ceiling && compareScores(ceiling, bound) >= 0 ? ceiling : bound;
   };
+
   search: for (const [g, { choices, capacity }] of groups.entries()) {
     states = states.map((state) => ({ ...state, used: 0 }));
     for (const [i, next] of choices.entries()) {
@@ -96,12 +97,14 @@ export function bestSet(
         canMeetNeeds(state, from)
           ? score(addStats(state.optimistic, ahead[g]![from]![capacity - state.used]!))
           : unusable;
+
       // Out of time: every unfinished partial set might still have led to the best set, so their
       // bounds join the ceiling and the margin stays honest.
       if (performance.now() > deadline) {
         states.forEach((state) => raise(bound(state, i)));
         break search;
       }
+
       const nextBans = masks(next);
       const nextGroups = setGroupsOf(rules, next);
       const grown = states.flatMap((state) =>
@@ -113,30 +116,38 @@ export function bestSet(
       const [old, added] = [promising(states), promising(grown)];
       const merge = (base: Scored[], more: Scored[]) => {
         const signed = withSignatures([...base, ...more], stats);
+
         return frontier(signed.slice(0, base.length), signed.slice(base.length), covers);
       };
+
       // Old states were already compared with each other, so only new ones need comparing, except at
       // the start of a group, where resetting `used` can make one old state dominate another.
       const kept: Scored[] = i === 0 ? merge([], [...old, ...added]) : added.length > 0 ? merge(old, added) : old;
+
       // Keep the most promising; the best bound among those cut is the highest any of them could reach.
       if (kept.length > maxStates) {
         kept.sort((a, b) => compareScores(b.bound, a.bound));
         raise(kept[maxStates]!.bound);
       }
+
       states = kept.slice(0, maxStates).map(({ state }) => state);
     }
   }
+
   for (const { chosen } of states) {
     const candidateScore = setScore(chosen);
+
     if (compareScores(candidateScore, bestScore) > 0) {
       best = chosen;
       bestScore = candidateScore;
     }
   }
+
   // Repair could strip an unusable set down to nothing, since every unusable set scores the same.
   if (!repair || !usable(best)) {
     return { set: best, ceiling };
   }
+
   // Swap repair fixes small misses the search can make while cutting. When the first priority isn't
   // speed, it also starts from a greedy set built for that priority alone. Both stop at the deadline.
   const starts =
@@ -154,6 +165,7 @@ export function bestSet(
   const winner = starts
     .map((start) => improveBySwaps(groups, start, compatible, setScore, deadline))
     .reduce((a, b) => (compareScores(setScore(b), setScore(a)) > 0 ? b : a));
+
   return { set: withoutIdlePicks(winner, setScore), ceiling };
 }
 
@@ -168,6 +180,7 @@ function improveBySwaps(
 ): Candidate[] {
   let best = start;
   let bestScore = setScore(best);
+
   for (let improved = true; improved && performance.now() <= deadline;) {
     improved = false;
     for (const { capacity, choices } of groups) {
@@ -176,13 +189,16 @@ function improveBySwaps(
         ...(inGroup.length < capacity ? [best] : []),
         ...inGroup.map((out) => best.filter((c) => c !== out)),
       ];
+
       for (const base of options) {
         for (const next of choices) {
           if (!compatible(base, next)) {
             continue;
           }
+
           const trial = [...base, next];
           const trialScore = setScore(trial);
+
           if (compareScores(trialScore, bestScore) > 0) {
             best = trial;
             bestScore = trialScore;
@@ -192,6 +208,7 @@ function improveBySwaps(
       }
     }
   }
+
   return best;
 }
 
@@ -205,6 +222,7 @@ function greedy(
 ): Candidate[] {
   let chosen = start;
   let current = setScore(chosen);
+
   for (;;) {
     const options = groups.flatMap(({ capacity, choices }) =>
       chosen.filter((c) => choices.includes(c)).length < capacity ? choices.filter((c) => compatible(chosen, c)) : [],
@@ -215,9 +233,11 @@ function greedy(
         (a, b) => (!a || compareScores(b.score, a.score) > 0 ? b : a),
         undefined,
       );
+
     if (!top || compareScores(top.score, current) <= 0) {
       return chosen;
     }
+
     chosen = [...chosen, top.c];
     current = top.score;
   }
@@ -237,6 +257,7 @@ function neededStart(
 
     return compatible(chosen, next) && chosen.filter((c) => groupOf.get(c) === group).length < group.capacity;
   };
+
   const addFor = (chosen: Candidate[], { keyword, count }: NeedRule) =>
     [...groupOf.keys()]
       .filter((candidate) => candidate.keywords.includes(keyword))
@@ -334,10 +355,12 @@ function withSignatures(entries: Scored[], stats: ((t: StatTotals) => number)[])
   const levels = stats.flatMap((stat) => {
     const values = entries.map(({ state }) => stat(state.optimistic)).sort((a, b) => a - b);
     const at = Array.from({ length: perStat }, (_, k) => values[Math.floor(((k + 1) * values.length) / (perStat + 1))]);
+
     return [...new Set(at)].flatMap((value) => (value === undefined ? [] : [{ stat, value }]));
   });
   const bitsOf = (totals: StatTotals) =>
     levels.reduce((bits, { stat, value }, i) => (stat(totals) >= value ? bits | (1 << i) : bits), 0);
+
   return entries.map((entry) => ({
     ...entry,
     haveBits: bitsOf(entry.state.guaranteed),
@@ -356,6 +379,7 @@ function coverage(
   return (a, b) => {
     const have = a.guaranteed;
     const could = b.optimistic;
+
     if (
       a.used > b.used ||
       have.stepsPercent > could.stepsPercent ||
@@ -366,13 +390,16 @@ function coverage(
     ) {
       return false;
     }
+
     for (let i = 0; i < goalDims; i++) {
       if ((have.goalStats[i] ?? 0) < (could.goalStats[i] ?? 0)) {
         return false;
       }
     }
+
     return a.setItems.every((ids, i) => {
       const other = b.setItems[i]!.length;
+
       return cappedSetGroups.has(i) ? ids.length === other : ids.length >= other;
     });
   };
@@ -385,10 +412,12 @@ function frontier(kept: Bounded[], added: Bounded[], covers: (a: PartialSet, b: 
   const result = [...kept];
   const haves = result.map((entry) => entry.haveBits);
   const coulds = result.map((entry) => entry.couldBits);
+
   for (const entry of added) {
     if (isCovered(result, haves, entry, covers)) {
       continue;
     }
+
     for (let i = result.length - 1; i >= 0; i--) {
       if ((coulds[i]! & ~entry.haveBits) === 0 && covers(entry.state, result[i]!.state)) {
         result.splice(i, 1);
@@ -396,10 +425,12 @@ function frontier(kept: Bounded[], added: Bounded[], covers: (a: PartialSet, b: 
         coulds.splice(i, 1);
       }
     }
+
     result.push(entry);
     haves.push(entry.haveBits);
     coulds.push(entry.couldBits);
   }
+
   return result;
 }
 
@@ -414,6 +445,7 @@ function isCovered(
       return true;
     }
   }
+
   return false;
 }
 
@@ -421,9 +453,11 @@ function isCovered(
 // the best of everything at once, so this overshoots, which is what makes it a safe bound.
 function topSums(choices: Candidate[], capacity: number, useful: number): StatTotals[][] {
   const goalCount = Math.max(0, ...choices.map((c) => c.best.goalStats.length));
+
   return Array.from({ length: choices.length + 1 }, (_, start) => {
     const rest = choices.slice(start).map((c) => c.best);
     const best = (value: (totals: StatTotals) => number, picks: number) => topSum(rest.map(value), picks);
+
     return Array.from({ length: capacity + 1 }, (_, picks) => ({
       workEfficiency: Math.min(
         best((t) => t.workEfficiency, picks),
@@ -447,8 +481,10 @@ export function topSum(values: number[], picks: number): number {
 
 function withoutIdlePicks(chosen: Candidate[], setScore: (set: Candidate[]) => Score): Candidate[] {
   const target = setScore(chosen);
+
   return chosen.reduce((kept, c) => {
     const without = kept.filter((other) => other !== c);
+
     return compareScores(setScore(without), target) >= 0 ? without : kept;
   }, chosen);
 }

@@ -21,6 +21,7 @@ afterEach(() => {
 
 function watch(update = vi.fn(async () => undefined as unknown as ServiceWorkerRegistration)) {
   stop = checkForUpdatesWhileOpen({ update });
+
   return update;
 }
 
@@ -32,6 +33,7 @@ const switchTo = (state: DocumentVisibilityState) => {
 describe("checkForUpdatesWhileOpen", () => {
   it("checks for a new version when the app comes back on screen", () => {
     const update = watch();
+
     switchTo("hidden");
     expect(update).not.toHaveBeenCalled();
     switchTo("visible");
@@ -40,6 +42,7 @@ describe("checkForUpdatesWhileOpen", () => {
 
   it("checks every hour while the app stays open", () => {
     const update = watch();
+
     vi.advanceTimersByTime(UPDATE_CHECK_MS);
     expect(update).toHaveBeenCalledOnce();
   });
@@ -47,12 +50,14 @@ describe("checkForUpdatesWhileOpen", () => {
   it("skips the hourly check while the app is in the background", () => {
     visibility = "hidden";
     const update = watch();
+
     vi.advanceTimersByTime(UPDATE_CHECK_MS);
     expect(update).not.toHaveBeenCalled();
   });
 
   it("stops checking once stopped", () => {
     const update = watch();
+
     stop();
     switchTo("visible");
     vi.advanceTimersByTime(UPDATE_CHECK_MS);
@@ -61,6 +66,7 @@ describe("checkForUpdatesWhileOpen", () => {
 
   it("ignores a failed check, such as when offline", async () => {
     const update = watch(vi.fn(() => Promise.reject(new Error("offline"))));
+
     switchTo("visible");
     await Promise.resolve();
     expect(update).toHaveBeenCalledOnce();
@@ -74,6 +80,7 @@ describe("registerAppUpdates", () => {
   it("starts checking for updates once the service worker is registered", () => {
     registerAppUpdates();
     const update = vi.fn(async () => undefined as unknown as ServiceWorkerRegistration);
+
     registered().onRegisteredSW!("/sw.js", { update } as unknown as ServiceWorkerRegistration);
     vi.advanceTimersByTime(UPDATE_CHECK_MS);
     expect(update).toHaveBeenCalledOnce();

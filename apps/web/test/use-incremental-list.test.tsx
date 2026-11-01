@@ -18,6 +18,7 @@ class FakeIntersectionObserver {
 
 function scrollToBottom() {
   const observer = observers.findLast((o) => !o.disconnected);
+
   act(() => observer?.callback([{ isIntersecting: true } as IntersectionObserverEntry], {} as IntersectionObserver));
 }
 
@@ -25,6 +26,7 @@ const items = Array.from({ length: 25 }, (_, i) => `item ${i}`);
 
 function List({ listKey }: { listKey: string }) {
   const { visibleItems, hasMore, sentinelRef } = useIncrementalList(items, listKey, 10);
+
   return (
     <>
       <p>{visibleItems.length} shown</p>
@@ -63,6 +65,7 @@ describe("useIncrementalList", () => {
 
   it("remembers how far a list was scrolled when it's shown again", () => {
     const { unmount } = render(<List listKey="c" />);
+
     scrollToBottom();
     unmount();
     render(<List listKey="c" />);
@@ -71,6 +74,7 @@ describe("useIncrementalList", () => {
 
   it("starts a different list from the first page", () => {
     const { unmount } = render(<List listKey="d" />);
+
     scrollToBottom();
     unmount();
     render(<List listKey="e" />);

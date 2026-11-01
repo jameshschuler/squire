@@ -39,6 +39,7 @@ describe("gearTargets", () => {
 
   it("leaves out recipes without steps", () => {
     const noSteps = { ...book, recipes: book.recipes.map((r) => ({ ...r, workRequired: null })) };
+
     expect(gearTargets(noSteps).map((t) => t.key)).toEqual(["activity:mine_gold_ore"]);
   });
 });
@@ -98,6 +99,7 @@ describe("recommendedGoals", () => {
 
   it("recommends XP instead of chests when the activity has none", () => {
     const noChests = { ...byKey("activity:mine_gold_ore"), lootTypes: [] };
+
     expect(recommendedGoals(noChests)).toEqual(["steps", "items", "xp"]);
   });
 
@@ -107,6 +109,7 @@ describe("recommendedGoals", () => {
 
   it("offers and recommends best quality for a recipe that makes tiered gear", () => {
     const tiered = { ...byKey("recipe:smelt_a_gold_bar"), makesTieredGear: true };
+
     expect(goalsFor(tiered).map((g) => g.id)).toContain("quality");
     expect(recommendedGoals(tiered)).toEqual(["steps", "materials", "quality"]);
   });
@@ -119,6 +122,7 @@ describe("recommendedGoals", () => {
       ],
     };
     const smelt = gearTargets(withGear).find((t) => t.key === "recipe:smelt_a_gold_bar")!;
+
     expect(smelt.makesTieredGear).toBe(true);
     expect(byKey("recipe:smelt_a_gold_bar").makesTieredGear).toBe(false);
   });

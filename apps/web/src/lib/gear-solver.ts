@@ -19,16 +19,19 @@ export function solveInBackground(request: GearRequest): GearJob {
     current.terminate();
     worker = null;
   };
+
   const result = new Promise<GearSolution>((resolve, reject) => {
     current.onmessage = (event: MessageEvent<GearSolution>) => {
       done = true;
       resolve(event.data);
     };
+
     current.onerror = (event) => {
       stop();
       reject(new Error(event.message));
     };
   });
+
   current.postMessage(request);
   const job = {
     result,
@@ -38,6 +41,8 @@ export function solveInBackground(request: GearRequest): GearJob {
       }
     },
   };
+
   running = job;
+
   return job;
 }

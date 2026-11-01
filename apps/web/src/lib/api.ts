@@ -18,13 +18,17 @@ async function fetchVersioned<T extends { schema: number }>(
   fresh: boolean,
 ): Promise<T> {
   const res = await fetch(`${API_URL}${path}?schema=${schema}${fresh ? "&fresh=1" : ""}`);
+
   if (!res.ok) {
     throw new Error(`Failed to load ${label} (${res.status})`);
   }
+
   const data: T = await res.json();
+
   if (data.schema !== schema) {
     throw new Error(`${label.charAt(0).toUpperCase()}${label.slice(1)} is updating. Try again in a minute.`);
   }
+
   return data;
 }
 

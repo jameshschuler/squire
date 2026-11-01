@@ -5,6 +5,7 @@ import { GameDataProvider, useGameDataContext } from "@/contexts/game-data-conte
 
 function Probe() {
   const state = useGameDataContext();
+
   return (
     <p>
       {state.status === "ready"
@@ -18,7 +19,9 @@ function Probe() {
 
 function mockFetch(response: Response) {
   const fetch = vi.fn(async () => response);
+
   vi.stubGlobal("fetch", fetch);
+
   return fetch;
 }
 
@@ -43,6 +46,7 @@ describe("GameDataProvider", () => {
 
   it("asks for the recipe book version this app understands", async () => {
     const fetch = mockFetch(new Response(JSON.stringify({ schema: RECIPE_BOOK_SCHEMA, version: "v1", recipes: [] })));
+
     render(
       <GameDataProvider>
         <Probe />

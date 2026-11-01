@@ -20,7 +20,9 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
         setFavoriteIds(readFavorites());
       }
     };
+
     addEventListener("storage", onStorage);
+
     return () => removeEventListener("storage", onStorage);
   }, []);
 
@@ -41,8 +43,10 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
 export function useFavoritesContext(): FavoritesContextValue {
   const value = useContext(FavoritesContext);
+
   if (!value) {
     throw new Error("useFavoritesContext must be used inside FavoritesProvider");
   }
+
   return value;
 }

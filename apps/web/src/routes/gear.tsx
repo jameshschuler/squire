@@ -10,5 +10,6 @@ export const Route = createFileRoute("/gear")({
 function GearRoute() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
+
   return <GearPage search={search} onSearchChange={(next) => navigate({ search: next })} />;
 }

@@ -55,6 +55,7 @@ describe("locationChoices", () => {
       gearItem("corslet", "chest", [bonus("doubleAction", 0.07)]),
       gearItem("bauble", "tool", [bonus("workEfficiency", 0.05)]),
     ];
+
     expect(locationChoices(gear(items), BEST_IN_GAME, target)).toEqual([
       { value: "best", label: "Best location" },
       {
@@ -73,6 +74,7 @@ describe("locationChoices", () => {
       gearItem("b", "tool", [bonus("workEfficiency", 0.05)]),
       gearItem("c", "head", [bonus("chestFind", 0.03)]),
     ];
+
     expect(locationChoices(gear(items), BEST_IN_GAME, target)[1]?.detail).toBe(
       "+7% Double action · +5% Work efficiency",
     );

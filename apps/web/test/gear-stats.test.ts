@@ -39,6 +39,7 @@ describe("statGroups", () => {
 
   it("highlights only the exact stat a priority uses, not its flat or percent twin", () => {
     const xp = statGroups([...lines], capped, [{ stat: "bonusExperience", isPercent: true }], steps);
+
     expect(xp.other.filter((t) => t.highlight).map((t) => t.label)).toEqual(["Bonus XP"]);
   });
 
@@ -55,6 +56,7 @@ describe("statGroups", () => {
       ],
       steps,
     );
+
     expect(ranked.other.map((t) => t.label)).toEqual(["Gem finding", "Chest finding"]);
   });
 
@@ -89,6 +91,7 @@ describe("statGroups", () => {
 
   it("shows a highlighted zero for a priority stat the set doesn't give", () => {
     const none = statGroups([], capped, [{ stat: "chestFind", isPercent: true }], steps);
+
     expect(none.other).toMatchObject([{ label: "Chest finding", value: "+0%", highlight: true }]);
   });
 });
@@ -123,6 +126,7 @@ describe("locationTiles", () => {
     const tiles = locationTiles(
       names.map((source) => ({ source, stat: "doubleAction", isPercent: true, value: 0.01 })),
     );
+
     expect(tiles[0]?.details).toEqual([expected]);
   });
 

@@ -30,5 +30,6 @@ export function slotCapacity(slot: GearType | "pet", tools: number): number {
   if (slot === "tool") {
     return tools;
   }
+
   return GEAR_SLOTS.find((s) => s.slot === slot)?.capacity ?? 1;
 }

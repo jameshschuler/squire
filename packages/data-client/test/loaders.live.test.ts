@@ -9,11 +9,14 @@ describe.skipIf(!apiKey)("client.loadAll against the live dev API", () => {
     let requests = 0;
     const countingFetch: typeof fetch = async (input, init) => {
       const res = await fetch(input, init);
+
       if (res.status !== HTTP_STATUS.TOO_MANY_REQUESTS) {
         requests++;
       }
+
       return res;
     };
+
     const client = createClient({ apiKey: apiKey!, baseUrl: ENVIRONMENTS.dev, fetch: countingFetch });
     const [recipes, activities, lootTables] = await Promise.all([
       client.recipes.loadAll(),
@@ -23,10 +26,12 @@ describe.skipIf(!apiKey)("client.loadAll against the live dev API", () => {
     const loadRequests = requests;
 
     const [recipeList, activityList] = await Promise.all([client.recipes.list(), client.activities.list()]);
+
     expect(recipes).toHaveLength(recipeList.length);
     expect(activities).toHaveLength(activityList.length);
     const tables = new Map(lootTables.map((t) => [t.id, t]));
     const referenced = activities.flatMap((a) => (a.tables ?? []).flatMap((ref) => ref.tables));
+
     expect(referenced.filter((id) => !tables.has(id))).toEqual([]);
     expect(loadRequests).toBeLessThan(35);
   });
