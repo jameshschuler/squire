@@ -124,9 +124,9 @@ export function bestSet(
     return { set: best, ceiling };
   }
   // Swap repair fixes small misses the search can make while cutting. When the first priority isn't
-  // speed, it also starts from a greedy set built for that priority alone.
+  // speed, it also starts from a greedy set built for that priority alone. Both stop at the deadline.
   const starts =
-    primaryValue === null
+    primaryValue === null || performance.now() > deadline
       ? [best]
       : [
           best,
@@ -135,7 +135,7 @@ export function bestSet(
           ]),
         ];
   const winner = starts
-    .map((start) => improveBySwaps(groups, start, compatible, setScore))
+    .map((start) => improveBySwaps(groups, start, compatible, setScore, deadline))
     .reduce((a, b) => (compareScores(setScore(b), setScore(a)) > 0 ? b : a));
   return { set: withoutIdlePicks(winner, setScore), ceiling };
 }
@@ -147,10 +147,11 @@ function improveBySwaps(
   start: Candidate[],
   compatible: (chosen: Candidate[], next: Candidate) => boolean,
   setScore: (set: Candidate[]) => Score,
+  deadline: number,
 ): Candidate[] {
   let best = start;
   let bestScore = setScore(best);
-  for (let improved = true; improved;) {
+  for (let improved = true; improved && performance.now() <= deadline;) {
     improved = false;
     for (const { capacity, choices } of groups) {
       const inGroup = best.filter((c) => choices.includes(c));

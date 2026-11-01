@@ -307,6 +307,22 @@ describe("optimizeGear", () => {
     expect(picked(gear, BEST_IN_GAME)).toEqual(["miner_boots", "miner_helm"]);
   });
 
+  it("keeps a weaker set ring when two copies of a stronger one would count as only one set piece", () => {
+    const setBonus = flatSteps(-10, {
+      type: "distinctKeywordItemsEquipped",
+      opposite: false,
+      requirement: { quantity: 3, keywords: ["gem_set"] },
+    });
+    const gear = gearData([
+      item("gem_hat", "head", [setBonus], { keywords: ["gem_set"] }),
+      item("ruby_ring", "ring", [flatSteps(-3)], { keywords: ["gem_set"] }),
+      item("opal_ring", "ring", [flatSteps(-1)], { keywords: ["gem_set"] }),
+    ]);
+    const owned = character(["gem_hat", "ruby_ring*2", "opal_ring"]);
+
+    expect(picked(gear, owned)).toEqual(["gem_hat", "opal_ring", "ruby_ring"]);
+  });
+
   it("keeps a plain set piece when a later slot's set bonus needs it", () => {
     const gear = gearData([
       item("set_helm", "head", [], { keywords: ["miner_set"] }),

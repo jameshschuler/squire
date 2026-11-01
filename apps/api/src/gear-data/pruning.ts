@@ -1,4 +1,4 @@
-import type { Candidate } from "./candidates.js";
+import { itemId, type Candidate } from "./candidates.js";
 import { MAX_DOUBLE_ACTION, type StatTotals } from "./steps.js";
 
 // `banKeys` are every keyword that takes part in a ban. `setGroups` are the keyword lists set bonuses
@@ -86,7 +86,16 @@ export function prune(choices: Candidate[], capacity: number, rules: KeywordRule
     );
   };
   const dominates = (a: Candidate, b: Candidate) => covers(a, b) && (!covers(b, a) || a.id < b.id);
-  return kept.filter((c) => kept.filter((other) => other !== c && dominates(other, c)).length < capacity);
+
+  // Set bonuses count distinct items, so two copies of one ring are only one set piece: a set piece is
+  // only dropped when enough different items beat it.
+  const beaten = (candidate: Candidate) => {
+    const winners = kept.filter((other) => other !== candidate && dominates(other, candidate));
+
+    return keys.get(candidate)!.set.size > 0 ? new Set(winners.map(itemId)).size : winners.length;
+  };
+
+  return kept.filter((candidate) => beaten(candidate) < capacity);
 }
 
 function helps(totals: StatTotals, useful: number): boolean {
