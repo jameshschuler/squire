@@ -1,17 +1,36 @@
 import { describe, expect, it, vi } from "vitest";
 import { createBookSource } from "../src/book-source.js";
+import type { GameDataCache } from "../src/game-data-cache.js";
+import type { GameData } from "../src/recipe-book/index.js";
+import sample from "../../../fixtures/api/gamedata-sample.json";
 import { fakeClient } from "./fake-client.js";
 
 const MINUTE = 60 * 1000;
 
-function setup() {
+function setup(cache?: GameDataCache) {
   const fake = fakeClient();
   const clock = { now: 0 };
-  const log = { info: vi.fn() };
+  const log = { info: vi.fn(), warn: vi.fn() };
   const onLoad = vi.fn();
-  const books = createBookSource(fake.client, log, { onLoad, now: () => clock.now });
+  const books = createBookSource(fake.client, log, { onLoad, now: () => clock.now, cache });
 
   return { ...fake, clock, log, onLoad, books };
+}
+
+function memoryCache(saved: GameData | null = null) {
+  const cache = {
+    saved,
+    read: vi.fn(async () => cache.saved),
+    write: vi.fn(async (data: GameData) => {
+      cache.saved = data;
+    }),
+  };
+
+  return cache;
+}
+
+function savedGameData(version: string): GameData {
+  return { ...(sample as unknown as GameData), version };
 }
 
 describe("createBookSource", () => {
@@ -68,7 +87,10 @@ describe("createBookSource", () => {
     const { books, log } = setup();
 
     await books();
-    expect(log.info).toHaveBeenCalledWith({ version: "v1", recipes: 3, gear: 0, ms: 0 }, "Loaded game data");
+    expect(log.info).toHaveBeenCalledWith(
+      { version: "v1", from: "api", recipes: 3, gear: 0, ms: 0 },
+      "Loaded game data",
+    );
   });
 
   it("shares one load between concurrent requests", async () => {
@@ -89,5 +111,64 @@ describe("createBookSource", () => {
     await expect(books()).rejects.toThrow("down");
     client.version = version;
     await expect(books()).resolves.toMatchObject({ recipeBook: { version: "v1" } });
+  });
+
+  describe("with saved game data", () => {
+    it("builds from the saved data with one version check when it's still current", async () => {
+      const cache = memoryCache(savedGameData("v1"));
+      const { books, calls, log } = setup(cache);
+
+      const loaded = await books();
+
+      expect(loaded.recipeBook.version).toBe("v1");
+      expect(calls.version).toBe(1);
+      expect(calls.lists).toBe(0);
+      expect(log.info).toHaveBeenCalledWith(expect.objectContaining({ from: "cache" }), "Loaded game data");
+    });
+
+    it("refetches and saves the new data when the saved version is out of date", async () => {
+      const cache = memoryCache(savedGameData("v0"));
+      const { books, calls } = setup(cache);
+
+      const loaded = await books();
+
+      expect(loaded.recipeBook.version).toBe("v1");
+      expect(calls.lists).toBeGreaterThan(0);
+      expect(cache.saved?.version).toBe("v1");
+    });
+
+    it("saves the data after a fetch when nothing was saved", async () => {
+      const cache = memoryCache();
+      const { books } = setup(cache);
+
+      await books();
+
+      expect(cache.write).toHaveBeenCalledTimes(1);
+      expect(cache.saved?.version).toBe("v1");
+    });
+
+    it("serves the saved data when the version check fails, so a WalkScape outage doesn't take the API down", async () => {
+      const cache = memoryCache(savedGameData("v1"));
+      const { books, client, calls, log } = setup(cache);
+
+      client.version = () => Promise.reject(new Error("WalkScape API unavailable"));
+
+      await expect(books()).resolves.toMatchObject({ recipeBook: { version: "v1" } });
+      expect(calls.lists).toBe(0);
+      expect(log.warn).toHaveBeenCalledWith(
+        expect.anything(),
+        "Couldn't check the game data version, using the saved game data",
+      );
+    });
+
+    it("still serves the data when saving it fails, and logs a warning", async () => {
+      const cache = memoryCache();
+
+      cache.write.mockRejectedValueOnce(new Error("disk full"));
+      const { books, log } = setup(cache);
+
+      await expect(books()).resolves.toMatchObject({ recipeBook: { version: "v1" } });
+      await vi.waitFor(() => expect(log.warn).toHaveBeenCalledWith(expect.anything(), "Failed to save game data"));
+    });
   });
 });
