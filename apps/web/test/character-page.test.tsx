@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, screen } from "@testing-library/react";
 import { RECIPE_BOOK_SCHEMA, type ItemWithEffects } from "@squire/api/recipe-book";
+import { GEAR_DATA_SCHEMA, type GearData, type PetView } from "@walkscape-community/gear-optimizer";
 import exportFixture from "../../../fixtures/character/export.json";
 import { CharacterPage } from "@/components/character/CharacterPage";
 import { CharacterProvider } from "@/contexts/character-context";
 import { GameDataProvider } from "@/contexts/game-data-context";
+import { GearDataProvider } from "@/contexts/gear-data-context";
 import { CHARACTER_STORAGE_KEY, readStoredCharacter, storeCharacter } from "@/lib/character";
 import { renderWithRouter } from "./render-with-router";
 
@@ -36,6 +38,30 @@ const book = {
   ],
 };
 
+const pet = (id: string, name: string, rareId: string): PetView => ({ id, name, rareId, icon: "", levels: [] });
+
+const gearData: GearData = {
+  schema: GEAR_DATA_SCHEMA,
+  version: "v1",
+  items: [],
+  pets: [
+    pet("camel", "Camel", "two_hump_camel"),
+    pet("frog", "Frog", "golden_frog"),
+    pet("mummy", "Mummy", "silky_mummy"),
+  ],
+  bannedKeywords: {},
+  skills: [],
+  locations: [],
+};
+
+const serveGearData = () =>
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) =>
+      url.includes("/api/gear") ? new Response(JSON.stringify(gearData)) : new Promise<Response>(() => {}),
+    ),
+  );
+
 const serveGameData = () =>
   vi.stubGlobal(
     "fetch",
@@ -46,7 +72,9 @@ const renderPage = () =>
   renderWithRouter(
     <GameDataProvider>
       <CharacterProvider>
-        <CharacterPage />
+        <GearDataProvider>
+          <CharacterPage />
+        </GearDataProvider>
       </CharacterProvider>
     </GameDataProvider>,
   );
@@ -206,6 +234,48 @@ describe("Character page", () => {
     expect(screen.getByText("Collectibles · 2 of 3")).toBeDefined();
     expect(screen.queryByText("2 of 3")).toBeNull();
     expect(screen.getByText("2")).toBeDefined();
+  });
+
+  it("shows progress to the next character level", async () => {
+    localStorage.setItem(CHARACTER_STORAGE_KEY, saved);
+    await renderPage();
+    expect(screen.getByText("0 / 951,050 steps to level 81")).toBeDefined();
+    expect(screen.getByRole("progressbar", { name: "Character level: 0 / 951,050 steps to level 81" })).toBeDefined();
+  });
+
+  it("shows each skill's progress to its next level, and a full bar at the max level", async () => {
+    localStorage.setItem(CHARACTER_STORAGE_KEY, saved);
+    await renderPage();
+    const skills = screen.getByRole("list", { name: "Skill levels" });
+    const bars = [...skills.querySelectorAll("[role=progressbar]")];
+
+    expect(bars.map((bar) => bar.getAttribute("aria-label"))).toEqual([
+      "Agility: 209,655 / 339,198 XP to level 86",
+      "Cooking: 6,040 / 84,812 XP to level 72",
+      "Fishing: 0 / 83 XP to level 2",
+      "Mining: Max level",
+    ]);
+    expect(bars.at(-1)?.getAttribute("aria-valuenow")).toBe("100");
+  });
+
+  it("shows every pet, owned or not, with the level of the ones owned", async () => {
+    serveGearData();
+    localStorage.setItem(CHARACTER_STORAGE_KEY, saved);
+    await renderPage();
+    const list = await screen.findByRole("list", { name: "Pets" });
+
+    expect([...list.querySelectorAll(".sr-only")].map((label) => label.textContent)).toEqual([
+      "Camel, level 1",
+      "Frog, not found yet",
+      "Mummy, level 2",
+    ]);
+    expect(screen.getByText("Pets · 2 of 3")).toBeDefined();
+  });
+
+  it("shows no pets until gear data loads", async () => {
+    localStorage.setItem(CHARACTER_STORAGE_KEY, saved);
+    await renderPage();
+    expect(screen.queryByRole("list", { name: "Pets" })).toBeNull();
   });
 
   it("shows the owned count on the card, and no grid until game data loads", async () => {

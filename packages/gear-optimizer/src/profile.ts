@@ -79,7 +79,7 @@ export function ownedPets(profile: PlayerProfile, pets: PetView[]): OwnedPetView
 }
 
 export function petAt(pets: PetView[], { species, level }: OwnedPet): OwnedPetView | undefined {
-  const pet = pets.find((option) => option.id === species || option.rareId === species);
+  const pet = petOf(pets, species);
   const reached = pet?.levels.filter((petLevel) => petLevel.level <= level).at(-1);
 
   return pet && reached ? { pet, level: reached.level, stats: reached.stats } : undefined;
@@ -127,4 +127,9 @@ function meetsRequirements(character: Character, requirements: GearCondition[]):
 
 function bestQuality(item: GearItem): ItemQuality | null {
   return QUALITIES.filter((quality) => item.tierStats[quality]).at(-1) ?? null;
+}
+
+// A rare pet's species is its `rareId`; it's still the same pet.
+export function petOf(pets: PetView[], species: string): PetView | undefined {
+  return pets.find((option) => option.id === species || option.rareId === species);
 }

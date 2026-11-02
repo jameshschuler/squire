@@ -14,6 +14,6 @@ export function collectionOf(loot: ItemWithEffects[], ownedIds: string[]): Colle
     .map((item) => ({ item, owned: owned.has(item.id) }));
 }
 
-export function collectionProgress(collection: CollectibleEntry[]): string {
-  return `${collection.filter((entry) => entry.owned).length} of ${collection.length}`;
+export function collectionProgress(found: number, total: number): string {
+  return `${found} of ${total}`;
 }

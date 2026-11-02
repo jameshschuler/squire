@@ -1,12 +1,17 @@
-import type { Character } from "@walkscape-community/gear-optimizer";
+import { characterProgress, type Character } from "@walkscape-community/gear-optimizer";
 import { RefreshCw } from "lucide-react";
 import { CharacterCollectibles } from "@/components/character/CharacterCollectibles";
+import { CharacterPets } from "@/components/character/CharacterPets";
+import { CharacterSkills } from "@/components/character/CharacterSkills";
+import { LevelBar } from "@/components/character/LevelBar";
 import { RemoveCharacterButton } from "@/components/character/RemoveCharacterButton";
-import { Section } from "@/components/shared/Section";
 import { Button } from "@/components/ui/button";
 import { useGameDataContext } from "@/contexts/game-data-context";
+import { useGearDataContext } from "@/contexts/gear-data-context";
 import { collectionOf } from "@/lib/collectibles";
-import { formatDateTime, formatNumber, formatTitle } from "@/lib/format";
+import { formatDateTime, formatNumber } from "@/lib/format";
+import { nextLevelLabel } from "@/lib/levels";
+import { petCollection } from "@/lib/pets";
 
 interface CharacterSummaryProps {
   character: Character;
@@ -16,15 +21,13 @@ interface CharacterSummaryProps {
 
 export function CharacterSummary({ character, savedAt, onUpdate }: CharacterSummaryProps) {
   const gameData = useGameDataContext();
+  const gearData = useGearDataContext();
   const collection = gameData.status === "ready" ? collectionOf(gameData.book.loot, character.collectibles) : null;
-  const skills = Object.entries(character.skillLevels).sort(([left], [right]) => left.localeCompare(right));
+  const pets = gearData.status === "ready" ? petCollection(gearData.gear.pets, character.pets) : null;
+  const levelProgress = characterProgress(character.lifetimeSteps);
   const stats = [
-    { label: "Character level", value: formatNumber(character.characterLevel) },
     { label: "Steps walked", value: formatNumber(character.lifetimeSteps) },
-    {
-      label: "Collectibles",
-      value: formatNumber(character.collectibles.length),
-    },
+    { label: "Collectibles", value: formatNumber(character.collectibles.length) },
     { label: "Achievement points", value: formatNumber(character.achievementPoints) },
   ];
 
@@ -44,6 +47,16 @@ export function CharacterSummary({ character, savedAt, onUpdate }: CharacterSumm
         {savedAt && <p className="text-sm text-muted-foreground">Imported {formatDateTime(savedAt)}</p>}
       </header>
       <dl className="grid grid-cols-2 gap-3">
+        <div className="col-span-2 rounded-lg border p-3">
+          <dt className="text-xs text-muted-foreground">Character level</dt>
+          <dd className="mt-1 text-xl font-semibold tabular-nums">{formatNumber(character.characterLevel)}</dd>
+          <dd className="mt-2">
+            <LevelBar name="Character level" progress={levelProgress} unit="steps" />
+            <p className="mt-1.5 text-xs text-muted-foreground tabular-nums">
+              {nextLevelLabel(levelProgress, "steps")}
+            </p>
+          </dd>
+        </div>
         {stats.map(({ label, value }) => (
           <div key={label} className="rounded-lg border p-3">
             <dt className="text-xs text-muted-foreground">{label}</dt>
@@ -51,21 +64,9 @@ export function CharacterSummary({ character, savedAt, onUpdate }: CharacterSumm
           </div>
         ))}
       </dl>
-      <Section title="Skills">
-        <ul aria-label="Skill levels" className="grid grid-cols-2 gap-x-8 gap-y-2.5 text-sm sm:grid-cols-3">
-          {skills.map(([skill, level]) => (
-            <li key={skill} className="flex justify-between">
-              <span>{formatTitle(skill)}</span>
-              <span className="text-muted-foreground tabular-nums">{level}</span>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-3 flex justify-between border-t pt-3 text-sm font-medium">
-          <span>Total skill level</span>
-          <span className="tabular-nums">{formatNumber(character.totalSkillLevel)}</span>
-        </p>
-      </Section>
+      <CharacterSkills character={character} />
       {collection && <CharacterCollectibles collection={collection} />}
+      {pets && <CharacterPets pets={pets} />}
     </article>
   );
 }
