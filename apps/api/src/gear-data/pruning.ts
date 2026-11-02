@@ -4,12 +4,15 @@ import { MAX_DOUBLE_ACTION, type StatTotals } from "./steps.js";
 
 // `banKeys` are every keyword that takes part in a ban. `setGroups` are the keyword lists the search
 // counts distinct items for: set bonuses, then needs. `cappedSetGroups` are the set groups with a
-// "fewer than N pieces" bonus, where more pieces can hurt. `needs` are the gear the activity requires.
+// "fewer than N pieces" bonus, where more pieces can hurt. `pieceCaps` are, per group, the most pieces
+// that can matter: the highest count any bonus asks for, or the count a need requires. `needs` are the
+// gear the activity requires.
 export interface KeywordRules {
   bannedKeywords: Record<string, string[]>;
   banKeys: Set<string>;
   setGroups: string[][];
   cappedSetGroups: Set<number>;
+  pieceCaps: number[];
   needs: NeedRule[];
 }
 
@@ -31,12 +34,20 @@ export function keywordRules(
     count,
     group: groups.length + index,
   }));
+  const mostPieces = new Map<string, number>();
+
+  for (const condition of conditions) {
+    const group = JSON.stringify(condition.requirement.keywords);
+
+    mostPieces.set(group, Math.max(mostPieces.get(group) ?? 0, condition.requirement.quantity));
+  }
 
   return {
     bannedKeywords,
     banKeys: new Set([...Object.keys(bannedKeywords), ...Object.values(bannedKeywords).flat()]),
     setGroups: [...groups.map((group) => JSON.parse(group) as string[]), ...needs.map((need) => [need.keyword])],
     cappedSetGroups: new Set(groups.flatMap((group, index) => (capped.has(group) ? [index] : []))),
+    pieceCaps: [...groups.map((group) => mostPieces.get(group)!), ...needCounts],
     needs,
   };
 }

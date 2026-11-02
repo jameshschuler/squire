@@ -625,6 +625,21 @@ describe("required gear", () => {
     ).toEqual(["fast_saw", "spectral_saw"]);
   });
 
+  it("starts from a set that wears needed gear where it costs nothing, so a search stopped at once is still good", () => {
+    const gear = gearData([
+      item("candle_hat", "head", [], { keywords: ["light_source"] }),
+      item("miner_hat", "head", [flatSteps(-5)]),
+      item("simple_torch", "tool", [], { keywords: ["light_source"] }),
+    ]);
+    const lights = need({ label: "Light source", keywords: ["light_source"] });
+    const suggestion = optimizeGear(gear, BEST_IN_GAME, withNeeds(lights), ["steps"], {
+      maxStates: 1,
+      timeBudgetMs: 0,
+    });
+
+    expect(suggestion.picks.map((pick) => pick.item.id).sort()).toEqual(["miner_hat", "simple_torch"]);
+  });
+
   it("names required gear the character doesn't have, and still suggests a set without it", () => {
     const gear = gearData([
       item("light_gloves", "hands", [flatSteps(-5)]),

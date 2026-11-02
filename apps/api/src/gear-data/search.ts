@@ -32,8 +32,9 @@ export interface SlotGroup {
 
 // A set still being built. `guaranteed` is the least its stats could be (every harmful set bonus
 // counted, no helpful one); `optimistic` adds every helpful set bonus as if it will be met. `used` is
-// how many places in the current slot group are filled. `bans` holds the ban-keyword bits of what's worn, and `setItems` the distinct items per set group.
-interface PartialSet {
+// how many places in the current slot group are filled. `bans` holds the ban-keyword bits of what's
+// worn, and `setItems` the distinct items per set group.
+export interface PartialSet {
   chosen: Candidate[];
   guaranteed: StatTotals;
   optimistic: StatTotals;
@@ -65,8 +66,28 @@ export function bestSet(
     groupOf: new Map(groups.flatMap((group) => group.choices.map((choice) => [choice, group] as const))),
     compatible,
   };
-  const needed = neededStart(slots, rules.needs, (candidate) => score(candidate.best));
-  const greedySet = greedy(slots, setScore, needed);
+  const value = (candidate: Candidate) => score(candidate.best);
+  // Putting needed items in first can take slots better items need. So with needs, also start from the
+  // best set ignoring them, add needed items where places are still free, and keep whichever start wins.
+  const greedyStarts =
+    rules.needs.length > 0
+      ? [
+          neededStart(slots, rules.needs, value, []),
+          neededStart(
+            slots,
+            rules.needs,
+            value,
+            greedy(slots, (set) => score(withSetBonuses(set)), []),
+          ),
+        ]
+      : [[]];
+  const { start: needed, set: greedySet } = greedyStarts
+    .map((start) => {
+      const set = greedy(slots, setScore, start);
+
+      return { start, set, score: setScore(set) };
+    })
+    .reduce((leader, next) => (compareScores(next.score, leader.score) > 0 ? next : leader));
   let best = compareScores(setScore(seed), setScore(greedySet)) > 0 ? seed : greedySet;
   let bestScore = setScore(best);
 
@@ -82,7 +103,7 @@ export function bestSet(
   const reach = needReach(groups, rules.needs);
   const masks = banMasks(rules);
   const stats = dominanceStats(useful, goalDims);
-  const covers = coverage(useful, goalDims, rules.cappedSetGroups);
+  const covers = coverage(useful, goalDims, rules);
   let states: PartialSet[] = [emptySet(rules.setGroups.length)];
   let ceiling: Score | null = null;
   const raise = (bound: Score) => {
@@ -272,12 +293,13 @@ function greedy(
   }
 }
 
-// The best items that fill each need, until each has enough different items, so greedy starts from a
-// set the activity allows.
+// Adds to `start` the best items that fill each need, where they fit, until each has enough different
+// items, so greedy starts from a set the activity allows.
 function neededStart(
   { groupOf, compatible }: Slots,
   needs: NeedRule[],
   value: (candidate: Candidate) => Score,
+  start: Candidate[],
 ): Candidate[] {
   const fits = (chosen: Candidate[], next: Candidate) => {
     const group = groupOf.get(next)!;
@@ -298,7 +320,7 @@ function neededStart(
         return short && adds && fits(set, candidate) ? [...set, candidate] : set;
       }, chosen);
 
-  return needs.reduce(addFor, []);
+  return needs.reduce(addFor, start);
 }
 
 // How many more items that fill need `k` a partial set could still add from item `from` of group `g`
@@ -403,11 +425,13 @@ function withSignatures(entries: Scored[], stats: ((t: StatTotals) => number)[])
 
 // a covers b when anything b could become, a could become at least as well: a's guaranteed stats are
 // at least b's optimistic ones, a has no more places used, a's bans are a subset of b's, and a has at
-// least as many set pieces. A set group with a "fewer than N pieces" bonus must match exactly, since more pieces can hurt.
-function coverage(
+// least as many set pieces. A set group with a "fewer than N pieces" bonus must match exactly, since more
+// pieces can hurt. Pieces past a group's cap (the most any bonus or need asks for) change nothing, so
+// counts are compared only up to it.
+export function coverage(
   useful: number,
   goalDims: number,
-  cappedSetGroups: Set<number>,
+  { cappedSetGroups, pieceCaps }: KeywordRules,
 ): (a: PartialSet, b: PartialSet) => boolean {
   return (state, other) => {
     const have = state.guaranteed;
@@ -432,8 +456,11 @@ function coverage(
 
     return state.setItems.every((ids, index) => {
       const otherCount = other.setItems[index]!.length;
+      const cap = pieceCaps[index]!;
 
-      return cappedSetGroups.has(index) ? ids.length === otherCount : ids.length >= otherCount;
+      return cappedSetGroups.has(index)
+        ? ids.length === otherCount
+        : Math.min(ids.length, cap) >= Math.min(otherCount, cap);
     });
   };
 }
