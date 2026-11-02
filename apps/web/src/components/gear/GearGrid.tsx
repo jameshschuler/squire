@@ -1,4 +1,4 @@
-import type { GearPick, OwnedPetView } from "@squire/api/gear-data";
+import type { GearPick, OwnedPetView } from "@walkscape-community/gear-optimizer";
 import { gearCells, pickQuality, toolCells, type GearCell } from "@/lib/gear-grid";
 import { GearSlotCell } from "./GearSlotCell";
 

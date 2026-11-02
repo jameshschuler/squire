@@ -5,5 +5,5 @@ export default defineConfig({
   format: ["esm"],
   target: "node24",
   clean: true,
-  noExternal: ["@walkscape-community/data-api-client"],
+  noExternal: ["@walkscape-community/data-api-client", "@walkscape-community/gear-optimizer"],
 });

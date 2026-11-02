@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { goalOf, type Goal, type GoalId } from "@squire/api/gear-data";
+import { goalOf, type Goal, type GoalId } from "@walkscape-community/gear-optimizer";
 import { Button } from "@/components/ui/button";
 import { MAX_GOALS } from "@/lib/gear-search";
 import { cn } from "@/lib/utils";

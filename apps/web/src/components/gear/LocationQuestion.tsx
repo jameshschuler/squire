@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { GearData, PlayerProfile } from "@squire/api/gear-data";
+import type { GearData, PlayerProfile } from "@walkscape-community/gear-optimizer";
 import { locationChoices } from "@/lib/gear-locations";
 import type { GearTarget } from "@/lib/gear-targets";
 import { ChoiceButtons } from "./ChoiceButtons";

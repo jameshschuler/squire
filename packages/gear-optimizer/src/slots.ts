@@ -1,5 +1,5 @@
 import type { GearType } from "@walkscape-community/data-api-client";
-import { MAX_LEVEL, toolSlots } from "../character/character.js";
+import { MAX_LEVEL, toolSlots } from "./character.js";
 
 export interface GearSlot {
   slot: GearType;

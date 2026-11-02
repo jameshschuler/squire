@@ -1,4 +1,4 @@
-import { GEAR_SLOTS, type GearPick } from "@squire/api/gear-data";
+import { GEAR_SLOTS, type GearPick } from "@walkscape-community/gear-optimizer";
 import { pickQuality } from "./gear-grid";
 
 interface GearSetEntry {

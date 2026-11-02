@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
-import { GEAR_DATA_SCHEMA } from "@squire/api/gear-data";
+import { GEAR_DATA_SCHEMA } from "@walkscape-community/gear-optimizer";
 import { GearDataProvider, useGearDataContext } from "@/contexts/gear-data-context";
 
 const gear = {

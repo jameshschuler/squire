@@ -1,4 +1,4 @@
-import { GEAR_DATA_SCHEMA, type GearData } from "@squire/api/gear-data";
+import { GEAR_DATA_SCHEMA, type GearData } from "@walkscape-community/gear-optimizer";
 import { RECIPE_BOOK_SCHEMA, type RecipeBook } from "@squire/api/recipe-book";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "";

@@ -8,7 +8,7 @@ import type {
 import { itemsIn, lootTypeOf } from "./game-rules.js";
 import { skillLevels, xpRewards } from "./lookup.js";
 import { byActivityLevel } from "./order.js";
-import { humanize, spaced } from "./text.js";
+import { humanize, spaced } from "@walkscape-community/gear-optimizer";
 import type {
   ActivityDrops,
   ActivityNeed,

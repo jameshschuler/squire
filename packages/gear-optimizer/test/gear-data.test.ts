@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ItemDetail } from "@walkscape-community/data-api-client";
-import { GEAR_DATA_SCHEMA, buildGearData, gearDataIcons } from "../src/gear-data/index.js";
-import type { GameData } from "../src/recipe-book/index.js";
+import { GEAR_DATA_SCHEMA, buildGearData, gearDataIcons } from "../src/index.js";
+import type { GameData } from "../src/game-data.js";
 import gearItems from "../../../fixtures/api/gear.json";
 import lootItems from "../../../fixtures/api/loot.json";
 import sample from "../../../fixtures/api/gamedata-sample.json";

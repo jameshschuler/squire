@@ -1,3 +1,10 @@
+import {
+  humanize,
+  itemSummaries,
+  locationSummary,
+  regionNames,
+  type GameData,
+} from "@walkscape-community/gear-optimizer";
 import type {
   AchievementDetail,
   ItemDetail,
@@ -11,12 +18,9 @@ import type {
 } from "@walkscape-community/data-api-client";
 import { activityViews } from "./activities.js";
 import { itemEffects } from "./effects.js";
-import type { GameData } from "./game-data.js";
 import { getServiceKeywords, isServiceRequirement, itemsIn, meetsServiceTier } from "./game-rules.js";
 import { activityItems, lowestSkillLevels, skillLevels, sourceKey, xpRewards } from "./lookup.js";
-import { humanize } from "./text.js";
 import { byLevel, minLevel } from "./order.js";
-import { itemSummaries, locationSummary, regionNames } from "./summaries.js";
 import {
   RECIPE_BOOK_SCHEMA,
   type AchievementSource,

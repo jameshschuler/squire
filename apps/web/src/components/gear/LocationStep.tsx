@@ -1,4 +1,4 @@
-import type { GearData, LocationView, PlayerProfile } from "@squire/api/gear-data";
+import type { GearData, LocationView, PlayerProfile } from "@walkscape-community/gear-optimizer";
 import { locationLabel, locationRegion, type GearTarget } from "@/lib/gear-targets";
 import { ChatAnswer } from "./ChatAnswer";
 import { ChatMessage } from "./ChatMessage";

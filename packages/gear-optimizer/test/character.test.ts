@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import exportFixture from "../../../fixtures/character/export.json";
-import { characterLevel, ownedItem, parseCharacterExport, skillLevel, toolSlots } from "../src/character/index.js";
+import { characterLevel, ownedItem, parseCharacterExport, skillLevel, toolSlots } from "../src/character.js";
 
 const fixtureText = JSON.stringify(exportFixture);
 

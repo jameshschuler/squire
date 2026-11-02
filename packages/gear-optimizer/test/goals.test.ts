@@ -1,15 +1,7 @@
 import { describe, expect, it } from "vitest";
-import {
-  GOALS,
-  compareScores,
-  goalScorer,
-  goalStats,
-  goalValue,
-  marginHolds,
-  marginOf,
-} from "../src/gear-data/goals.js";
-import type { GoalId } from "../src/gear-data/goals.js";
-import { NO_STATS } from "../src/gear-data/steps.js";
+import { GOALS, compareScores, goalScorer, goalStats, goalValue, marginHolds, marginOf } from "../src/goals.js";
+import type { GoalId } from "../src/goals.js";
+import { NO_STATS } from "../src/steps.js";
 
 const BASE_XP = 22;
 const result = (averageSteps: number) => ({ efficiency: 1, steps: Math.ceil(averageSteps), averageSteps });

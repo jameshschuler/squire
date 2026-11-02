@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
-import { buildGearData, type GearItem } from "@squire/api/gear-data";
+import { buildGearData, type GearItem } from "@walkscape-community/gear-optimizer";
 import { RECIPE_BOOK_SCHEMA, buildRecipeBook, type GameData } from "@squire/api/recipe-book";
 import exportFixture from "../../../fixtures/character/export.json";
 import sample from "../../../fixtures/api/gamedata-sample.json";

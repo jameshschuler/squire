@@ -10,6 +10,7 @@ services:
       paths:
         - apps/api/**
         - packages/data-client/**
+        - packages/gear-optimizer/**
         - pnpm-lock.yaml
     envVars:
       - key: WALKSCAPE_API_KEY
@@ -30,9 +31,9 @@ services:
       paths:
         - apps/web/**
         - apps/api/src/recipe-book/**
-        - apps/api/src/character/**
         - apps/api/package.json
         - packages/data-client/**
+        - packages/gear-optimizer/**
         - pnpm-lock.yaml
     envVars:
       - key: VITE_API_URL

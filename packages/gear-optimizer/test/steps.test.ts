@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NO_STATS, stepsPerAction, type StatTotals, type WorkTarget } from "../src/gear-data/steps.js";
+import { NO_STATS, stepsPerAction, type StatTotals, type WorkTarget } from "../src/steps.js";
 
 const hutJumping: WorkTarget = { skill: "agility", level: 25, workRequired: 53, maxWorkEfficiency: 1.5 };
 const fryAPerch: WorkTarget = { skill: "cooking", level: 1, workRequired: 70, maxWorkEfficiency: 1.5 };

@@ -1,4 +1,4 @@
-import { QUALITIES, type ItemQuality } from "../recipe-book/types.js";
+import { QUALITIES, type ItemQuality } from "./game-data.js";
 
 export const EQUIPMENT_SLOTS = [
   "head",

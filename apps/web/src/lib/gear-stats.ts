@@ -1,4 +1,4 @@
-import { sameStat, type GoalStat, type SourcedStat, type StatLine } from "@squire/api/gear-data";
+import { sameStat, type GoalStat, type SourcedStat, type StatLine } from "@walkscape-community/gear-optimizer";
 import { formatPercent, formatPercentOf, percentPoints } from "./format";
 
 type StatType = StatLine["stat"];

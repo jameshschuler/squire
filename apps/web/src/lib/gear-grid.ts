@@ -1,4 +1,4 @@
-import type { GearPick } from "@squire/api/gear-data";
+import type { GearPick } from "@walkscape-community/gear-optimizer";
 import type { ItemQuality } from "@squire/api/recipe-book";
 
 type Slot = GearPick["slot"];

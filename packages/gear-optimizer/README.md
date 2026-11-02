@@ -1,6 +1,6 @@
 # Gear optimizer
 
-Given a player's gear, an activity or recipe, and a ranked list of priorities ("Fastest, then Most chests"), this module picks the set of gear to wear. It also says how sure it is: either the set is proven best, or it is proven to be within some percentage of the best possible.
+Given a player's gear, an activity or recipe, and a ranked list of priorities ("Fastest, then Most chests"), this package picks the set of gear to wear. It also says how sure it is: either the set is proven best, or it is proven to be within some percentage of the best possible.
 
 The web app runs the optimizer in a Web Worker (`apps/web/src/workers/gear-solver.worker.ts`), so a search never freezes the page. The API only builds `GearData` and serves it at `/api/gear`.
 
@@ -20,6 +20,8 @@ The web app runs the optimizer in a Web Worker (`apps/web/src/workers/gear-solve
 | `optimizer.ts`                                | Runs the whole thing: locations, passes, rounds, the time limit, and the final margin.                                                                                |
 | `set-stats.ts`                                | Display helpers: a set's stats added up, and bonuses tied to the location.                                                                                            |
 | `slots.ts`                                    | Slot sizes (two rings, a tool count that grows with character level).                                                                                                 |
+| `character.ts`                                | Reads a player's character export: levels, owned items and pets, and tool slots.                                                                                      |
+| `game-data.ts`, `summaries.ts`, `text.ts`     | The raw game data the API loads, and the item and location summaries shared with the recipe book.                                                                     |
 
 ## Steps per action
 

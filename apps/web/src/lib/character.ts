@@ -1,4 +1,4 @@
-import { parseCharacterExport, type Character } from "@squire/api/character";
+import { parseCharacterExport, type Character } from "@walkscape-community/gear-optimizer";
 
 export const CHARACTER_STORAGE_KEY = "squire-character";
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { GearSuggestion, GoalId, Margin, StepsResult } from "@squire/api/gear-data";
+import type { GearSuggestion, GoalId, Margin, StepsResult } from "@walkscape-community/gear-optimizer";
 import { answerNotes, stepsTile } from "@/lib/gear-answer";
 import type { GearTarget } from "@/lib/gear-targets";
 

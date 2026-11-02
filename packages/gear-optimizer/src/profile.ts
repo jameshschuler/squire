@@ -1,5 +1,5 @@
-import { MAX_LEVEL, toolSlots, type Character, type OwnedPet } from "../character/character.js";
-import { QUALITIES, QUALITY_RANK, type ItemQuality } from "../recipe-book/types.js";
+import { MAX_LEVEL, toolSlots, type Character, type OwnedPet } from "./character.js";
+import { QUALITIES, QUALITY_RANK, type ItemQuality } from "./game-data.js";
 import { stackedStats } from "./items.js";
 import { copiesAllowed } from "./slots.js";
 import type { GearCondition, GearItem, GearStat, PetView } from "./types.js";

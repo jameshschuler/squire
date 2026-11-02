@@ -14,7 +14,7 @@ import {
   type OptimizeTarget,
   type PlayerProfile,
   type StepsResult,
-} from "@squire/api/gear-data";
+} from "@walkscape-community/gear-optimizer";
 import { formatNumber, formatPercent } from "./format";
 import type { GearSolution } from "./gear-solution";
 import { locationTiles, statGroups, type StatGroups, type StatTile } from "./gear-stats";

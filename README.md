@@ -2,11 +2,12 @@
 
 A WalkScape companion app, live at [wssquire.app](https://wssquire.app). Search recipes, materials, food and loot to see what they're made from, where to find them and what their effects do. It installs as an app on your phone and works offline.
 
-| Package                | What it is                                                                                   |
-| ---------------------- | -------------------------------------------------------------------------------------------- |
-| `packages/data-client` | Typed client for the WalkScape Data API, published as `@walkscape-community/data-api-client` |
-| `apps/api`             | Fastify server. Holds the API key, builds and caches the recipe book                         |
-| `apps/web`             | React PWA                                                                                    |
+| Package                   | What it is                                                                                   |
+| ------------------------- | -------------------------------------------------------------------------------------------- |
+| `packages/data-client`    | Typed client for the WalkScape Data API, published as `@walkscape-community/data-api-client` |
+| `packages/gear-optimizer` | Picks the best gear set for an activity or recipe, and reads character exports               |
+| `apps/api`                | Fastify server. Holds the API key, builds and caches the recipe book                         |
+| `apps/web`                | React PWA                                                                                    |
 
 ## Run it
 

@@ -6,7 +6,7 @@ import {
   type GoalId,
   type OptimizeTarget,
   type PlayerProfile,
-} from "@squire/api/gear-data";
+} from "@walkscape-community/gear-optimizer";
 
 export interface GearRequest {
   gear: GearData;

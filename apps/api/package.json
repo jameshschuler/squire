@@ -4,8 +4,6 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./character": "./src/character/index.ts",
-    "./gear-data": "./src/gear-data/index.ts",
     "./recipe-book": "./src/recipe-book/index.ts"
   },
   "scripts": {
@@ -19,6 +17,7 @@
     "@fastify/compress": "^8.3.0",
     "@fastify/cors": "^11.3.1",
     "@walkscape-community/data-api-client": "workspace:*",
+    "@walkscape-community/gear-optimizer": "workspace:*",
     "fastify": "^5.2.0"
   },
   "devDependencies": {

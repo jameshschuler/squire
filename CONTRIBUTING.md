@@ -14,10 +14,11 @@ pnpm install
 pnpm dev                # API on :3000, web on :5173
 ```
 
-The repo has three parts:
+The repo has four parts:
 
 - `packages/data-client`: the WalkScape Data API client, with types generated from the API's OpenAPI spec and loaders for whole resources. It will be published to npm, so keep it free of anything Squire-specific and avoid adding runtime dependencies.
-- `apps/api`: the Fastify server. It's the only place the API key lives. `src/recipe-book/` turns game data into Squire's recipe book, and `src/character/` reads a player's character export. The web app imports them as `@squire/api/recipe-book` and `@squire/api/character`, so keep both folders free of server code.
+- `packages/gear-optimizer`: picks the best gear set for an activity or recipe, and reads a player's character export. The API builds its gear data and the web app runs the search in the browser, so keep it free of server code.
+- `apps/api`: the Fastify server. It's the only place the API key lives. `src/recipe-book/` turns game data into Squire's recipe book. The web app imports it as `@squire/api/recipe-book`, so keep that folder free of server code.
 - `apps/web`: the React PWA (TanStack Router, Tailwind, shadcn, Lucide).
 
 ## Using the WalkScape API

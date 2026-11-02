@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { GearData, GoalId, OptimizeTarget, PlayerProfile } from "@squire/api/gear-data";
+import type { GearData, GoalId, OptimizeTarget, PlayerProfile } from "@walkscape-community/gear-optimizer";
 import type { GearSolution } from "@/lib/gear-solution";
 import { solveInBackground } from "@/lib/gear-solver";
 
