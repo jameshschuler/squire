@@ -6,7 +6,7 @@ import {
   type RecipeBook,
   type SkillLevel,
 } from "@squire/api/recipe-book";
-import { GOALS, type Goal, type GoalId, type OptimizeTarget } from "@squire/api/gear-data";
+import { GOALS, type Goal, type GoalId, type OptimizeTarget } from "@walkscape-community/gear-optimizer";
 import { MAX_GOALS } from "./gear-search";
 import { matchesWords } from "./match";
 

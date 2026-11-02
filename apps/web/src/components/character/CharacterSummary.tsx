@@ -1,4 +1,4 @@
-import type { Character } from "@squire/api/character";
+import type { Character } from "@walkscape-community/gear-optimizer";
 import { RefreshCw } from "lucide-react";
 import { CharacterCollectibles } from "@/components/character/CharacterCollectibles";
 import { RemoveCharacterButton } from "@/components/character/RemoveCharacterButton";

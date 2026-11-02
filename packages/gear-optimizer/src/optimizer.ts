@@ -43,7 +43,7 @@ import {
 } from "./steps.js";
 import type { GearData, LocationView } from "./types.js";
 import { canMeetNeed, meetsNeeds, metBy, withNeedKeywords } from "./needs.js";
-import type { GearNeed } from "../recipe-book/types.js";
+import type { GearNeed } from "./game-data.js";
 
 export type { GearPick } from "./candidates.js";
 

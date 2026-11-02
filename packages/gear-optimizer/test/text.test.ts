@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { capitalize, humanize, spaced } from "../src/recipe-book/text.js";
+import { capitalize, humanize, spaced } from "../src/text.js";
 
 describe("text helpers", () => {
   it.each([

@@ -51,6 +51,22 @@ export default tseslint.config(
     },
   },
   {
+    files: ["packages/gear-optimizer/src/**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["node:*", "fastify", "@fastify/*", "@squire/*"],
+              message: "The web app runs the gear optimizer in the browser, so keep it free of server code.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ["apps/web/**/*.{ts,tsx}"],
     languageOptions: { globals: globals.browser },
     plugins: { "react-hooks": reactHooks, "react-refresh": reactRefresh },

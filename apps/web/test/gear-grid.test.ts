@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { GearPick } from "@squire/api/gear-data";
+import type { GearPick } from "@walkscape-community/gear-optimizer";
 import { gearCells, pickQuality, toolCells } from "@/lib/gear-grid";
 
 const pick = (id: string, slot: GearPick["slot"]) => ({ slot, item: { id }, quality: null }) as unknown as GearPick;

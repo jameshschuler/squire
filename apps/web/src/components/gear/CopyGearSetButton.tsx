@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Check, Copy } from "lucide-react";
-import type { GearPick } from "@squire/api/gear-data";
+import type { GearPick } from "@walkscape-community/gear-optimizer";
 import { Button } from "@/components/ui/button";
 import { gearSetCode } from "@/lib/gear-set-code";
 

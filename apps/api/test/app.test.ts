@@ -1,7 +1,7 @@
 import { brotliDecompressSync, gunzipSync } from "node:zlib";
 import { WalkScapeApiError } from "@walkscape-community/data-api-client";
 import { describe, expect, it, vi } from "vitest";
-import { GEAR_DATA_SCHEMA, type GearData } from "../src/gear-data/index.js";
+import { GEAR_DATA_SCHEMA, type GearData } from "@walkscape-community/gear-optimizer";
 import { RECIPE_BOOK_SCHEMA, type RecipeBook } from "../src/recipe-book/index.js";
 import { buildApp } from "../src/app.js";
 import { fakeClient } from "./fake-client.js";

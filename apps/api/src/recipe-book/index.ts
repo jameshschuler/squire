@@ -1,5 +1,5 @@
 export * from "./build.js";
-export * from "./game-data.js";
+export type { GameData } from "@walkscape-community/gear-optimizer";
 export * from "./lookup.js";
 export * from "./search.js";
 export * from "./types.js";

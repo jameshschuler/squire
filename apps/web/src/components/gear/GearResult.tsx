@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Loader2 } from "lucide-react";
-import type { GearData, OptimizeTarget, PlayerProfile } from "@squire/api/gear-data";
+import type { GearData, OptimizeTarget, PlayerProfile } from "@walkscape-community/gear-optimizer";
 import { gearAnswer } from "@/lib/gear-answer";
 import type { GearSolution } from "@/lib/gear-solution";
 import type { GearTarget } from "@/lib/gear-targets";

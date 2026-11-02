@@ -1,6 +1,6 @@
 import type { FactionDetail, ItemDetail, LocationDetail } from "@walkscape-community/data-api-client";
 import { humanize } from "./text.js";
-import type { ItemSummary, LocationSummary } from "./types.js";
+import type { ItemSummary, LocationSummary } from "./game-data.js";
 
 export function itemSummaries(items: Map<string, ItemDetail>): (id: string) => ItemSummary {
   return (id) => {

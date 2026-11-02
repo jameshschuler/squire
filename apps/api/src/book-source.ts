@@ -2,7 +2,7 @@ import type { FastifyBaseLogger } from "fastify";
 import type { WalkScapeClient } from "@walkscape-community/data-api-client";
 import { loadGameData } from "./game-data.js";
 import type { GameDataCache } from "./game-data-cache.js";
-import { buildGearData, type GearData } from "./gear-data/index.js";
+import { buildGearData, type GearData } from "@walkscape-community/gear-optimizer";
 import { buildRecipeBook, type GameData, type RecipeBook } from "./recipe-book/index.js";
 
 const VERSION_CHECK_INTERVAL_MS = 5 * 60 * 1000;

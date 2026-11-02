@@ -1,5 +1,5 @@
 import type { Attribute, GearType, ItemDetail, StatType } from "@walkscape-community/data-api-client";
-import { QUALITIES, QUALITY_RANK, type ItemQuality, type ItemSummary } from "../recipe-book/types.js";
+import { QUALITIES, QUALITY_RANK, type ItemQuality, type ItemSummary } from "./game-data.js";
 import type { GearCondition, GearItem, GearStat } from "./types.js";
 
 type GearDetail = Extract<ItemDetail, { gearType: GearType }>;

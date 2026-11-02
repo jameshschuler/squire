@@ -2,7 +2,7 @@ import Fastify, { type FastifyInstance } from "fastify";
 import compress from "@fastify/compress";
 import cors from "@fastify/cors";
 import { WalkScapeApiError, type WalkScapeClient } from "@walkscape-community/data-api-client";
-import { gearDataIcons } from "./gear-data/index.js";
+import { gearDataIcons } from "@walkscape-community/gear-optimizer";
 import { recipeBookIcons } from "./recipe-book/index.js";
 import { HTTP_STATUS } from "./http-status.js";
 import { createIconStore } from "./icons.js";

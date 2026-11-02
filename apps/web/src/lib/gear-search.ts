@@ -1,4 +1,4 @@
-import { GOALS, type GoalId } from "@squire/api/gear-data";
+import { GOALS, type GoalId } from "@walkscape-community/gear-optimizer";
 
 export interface GearSearch {
   target?: string;

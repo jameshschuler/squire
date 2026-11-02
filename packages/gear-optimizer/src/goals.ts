@@ -1,5 +1,5 @@
 import type { StatType } from "@walkscape-community/data-api-client";
-import type { LootType } from "../recipe-book/types.js";
+import type { LootType } from "./game-data.js";
 import type { StatTotals, StepsResult } from "./steps.js";
 
 export type GoalId =

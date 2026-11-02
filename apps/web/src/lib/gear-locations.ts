@@ -1,4 +1,4 @@
-import { gearBonusesByLocation, type GearData, type PlayerProfile } from "@squire/api/gear-data";
+import { gearBonusesByLocation, type GearData, type PlayerProfile } from "@walkscape-community/gear-optimizer";
 import { formatStatValue, statName } from "./gear-stats";
 import { BEST_LOCATION, optimizeTarget, type GearTarget } from "./gear-targets";
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { banMasks, clashes, conflicts, type KeywordRules } from "../src/gear-data/pruning.js";
-import type { Candidate } from "../src/gear-data/candidates.js";
+import { banMasks, clashes, conflicts, type KeywordRules } from "../src/pruning.js";
+import type { Candidate } from "../src/candidates.js";
 
 const bannedKeywords = { fishing_rod: ["fishing_net", "fishing_rod"], needle: ["needle"] };
 const rules: KeywordRules = {

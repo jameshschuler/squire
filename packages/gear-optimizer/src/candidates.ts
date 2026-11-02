@@ -1,6 +1,6 @@
 import type { GearType } from "@walkscape-community/data-api-client";
 import { sameStat, type GoalStat } from "./goals.js";
-import type { ItemQuality } from "../recipe-book/types.js";
+import type { ItemQuality } from "./game-data.js";
 import { ownedKey } from "./items.js";
 import { playerConditionHolds, type OwnedGear, type OwnedPetView, type PlayerProfile } from "./profile.js";
 import { NO_STATS, addStats, type StatTotals, type WorkTarget } from "./steps.js";

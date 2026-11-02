@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BEST_IN_GAME, type GearData, type GearItem, type GearStat } from "@squire/api/gear-data";
+import { BEST_IN_GAME, type GearData, type GearItem, type GearStat } from "@walkscape-community/gear-optimizer";
 import { locationChoices } from "@/lib/gear-locations";
 import type { GearTarget } from "@/lib/gear-targets";
 

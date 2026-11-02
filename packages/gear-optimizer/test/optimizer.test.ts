@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { stepsPerAction } from "../src/gear-data/steps.js";
+import { stepsPerAction } from "../src/steps.js";
 import tailoringGear from "../../../fixtures/gear/tailoring.json";
 import type { GearType } from "@walkscape-community/data-api-client";
-import type { Character } from "../src/character/index.js";
-import type { GearNeed } from "../src/recipe-book/types.js";
+import type { Character } from "../src/character.js";
+import type { GearNeed } from "../src/game-data.js";
 import {
   BEST_IN_GAME,
   fewestSteps,
@@ -22,7 +22,7 @@ import {
   gearBonusesByLocation,
   locationBonuses,
   setStats,
-} from "../src/gear-data/index.js";
+} from "../src/index.js";
 
 const stat = (stat: GearStat["stat"], value: number, isPercent: boolean, ...conditions: GearCondition[]): GearStat => ({
   stat,

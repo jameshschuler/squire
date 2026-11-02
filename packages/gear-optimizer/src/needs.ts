@@ -1,5 +1,5 @@
 import type { GearType } from "@walkscape-community/data-api-client";
-import type { GearNeed } from "../recipe-book/types.js";
+import type { GearNeed } from "./game-data.js";
 import { setCount, type Candidate } from "./candidates.js";
 import type { OwnedGear } from "./profile.js";
 import type { GearItem } from "./types.js";

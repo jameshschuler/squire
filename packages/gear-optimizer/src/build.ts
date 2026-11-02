@@ -1,6 +1,6 @@
 import type { KeywordDetail } from "@walkscape-community/data-api-client";
-import type { GameData } from "../recipe-book/game-data.js";
-import { itemSummaries, locationSummary, regionNames } from "../recipe-book/summaries.js";
+import type { GameData } from "./game-data.js";
+import { itemSummaries, locationSummary, regionNames } from "./summaries.js";
 import { gearItems } from "./items.js";
 import { petViews } from "./pets.js";
 import { GEAR_DATA_SCHEMA, type GearData } from "./types.js";

@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import type { GearData } from "@squire/api/gear-data";
+import type { GearData } from "@walkscape-community/gear-optimizer";
 import { fetchGearData } from "@/lib/api";
 
 export type GearDataState =

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { parseCharacterExport, type Character } from "@squire/api/character";
+import { parseCharacterExport, type Character } from "@walkscape-community/gear-optimizer";
 import { CHARACTER_STORAGE_KEY, readStoredCharacter, storeCharacter } from "@/lib/character";
 
 interface CharacterContextValue {

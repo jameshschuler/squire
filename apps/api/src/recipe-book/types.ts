@@ -1,4 +1,21 @@
-import type { ItemDetail, ServiceTier } from "@walkscape-community/data-api-client";
+import type { ServiceTier } from "@walkscape-community/data-api-client";
+import type {
+  GearNeed,
+  ItemQuality,
+  ItemSummary,
+  LocationSummary,
+  LootType,
+} from "@walkscape-community/gear-optimizer";
+
+export {
+  QUALITIES,
+  QUALITY_RANK,
+  type GearNeed,
+  type ItemQuality,
+  type ItemSummary,
+  type LocationSummary,
+  type LootType,
+} from "@walkscape-community/gear-optimizer";
 
 // Bump whenever the RecipeBook shape changes, so cached copies on devices refresh.
 export const RECIPE_BOOK_SCHEMA = 28;
@@ -30,30 +47,10 @@ export interface ItemEffects {
   tiers: QualityEffects[];
 }
 
-export type ItemQuality = ItemDetail["quality"];
-
-export const QUALITIES: ItemQuality[] = ["common", "uncommon", "rare", "epic", "legendary", "ethereal"];
-export const QUALITY_RANK = new Map(QUALITIES.map((quality, index) => [quality, index]));
-
-export interface ItemSummary {
-  id: string;
-  name: string;
-  icon: string;
-  quality: ItemQuality | null;
-  isCollectible: boolean;
-  keywords: string[];
-}
-
 export type ItemWithEffects = ItemSummary & { effects: ItemEffects | null };
 
 export interface RecipeItem extends ItemSummary {
   amount: number;
-}
-
-export interface LocationSummary {
-  id: string;
-  name: string;
-  region: string;
 }
 
 export interface RecipeLocation extends LocationSummary {
@@ -91,22 +88,10 @@ export interface RecipeView {
   maxWorkEfficiency: number | null;
 }
 
-export type LootType = "main" | "secondary" | "gem" | "birdNest" | "chestTable" | "collectible" | "petEgg";
-
 export interface ActivityNeed {
   label: string;
   level: SkillLevel | null;
   item: ItemSummary | null;
-}
-
-// Gear an activity can't be done without: `count` different equipped items that each have one of
-// `keywords` (and, with `level`, take at least that skill level to wear), or the item `itemId`.
-export interface GearNeed {
-  label: string;
-  keywords: string[];
-  count: number;
-  level: { skill: string; level: number } | null;
-  itemId: string | null;
 }
 
 export interface ActivityDrops {

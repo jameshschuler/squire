@@ -1,5 +1,5 @@
 import type { Attribute, ItemDetail, Requirement, SkillDetail } from "@walkscape-community/data-api-client";
-import { capitalize, spaced } from "./text.js";
+import { capitalize, spaced } from "@walkscape-community/gear-optimizer";
 import {
   QUALITY_RANK,
   type Effect,

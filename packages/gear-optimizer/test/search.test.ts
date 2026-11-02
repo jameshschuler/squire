@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { Candidate } from "../src/gear-data/candidates.js";
-import { keywordRules } from "../src/gear-data/pruning.js";
-import { coverage, type PartialSet } from "../src/gear-data/search.js";
-import { NO_STATS } from "../src/gear-data/steps.js";
-import type { GearCondition } from "../src/gear-data/types.js";
+import type { Candidate } from "../src/candidates.js";
+import { keywordRules } from "../src/pruning.js";
+import { coverage, type PartialSet } from "../src/search.js";
+import { NO_STATS } from "../src/steps.js";
+import type { GearCondition } from "../src/types.js";
 
 const wearing = (...pieces: string[]): PartialSet => ({
   chosen: [],

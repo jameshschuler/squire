@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { GEAR_DATA_SCHEMA } from "@squire/api/gear-data";
+import { GEAR_DATA_SCHEMA } from "@walkscape-community/gear-optimizer";
 import { RECIPE_BOOK_SCHEMA } from "@squire/api/recipe-book";
 import { fetchGearData, fetchRecipeBook } from "@/lib/api";
 

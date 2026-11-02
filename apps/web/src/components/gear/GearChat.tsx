@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { RotateCcw } from "lucide-react";
 import type { RecipeBook } from "@squire/api/recipe-book";
-import { BEST_IN_GAME, goalOf, type GearData, type PlayerProfile } from "@squire/api/gear-data";
+import { BEST_IN_GAME, goalOf, type GearData, type PlayerProfile } from "@walkscape-community/gear-optimizer";
 import { Button } from "@/components/ui/button";
 import { useCharacterContext } from "@/contexts/character-context";
 import { useGearSuggestion } from "@/hooks/useGearSuggestion";

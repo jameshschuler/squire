@@ -16,6 +16,7 @@
     "@fontsource/poppins": "^5.3.0",
     "@squire/api": "workspace:*",
     "@tanstack/react-router": "^1.170.46",
+    "@walkscape-community/gear-optimizer": "workspace:*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cn": "^0.5.0",

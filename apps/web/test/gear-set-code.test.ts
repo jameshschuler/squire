@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { gunzipSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
-import type { GearItem, GearPick } from "@squire/api/gear-data";
+import type { GearItem, GearPick } from "@walkscape-community/gear-optimizer";
 import { gearSetCode, gearSetEntries } from "@/lib/gear-set-code";
 
 const gearItem = (id: string, extra: Partial<GearItem>): GearItem => ({

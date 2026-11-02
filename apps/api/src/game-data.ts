@@ -1,5 +1,5 @@
 import type { WalkScapeClient } from "@walkscape-community/data-api-client";
-import { isGear } from "./gear-data/items.js";
+import { isGear } from "@walkscape-community/gear-optimizer";
 import type { GameData } from "./recipe-book/index.js";
 
 export async function loadGameData(client: WalkScapeClient): Promise<GameData> {

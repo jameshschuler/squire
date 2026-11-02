@@ -1,0 +1,22 @@
+{
+  "name": "@walkscape-community/gear-optimizer",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Finds the best WalkScape gear set for an activity or recipe",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@walkscape-community/data-api-client": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^5.0.5"
+  }
+}

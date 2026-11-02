@@ -1,5 +1,5 @@
 import type { GearType, Requirement, StatType } from "@walkscape-community/data-api-client";
-import type { ItemQuality, ItemSummary, LocationSummary } from "../recipe-book/types.js";
+import type { ItemQuality, ItemSummary, LocationSummary } from "./game-data.js";
 
 // Bump whenever the GearData shape changes, so cached copies on devices refresh.
 export const GEAR_DATA_SCHEMA = 1;

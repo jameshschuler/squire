@@ -2,12 +2,12 @@ import { existsSync, readFileSync } from "node:fs";
 import { availableParallelism } from "node:os";
 import { parseArgs } from "node:util";
 import { Worker, isMainThread, parentPort, workerData } from "node:worker_threads";
-import { parseCharacterExport } from "@squire/api/character";
 import {
   BEST_IN_GAME,
   compareScores,
   marginHolds,
   optimizeGear,
+  parseCharacterExport,
   type GearData,
   type GoalId,
   type Margin,
@@ -15,7 +15,7 @@ import {
   type PlayerProfile,
   type Score,
   type SearchLimits,
-} from "@squire/api/gear-data";
+} from "@walkscape-community/gear-optimizer";
 import type { RecipeBook } from "@squire/api/recipe-book";
 import { gearTargets, optimizeTarget, recommendedGoals, tieBreakersFor } from "../src/lib/gear-targets";
 

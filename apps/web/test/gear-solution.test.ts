@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BEST_IN_GAME, buildGearData, optimizeGear, type GearData } from "@squire/api/gear-data";
+import { BEST_IN_GAME, buildGearData, optimizeGear, type GearData } from "@walkscape-community/gear-optimizer";
 import type { GameData } from "@squire/api/recipe-book";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 import gearItems from "../../../fixtures/api/gear.json";
