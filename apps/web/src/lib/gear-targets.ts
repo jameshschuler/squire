@@ -29,16 +29,21 @@ export const BEST_LOCATION = "best";
 
 const SUGGESTION_LIMIT = 8;
 
+// One action, then the game moves you on, so nobody wants a gear set for it (and its search is slow).
+const ONE_TRIP_ACTIVITIES = new Set(["venture_into_the_hideout"]);
+
 export function gearTargets(book: RecipeBook): GearTarget[] {
   const tiered = new Set(book.gear.filter((gearItem) => gearItem.effects?.tiers.length).map((gearItem) => gearItem.id));
-  const activities = book.activities.map((activity) => ({
-    ...activity,
-    key: `activity:${activity.id}`,
-    lootTypes: activity.drops.map((drop) => drop.lootType),
-    kind: "activity" as const,
-    makesTieredGear: false,
-    needs: activity.gearNeeds,
-  }));
+  const activities = book.activities
+    .filter((activity) => !ONE_TRIP_ACTIVITIES.has(activity.id))
+    .map((activity) => ({
+      ...activity,
+      key: `activity:${activity.id}`,
+      lootTypes: activity.drops.map((drop) => drop.lootType),
+      kind: "activity" as const,
+      makesTieredGear: false,
+      needs: activity.gearNeeds,
+    }));
   const recipes = book.recipes.map((recipe) => ({
     ...recipe,
     key: `recipe:${recipe.id}`,
