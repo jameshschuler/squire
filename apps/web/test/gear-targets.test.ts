@@ -45,6 +45,15 @@ describe("gearTargets", () => {
 
     expect(gearTargets(noSteps).map((target) => target.key)).toEqual(["activity:mine_gold_ore"]);
   });
+
+  it("leaves out Venture into the hideout, a one-action trip", () => {
+    const hideout = {
+      ...book,
+      activities: book.activities.map((activity) => ({ ...activity, id: "venture_into_the_hideout" })),
+    };
+
+    expect(gearTargets(hideout).some((target) => target.kind === "activity")).toBe(false);
+  });
 });
 
 describe("searchGearTargets", () => {
