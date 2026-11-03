@@ -36,14 +36,13 @@ const suggestion = (
   }) as unknown as GearSuggestion;
 
 describe("answerNotes", () => {
-  it("says the set is proven best when gear helps and the level is fine", () => {
-    expect(answerNotes(suggestion(30), target, 50)).toEqual(["Proven best set for this gear."]);
+  it("adds no note when the set is proven best and the level is fine", () => {
+    expect(answerNotes(suggestion(30), target, 50)).toEqual([]);
   });
 
   it("says when the character's level is too low", () => {
     expect(answerNotes(suggestion(30), target, 20)).toEqual([
       "You need Mining level 40 for this. Here's the set for when you get there.",
-      "Proven best set for this gear.",
     ]);
   });
 
@@ -66,7 +65,6 @@ describe("answerNotes", () => {
 
     expect(answerNotes({ ...suggestion(30), missingNeeds }, target, 50)).toEqual([
       "You don't have the gear this needs: Pickaxe (Mining 50), Light source. The set leaves it out.",
-      "Proven best set for this gear.",
     ]);
   });
 
@@ -84,10 +82,8 @@ describe("answerNotes", () => {
     expect(answerNotes(suggestion(30, 1, margin), target, null)).toEqual([note]);
   });
 
-  it("claims proof only for the first priority when the player picked several", () => {
-    const notes = answerNotes(suggestion(30, 1, null, ["steps", "chests", "materials"]), target, null);
-
-    expect(notes).toEqual(["Proven best for Fastest."]);
+  it("adds no note for a proven set when the player picked several priorities", () => {
+    expect(answerNotes(suggestion(30, 1, null, ["steps", "chests", "materials"]), target, null)).toEqual([]);
   });
 });
 

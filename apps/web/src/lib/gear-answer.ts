@@ -74,21 +74,21 @@ export function answerNotes(suggestion: GearSuggestion, target: GearTarget, skil
 
   if (suggestion.picks.length === 0 && !suggestion.pet) {
     return suggestion.margin
-      ? [...before, "No gear found that helps.", marginNote(suggestion)]
+      ? [...before, "No gear found that helps.", ...marginNotes(suggestion)]
       : [...before, "No gear helps with this."];
   }
 
-  return [...before, marginNote(suggestion)];
+  return [...before, ...marginNotes(suggestion)];
 }
 
-export function marginNote({ margin, goals }: GearSuggestion): string {
-  const first = goalOf(goals[0] ?? "steps").label;
-
-  if (margin) {
-    return `Within ${formatPercent(Math.ceil(margin.gap * 1000) / 1000, 1)} of the best possible for ${first}.`;
+function marginNotes({ margin, goals }: GearSuggestion): string[] {
+  if (!margin) {
+    return [];
   }
 
-  return goals.length > 1 ? `Proven best for ${first}.` : "Proven best set for this gear.";
+  const first = goalOf(goals[0] ?? "steps").label;
+
+  return [`Within ${formatPercent(Math.ceil(margin.gap * 1000) / 1000, 1)} of the best possible for ${first}.`];
 }
 
 export function stepsTile({ result, goals }: GearSuggestion, noGear: StepsResult, fewest: number): StatTile {
