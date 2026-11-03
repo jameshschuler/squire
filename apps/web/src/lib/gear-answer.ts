@@ -16,7 +16,6 @@ import {
   type StepsResult,
 } from "@walkscape-community/gear-optimizer";
 import { formatNumber, formatPercent } from "./format";
-import type { GearSolution } from "./gear-solution";
 import { locationTiles, statGroups, type StatGroups, type StatTile } from "./gear-stats";
 import type { GearTarget } from "./gear-targets";
 
@@ -39,7 +38,7 @@ export function gearAnswer(
   profile: PlayerProfile,
   target: GearTarget,
   optimize: OptimizeTarget,
-  { suggestion, fewestSteps }: GearSolution,
+  suggestion: GearSuggestion,
 ): GearAnswerView {
   const lines = setStats(gear, profile, optimize, suggestion);
   const level = skillLevelOf(profile, optimize.skill);
@@ -61,7 +60,7 @@ export function gearAnswer(
     location: location && tiles.length > 0 ? { name: location.name, region: location.region, tiles } : null,
     stats: statGroups(lines, parts, goalStats(suggestion.goals), [
       efficiencyStepsTile(efficiencyOnly, fullEfficiency, noGear),
-      stepsTile(suggestion, fewestSteps),
+      stepsTile(suggestion),
     ]),
     notes: answerNotes(suggestion, target, profile.kind === "character" ? level : null),
     toolSlots: toolSlotsOf(profile),
@@ -98,12 +97,12 @@ function marginNotes({ margin, goals }: GearSuggestion): string[] {
   return [`Within ${formatPercent(Math.ceil(margin.gap * 1000) / 1000, 1)} of the best possible for ${first}.`];
 }
 
-export function stepsTile({ result, goals }: GearSuggestion, fewest: number): StatTile {
+export function stepsTile({ result, goals }: GearSuggestion): StatTile {
   return {
     key: "steps",
     value: formatNumber(result.steps),
     label: "Steps per action",
-    details: [`Best in game ${formatNumber(Math.min(fewest, result.steps))}`],
+    details: [],
     highlight: goals.includes("steps"),
     over: false,
   };

@@ -216,7 +216,7 @@ describe("Gear page", () => {
   it("uses the character's gear without asking, and compares with no gear", async () => {
     addCharacter();
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
-    expect(await screen.findByText(/^Best in game \d+$/)).toBeDefined();
+    expect(await screen.findByText(/^(Min [\d,]+ · )?Max [\d,]+$/)).toBeDefined();
     expect(screen.queryByText("Whose gear?")).toBeNull();
   });
 
@@ -294,7 +294,8 @@ describe("Gear page", () => {
     const stats = await screen.findByRole("region", { name: "Set stats" });
 
     expect(stats.textContent).toMatch(/Steps after work efficiency(Min [\d,]+ · )?Max [\d,]+/);
-    expect(stats.textContent).toMatch(/Steps per actionBest in game [\d,]+/);
+    expect(stats.textContent).toMatch(/Steps per action/);
+    expect(stats.textContent).not.toMatch(/Best in game/);
     expect(stats.textContent).toMatch(/\d+(\.\d)?\/\d+(\.\d)?%Work efficiency/);
     expect(stats.textContent).toContain("−5Steps required (flat)");
   });

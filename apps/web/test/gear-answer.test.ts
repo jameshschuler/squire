@@ -88,35 +88,25 @@ describe("answerNotes", () => {
 });
 
 describe("stepsTile", () => {
-  const result: StepsResult = { efficiency: 1.5, steps: 40, averageSteps: 32 };
+  const result: StepsResult = { efficiency: 1.5, steps: 5548, averageSteps: 4604 };
   const withGoals = (goals: string[]) => ({ result, goals }) as unknown as GearSuggestion;
 
   it.each([
     [["steps", "chests"], true],
     [["chests"], false],
   ])("highlights the steps tile for goals %j: %s", (goals, highlight) => {
-    expect(stepsTile(withGoals(goals), 28).highlight).toBe(highlight);
+    expect(stepsTile(withGoals(goals)).highlight).toBe(highlight);
   });
 
-  it("shows the set's steps with the fewest possible in the game", () => {
-    expect(stepsTile(withGoals(["steps"]), 28)).toEqual({
+  it("shows the set's steps on their own", () => {
+    expect(stepsTile(withGoals(["steps"]))).toEqual({
       key: "steps",
-      value: "40",
+      value: "5,548",
       label: "Steps per action",
-      details: ["Best in game 28"],
+      details: [],
       highlight: true,
       over: false,
     });
-  });
-
-  it("never shows a best in game above the set's own steps", () => {
-    expect(stepsTile(withGoals(["steps"]), 42).details).toEqual(["Best in game 40"]);
-  });
-
-  it("formats large step counts", () => {
-    const long = { result: { efficiency: 1, steps: 5548, averageSteps: 5548 }, goals: [] } as unknown as GearSuggestion;
-
-    expect(stepsTile(long, 5382)).toMatchObject({ value: "5,548", details: ["Best in game 5,382"] });
   });
 });
 

@@ -6,7 +6,6 @@ import type { Character } from "../src/character.js";
 import type { GearNeed } from "../src/game-data.js";
 import {
   BEST_IN_GAME,
-  fewestSteps,
   optimizeGear,
   type GearCondition,
   type GearData,
@@ -972,21 +971,6 @@ describe("search time", () => {
     expect(Number.isInteger(searchMs)).toBe(true);
     expect(searchMs).toBeGreaterThanOrEqual(0);
     expect(searchMs).toBeLessThanOrEqual(Math.ceil(took));
-  });
-});
-
-describe("fewestSteps", () => {
-  it("counts the steps with the best gear in the game, whatever the character owns", () => {
-    const gear = gearData([
-      item("small_gloves", "hands", [flatSteps(-2)]),
-      item("big_gloves", "hands", [flatSteps(-5)]),
-    ]);
-
-    expect(fewestSteps(gear, mining)).toBe(75);
-  });
-
-  it("is the no-gear steps when no gear helps", () => {
-    expect(fewestSteps(gearData([item("hat", "head", [])]), mining)).toBe(80);
   });
 });
 

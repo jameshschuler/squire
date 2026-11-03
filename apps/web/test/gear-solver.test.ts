@@ -46,15 +46,15 @@ describe("solveInBackground", () => {
     const [worker] = FakeWorker.created;
 
     expect(worker!.posted).toEqual([request]);
-    worker!.reply({ fewestSteps: 10 });
-    await expect(job.result).resolves.toEqual({ fewestSteps: 10 });
+    worker!.reply({ goals: ["steps"] });
+    await expect(job.result).resolves.toEqual({ goals: ["steps"] });
   });
 
   it("reuses the worker for the next request once the last one is done", async () => {
     const solve = await freshSolver();
     const first = solve(request);
 
-    FakeWorker.created[0]!.reply({ fewestSteps: 10 });
+    FakeWorker.created[0]!.reply({ goals: ["steps"] });
     await first.result;
     first.cancel();
     solve(request);
@@ -97,9 +97,9 @@ describe("solveInBackground", () => {
 
     const retry = solve(request);
 
-    FakeWorker.created[1]!.reply({ fewestSteps: 10 });
+    FakeWorker.created[1]!.reply({ goals: ["steps"] });
 
     expect(FakeWorker.created[0]!.terminated).toBe(true);
-    await expect(retry.result).resolves.toEqual({ fewestSteps: 10 });
+    await expect(retry.result).resolves.toEqual({ goals: ["steps"] });
   });
 });

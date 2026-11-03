@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
-import type { GearData, GoalId, OptimizeTarget, PlayerProfile } from "@walkscape-community/gear-optimizer";
-import type { GearSolution } from "@/lib/gear-solution";
+import type {
+  GearData,
+  GearSuggestion,
+  GoalId,
+  OptimizeTarget,
+  PlayerProfile,
+} from "@walkscape-community/gear-optimizer";
 import { solveInBackground } from "@/lib/gear-solver";
 
 interface Solved {
@@ -8,11 +13,11 @@ interface Solved {
   profile: PlayerProfile;
   goals: GoalId[];
   tieBreakers: GoalId[];
-  solution: GearSolution | null;
+  solution: GearSuggestion | null;
 }
 
 export interface GearSuggestionState {
-  solution: GearSolution | null;
+  solution: GearSuggestion | null;
   failed: boolean;
 }
 
@@ -32,7 +37,7 @@ export function useGearSuggestion(
 
     let active = true;
     const job = solveInBackground({ gear, profile, target, goals, tieBreakers });
-    const settle = (solution: GearSolution | null) => {
+    const settle = (solution: GearSuggestion | null) => {
       if (active) {
         setSolved({ target, profile, goals, tieBreakers, solution });
       }
