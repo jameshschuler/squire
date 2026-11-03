@@ -17,6 +17,7 @@ const rescueTeam: BreakdownInput = {
   sources: [
     source("workEfficiency", 0.24, true, "Oak skis"),
     source("workEfficiency", 0.2, true, "Cape of Half-Achiever"),
+    source("workEfficiency", -0.1, true, "Mountaineering guidebook"),
     source("stepsRequired", -0.01, true, "Stepring"),
     source("stepsRequired", -0.01, true, "Stepring"),
     source("stepsRequired", -4, false, "Wanderlust walking stick"),
@@ -28,21 +29,29 @@ const rescueTeam: BreakdownInput = {
 
 describe("stepsBreakdown", () => {
   it("works from base steps through each step change to the rounded steps, leaving out double action", () => {
-    expect(stepsBreakdown(rescueTeam).map(({ label, detail, result }) => [label, detail, result])).toEqual([
-      ["Base steps", null, "8,500"],
-      ["Work efficiency", "169%, max 150%", "÷ 150% = 5,666.7"],
-      ["Steps required", "−2%", "5,553.3"],
-      ["Steps required (flat)", "−6", "5,547.3"],
-      ["Rounded up", null, "5,548"],
+    expect(stepsBreakdown(rescueTeam).map(({ label, detail, note, result }) => [label, detail, note, result])).toEqual([
+      ["Base steps", null, null, "8,500"],
+      ["Work efficiency", "÷ 150%", "159% from gear and level, capped at 150%", "5,666.7"],
+      ["Steps required", "−2%", null, "5,553.3"],
+      ["Flat steps", "−6", null, "5,547.3"],
+      ["Rounded up", null, null, "5,548"],
     ]);
   });
 
-  it("names the level bonus and each item behind a step, adding up copies of one item", () => {
+  it("lists what's behind each step, biggest help first, adding up copies of one item", () => {
     const [, efficiency, percent, flat] = stepsBreakdown(rescueTeam);
 
-    expect(efficiency?.sources).toEqual(["Level bonus +25%", "Oak skis +24%", "Cape of Half-Achiever +20%"]);
-    expect(percent?.sources).toEqual(["Stepring −2%"]);
-    expect(flat?.sources).toEqual(["Wanderlust walking stick −4", "Cape of Half-Achiever −2"]);
+    expect(efficiency?.sources).toEqual([
+      { name: "Level bonus", value: "+25%" },
+      { name: "Oak skis", value: "+24%" },
+      { name: "Cape of Half-Achiever", value: "+20%" },
+      { name: "Mountaineering guidebook", value: "−10%" },
+    ]);
+    expect(percent?.sources).toEqual([{ name: "Stepring", value: "−2%" }]);
+    expect(flat?.sources).toEqual([
+      { name: "Wanderlust walking stick", value: "−4" },
+      { name: "Cape of Half-Achiever", value: "−2" },
+    ]);
   });
 
   it("skips step changes the set doesn't have, and the level bonus below the requirement", () => {
@@ -54,15 +63,15 @@ describe("stepsBreakdown", () => {
     };
 
     expect(stepsBreakdown(bare)).toEqual([
-      { label: "Base steps", detail: null, result: "8,500", sources: [] },
-      { label: "Work efficiency", detail: "100%", result: "÷ 100% = 8,500", sources: [] },
-      { label: "Rounded up", detail: null, result: "8,500", sources: [] },
+      { label: "Base steps", detail: null, note: null, result: "8,500", sources: [] },
+      { label: "Work efficiency", detail: "÷ 100%", note: null, result: "8,500", sources: [] },
+      { label: "Rounded up", detail: null, note: null, result: "8,500", sources: [] },
     ]);
   });
 
-  it("shows efficiency without a max when the activity has none", () => {
+  it("explains no cap when the activity has no max efficiency", () => {
     const uncapped = { ...rescueTeam, cap: Number.POSITIVE_INFINITY };
 
-    expect(stepsBreakdown(uncapped)[1]?.detail).toBe("169%");
+    expect(stepsBreakdown(uncapped)[1]?.note).toBeNull();
   });
 });
