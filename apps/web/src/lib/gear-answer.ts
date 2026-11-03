@@ -4,17 +4,14 @@ import {
   goalStats,
   levelBonus,
   locationBonuses,
-  NO_STATS,
   setStats,
   setStatsBySource,
   skillLevelOf,
-  stepsPerAction,
   toolSlotsOf,
   type GearData,
   type GearSuggestion,
   type OptimizeTarget,
   type PlayerProfile,
-  type StepsResult,
 } from "@walkscape-community/gear-optimizer";
 import { formatNumber, formatPercent } from "./format";
 import { locationTiles, statGroups, type StatGroups, type StatTile } from "./gear-stats";
@@ -50,21 +47,13 @@ export function gearAnswer(
     gear: lines.find((line) => line.stat === "workEfficiency" && line.isPercent)?.value ?? 0,
     level: levelBonus(optimize, level),
   };
-  const noGear = stepsPerAction(optimize, level, NO_STATS);
-  const efficiencyOnly = stepsPerAction(optimize, level, { ...NO_STATS, workEfficiency: parts.gear });
-  const fullEfficiency = Number.isFinite(parts.cap)
-    ? stepsPerAction(optimize, level, { ...NO_STATS, workEfficiency: parts.cap })
-    : null;
   const { location } = suggestion;
   const tiles = locationTiles(locationBonuses(gear, profile, optimize, suggestion));
 
   return {
     suggestion,
     location: location && tiles.length > 0 ? { name: location.name, region: location.region, tiles } : null,
-    stats: statGroups(lines, parts, goalStats(suggestion.goals), [
-      efficiencyStepsTile(efficiencyOnly, fullEfficiency, noGear),
-      stepsTile(suggestion),
-    ]),
+    stats: statGroups(lines, parts, goalStats(suggestion.goals), stepsTile(suggestion)),
     breakdown: stepsBreakdown({
       workRequired: optimize.workRequired,
       levelBonus: parts.level,
@@ -114,25 +103,6 @@ export function stepsTile({ result, goals }: GearSuggestion): StatTile {
     label: "Steps per action",
     details: [],
     highlight: goals.includes("steps"),
-    over: false,
-  };
-}
-
-// Steps from work efficiency alone, before step changes: what the wiki's "Minimum Steps" counts at
-// max efficiency. `fullEfficiency` is null when the activity has no max.
-export function efficiencyStepsTile(
-  efficiencyOnly: StepsResult,
-  fullEfficiency: StepsResult | null,
-  noGear: StepsResult,
-): StatTile {
-  const max = `Max ${formatNumber(noGear.steps)}`;
-
-  return {
-    key: "efficiencySteps",
-    value: formatNumber(efficiencyOnly.steps),
-    label: "Steps after work efficiency",
-    details: [fullEfficiency ? `Min ${formatNumber(fullEfficiency.steps)} · ${max}` : max],
-    highlight: false,
     over: false,
   };
 }

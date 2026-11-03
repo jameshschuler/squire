@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { GearSuggestion, GoalId, Margin, StepsResult } from "@walkscape-community/gear-optimizer";
-import { answerNotes, efficiencyStepsTile, stepsTile } from "@/lib/gear-answer";
+import { answerNotes, stepsTile } from "@/lib/gear-answer";
 import type { GearTarget } from "@/lib/gear-targets";
 
 const target: GearTarget = {
@@ -107,24 +107,5 @@ describe("stepsTile", () => {
       highlight: true,
       over: false,
     });
-  });
-});
-
-describe("efficiencyStepsTile", () => {
-  const steps = (count: number): StepsResult => ({ efficiency: 1, steps: count, averageSteps: count });
-
-  it("shows steps from work efficiency alone, between max efficiency and no gear", () => {
-    expect(efficiencyStepsTile(steps(5667), steps(5667), steps(6800))).toEqual({
-      key: "efficiencySteps",
-      value: "5,667",
-      label: "Steps after work efficiency",
-      details: ["Min 5,667 · Max 6,800"],
-      highlight: false,
-      over: false,
-    });
-  });
-
-  it("shows only the no-gear steps when the activity has no max efficiency", () => {
-    expect(efficiencyStepsTile(steps(30), null, steps(63)).details).toEqual(["Max 63"]);
   });
 });
