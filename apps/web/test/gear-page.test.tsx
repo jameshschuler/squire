@@ -220,23 +220,6 @@ describe("Gear page", () => {
     expect(screen.queryByText("Whose gear?")).toBeNull();
   });
 
-  it("shows the fastest set in the game under a character's answer, closed until asked", async () => {
-    addCharacter();
-    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
-    const toggle = await screen.findByRole("button", { name: /^Best in game · [\d,]+ steps$/ });
-
-    expect(screen.queryByRole("region", { name: "Best in game stats" })).toBeNull();
-    fireEvent.click(toggle);
-    expect(screen.getByText("The fastest set with every item in the game, at max level.")).toBeDefined();
-    expect(screen.getByRole("region", { name: "Best in game stats" }).textContent).toMatch(/Steps per action/);
-  });
-
-  it("doesn't repeat the best-in-game set when the answer already uses every item", async () => {
-    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
-    await screen.findByRole("region", { name: "Set stats" });
-    expect(screen.queryByRole("button", { name: /^Best in game ·/ })).toBeNull();
-  });
-
   it("asks for priorities in order, up to three, offering only goals the activity can give", async () => {
     await renderPage({ target: "activity:mine_gold_ore" });
     expect(await screen.findByText("What matters most? Pick up to 3, in order.")).toBeDefined();

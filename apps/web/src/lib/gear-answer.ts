@@ -1,5 +1,4 @@
 import {
-  BEST_IN_GAME,
   efficiencyCap,
   goalOf,
   goalStats,
@@ -27,7 +26,7 @@ export interface AnswerLocation {
   tiles: StatTile[];
 }
 
-export interface GearSetView {
+export interface GearAnswerView {
   suggestion: GearSuggestion;
   location: AnswerLocation | null;
   stats: StatGroups;
@@ -35,34 +34,13 @@ export interface GearSetView {
   toolSlots: number;
 }
 
-// `bestInGame` is the fastest set with every item in the game, shown only for a character's own gear.
-export interface GearAnswerView extends GearSetView {
-  bestInGame: GearSetView | null;
-}
-
 export function gearAnswer(
   gear: GearData,
   profile: PlayerProfile,
   target: GearTarget,
   optimize: OptimizeTarget,
-  { suggestion, bestInGame }: GearSolution,
+  { suggestion, fewestSteps }: GearSolution,
 ): GearAnswerView {
-  const fewest = bestInGame.result.steps;
-
-  return {
-    ...setView(gear, profile, target, optimize, suggestion, fewest),
-    bestInGame: profile.kind === "character" ? setView(gear, BEST_IN_GAME, target, optimize, bestInGame, fewest) : null,
-  };
-}
-
-function setView(
-  gear: GearData,
-  profile: PlayerProfile,
-  target: GearTarget,
-  optimize: OptimizeTarget,
-  suggestion: GearSuggestion,
-  fewestSteps: number,
-): GearSetView {
   const lines = setStats(gear, profile, optimize, suggestion);
   const level = skillLevelOf(profile, optimize.skill);
   const parts = {
