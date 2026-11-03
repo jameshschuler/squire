@@ -75,6 +75,7 @@ function character(owned: string[], extra: Partial<Character> = {}): PlayerProfi
     character: {
       name: "Test Walker",
       skillLevels: { mining: 50, cooking: 50 },
+      skillXp: { mining: 101_333, cooking: 101_333 },
       totalSkillLevel: 100,
       lifetimeSteps: 0,
       characterLevel: 50,

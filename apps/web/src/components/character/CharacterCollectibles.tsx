@@ -5,8 +5,10 @@ import { collectionProgress, type CollectibleEntry } from "@/lib/collectibles";
 import { cn } from "@/lib/utils";
 
 export function CharacterCollectibles({ collection }: { collection: CollectibleEntry[] }) {
+  const found = collection.filter((entry) => entry.owned).length;
+
   return (
-    <Section title={`Collectibles · ${collectionProgress(collection)}`}>
+    <Section title={`Collectibles · ${collectionProgress(found, collection.length)}`}>
       <ul aria-label="Collectibles" className="grid grid-cols-6 gap-2 sm:grid-cols-8">
         {collection.map(({ item, owned }) => (
           <li key={item.id}>

@@ -40,6 +40,7 @@ export interface OwnedStack extends OwnedItem {
 export interface Character {
   name: string;
   skillLevels: Record<string, number>;
+  skillXp: Record<string, number>;
   totalSkillLevel: number;
   lifetimeSteps: number;
   characterLevel: number;
@@ -49,6 +50,14 @@ export interface Character {
   equipped: Partial<Record<EquipmentSlot, OwnedItem>>;
   owned: OwnedStack[];
   pets: OwnedPet[];
+}
+
+// How far past its current level something is: XP for a skill, steps for the character. `needed` is
+// what the next level takes from the start of this one, or null at the max level.
+export interface LevelProgress {
+  level: number;
+  gained: number;
+  needed: number | null;
 }
 
 interface CharacterExport {
@@ -85,12 +94,22 @@ const SKILL_XP_BY_LEVEL = Array.from({ length: MAX_LEVEL }, (_, index) => {
   return Math.floor(points / 4);
 });
 
+const CHARACTER_STEPS_BY_LEVEL = SKILL_XP_BY_LEVEL.map((xp) => Math.round(xp * CHARACTER_STEPS_PER_XP));
+
 export function skillLevel(xp: number): number {
-  return SKILL_XP_BY_LEVEL.filter((required) => required <= xp).length;
+  return skillProgress(xp).level;
 }
 
 export function characterLevel(lifetimeSteps: number): number {
-  return SKILL_XP_BY_LEVEL.filter((xp) => Math.round(xp * CHARACTER_STEPS_PER_XP) <= lifetimeSteps).length;
+  return characterProgress(lifetimeSteps).level;
+}
+
+export function skillProgress(xp: number): LevelProgress {
+  return progressOn(SKILL_XP_BY_LEVEL, xp);
+}
+
+export function characterProgress(lifetimeSteps: number): LevelProgress {
+  return progressOn(CHARACTER_STEPS_BY_LEVEL, lifetimeSteps);
 }
 
 export function toolSlots(level: number): number {
@@ -126,6 +145,7 @@ export function parseCharacterExport(text: string): Character {
   return {
     name: data.name,
     skillLevels,
+    skillXp: data.skills,
     totalSkillLevel: Object.values(skillLevels).reduce((total, level) => total + level, 0),
     lifetimeSteps: data.steps,
     characterLevel: level,
@@ -138,6 +158,14 @@ export function parseCharacterExport(text: string): Character {
       .map(([id, count]) => ({ ...ownedItem(id), count })),
     pets: [...(data.pets?.pet ? [data.pets.pet] : []), ...(data.available_pets ?? [])].map(ownedPet),
   };
+}
+
+function progressOn(thresholds: number[], amount: number): LevelProgress {
+  const level = thresholds.filter((required) => required <= amount).length;
+  const start = thresholds[level - 1] ?? 0;
+  const next = thresholds[level];
+
+  return { level, gained: amount - start, needed: next === undefined ? null : next - start };
 }
 
 function ownedPet({ species, level }: OwnedPet): OwnedPet {

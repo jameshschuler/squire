@@ -15,10 +15,12 @@ describe("collectionOf", () => {
   });
 
   it("ignores owned ids that aren't collectibles in the game data", () => {
-    expect(collectionProgress(collectionOf(loot, ["w", "gone"]))).toBe("0 of 2");
+    expect(collectionOf(loot, ["w", "gone"]).filter((entry) => entry.owned)).toEqual([]);
   });
+});
 
-  it("counts what's owned out of the game's total", () => {
-    expect(collectionProgress(collectionOf(loot, ["a", "b"]))).toBe("2 of 2");
+describe("collectionProgress", () => {
+  it("counts what's found out of the game's total", () => {
+    expect(collectionProgress(2, 40)).toBe("2 of 40");
   });
 });

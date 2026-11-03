@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import exportFixture from "../../../fixtures/character/export.json";
-import { characterLevel, ownedItem, parseCharacterExport, skillLevel, toolSlots } from "../src/character.js";
+import {
+  characterLevel,
+  characterProgress,
+  ownedItem,
+  parseCharacterExport,
+  skillLevel,
+  skillProgress,
+  toolSlots,
+} from "../src/character.js";
 
 const fixtureText = JSON.stringify(exportFixture);
 
@@ -31,6 +39,30 @@ describe("characterLevel", () => {
     [59_958_383, 99],
   ])("%i lifetime steps is level %i", (steps, level) => {
     expect(characterLevel(steps)).toBe(level);
+  });
+});
+
+describe("skillProgress", () => {
+  it.each([
+    [0, { level: 1, gained: 0, needed: 83 }],
+    [83, { level: 2, gained: 0, needed: 91 }],
+    [100, { level: 2, gained: 17, needed: 91 }],
+    [13_034_430, { level: 98, gained: 1_228_824, needed: 1_228_825 }],
+    [13_034_431, { level: 99, gained: 0, needed: null }],
+    [20_000_000, { level: 99, gained: 6_965_569, needed: null }],
+  ])("%i XP is %o", (xp, progress) => {
+    expect(skillProgress(xp)).toEqual(progress);
+  });
+});
+
+describe("characterProgress", () => {
+  it.each([
+    [0, { level: 1, gained: 0, needed: 382 }],
+    [9_135_912, { level: 79, gained: 861_395, needed: 861_396 }],
+    [9_200_000, { level: 80, gained: 64_087, needed: 951_050 }],
+    [59_958_383, { level: 99, gained: 0, needed: null }],
+  ])("%i lifetime steps is %o", (steps, progress) => {
+    expect(characterProgress(steps)).toEqual(progress);
   });
 });
 
@@ -68,6 +100,7 @@ describe("parseCharacterExport", () => {
     expect(character).toMatchObject({
       name: "Test Walker",
       skillLevels: { agility: 85, cooking: 71, fishing: 1, mining: 99 },
+      skillXp: { agility: 3_468_249, cooking: 820_485, fishing: 0, mining: 13_034_431 },
       totalSkillLevel: 256,
       lifetimeSteps: 9_135_913,
       characterLevel: 80,
