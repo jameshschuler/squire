@@ -1,4 +1,4 @@
-import { MAX_DOUBLE_ACTION, type SourcedStat, type StepsResult } from "@walkscape-community/gear-optimizer";
+import type { SourcedStat, StepsResult } from "@walkscape-community/gear-optimizer";
 import { formatNumber, formatPercent } from "./format";
 import { formatStatValue } from "./gear-stats";
 
@@ -17,10 +17,10 @@ export interface BreakdownInput {
   sources: SourcedStat[];
 }
 
-type StepStat = "workEfficiency" | "stepsRequired" | "doubleAction";
+type StepStat = "workEfficiency" | "stepsRequired";
 
-// The game's step formula worked through with one set's numbers, from base steps to the average per
-// action, each step naming the items behind it.
+// The game's step formula worked through with one set's numbers, from base steps to steps per action,
+// each step naming the items behind it.
 export function stepsBreakdown({ workRequired, levelBonus, cap, result, sources }: BreakdownInput): BreakdownStep[] {
   const linesOf = (stat: StepStat, isPercent: boolean) =>
     sources.filter((source) => source.stat === stat && source.isPercent === isPercent);
@@ -31,7 +31,6 @@ export function stepsBreakdown({ workRequired, levelBonus, cap, result, sources 
   const efficiency = 1 + levelBonus + total("workEfficiency", true);
   const percent = total("stepsRequired", true);
   const flat = total("stepsRequired", false);
-  const doubleAction = total("doubleAction", true);
   const afterEfficiency = workRequired / result.efficiency;
   const afterPercent = afterEfficiency * (1 + percent);
   const levelSource = levelBonus > 0 ? [`Level bonus ${formatStatValue({ value: levelBonus, isPercent: true })}`] : [];
@@ -68,19 +67,6 @@ export function stepsBreakdown({ workRequired, levelBonus, cap, result, sources 
           },
         ]),
     { label: "Rounded up", detail: null, result: formatNumber(result.steps), sources: [] },
-    ...(doubleAction <= 0
-      ? []
-      : [
-          {
-            label: "Double action",
-            detail:
-              doubleAction > MAX_DOUBLE_ACTION
-                ? `${formatStatValue({ value: doubleAction, isPercent: true })}, max ${formatPercent(MAX_DOUBLE_ACTION)}`
-                : formatStatValue({ value: doubleAction, isPercent: true }),
-            result: `${formatSteps(result.averageSteps)} on average`,
-            sources: named("doubleAction", true),
-          },
-        ]),
   ];
 }
 

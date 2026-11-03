@@ -27,14 +27,13 @@ const rescueTeam: BreakdownInput = {
 };
 
 describe("stepsBreakdown", () => {
-  it("works from base steps through each step change to the rounded steps and the average", () => {
+  it("works from base steps through each step change to the rounded steps, leaving out double action", () => {
     expect(stepsBreakdown(rescueTeam).map(({ label, detail, result }) => [label, detail, result])).toEqual([
       ["Base steps", null, "8,500"],
       ["Work efficiency", "169%, max 150%", "÷ 150% = 5,666.7"],
       ["Steps required", "−2%", "5,553.3"],
       ["Steps required (flat)", "−6", "5,547.3"],
       ["Rounded up", null, "5,548"],
-      ["Double action", "+20.5%", "4,604.1 on average"],
     ]);
   });
 
@@ -59,12 +58,6 @@ describe("stepsBreakdown", () => {
       { label: "Work efficiency", detail: "100%", result: "÷ 100% = 8,500", sources: [] },
       { label: "Rounded up", detail: null, result: "8,500", sources: [] },
     ]);
-  });
-
-  it("says when double action is past its max", () => {
-    const doubled = { ...rescueTeam, sources: [source("doubleAction", 1.2, true, "Lucky charm")] };
-
-    expect(stepsBreakdown(doubled).at(-1)?.detail).toBe("+120%, max 100%");
   });
 
   it("shows efficiency without a max when the activity has none", () => {
