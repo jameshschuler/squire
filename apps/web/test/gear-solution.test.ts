@@ -17,20 +17,21 @@ const woodcutting = {
 };
 
 describe("solveGear", () => {
-  it("finds the set for the goals and the fewest steps possible", () => {
+  it("finds the set for the goals and the fastest set in the game", () => {
     const solution = solveGear({ gear, profile: BEST_IN_GAME, target: woodcutting, goals: ["xp"], tieBreakers: [] });
     const expected = optimizeGear(gear, BEST_IN_GAME, woodcutting, ["xp"]);
 
     expect(solution.suggestion).toEqual({ ...expected, searchMs: expect.any(Number) });
-    expect(solution.fewestSteps).toBe(optimizeGear(gear, BEST_IN_GAME, woodcutting).result.steps);
+    expect(solution.bestInGame.result.steps).toBe(optimizeGear(gear, BEST_IN_GAME, woodcutting).result.steps);
+    expect(solution.bestInGame.goals).toEqual(["steps"]);
   });
 
-  it("works out the fewest steps per target", () => {
+  it("works out the fastest set in the game per target", () => {
     const slow = { ...woodcutting, workRequired: 300 };
     const fast = solveGear({ gear, profile: BEST_IN_GAME, target: woodcutting, goals: ["steps"], tieBreakers: [] });
     const longer = solveGear({ gear, profile: BEST_IN_GAME, target: slow, goals: ["steps"], tieBreakers: [] });
 
-    expect(longer.fewestSteps).toBeGreaterThan(fast.fewestSteps);
+    expect(longer.bestInGame.result.steps).toBeGreaterThan(fast.bestInGame.result.steps);
   });
 
   it("breaks ties with the extra goals but reports only the player's", () => {

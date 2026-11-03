@@ -1,5 +1,5 @@
 import {
-  fewestSteps,
+  fastestInGame,
   optimizeGear,
   type GearData,
   type GearSuggestion,
@@ -18,17 +18,17 @@ export interface GearRequest {
 
 export interface GearSolution {
   suggestion: GearSuggestion;
-  fewestSteps: number;
+  bestInGame: GearSuggestion;
 }
 
-const fewestByTarget = new Map<string, number>();
+const bestInGameByTarget = new Map<string, GearSuggestion>();
 
 export function solveGear({ gear, profile, target, goals, tieBreakers }: GearRequest): GearSolution {
   const key = `${gear.version}:${JSON.stringify(target)}`;
-  const fewest = fewestByTarget.get(key) ?? fewestSteps(gear, target);
+  const bestInGame = bestInGameByTarget.get(key) ?? fastestInGame(gear, target);
 
-  fewestByTarget.set(key, fewest);
+  bestInGameByTarget.set(key, bestInGame);
   const suggestion = optimizeGear(gear, profile, target, [...goals, ...tieBreakers], { checkedGoals: 1 });
 
-  return { suggestion: { ...suggestion, goals }, fewestSteps: fewest };
+  return { suggestion: { ...suggestion, goals }, bestInGame };
 }

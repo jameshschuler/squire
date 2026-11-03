@@ -115,7 +115,7 @@ The web app checks only the first priority (`checkedGoals: 1`), so the answer sa
 
 The result has the set, its stats and steps, the margin (`null` means proven best) and `searchMs`.
 
-`fewestSteps` runs a quick "Fastest" search with the best gear in the game. The web app shows it as the "Min" on the steps tile.
+`fastestInGame` runs a quick "Fastest" search with the best gear in the game. The web app shows its steps as "Best in game" on the steps tile, and the set itself under the player's answer.
 
 ## How it's tested
 

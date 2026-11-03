@@ -82,7 +82,7 @@ type Search = Omit<GearSuggestion, "margin" | "missingNeeds" | "searchMs"> & {
 // The search stops early once the set is proven within CLOSE_ENOUGH of the best possible, or at the deadline.
 const SEARCH_STATES = 1000;
 const SEARCH_BUDGET_MS = 10_000;
-const FEWEST_STEPS_BUDGET_MS = 1_000;
+const FASTEST_IN_GAME_BUDGET_MS = 1_000;
 const STATES_GROWTH = 4;
 const MAX_SEARCH_STATES = 16_000;
 const CLOSE_ENOUGH = 0.01;
@@ -277,11 +277,10 @@ function lower(left: Score | null, right: Score | null): Score | null {
   return compareScores(left, right) <= 0 ? left : right;
 }
 
-// The fewest steps possible with the best gear in the game, shown as the "Min" on the steps tile. It
-// gets a short budget so it doesn't hold up the player's own search; if it runs out of time, the Min
-// can be a little above the true minimum.
-export function fewestSteps(gear: GearData, target: OptimizeTarget): number {
-  return optimizeGear(gear, BEST_IN_GAME, target, ["steps"], { timeBudgetMs: FEWEST_STEPS_BUDGET_MS }).result.steps;
+// The fastest set with the best gear in the game. It gets a short budget so it doesn't hold up the
+// player's own search; if it runs out of time, its steps can be a little above the true minimum.
+export function fastestInGame(gear: GearData, target: OptimizeTarget): GearSuggestion {
+  return optimizeGear(gear, BEST_IN_GAME, target, ["steps"], { timeBudgetMs: FASTEST_IN_GAME_BUDGET_MS });
 }
 
 // Builds a location's candidates and slot groups. Each group's items are pruned and then sorted best
