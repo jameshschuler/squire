@@ -1,8 +1,7 @@
 import { useMemo } from "react";
 import { Loader2 } from "lucide-react";
-import type { GearData, OptimizeTarget, PlayerProfile } from "@walkscape-community/gear-optimizer";
+import type { GearData, GearSuggestion, OptimizeTarget, PlayerProfile } from "@walkscape-community/gear-optimizer";
 import { gearAnswer } from "@/lib/gear-answer";
-import type { GearSolution } from "@/lib/gear-solution";
 import type { GearTarget } from "@/lib/gear-targets";
 import { ChatMessage } from "./ChatMessage";
 import { GearAnswer } from "./GearAnswer";
@@ -12,7 +11,7 @@ interface GearResultProps {
   profile: PlayerProfile;
   target: GearTarget;
   optimize: OptimizeTarget;
-  solution: GearSolution | null;
+  solution: GearSuggestion | null;
   failed: boolean;
 }
 

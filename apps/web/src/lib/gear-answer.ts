@@ -4,21 +4,19 @@ import {
   goalStats,
   levelBonus,
   locationBonuses,
-  NO_STATS,
   setStats,
+  setStatsBySource,
   skillLevelOf,
-  stepsPerAction,
   toolSlotsOf,
   type GearData,
   type GearSuggestion,
   type OptimizeTarget,
   type PlayerProfile,
-  type StepsResult,
 } from "@walkscape-community/gear-optimizer";
 import { formatNumber, formatPercent } from "./format";
-import type { GearSolution } from "./gear-solution";
 import { locationTiles, statGroups, type StatGroups, type StatTile } from "./gear-stats";
 import type { GearTarget } from "./gear-targets";
+import { stepsBreakdown, type BreakdownStep } from "./steps-breakdown";
 
 export interface AnswerLocation {
   name: string;
@@ -30,6 +28,7 @@ export interface GearAnswerView {
   suggestion: GearSuggestion;
   location: AnswerLocation | null;
   stats: StatGroups;
+  breakdown: BreakdownStep[];
   notes: string[];
   toolSlots: number;
 }
@@ -39,7 +38,7 @@ export function gearAnswer(
   profile: PlayerProfile,
   target: GearTarget,
   optimize: OptimizeTarget,
-  { suggestion, fewestSteps }: GearSolution,
+  suggestion: GearSuggestion,
 ): GearAnswerView {
   const lines = setStats(gear, profile, optimize, suggestion);
   const level = skillLevelOf(profile, optimize.skill);
@@ -48,14 +47,20 @@ export function gearAnswer(
     gear: lines.find((line) => line.stat === "workEfficiency" && line.isPercent)?.value ?? 0,
     level: levelBonus(optimize, level),
   };
-  const noGear = stepsPerAction(optimize, level, NO_STATS);
   const { location } = suggestion;
   const tiles = locationTiles(locationBonuses(gear, profile, optimize, suggestion));
 
   return {
     suggestion,
     location: location && tiles.length > 0 ? { name: location.name, region: location.region, tiles } : null,
-    stats: statGroups(lines, parts, goalStats(suggestion.goals), stepsTile(suggestion, noGear, fewestSteps)),
+    stats: statGroups(lines, parts, goalStats(suggestion.goals), stepsTile(suggestion)),
+    breakdown: stepsBreakdown({
+      workRequired: optimize.workRequired,
+      levelBonus: parts.level,
+      cap: parts.cap,
+      result: suggestion.result,
+      sources: setStatsBySource(gear, profile, optimize, suggestion),
+    }),
     notes: answerNotes(suggestion, target, profile.kind === "character" ? level : null),
     toolSlots: toolSlotsOf(profile),
   };
@@ -74,29 +79,29 @@ export function answerNotes(suggestion: GearSuggestion, target: GearTarget, skil
 
   if (suggestion.picks.length === 0 && !suggestion.pet) {
     return suggestion.margin
-      ? [...before, "No gear found that helps.", marginNote(suggestion)]
+      ? [...before, "No gear found that helps.", ...marginNotes(suggestion)]
       : [...before, "No gear helps with this."];
   }
 
-  return [...before, marginNote(suggestion)];
+  return [...before, ...marginNotes(suggestion)];
 }
 
-export function marginNote({ margin, goals }: GearSuggestion): string {
-  const first = goalOf(goals[0] ?? "steps").label;
-
-  if (margin) {
-    return `Within ${formatPercent(Math.ceil(margin.gap * 1000) / 1000, 1)} of the best possible for ${first}.`;
+function marginNotes({ margin, goals }: GearSuggestion): string[] {
+  if (!margin) {
+    return [];
   }
 
-  return goals.length > 1 ? `Proven best for ${first}.` : "Proven best set for this gear.";
+  const first = goalOf(goals[0] ?? "steps").label;
+
+  return [`Within ${formatPercent(Math.ceil(margin.gap * 1000) / 1000, 1)} of the best possible for ${first}.`];
 }
 
-export function stepsTile({ result, goals }: GearSuggestion, noGear: StepsResult, fewest: number): StatTile {
+export function stepsTile({ result, goals }: GearSuggestion): StatTile {
   return {
     key: "steps",
     value: formatNumber(result.steps),
     label: "Steps per action",
-    details: [`Min ${formatNumber(Math.min(fewest, result.steps))} · Max ${formatNumber(noGear.steps)}`],
+    details: [],
     highlight: goals.includes("steps"),
     over: false,
   };

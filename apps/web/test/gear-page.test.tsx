@@ -213,10 +213,10 @@ describe("Gear page", () => {
     expect(screen.getByRole("region", { name: "Set stats" }).textContent).toMatch(/\d+ \(priority\)Steps/);
   });
 
-  it("uses the character's gear without asking, and compares with no gear", async () => {
+  it("uses the character's gear without asking", async () => {
     addCharacter();
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
-    expect(await screen.findByText(/^Min \d+ · Max \d+$/)).toBeDefined();
+    expect(await screen.findByRole("region", { name: "Set stats" })).toBeDefined();
     expect(screen.queryByText("Whose gear?")).toBeNull();
   });
 
@@ -284,16 +284,24 @@ describe("Gear page", () => {
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps,chests" });
     const stats = await screen.findByRole("region", { name: "Set stats" });
 
-    expect(stats.textContent).toMatch(/^Steps[\d,]+ \(priority\)Steps/);
+    expect(stats.textContent).toMatch(/^Steps[\d,]+ \(priority\)Steps per action/);
     expect(stats.textContent).toMatch(/\+[\d.]+% \(priority\)Chest finding/);
     expect(screen.queryByRole("region", { name: "Summary" })).toBeNull();
   });
 
-  it("shows the set's stats, with the steps range and total work efficiency against the max", async () => {
+  it("shows the set's stats and work efficiency against the max, with a breakdown of the steps", async () => {
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     const stats = await screen.findByRole("region", { name: "Set stats" });
 
-    expect(stats.textContent).toMatch(/Steps per actionMin \d+ · Max \d+/);
+    expect(stats.textContent).toMatch(/Steps per action/);
+    expect(stats.textContent).not.toMatch(/Steps after work efficiency/);
+    expect(stats.textContent).not.toMatch(/Best in game/);
+    fireEvent.click(screen.getByRole("button", { name: "How the steps are worked out" }));
+    expect(
+      [...screen.getByRole("list", { name: "Steps breakdown" }).querySelectorAll("li")].map(
+        (step) => step.querySelector("span")?.textContent,
+      ),
+    ).toEqual(expect.arrayContaining(["Base steps", "Rounded up"]));
     expect(stats.textContent).toMatch(/\d+(\.\d)?\/\d+(\.\d)?%Work efficiency/);
     expect(stats.textContent).toContain("−5Steps required (flat)");
   });

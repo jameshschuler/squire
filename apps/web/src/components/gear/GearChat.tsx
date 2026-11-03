@@ -92,7 +92,7 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
           profile={profile}
           target={target}
           location={location}
-          bestAt={solution?.suggestion.location ?? null}
+          bestAt={solution?.location ?? null}
           onChoose={(location) => update({ location })}
         />
       )}

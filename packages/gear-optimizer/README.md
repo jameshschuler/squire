@@ -115,8 +115,6 @@ The web app checks only the first priority (`checkedGoals: 1`), so the answer sa
 
 The result has the set, its stats and steps, the margin (`null` means proven best) and `searchMs`.
 
-`fewestSteps` runs a quick "Fastest" search with the best gear in the game. The web app shows it as the "Min" on the steps tile.
-
 ## How it's tested
 
 - `apps/api/test/optimizer.test.ts` compares the search with brute force (every possible set) on hundreds of random gear pools, for several priority orders, with and without the cap, and with a deliberately tiny cap and no time so margins are wide. Every claimed margin must hold.

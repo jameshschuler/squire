@@ -17,20 +17,11 @@ const woodcutting = {
 };
 
 describe("solveGear", () => {
-  it("finds the set for the goals and the fewest steps possible", () => {
+  it("finds the set for the goals", () => {
     const solution = solveGear({ gear, profile: BEST_IN_GAME, target: woodcutting, goals: ["xp"], tieBreakers: [] });
     const expected = optimizeGear(gear, BEST_IN_GAME, woodcutting, ["xp"]);
 
-    expect(solution.suggestion).toEqual({ ...expected, searchMs: expect.any(Number) });
-    expect(solution.fewestSteps).toBe(optimizeGear(gear, BEST_IN_GAME, woodcutting).result.steps);
-  });
-
-  it("works out the fewest steps per target", () => {
-    const slow = { ...woodcutting, workRequired: 300 };
-    const fast = solveGear({ gear, profile: BEST_IN_GAME, target: woodcutting, goals: ["steps"], tieBreakers: [] });
-    const longer = solveGear({ gear, profile: BEST_IN_GAME, target: slow, goals: ["steps"], tieBreakers: [] });
-
-    expect(longer.fewestSteps).toBeGreaterThan(fast.fewestSteps);
+    expect(solution).toEqual({ ...expected, searchMs: expect.any(Number) });
   });
 
   it("breaks ties with the extra goals but reports only the player's", () => {
@@ -43,7 +34,7 @@ describe("solveGear", () => {
     });
     const both = optimizeGear(gear, BEST_IN_GAME, woodcutting, ["steps", "xp"]);
 
-    expect(solution.suggestion).toEqual({ ...both, goals: ["steps"], searchMs: expect.any(Number) });
-    expect(solution.suggestion.result.steps).toBe(optimizeGear(gear, BEST_IN_GAME, woodcutting).result.steps);
+    expect(solution).toEqual({ ...both, goals: ["steps"], searchMs: expect.any(Number) });
+    expect(solution.result.steps).toBe(optimizeGear(gear, BEST_IN_GAME, woodcutting).result.steps);
   });
 });

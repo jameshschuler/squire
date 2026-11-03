@@ -1,7 +1,8 @@
-import type { GearRequest, GearSolution } from "./gear-solution";
+import type { GearSuggestion } from "@walkscape-community/gear-optimizer";
+import type { GearRequest } from "./gear-solution";
 
 export interface GearJob {
-  result: Promise<GearSolution>;
+  result: Promise<GearSuggestion>;
   cancel: () => void;
 }
 
@@ -20,8 +21,8 @@ export function solveInBackground(request: GearRequest): GearJob {
     worker = null;
   };
 
-  const result = new Promise<GearSolution>((resolve, reject) => {
-    current.onmessage = (event: MessageEvent<GearSolution>) => {
+  const result = new Promise<GearSuggestion>((resolve, reject) => {
+    current.onmessage = (event: MessageEvent<GearSuggestion>) => {
       done = true;
       resolve(event.data);
     };

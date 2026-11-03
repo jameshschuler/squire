@@ -6,7 +6,6 @@ import type { Character } from "../src/character.js";
 import type { GearNeed } from "../src/game-data.js";
 import {
   BEST_IN_GAME,
-  fewestSteps,
   optimizeGear,
   type GearCondition,
   type GearData,
@@ -22,6 +21,7 @@ import {
   gearBonusesByLocation,
   locationBonuses,
   setStats,
+  setStatsBySource,
 } from "../src/index.js";
 
 const stat = (stat: GearStat["stat"], value: number, isPercent: boolean, ...conditions: GearCondition[]): GearStat => ({
@@ -976,21 +976,6 @@ describe("search time", () => {
   });
 });
 
-describe("fewestSteps", () => {
-  it("counts the steps with the best gear in the game, whatever the character owns", () => {
-    const gear = gearData([
-      item("small_gloves", "hands", [flatSteps(-2)]),
-      item("big_gloves", "hands", [flatSteps(-5)]),
-    ]);
-
-    expect(fewestSteps(gear, mining)).toBe(75);
-  });
-
-  it("is the no-gear steps when no gear helps", () => {
-    expect(fewestSteps(gearData([item("hat", "head", [])]), mining)).toBe(80);
-  });
-});
-
 describe("search size", () => {
   it("stops at its time budget even partway through a search", () => {
     const tailoring = {
@@ -1072,6 +1057,18 @@ describe("setStats", () => {
 
   it("counts a set bonus only with enough set pieces", () => {
     expect(stats(["miner_boots"]).map((line) => line.stat)).toEqual(["chestFind"]);
+  });
+
+  it("names the item each applying bonus comes from", () => {
+    const suggestion = optimizeGear(gear, BEST_IN_GAME, mining);
+    const picks = gear.items.map((gearItem) => ({ slot: gearItem.slot, item: gearItem, quality: null }));
+
+    expect(setStatsBySource(gear, BEST_IN_GAME, mining, { ...suggestion, picks, pet: null })).toEqual([
+      { stat: "stepsRequired", isPercent: false, value: -2, source: "miner_hat" },
+      { stat: "chestFind", isPercent: true, value: 0.1, source: "miner_hat" },
+      { stat: "chestFind", isPercent: true, value: 0.1, source: "miner_boots" },
+      { stat: "doubleRewards", isPercent: true, value: 0.05, source: "miner_boots" },
+    ]);
   });
 });
 
