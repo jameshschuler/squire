@@ -280,11 +280,11 @@ describe("Gear page", () => {
     expect(stats.textContent).not.toContain("(priority)Chest finding");
   });
 
-  it("puts steps first in the stats and highlights the priority stats", async () => {
+  it("puts steps after work efficiency first, then the priority steps, and highlights the priority stats", async () => {
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps,chests" });
     const stats = await screen.findByRole("region", { name: "Set stats" });
 
-    expect(stats.textContent).toMatch(/^Steps[\d,]+ \(priority\)Steps/);
+    expect(stats.textContent).toMatch(/^Steps[\d,]+Steps after work efficiency.*?[\d,]+ \(priority\)Steps per action/);
     expect(stats.textContent).toMatch(/\+[\d.]+% \(priority\)Chest finding/);
     expect(screen.queryByRole("region", { name: "Summary" })).toBeNull();
   });
@@ -293,8 +293,8 @@ describe("Gear page", () => {
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     const stats = await screen.findByRole("region", { name: "Set stats" });
 
-    expect(stats.textContent).toMatch(/Steps per actionBest in game \d+/);
-    expect(stats.textContent).toMatch(/\d+Steps after work efficiency(Min \d+ · )?Max \d+/);
+    expect(stats.textContent).toMatch(/Steps after work efficiency(Min [\d,]+ · )?Max [\d,]+/);
+    expect(stats.textContent).toMatch(/Steps per actionBest in game [\d,]+/);
     expect(stats.textContent).toMatch(/\d+(\.\d)?\/\d+(\.\d)?%Work efficiency/);
     expect(stats.textContent).toContain("−5Steps required (flat)");
   });

@@ -60,8 +60,8 @@ export function gearAnswer(
     suggestion,
     location: location && tiles.length > 0 ? { name: location.name, region: location.region, tiles } : null,
     stats: statGroups(lines, parts, goalStats(suggestion.goals), [
-      stepsTile(suggestion, fewestSteps),
       efficiencyStepsTile(efficiencyOnly, fullEfficiency, noGear),
+      stepsTile(suggestion, fewestSteps),
     ]),
     notes: answerNotes(suggestion, target, profile.kind === "character" ? level : null),
     toolSlots: toolSlotsOf(profile),
