@@ -296,6 +296,12 @@ describe("Gear page", () => {
     expect(stats.textContent).toMatch(/Steps after work efficiency(Min [\d,]+ · )?Max [\d,]+/);
     expect(stats.textContent).toMatch(/Steps per action/);
     expect(stats.textContent).not.toMatch(/Best in game/);
+    fireEvent.click(screen.getByRole("button", { name: "How the steps are worked out" }));
+    expect(
+      [...screen.getByRole("list", { name: "Steps breakdown" }).querySelectorAll("li")].map(
+        (step) => step.querySelector("span")?.textContent,
+      ),
+    ).toEqual(expect.arrayContaining(["Base steps", "Rounded up"]));
     expect(stats.textContent).toMatch(/\d+(\.\d)?\/\d+(\.\d)?%Work efficiency/);
     expect(stats.textContent).toContain("−5Steps required (flat)");
   });

@@ -37,6 +37,23 @@ export function setStats(
   return sumLines(pieces.flatMap((piece) => piece.stats).filter((stat) => stat.conditions.every(holds)));
 }
 
+// Each worn item's bonuses that apply here, to show where a set's stats come from.
+export function setStatsBySource(
+  gear: GearData,
+  profile: PlayerProfile,
+  target: WorkTarget,
+  suggestion: GearSuggestion,
+): SourcedStat[] {
+  const { pieces, holds } = worn(gear, profile, target, suggestion);
+
+  return pieces.flatMap((piece) =>
+    sumLines(piece.stats.filter((stat) => stat.conditions.every(holds))).map((line) => ({
+      ...line,
+      source: piece.name,
+    })),
+  );
+}
+
 // Each worn item's bonuses that only apply because of the location, for the "Location bonuses" tiles.
 export function locationBonuses(
   gear: GearData,

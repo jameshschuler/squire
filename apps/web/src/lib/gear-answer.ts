@@ -6,6 +6,7 @@ import {
   locationBonuses,
   NO_STATS,
   setStats,
+  setStatsBySource,
   skillLevelOf,
   stepsPerAction,
   toolSlotsOf,
@@ -18,6 +19,7 @@ import {
 import { formatNumber, formatPercent } from "./format";
 import { locationTiles, statGroups, type StatGroups, type StatTile } from "./gear-stats";
 import type { GearTarget } from "./gear-targets";
+import { stepsBreakdown, type BreakdownStep } from "./steps-breakdown";
 
 export interface AnswerLocation {
   name: string;
@@ -29,6 +31,7 @@ export interface GearAnswerView {
   suggestion: GearSuggestion;
   location: AnswerLocation | null;
   stats: StatGroups;
+  breakdown: BreakdownStep[];
   notes: string[];
   toolSlots: number;
 }
@@ -62,6 +65,13 @@ export function gearAnswer(
       efficiencyStepsTile(efficiencyOnly, fullEfficiency, noGear),
       stepsTile(suggestion),
     ]),
+    breakdown: stepsBreakdown({
+      workRequired: optimize.workRequired,
+      levelBonus: parts.level,
+      cap: parts.cap,
+      result: suggestion.result,
+      sources: setStatsBySource(gear, profile, optimize, suggestion),
+    }),
     notes: answerNotes(suggestion, target, profile.kind === "character" ? level : null),
     toolSlots: toolSlotsOf(profile),
   };
