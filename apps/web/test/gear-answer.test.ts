@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { GearSuggestion, GoalId, Margin, StepsResult } from "@walkscape-community/gear-optimizer";
-import { answerNotes, stepsTile } from "@/lib/gear-answer";
+import { answerNotes, efficiencyStepsTile, stepsTile } from "@/lib/gear-answer";
 import type { GearTarget } from "@/lib/gear-targets";
 
 const target: GearTarget = {
@@ -89,35 +89,52 @@ describe("answerNotes", () => {
 
 describe("stepsTile", () => {
   const result: StepsResult = { efficiency: 1.5, steps: 40, averageSteps: 32 };
-  const noGear: StepsResult = { efficiency: 1, steps: 63, averageSteps: 63 };
   const withGoals = (goals: string[]) => ({ result, goals }) as unknown as GearSuggestion;
 
   it.each([
     [["steps", "chests"], true],
     [["chests"], false],
   ])("highlights the steps tile for goals %j: %s", (goals, highlight) => {
-    expect(stepsTile(withGoals(goals), noGear, 28).highlight).toBe(highlight);
+    expect(stepsTile(withGoals(goals), 28).highlight).toBe(highlight);
   });
 
-  it("shows the set's steps with the fewest possible and the no-gear steps", () => {
-    expect(stepsTile(withGoals(["steps"]), noGear, 28)).toEqual({
+  it("shows the set's steps with the fewest possible in the game", () => {
+    expect(stepsTile(withGoals(["steps"]), 28)).toEqual({
       key: "steps",
       value: "40",
       label: "Steps per action",
-      details: ["Min 28 · Max 63"],
+      details: ["Best in game 28"],
       highlight: true,
       over: false,
     });
   });
 
-  it("never shows a minimum above the set's own steps", () => {
-    expect(stepsTile(withGoals(["steps"]), noGear, 42).details).toEqual(["Min 40 · Max 63"]);
+  it("never shows a best in game above the set's own steps", () => {
+    expect(stepsTile(withGoals(["steps"]), 42).details).toEqual(["Best in game 40"]);
   });
 
   it("formats large step counts", () => {
-    const long = { result: { efficiency: 1, steps: 5547, averageSteps: 5547 }, goals: [] } as unknown as GearSuggestion;
-    const bare = { efficiency: 1, steps: 12400, averageSteps: 12400 };
+    const long = { result: { efficiency: 1, steps: 5548, averageSteps: 5548 }, goals: [] } as unknown as GearSuggestion;
 
-    expect(stepsTile(long, bare, 4100)).toMatchObject({ value: "5,547", details: ["Min 4,100 · Max 12,400"] });
+    expect(stepsTile(long, 5382)).toMatchObject({ value: "5,548", details: ["Best in game 5,382"] });
+  });
+});
+
+describe("efficiencyStepsTile", () => {
+  const steps = (count: number): StepsResult => ({ efficiency: 1, steps: count, averageSteps: count });
+
+  it("shows steps from work efficiency alone, between max efficiency and no gear", () => {
+    expect(efficiencyStepsTile(steps(5667), steps(5667), steps(6800))).toEqual({
+      key: "efficiencySteps",
+      value: "5,667",
+      label: "Steps after work efficiency",
+      details: ["Min 5,667 · Max 6,800"],
+      highlight: false,
+      over: false,
+    });
+  });
+
+  it("shows only the no-gear steps when the activity has no max efficiency", () => {
+    expect(efficiencyStepsTile(steps(30), null, steps(63)).details).toEqual(["Max 63"]);
   });
 });

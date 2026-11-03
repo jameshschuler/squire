@@ -49,13 +49,20 @@ export function gearAnswer(
     level: levelBonus(optimize, level),
   };
   const noGear = stepsPerAction(optimize, level, NO_STATS);
+  const efficiencyOnly = stepsPerAction(optimize, level, { ...NO_STATS, workEfficiency: parts.gear });
+  const fullEfficiency = Number.isFinite(parts.cap)
+    ? stepsPerAction(optimize, level, { ...NO_STATS, workEfficiency: parts.cap })
+    : null;
   const { location } = suggestion;
   const tiles = locationTiles(locationBonuses(gear, profile, optimize, suggestion));
 
   return {
     suggestion,
     location: location && tiles.length > 0 ? { name: location.name, region: location.region, tiles } : null,
-    stats: statGroups(lines, parts, goalStats(suggestion.goals), stepsTile(suggestion, noGear, fewestSteps)),
+    stats: statGroups(lines, parts, goalStats(suggestion.goals), [
+      stepsTile(suggestion, fewestSteps),
+      efficiencyStepsTile(efficiencyOnly, fullEfficiency, noGear),
+    ]),
     notes: answerNotes(suggestion, target, profile.kind === "character" ? level : null),
     toolSlots: toolSlotsOf(profile),
   };
@@ -91,13 +98,32 @@ function marginNotes({ margin, goals }: GearSuggestion): string[] {
   return [`Within ${formatPercent(Math.ceil(margin.gap * 1000) / 1000, 1)} of the best possible for ${first}.`];
 }
 
-export function stepsTile({ result, goals }: GearSuggestion, noGear: StepsResult, fewest: number): StatTile {
+export function stepsTile({ result, goals }: GearSuggestion, fewest: number): StatTile {
   return {
     key: "steps",
     value: formatNumber(result.steps),
     label: "Steps per action",
-    details: [`Min ${formatNumber(Math.min(fewest, result.steps))} · Max ${formatNumber(noGear.steps)}`],
+    details: [`Best in game ${formatNumber(Math.min(fewest, result.steps))}`],
     highlight: goals.includes("steps"),
+    over: false,
+  };
+}
+
+// Steps from work efficiency alone, before step changes: what the wiki's "Minimum Steps" counts at
+// max efficiency. `fullEfficiency` is null when the activity has no max.
+export function efficiencyStepsTile(
+  efficiencyOnly: StepsResult,
+  fullEfficiency: StepsResult | null,
+  noGear: StepsResult,
+): StatTile {
+  const max = `Max ${formatNumber(noGear.steps)}`;
+
+  return {
+    key: "efficiencySteps",
+    value: formatNumber(efficiencyOnly.steps),
+    label: "Steps after work efficiency",
+    details: [fullEfficiency ? `Min ${formatNumber(fullEfficiency.steps)} · ${max}` : max],
+    highlight: false,
     over: false,
   };
 }

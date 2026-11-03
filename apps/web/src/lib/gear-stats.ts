@@ -54,7 +54,7 @@ export function statGroups(
   lines: StatLine[],
   efficiency: EfficiencyParts,
   highlighted: GoalStat[],
-  steps: StatTile,
+  steps: StatTile[],
 ): StatGroups {
   const highlightRank = new Map(highlighted.map(({ stat, isPercent }, index) => [`${stat}:${isPercent}`, index]));
   const tile = (line: StatLine): StatTile => ({
@@ -76,7 +76,7 @@ export function statGroups(
 
   return {
     steps: [
-      steps,
+      ...steps,
       efficiencyTile(efficiency),
       ...STEP_STATS.flatMap((stat) => shown.filter((line) => line.stat === stat).map(tile)),
     ],

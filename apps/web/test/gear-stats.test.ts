@@ -3,7 +3,7 @@ import { formatStatValue, locationTiles, statGroups, type StatTile } from "@/lib
 
 describe("statGroups", () => {
   const capped = { cap: 0.2, gear: 0.95, level: 0.25 };
-  const steps = { key: "steps", value: "35", label: "Steps", details: [], highlight: true, over: false };
+  const steps = [{ key: "steps", value: "35", label: "Steps", details: [], highlight: true, over: false }];
   const lines = [
     { stat: "chestFind", isPercent: true, value: 0.69 },
     { stat: "workEfficiency", isPercent: true, value: 0.95 },
