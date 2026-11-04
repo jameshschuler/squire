@@ -12,6 +12,7 @@ import { matchesWords } from "./match";
 
 export interface GearTarget {
   key: string;
+  id: string;
   name: string;
   icon: string;
   skill: SkillLevel;
@@ -62,6 +63,7 @@ export function gearTargets(book: RecipeBook): GearTarget[] {
         ? [
             {
               key: entry.key,
+              id: entry.id,
               name: entry.name,
               icon: entry.icon,
               skill,

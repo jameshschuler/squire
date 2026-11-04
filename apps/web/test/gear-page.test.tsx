@@ -337,6 +337,14 @@ describe("Gear page", () => {
     expect(screen.queryByRole("button", { name: "Start over" })).toBeNull();
   });
 
+  it.each([
+    ["activity:mine_gold_ore", "Mine gold ore", "/activities/mine_gold_ore"],
+    ["recipe:smelt_a_gold_bar", "Smelt a gold bar", "/recipes/smelt_a_gold_bar"],
+  ])("links the chosen %s to its page", async (target, name, href) => {
+    await renderPage({ target, goals: "steps" });
+    expect((await screen.findByRole("link", { name })).getAttribute("href")).toBe(href);
+  });
+
   it("goes back to the question when you tap an answer", async () => {
     await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
     fireEvent.click(await screen.findByRole("button", { name: "Change answer: Mine gold ore" }));

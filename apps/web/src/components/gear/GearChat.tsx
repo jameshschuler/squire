@@ -20,6 +20,7 @@ import { LocationStep } from "./LocationStep";
 import { PriorityQuestion } from "./PriorityQuestion";
 import { GearResult } from "./GearResult";
 import { NoCharacterNote } from "./NoCharacterNote";
+import { TargetAnswer } from "./TargetAnswer";
 import { TargetQuestion } from "./TargetQuestion";
 
 interface GearChatProps {
@@ -80,8 +81,8 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
         )}
       </ChatMessage>
       {target && (
-        <ChatAnswer
-          label={target.name}
+        <TargetAnswer
+          target={target}
           onChange={() => update({ target: undefined, location: undefined, goals: undefined })}
         />
       )}
