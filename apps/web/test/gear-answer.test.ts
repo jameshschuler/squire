@@ -5,6 +5,7 @@ import type { GearTarget } from "@/lib/gear-targets";
 
 const target: GearTarget = {
   key: "activity:mine",
+  id: "mine",
   name: "Mine",
   icon: "",
   skill: { id: "mining", name: "Mining", level: 40 },
