@@ -104,6 +104,7 @@ export function buildRecipeBook(data: GameData): RecipeBook {
   return {
     schema: RECIPE_BOOK_SCHEMA,
     version: data.version,
+    updatedAt: data.fetchedAt,
     recipes: recipes.sort(byLevel),
     activities,
     foods,

@@ -6,7 +6,7 @@ import type { GameData } from "./recipe-book/index.js";
 
 // Bump whenever loadGameData's shape changes (a resource added or reshaped), so an older file is
 // ignored and refetched instead of being built into a broken book. A test pins the resources to it.
-export const GAME_DATA_CACHE_SCHEMA = 1;
+export const GAME_DATA_CACHE_SCHEMA = 2;
 
 // In the API package's node_modules, which git ignores, wherever the server is started from.
 export const DEFAULT_GAME_DATA_CACHE_PATH = fileURLToPath(
