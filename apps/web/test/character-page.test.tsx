@@ -257,6 +257,12 @@ describe("Character page", () => {
       "Mining: Max level",
     ]);
     expect(bars.at(-1)?.getAttribute("aria-valuenow")).toBe("100");
+    expect([...skills.querySelectorAll("li")].map((skill) => skill.textContent)).toEqual([
+      "Agility8561%",
+      "Cooking717%",
+      "Fishing10%",
+      "Mining99Max",
+    ]);
   });
 
   it("shows every pet, owned or not, with the level of the ones owned", async () => {

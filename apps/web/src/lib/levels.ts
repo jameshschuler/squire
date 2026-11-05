@@ -12,3 +12,7 @@ export function nextLevelLabel({ level, gained, needed }: LevelProgress, unit: "
 
   return `${formatNumber(gained)} / ${formatNumber(needed)} ${unit} to level ${level + 1}`;
 }
+
+export function formatLevelPercent(progress: LevelProgress): string {
+  return progress.needed === null ? "Max" : `${Math.floor(levelPercent(progress))}%`;
+}

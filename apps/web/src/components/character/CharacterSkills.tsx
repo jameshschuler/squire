@@ -2,6 +2,7 @@ import { skillProgress, type Character } from "@walkscape-community/gear-optimiz
 import { LevelBar } from "@/components/character/LevelBar";
 import { Section } from "@/components/shared/Section";
 import { formatNumber, formatTitle } from "@/lib/format";
+import { formatLevelPercent } from "@/lib/levels";
 
 export function CharacterSkills({ character }: { character: Character }) {
   const skills = Object.entries(character.skillXp)
@@ -15,7 +16,10 @@ export function CharacterSkills({ character }: { character: Character }) {
           <li key={name} className="min-w-0">
             <div className="flex justify-between gap-2">
               <span className="truncate">{name}</span>
-              <span className="text-muted-foreground tabular-nums">{progress.level}</span>
+              <span className="shrink-0 tabular-nums">
+                {progress.level}
+                <span className="ml-1.5 text-muted-foreground">{formatLevelPercent(progress)}</span>
+              </span>
             </div>
             <LevelBar name={name} progress={progress} unit="XP" className="mt-1" />
           </li>
