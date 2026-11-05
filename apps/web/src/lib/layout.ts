@@ -10,6 +10,15 @@ export type ItemPage = (typeof ITEM_PAGES)[number]["path"];
 
 export type Tab = "recipes" | "items" | "activities" | "gear";
 
+export type ListPage = "/" | ItemPage | "/activities" | "/gear";
+
+const LIST_PAGE_TABS = new Map<string, Tab>([
+  ["/", "recipes"],
+  ...ITEM_PAGES.map(({ path }) => [path, "items"] as const),
+  ["/activities", "activities"],
+  ["/gear", "gear"],
+]);
+
 const isAt = (pathname: string, path: string) => pathname === path || pathname.startsWith(`${path}/`);
 
 export function itemPage(pathname: string): ItemPage | undefined {
@@ -38,4 +47,10 @@ export function activeTab(pathname: string, previousTab: Tab): Tab | undefined {
   }
 
   return "recipes";
+}
+
+// The tab whose search list this page is, so the tab can reopen it with its search. Detail pages
+// aren't list pages.
+export function listPageTab(pathname: string): Tab | undefined {
+  return LIST_PAGE_TABS.get(pathname);
 }

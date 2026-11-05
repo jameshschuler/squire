@@ -17,6 +17,15 @@ const renderWithLinks = () =>
         Bread
       </Link>
       <Link to="/about">About page</Link>
+      <Link to="/" search={{ q: "gold" }}>
+        Search gold
+      </Link>
+      <Link to="/food" search={{ q: "bread" }}>
+        Search bread
+      </Link>
+      <Link to="/recipes/$recipeId" params={{ recipeId: "bake_a_bagel" }}>
+        Bagel
+      </Link>
     </>,
   );
 
@@ -71,5 +80,26 @@ describe("BottomTabBar", () => {
     expect(screen.getByRole("navigation", { name: "Main" }).querySelector('[aria-current="page"]')).toBeNull();
     fireEvent.click(tab("Bread"));
     await waitFor(() => expect(tab("Gear").getAttribute("aria-current")).toBe("page"));
+  });
+
+  it("keeps each tab's search when you switch tabs and come back", async () => {
+    await renderWithLinks();
+    fireEvent.click(tab("Search gold"));
+    await waitFor(() => expect(tab("Recipes").getAttribute("href")).toBe("/?q=gold"));
+    fireEvent.click(tab("Search bread"));
+    await waitFor(() => expect(tab("Items").getAttribute("href")).toBe("/food?q=bread"));
+    fireEvent.click(tab("Gear"));
+    await waitFor(() => expect(tab("Gear").getAttribute("aria-current")).toBe("page"));
+    expect(tab("Recipes").getAttribute("href")).toBe("/?q=gold");
+    expect(tab("Items").getAttribute("href")).toBe("/food?q=bread");
+  });
+
+  it("reopens the search list, not a detail page opened from it", async () => {
+    await renderWithLinks();
+    fireEvent.click(tab("Search gold"));
+    await waitFor(() => expect(tab("Recipes").getAttribute("href")).toBe("/?q=gold"));
+    fireEvent.click(tab("Bagel"));
+    await waitFor(() => expect(tab("Bagel").getAttribute("aria-current")).toBe("page"));
+    expect(tab("Recipes").getAttribute("href")).toBe("/?q=gold");
   });
 });

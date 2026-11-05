@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { activeTab, itemPage } from "@/lib/layout";
+import { activeTab, itemPage, listPageTab } from "@/lib/layout";
 
 describe("itemPage", () => {
   it.each([
@@ -37,5 +37,23 @@ describe("activeTab", () => {
     ["/items/bread", "recipes"],
   ] as const)("keeps the tab you came from on %s (from %s)", (pathname, previous) => {
     expect(activeTab(pathname, previous)).toBe(previous);
+  });
+});
+
+describe("listPageTab", () => {
+  it.each([
+    ["/", "recipes"],
+    ["/materials", "items"],
+    ["/food", "items"],
+    ["/loot", "items"],
+    ["/activities", "activities"],
+    ["/gear", "gear"],
+    ["/activities/mine_gold_ore", undefined],
+    ["/recipes/bake_bread", undefined],
+    ["/items/bread", undefined],
+    ["/favorites", undefined],
+    ["/about", undefined],
+  ])("on %s: %s", (pathname, expected) => {
+    expect(listPageTab(pathname)).toBe(expected);
   });
 });
