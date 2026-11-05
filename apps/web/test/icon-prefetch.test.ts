@@ -7,6 +7,7 @@ const ok = () => Promise.resolve(new Response(null, { status: 200 }));
 const book: RecipeBook = {
   schema: 2,
   version: "v1",
+  updatedAt: "2026-11-01T12:00:00.000Z",
   activities: [],
   foods: [],
   loot: [],

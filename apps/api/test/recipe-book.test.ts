@@ -29,6 +29,12 @@ describe("buildRecipeBook", () => {
     expect(book.schema).toBe(RECIPE_BOOK_SCHEMA);
   });
 
+  it("says when the game data was loaded from WalkScape", () => {
+    expect(
+      buildRecipeBook({ ...(sample as unknown as GameData), fetchedAt: "2026-11-01T12:00:00.000Z" }).updatedAt,
+    ).toBe("2026-11-01T12:00:00.000Z");
+  });
+
   it("sorts recipes by level, lowest first", () => {
     expect(ids(recipes)).toEqual(["smelt_a_gold_bar", "bake_a_bagel", "assemble_dynamite"]);
   });
@@ -517,6 +523,7 @@ describe("recipeBookIcons", () => {
       recipeBookIcons({
         schema: RECIPE_BOOK_SCHEMA,
         version: "v",
+        updatedAt: "2026-11-01T12:00:00.000Z",
         recipes: [{ ...recipe!, icon: "", outputs: [], materials: [] }],
         activities: [],
         foods: [],

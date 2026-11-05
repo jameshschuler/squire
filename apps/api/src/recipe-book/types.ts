@@ -18,7 +18,7 @@ export {
 } from "@walkscape-community/gear-optimizer";
 
 // Bump whenever the RecipeBook shape changes, so cached copies on devices refresh.
-export const RECIPE_BOOK_SCHEMA = 28;
+export const RECIPE_BOOK_SCHEMA = 29;
 
 export interface EffectTarget {
   id: string;
@@ -156,9 +156,11 @@ export interface RewardSource {
 
 export type ItemSource = ActivitySource | ChestSource | ShopSource | AchievementSource | RewardSource;
 
+// `updatedAt` is when the API loaded this game data from WalkScape (an ISO date).
 export interface RecipeBook {
   schema: number;
   version: string;
+  updatedAt: string;
   recipes: RecipeView[];
   activities: ActivityView[];
   foods: ItemWithEffects[];

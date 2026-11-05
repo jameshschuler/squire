@@ -126,6 +126,15 @@ describe("createBookSource", () => {
       expect(log.info).toHaveBeenCalledWith(expect.objectContaining({ from: "cache" }), "Loaded game data");
     });
 
+    it("keeps the time the saved data was fetched, not when the server started", async () => {
+      const cache = memoryCache({ ...savedGameData("v1"), fetchedAt: "2026-10-30T08:00:00.000Z" });
+      const { books, clock } = setup(cache);
+
+      clock.now = Date.parse("2026-11-04T09:00:00.000Z");
+
+      await expect(books()).resolves.toMatchObject({ recipeBook: { updatedAt: "2026-10-30T08:00:00.000Z" } });
+    });
+
     it("refetches and saves the new data when the saved version is out of date", async () => {
       const cache = memoryCache(savedGameData("v0"));
       const { books, calls } = setup(cache);
@@ -137,14 +146,16 @@ describe("createBookSource", () => {
       expect(cache.saved?.version).toBe("v1");
     });
 
-    it("saves the data after a fetch when nothing was saved", async () => {
+    it("saves the data after a fetch when nothing was saved, stamped with when it was fetched", async () => {
       const cache = memoryCache();
-      const { books } = setup(cache);
+      const { books, clock } = setup(cache);
 
-      await books();
+      clock.now = Date.parse("2026-11-04T09:00:00.000Z");
+      const loaded = await books();
 
       expect(cache.write).toHaveBeenCalledTimes(1);
-      expect(cache.saved?.version).toBe("v1");
+      expect(cache.saved).toMatchObject({ version: "v1", fetchedAt: "2026-11-04T09:00:00.000Z" });
+      expect(loaded.recipeBook.updatedAt).toBe("2026-11-04T09:00:00.000Z");
     });
 
     it("serves the saved data when the version check fails, so a WalkScape outage doesn't take the API down", async () => {

@@ -14,8 +14,10 @@ import type {
   SkillDetail,
 } from "@walkscape-community/data-api-client";
 
+// `fetchedAt` is when the API loaded this data from WalkScape (an ISO date).
 export interface GameData {
   version: string;
+  fetchedAt: string;
   recipes: RecipeDetail[];
   items: ItemDetail[];
   skills: SkillDetail[];

@@ -2,7 +2,7 @@ import type { WalkScapeClient } from "@walkscape-community/data-api-client";
 import { isGear } from "@walkscape-community/gear-optimizer";
 import type { GameData } from "./recipe-book/index.js";
 
-export async function loadGameData(client: WalkScapeClient): Promise<GameData> {
+export async function loadGameData(client: WalkScapeClient, fetchedAt = new Date()): Promise<GameData> {
   const [
     { version },
     recipes,
@@ -41,6 +41,7 @@ export async function loadGameData(client: WalkScapeClient): Promise<GameData> {
 
   return {
     version,
+    fetchedAt: fetchedAt.toISOString(),
     recipes,
     items,
     skills,

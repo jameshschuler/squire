@@ -9,6 +9,7 @@ describe("loadGameData", () => {
     const data = await loadGameData(fakeClient("v7").client);
 
     expect(data.version).toBe("v7");
+    expect(Date.parse(data.fetchedAt)).not.toBeNaN();
     expect(data.recipes.map((recipe) => recipe.id)).toContain("smelt_a_gold_bar");
     expect(data.lootTables.map((lootTable) => lootTable.id)).toContain("mining_chest_table");
     expect(data.shops.map((shop) => shop.id)).toEqual(["granfiddich_tool_stall"]);
@@ -18,11 +19,12 @@ describe("loadGameData", () => {
     const data = await loadGameData(fakeClient().client);
 
     expect({ schema: GAME_DATA_CACHE_SCHEMA, resources: Object.keys(data).sort() }).toEqual({
-      schema: 1,
+      schema: 2,
       resources: [
         "achievements",
         "activities",
         "factions",
+        "fetchedAt",
         "gameIds",
         "items",
         "keywords",

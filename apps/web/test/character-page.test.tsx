@@ -26,6 +26,7 @@ const lootItem = (id: string, name: string, isCollectible: boolean): ItemWithEff
 const book = {
   schema: RECIPE_BOOK_SCHEMA,
   version: "v1",
+  updatedAt: "2026-11-01T12:00:00.000Z",
   recipes: [],
   sources: {},
   foods: [],

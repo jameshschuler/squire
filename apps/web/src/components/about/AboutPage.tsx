@@ -1,4 +1,5 @@
 import { BookOpenText, Code, Globe, MessageCircle } from "lucide-react";
+import { DataInfo } from "@/components/about/DataInfo";
 import { BackButton } from "@/components/layout/BackButton";
 
 const LINKS = [
@@ -36,6 +37,7 @@ export function AboutPage() {
           </li>
         ))}
       </ul>
+      <DataInfo />
     </section>
   );
 }

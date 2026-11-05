@@ -51,7 +51,7 @@ export function createBookSource(
 
   async function load(): Promise<Books> {
     const startedAt = now();
-    const data = await loadGameData(client);
+    const data = await loadGameData(client, new Date(startedAt));
 
     cache?.write(data).catch((err: unknown) => log.warn({ err }, "Failed to save game data"));
 
