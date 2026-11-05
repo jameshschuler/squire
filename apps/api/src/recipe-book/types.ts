@@ -18,7 +18,7 @@ export {
 } from "@walkscape-community/gear-optimizer";
 
 // Bump whenever the RecipeBook shape changes, so cached copies on devices refresh.
-export const RECIPE_BOOK_SCHEMA = 30;
+export const RECIPE_BOOK_SCHEMA = 31;
 
 export interface EffectTarget {
   id: string;
