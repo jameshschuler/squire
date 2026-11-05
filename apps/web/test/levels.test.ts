@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { levelPercent, nextLevelLabel } from "@/lib/levels";
+import { formatLevelPercent, levelPercent, nextLevelLabel } from "@/lib/levels";
 
 describe("levelPercent", () => {
   it.each([
@@ -20,5 +20,16 @@ describe("nextLevelLabel", () => {
 
   it("says max level when there's no next level", () => {
     expect(nextLevelLabel({ level: 99, gained: 0, needed: null }, "XP")).toBe("Max level");
+  });
+});
+
+describe("formatLevelPercent", () => {
+  it.each([
+    [{ level: 2, gained: 0, needed: 91 }, "0%"],
+    [{ level: 50, gained: 2_653, needed: 10_612 }, "25%"],
+    [{ level: 70, gained: 999, needed: 1_000 }, "99%"],
+    [{ level: 99, gained: 6_965_569, needed: null }, "Max"],
+  ])("%o reads %s", (progress, expected) => {
+    expect(formatLevelPercent(progress)).toBe(expected);
   });
 });
