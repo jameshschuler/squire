@@ -4,8 +4,8 @@ import { RECIPE_BOOK_SCHEMA, buildRecipeBook, type GameData } from "@squire/api/
 import { RecipeSearch } from "@/components/recipes/RecipeSearch";
 import { FavoritesProvider } from "@/contexts/favorites-context";
 import { GameDataProvider } from "@/contexts/game-data-context";
-import { FAVORITES_STORAGE_KEY } from "@/lib/favorites";
-import { FAVORITES_FILTER } from "@/lib/recipe-filters";
+import { FAVORITES_STORAGE_KEYS } from "@/lib/favorites";
+import { FAVORITES_FILTER } from "@/lib/list-filters";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 import { renderWithRouter } from "./render-with-router";
 
@@ -34,7 +34,7 @@ async function renderSearch(skill: string | undefined, onSkillChange = () => {})
 
 describe("RecipeSearch favorites", () => {
   it("lists only favorites under the Favorites chip, with Clear all", async () => {
-    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(["smelt_a_gold_bar"]));
+    localStorage.setItem(FAVORITES_STORAGE_KEYS.recipe, JSON.stringify(["smelt_a_gold_bar"]));
     await renderSearch(FAVORITES_FILTER);
     expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual([
       expect.stringContaining("Smelt a gold bar"),
@@ -49,7 +49,7 @@ describe("RecipeSearch favorites", () => {
   });
 
   it("drops the chip and the filter after clearing favorites", async () => {
-    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(["smelt_a_gold_bar"]));
+    localStorage.setItem(FAVORITES_STORAGE_KEYS.recipe, JSON.stringify(["smelt_a_gold_bar"]));
     const onSkillChange = vi.fn();
 
     await renderSearch(FAVORITES_FILTER, onSkillChange);

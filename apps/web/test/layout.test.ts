@@ -24,7 +24,6 @@ describe("activeTab", () => {
     ["/activities", "activities"],
     ["/activities/mine_gold_ore", "activities"],
     ["/gear", "gear"],
-    ["/favorites", "recipes"],
     ["/about", undefined],
     ["/character", undefined],
   ])("on %s: %s", (pathname, expected) => {
@@ -51,7 +50,6 @@ describe("listPageTab", () => {
     ["/activities/mine_gold_ore", undefined],
     ["/recipes/bake_bread", undefined],
     ["/items/bread", undefined],
-    ["/favorites", undefined],
     ["/about", undefined],
   ])("on %s: %s", (pathname, expected) => {
     expect(listPageTab(pathname)).toBe(expected);

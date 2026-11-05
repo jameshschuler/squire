@@ -14,7 +14,6 @@ import { Route as ItemsRouteImport } from './routes/_items'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as ActivitiesRouteImport } from './routes/activities'
 import { Route as CharacterRouteImport } from './routes/character'
-import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as GearRouteImport } from './routes/gear'
 import { Route as ItemsFoodRouteImport } from './routes/_items/food'
 import { Route as ItemsLootRouteImport } from './routes/_items/loot'
@@ -45,11 +44,6 @@ const ActivitiesRoute = ActivitiesRouteImport.update({
 const CharacterRoute = CharacterRouteImport.update({
   id: '/character',
   path: '/character',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FavoritesRoute = FavoritesRouteImport.update({
-  id: '/favorites',
-  path: '/favorites',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GearRoute = GearRouteImport.update({
@@ -93,7 +87,6 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/activities': typeof ActivitiesRoute
   '/character': typeof CharacterRoute
-  '/favorites': typeof FavoritesRoute
   '/gear': typeof GearRoute
   '/food': typeof ItemsFoodRoute
   '/loot': typeof ItemsLootRoute
@@ -107,7 +100,6 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/activities': typeof ActivitiesRoute
   '/character': typeof CharacterRoute
-  '/favorites': typeof FavoritesRoute
   '/gear': typeof GearRoute
   '/food': typeof ItemsFoodRoute
   '/loot': typeof ItemsLootRoute
@@ -123,7 +115,6 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/activities': typeof ActivitiesRoute
   '/character': typeof CharacterRoute
-  '/favorites': typeof FavoritesRoute
   '/gear': typeof GearRoute
   '/_items/food': typeof ItemsFoodRoute
   '/_items/loot': typeof ItemsLootRoute
@@ -139,7 +130,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/activities'
     | '/character'
-    | '/favorites'
     | '/gear'
     | '/food'
     | '/loot'
@@ -153,7 +143,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/activities'
     | '/character'
-    | '/favorites'
     | '/gear'
     | '/food'
     | '/loot'
@@ -168,7 +157,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/activities'
     | '/character'
-    | '/favorites'
     | '/gear'
     | '/_items/food'
     | '/_items/loot'
@@ -184,7 +172,6 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   ActivitiesRoute: typeof ActivitiesRoute
   CharacterRoute: typeof CharacterRoute
-  FavoritesRoute: typeof FavoritesRoute
   GearRoute: typeof GearRoute
   ActivitiesActivityIdRoute: typeof ActivitiesActivityIdRoute
   ItemsItemIdRoute: typeof ItemsItemIdRoute
@@ -226,13 +213,6 @@ declare module '@tanstack/react-router' {
       path: '/character'
       fullPath: '/character'
       preLoaderRoute: typeof CharacterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/favorites': {
-      id: '/favorites'
-      path: '/favorites'
-      fullPath: '/favorites'
-      preLoaderRoute: typeof FavoritesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gear': {
@@ -307,7 +287,6 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   ActivitiesRoute: ActivitiesRoute,
   CharacterRoute: CharacterRoute,
-  FavoritesRoute: FavoritesRoute,
   GearRoute: GearRoute,
   ActivitiesActivityIdRoute: ActivitiesActivityIdRoute,
   ItemsItemIdRoute: ItemsItemIdRoute,

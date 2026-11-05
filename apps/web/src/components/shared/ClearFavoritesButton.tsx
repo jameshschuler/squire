@@ -12,8 +12,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useFavoritesContext } from "@/contexts/favorites-context";
+import type { FavoriteKind } from "@/lib/favorites";
 
-export function ClearFavoritesButton({ onCleared }: { onCleared: () => void }) {
+const NAMES: Record<FavoriteKind, string> = { recipe: "recipes", activity: "activities" };
+
+export function ClearFavoritesButton({ kind, onCleared }: { kind: FavoriteKind; onCleared: () => void }) {
   const { clearFavorites } = useFavoritesContext();
 
   return (
@@ -26,16 +29,16 @@ export function ClearFavoritesButton({ onCleared }: { onCleared: () => void }) {
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Clear all favorites?</AlertDialogTitle>
+          <AlertDialogTitle>Clear all favorite {NAMES[kind]}?</AlertDialogTitle>
           <AlertDialogDescription>
-            This removes every favorite on this device. You can't undo it.
+            This removes your favorite {NAMES[kind]} from this device. You can't undo it.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={() => {
-              clearFavorites();
+              clearFavorites(kind);
               onCleared();
             }}
           >
