@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Info, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "./ThemeToggle";
 
 export function AppHeader() {
@@ -20,6 +21,7 @@ export function AppHeader() {
             <Info className="size-5" />
           </Link>
         </Button>
+        <Separator orientation="vertical" className="mx-1.5 data-[orientation=vertical]:h-5" />
         <ThemeToggle />
       </div>
     </header>
