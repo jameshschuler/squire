@@ -33,4 +33,17 @@ describe("AppHeader", () => {
     expect(screen.getByRole("link", { name: "About" }).getAttribute("href")).toBe("/about");
     expect(screen.getByRole("link", { name: "Character" }).getAttribute("href")).toBe("/character");
   });
+
+  it("puts a divider between the page links and the theme toggle", async () => {
+    vi.stubGlobal("matchMedia", () => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
+    await renderWithRouter(
+      <ThemeProvider>
+        <AppHeader />
+      </ThemeProvider>,
+    );
+    const divider = document.querySelector('[data-slot="separator"]');
+
+    expect(divider?.previousElementSibling?.getAttribute("aria-label")).toBe("About");
+    expect(divider?.nextElementSibling?.getAttribute("aria-label")).toMatch(/Switch to/);
+  });
 });
