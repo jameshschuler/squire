@@ -20,6 +20,28 @@ function section(title: string) {
 }
 
 describe("ItemDetail", () => {
+  it("shows a collectible's W.E.A.R. in its own section, after where to get it", async () => {
+    const data = structuredClone(sample) as unknown as GameData;
+
+    data.items.push({
+      ...data.items[0]!,
+      id: "rough_sun_stone",
+      name: "Rough sun stone",
+      type: "collectible",
+    } as GameData["items"][number]);
+    const withCollectible = buildRecipeBook(data);
+
+    await renderWithRouter(<ItemDetail item={findItem(withCollectible, "rough_sun_stone")!} book={withCollectible} />);
+    expect(sectionTitles().slice(-2)).toEqual(["Where to get it", "W.E.A.R."]);
+    expect(section("W.E.A.R.").getByRole("link", { name: /Mine gold ore/ }).textContent).toContain("30,667 steps");
+    expect(section("Where to get it").queryByText(/30,667/)).toBeNull();
+  });
+
+  it("has no W.E.A.R. section for an item without one", async () => {
+    await renderItem("gold_ore");
+    expect(screen.queryByRole("heading", { name: "W.E.A.R." })).toBeNull();
+  });
+
   it("shows a crafted item's recipe, then what uses it, and no sources section when nothing drops it", async () => {
     await renderItem("gold_bar");
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Gold bar");

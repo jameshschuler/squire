@@ -22,10 +22,7 @@ interface CharacterSummaryProps {
 export function CharacterSummary({ character, savedAt, onUpdate }: CharacterSummaryProps) {
   const gameData = useGameDataContext();
   const gearData = useGearDataContext();
-  const collection =
-    gameData.status === "ready"
-      ? collectionOf(gameData.book.loot, gameData.book.sources, character.collectibles)
-      : null;
+  const collection = gameData.status === "ready" ? collectionOf(gameData.book.loot, character.collectibles) : null;
   const pets = gearData.status === "ready" ? petCollection(gearData.gear.pets, character.pets) : null;
   const levelProgress = characterProgress(character.lifetimeSteps);
   const stats = [

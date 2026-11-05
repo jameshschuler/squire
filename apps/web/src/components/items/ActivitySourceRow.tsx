@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import type { ActivitySource } from "@squire/api/recipe-book";
 import { Badge } from "@/components/ui/badge";
 import { GameIcon } from "@/components/shared/GameIcon";
-import { formatSkillLevels, formatStepCount, lootTypeLabel } from "@/lib/format";
+import { formatSkillLevels, lootTypeLabel } from "@/lib/format";
 import { SourceLocations } from "./SourceLocations";
 
 export function ActivitySourceRow({ source }: { source: ActivitySource }) {
@@ -15,14 +15,6 @@ export function ActivitySourceRow({ source }: { source: ActivitySource }) {
         <div className="min-w-0 flex-1">
           <p className="font-medium">{source.name}</p>
           <p className="text-sm text-muted-foreground">{formatSkillLevels(source.skills)}</p>
-          {source.wear !== null && (
-            <p className="text-sm text-muted-foreground tabular-nums">
-              <abbr title="Average steps per item at max work efficiency" className="no-underline">
-                W.E.A.R.
-              </abbr>{" "}
-              {formatStepCount(source.wear)}
-            </p>
-          )}
         </div>
         {label && (
           <Badge variant="outline" className="font-normal text-muted-foreground">

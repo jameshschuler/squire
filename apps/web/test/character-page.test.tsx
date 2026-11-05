@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, cleanup, fireEvent, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, screen } from "@testing-library/react";
 import { RECIPE_BOOK_SCHEMA, type ItemWithEffects } from "@squire/api/recipe-book";
 import { GEAR_DATA_SCHEMA, type GearData, type PetView } from "@walkscape-community/gear-optimizer";
 import exportFixture from "../../../fixtures/character/export.json";
@@ -28,20 +28,7 @@ const book = {
   version: "v1",
   updatedAt: "2026-11-01T12:00:00.000Z",
   recipes: [],
-  sources: {
-    ancient_ankh: [
-      {
-        kind: "activity",
-        id: "desert_foraging",
-        name: "Desert foraging",
-        icon: "",
-        skills: [],
-        lootType: "collectible",
-        locations: [],
-        wear: 101_754,
-      },
-    ],
-  },
+  sources: {},
   foods: [],
   gear: [],
   loot: [
@@ -241,12 +228,11 @@ describe("Character page", () => {
     expect(
       [...list.querySelectorAll("a")].map((link) => [link.getAttribute("aria-label"), link.getAttribute("href")]),
     ).toEqual([
-      ["Ancient ankh, not found yet, W.E.A.R. 101,754 steps", "/items/ancient_ankh"],
+      ["Ancient ankh, not found yet", "/items/ancient_ankh"],
       ["Lost Timmy's sand shovel", "/items/lost_timmys_sand_shovel"],
       ["Soup kitchen badge", "/items/soup_kitchen_badge"],
     ]);
     expect(screen.getByText("Collectibles · 2 of 3")).toBeDefined();
-    expect(within(list).getByText("102K")).toBeDefined();
     expect(screen.queryByText("2 of 3")).toBeNull();
     expect(screen.getByText("2")).toBeDefined();
   });

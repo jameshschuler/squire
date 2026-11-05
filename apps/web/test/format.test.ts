@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  formatCompactNumber,
   formatDateTime,
   formatNumber,
   formatStepCount,
@@ -156,16 +155,5 @@ describe("formatNumber", () => {
     [8_041_266, "8,041,266"],
   ])("formats %i as %s", (value, expected) => {
     expect(formatNumber(value)).toBe(expected);
-  });
-});
-
-describe("formatCompactNumber", () => {
-  it.each([
-    [44, "44"],
-    [43_980, "44K"],
-    [101_754, "102K"],
-    [1_249_000, "1.25M"],
-  ])("formats %i as %s", (value, expected) => {
-    expect(formatCompactNumber(value)).toBe(expected);
   });
 });

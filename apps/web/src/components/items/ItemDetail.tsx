@@ -11,9 +11,11 @@ import { Section } from "@/components/shared/Section";
 import { CollectibleBadge } from "@/components/shared/CollectibleBadge";
 import { GameIcon } from "@/components/shared/GameIcon";
 import { QualityBadge } from "@/components/shared/QualityBadge";
+import { wearSources } from "@/lib/wear";
 import { ItemEffectsSection } from "./ItemEffectsSection";
 import { ItemKeywords } from "./ItemKeywords";
 import { ItemSources } from "./ItemSources";
+import { ItemWear } from "./ItemWear";
 
 interface ItemDetailProps {
   item: ItemWithEffects;
@@ -24,6 +26,7 @@ export function ItemDetail({ item, book }: ItemDetailProps) {
   const madeBy = useMemo(() => findRecipesByOutput(book.recipes, item.id), [book, item.id]);
   const usedIn = useMemo(() => findRecipesByMaterial(book.recipes, item.id), [book, item.id]);
   const sources = book.sources[item.id] ?? [];
+  const wear = wearSources(sources);
   const isCrafted = madeBy.length > 0;
 
   return (
@@ -63,6 +66,7 @@ export function ItemDetail({ item, book }: ItemDetailProps) {
           <ItemSources sources={sources} />
         </Section>
       )}
+      {wear.length > 0 && <ItemWear sources={wear} />}
     </article>
   );
 }

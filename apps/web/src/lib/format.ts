@@ -87,9 +87,3 @@ const DATE_TIME = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeSt
 export function formatDateTime(iso: string): string {
   return DATE_TIME.format(new Date(iso));
 }
-
-const COMPACT = new Intl.NumberFormat("en-US", { notation: "compact", maximumSignificantDigits: 3 });
-
-export function formatCompactNumber(value: number): string {
-  return COMPACT.format(value);
-}

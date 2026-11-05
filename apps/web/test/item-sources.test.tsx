@@ -47,17 +47,6 @@ describe("ItemSources", () => {
     expect(screen.getAllByText("Gem find")).toHaveLength(1);
   });
 
-  it("shows a source's W.E.A.R. when it has one", async () => {
-    await renderWithRouter(
-      <ItemSources
-        sources={[source({ lootType: "collectible", wear: 101_754 }), source({ id: "mine", name: "Mining" })]}
-      />,
-    );
-    expect(screen.getAllByText(/W\.E\.A\.R\./).map((line) => line.closest("p")?.textContent)).toEqual([
-      "W.E.A.R. 101,754 steps",
-    ]);
-  });
-
   it("says when an activity has no known location", async () => {
     await renderWithRouter(<ItemSources sources={[source({ locations: [] })]} />);
     expect(screen.getByText("No known location")).toBeDefined();
