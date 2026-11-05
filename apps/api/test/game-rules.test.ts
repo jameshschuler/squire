@@ -11,7 +11,10 @@ import {
   getServiceKeywords,
   isServiceRequirement,
   isSkillLevelRequirement,
+  itemsPerAction,
+  itemsPerRoll,
   meetsServiceTier,
+  wearOf,
 } from "../src/recipe-book/game-rules.js";
 const service = (requirement: ServiceRequirement["requirement"]): ServiceRequirement => ({
   type: "service",
@@ -71,5 +74,73 @@ describe("getLootTableItemIds", () => {
     } as unknown as LootTableDetail;
 
     expect(getLootTableItemIds(table)).toEqual(["a", "b"]);
+  });
+});
+
+const row = (rowItemID: string | null, rowWeight: number, rowMinimumAmount = 1, rowMaximumAmount = 1) => ({
+  rowItemID,
+  rowWeight,
+  rowMinimumAmount,
+  rowMaximumAmount,
+});
+
+const lootTable = (id: string, noDropChance: number, rows: ReturnType<typeof row>[]) =>
+  ({ id, noDropChance, tableRows: rows, subTables: [] }) as unknown as LootTableDetail;
+
+const tinkering = lootTable("tinkering", 0.75, [
+  row(null, 10, 3, 6),
+  row("wire_saw", 0.08),
+  row("metal_scrap", 5, 2, 20),
+  row("wood_scrap", 5, 2, 20),
+]);
+const willowTear = lootTable("willow_tear", 0.9997, [row("weeping_willow_tear", 10)]);
+
+describe("itemsPerRoll", () => {
+  it.each([
+    ["a single-row collectible table", willowTear, "weeping_willow_tear", 0.0003],
+    ["a rare row among others", tinkering, "wire_saw", (0.25 * 0.08) / 20.08],
+    ["the average of a row's amounts", tinkering, "metal_scrap", (0.25 * 5 * 11) / 20.08],
+    ["an item the table doesn't drop", tinkering, "gold_ore", 0],
+    ["an empty table", lootTable("empty", 0, []), "gold_ore", 0],
+  ])("handles %s", (_, table, itemId, expected) => {
+    expect(itemsPerRoll(table, itemId)).toBeCloseTo(expected, 10);
+  });
+});
+
+describe("itemsPerAction", () => {
+  const tables = new Map([willowTear, tinkering].map((table) => [table.id, table]));
+  const ref = (rollAmount: number, ids: string[]) => ({
+    isPrimary: false,
+    type: ["collectible"],
+    rollAmount,
+    tables: ids,
+  });
+
+  it.each([
+    ["one roll", [ref(1, ["willow_tear"])], 0.0003],
+    ["each roll", [ref(2, ["willow_tear"])], 0.0006],
+    ["every table and reference", [ref(1, ["willow_tear", "willow_tear"]), ref(1, ["willow_tear"])], 0.0009],
+    ["no rolls", [ref(0, ["willow_tear"])], 0],
+    ["a missing table", [ref(1, ["gone"])], 0],
+  ])("counts %s", (_, refs, expected) => {
+    expect(itemsPerAction(refs, tables, "weeping_willow_tear")).toBeCloseTo(expected, 10);
+  });
+});
+
+describe("wearOf", () => {
+  it("matches the wiki's Wire saw: 44,000 steps from Tinkering at max work efficiency", () => {
+    expect(wearOf(92, 2.1, itemsPerRoll(tinkering, "wire_saw"))).toBe(44_176);
+  });
+
+  it("rounds steps per action up, as the game does", () => {
+    expect(wearOf(100, 1.5, 0.001)).toBe(67_000);
+  });
+
+  it.each([
+    ["no work required", null, 2, 0.01],
+    ["no max work efficiency", 100, null, 0.01],
+    ["nothing dropped per action", 100, 2, 0],
+  ])("is null with %s", (_, work, efficiency, perAction) => {
+    expect(wearOf(work, efficiency, perAction)).toBeNull();
   });
 });

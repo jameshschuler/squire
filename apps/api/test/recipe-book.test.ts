@@ -279,6 +279,18 @@ describe("activities", () => {
     expect(activity!.drops.map((drop) => drop.lootType)).toEqual(["main", "gem", "chestTable"]);
   });
 
+  it("gives W.E.A.R. only to collectibles, whatever table drops them", () => {
+    const [activity] = activitiesWith((data) => {
+      data.items.push({ ...data.items[0]!, id: "rough_sun_stone", type: "collectible" } as ItemDetail);
+    });
+
+    expect(activity!.drops.map((drop) => [drop.lootType, drop.items.map((item) => item.wear)])).toEqual([
+      ["main", [null]],
+      ["gem", [null, 30_667]],
+      ["chestTable", [null]],
+    ]);
+  });
+
   it("lists an item once per loot type, even when several tables drop it", () => {
     const [activity] = activitiesWith((data) => {
       data.activities[0]!.tables![0]!.tables.push("mine_gold_ore");
@@ -554,8 +566,35 @@ describe("sources", () => {
         skills: [{ id: "mining", name: "Mining", level: 40 }],
         lootType: "main",
         locations: [{ id: "crown_of_cinders", name: "Crown of Cinders", region: "Wrentmark" }],
+        wear: null,
       },
     ]);
+  });
+
+  it("gives a collectible's source its W.E.A.R.: average steps per item at max work efficiency", () => {
+    const sources = withActivity((data) => {
+      data.items.push({ ...data.items[0]!, id: "rough_sun_stone", type: "collectible" } as ItemDetail);
+    });
+
+    expect(sources.rough_sun_stone).toMatchObject([{ id: "mine_gold_ore", wear: Math.round(40 / (0.01 * (3 / 23))) }]);
+  });
+
+  it("rounds steps per action up before working out W.E.A.R.", () => {
+    const sources = withActivity((data) => {
+      data.items.push({ ...data.items[0]!, id: "rough_sun_stone", type: "collectible" } as ItemDetail);
+      data.activities[0]!.maxWorkEfficiency = 1.6;
+    });
+
+    expect(sources.rough_sun_stone).toMatchObject([{ wear: Math.round(43 / (0.01 * (3 / 23))) }]);
+  });
+
+  it("has no W.E.A.R. for a collectible from an activity without max work efficiency", () => {
+    const sources = withActivity((data) => {
+      data.items.push({ ...data.items[0]!, id: "rough_sun_stone", type: "collectible" } as ItemDetail);
+      data.activities[0]!.maxWorkEfficiency = null;
+    });
+
+    expect(sources.rough_sun_stone).toMatchObject([{ wear: null }]);
   });
 
   it("has no entry for a material nothing drops", () => {
