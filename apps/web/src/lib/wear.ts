@@ -17,3 +17,9 @@ export function itemWear(sources: ItemSource[]): ItemWear | null {
 
   return { steps: fastest.steps, from: rated.length > 1 ? fastest.name : null };
 }
+
+export function wearDescription({ from }: ItemWear): string {
+  const description = "Average steps to get one at max work efficiency";
+
+  return from ? `${description}, from ${from}` : description;
+}

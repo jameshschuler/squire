@@ -20,7 +20,7 @@ function section(title: string) {
 }
 
 describe("ItemDetail", () => {
-  it("shows a collectible's W.E.A.R. in its own section, after where to get it", async () => {
+  it("tags a collectible with its W.E.A.R. under the header, not in a section", async () => {
     const data = structuredClone(sample) as unknown as GameData;
 
     data.items.push({
@@ -32,16 +32,15 @@ describe("ItemDetail", () => {
     const withCollectible = buildRecipeBook(data);
 
     await renderWithRouter(<ItemDetail item={findItem(withCollectible, "rough_sun_stone")!} book={withCollectible} />);
-    expect(sectionTitles().slice(-2)).toEqual(["Where to get it", "W.E.A.R."]);
-    expect(section("W.E.A.R.").getByText("30,667 steps").parentElement!.textContent).toBe(
-      "30,667 steps to get one at max work efficiency",
+    expect(screen.getByText("W.E.A.R. 30,667 steps").getAttribute("title")).toBe(
+      "Average steps to get one at max work efficiency",
     );
-    expect(section("Where to get it").queryByText(/30,667/)).toBeNull();
+    expect(sectionTitles()).not.toContain("W.E.A.R.");
   });
 
-  it("has no W.E.A.R. section for an item without one", async () => {
+  it("has no W.E.A.R. tag for an item without one", async () => {
     await renderItem("gold_ore");
-    expect(screen.queryByRole("heading", { name: "W.E.A.R." })).toBeNull();
+    expect(screen.queryByText(/W\.E\.A\.R\./)).toBeNull();
   });
 
   it("shows a crafted item's recipe, then what uses it, and no sources section when nothing drops it", async () => {

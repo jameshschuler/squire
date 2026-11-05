@@ -15,7 +15,7 @@ import { itemWear } from "@/lib/wear";
 import { ItemEffectsSection } from "./ItemEffectsSection";
 import { ItemKeywords } from "./ItemKeywords";
 import { ItemSources } from "./ItemSources";
-import { ItemWear } from "./ItemWear";
+import { WearBadge } from "./WearBadge";
 
 interface ItemDetailProps {
   item: ItemWithEffects;
@@ -43,6 +43,11 @@ export function ItemDetail({ item, book }: ItemDetailProps) {
           item.quality && !item.effects?.tiers.length && <QualityBadge quality={item.quality} />
         )}
       </div>
+      {wear && (
+        <div className="-mt-3">
+          <WearBadge wear={wear} />
+        </div>
+      )}
       {item.keywords.length > 0 && (
         <Section title="Keywords">
           <ItemKeywords keywords={item.keywords} />
@@ -66,7 +71,6 @@ export function ItemDetail({ item, book }: ItemDetailProps) {
           <ItemSources sources={sources} />
         </Section>
       )}
-      {wear && <ItemWear wear={wear} />}
     </article>
   );
 }
