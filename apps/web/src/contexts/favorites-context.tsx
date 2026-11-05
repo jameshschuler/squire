@@ -1,23 +1,30 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { FAVORITES_STORAGE_KEY, parseFavorites, toggleFavorite } from "@/lib/favorites";
+import { FAVORITES_STORAGE_KEYS, parseFavorites, toggleFavorite, type FavoriteKind } from "@/lib/favorites";
+
+type Favorites = Record<FavoriteKind, string[]>;
 
 interface FavoritesContextValue {
-  favoriteIds: string[];
-  isFavorite: (recipeId: string) => boolean;
-  toggleFavorite: (recipeId: string) => void;
-  clearFavorites: () => void;
+  favoriteIds: (kind: FavoriteKind) => string[];
+  isFavorite: (kind: FavoriteKind, id: string) => boolean;
+  toggleFavorite: (kind: FavoriteKind, id: string) => void;
+  clearFavorites: (kind: FavoriteKind) => void;
 }
 
 const FavoritesContext = createContext<FavoritesContextValue | undefined>(undefined);
-const readFavorites = () => parseFavorites(localStorage.getItem(FAVORITES_STORAGE_KEY));
+const readFavorites = (kind: FavoriteKind) => parseFavorites(localStorage.getItem(FAVORITES_STORAGE_KEYS[kind]));
+const KINDS: FavoriteKind[] = ["recipe", "activity"];
+const KIND_BY_KEY = new Map(KINDS.map((kind) => [FAVORITES_STORAGE_KEYS[kind], kind]));
+const readAll = () => Object.fromEntries(KINDS.map((kind) => [kind, readFavorites(kind)])) as Favorites;
 
 export function FavoritesProvider({ children }: { children: ReactNode }) {
-  const [favoriteIds, setFavoriteIds] = useState(readFavorites);
+  const [favorites, setFavorites] = useState(readAll);
 
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
-      if (event.key === FAVORITES_STORAGE_KEY) {
-        setFavoriteIds(readFavorites());
+      const kind = event.key ? KIND_BY_KEY.get(event.key) : undefined;
+
+      if (kind) {
+        setFavorites((current) => ({ ...current, [kind]: readFavorites(kind) }));
       }
     };
 
@@ -26,16 +33,16 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     return () => removeEventListener("storage", onStorage);
   }, []);
 
-  const saveFavorites = (next: string[]) => {
-    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(next));
-    setFavoriteIds(next);
+  const saveFavorites = (kind: FavoriteKind, next: string[]) => {
+    localStorage.setItem(FAVORITES_STORAGE_KEYS[kind], JSON.stringify(next));
+    setFavorites((current) => ({ ...current, [kind]: next }));
   };
 
   const value: FavoritesContextValue = {
-    favoriteIds,
-    isFavorite: (recipeId) => favoriteIds.includes(recipeId),
-    toggleFavorite: (recipeId) => saveFavorites(toggleFavorite(favoriteIds, recipeId)),
-    clearFavorites: () => saveFavorites([]),
+    favoriteIds: (kind) => favorites[kind],
+    isFavorite: (kind, id) => favorites[kind].includes(id),
+    toggleFavorite: (kind, id) => saveFavorites(kind, toggleFavorite(readFavorites(kind), id)),
+    clearFavorites: (kind) => saveFavorites(kind, []),
   };
 
   return <FavoritesContext.Provider value={value}>{children}</FavoritesContext.Provider>;

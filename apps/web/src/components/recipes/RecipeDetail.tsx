@@ -1,9 +1,9 @@
 import type { RecipeView } from "@squire/api/recipe-book";
 import { BackButton } from "@/components/layout/BackButton";
 import { Badge } from "@/components/ui/badge";
+import { FavoriteButton } from "@/components/shared/FavoriteButton";
 import { GameIcon } from "@/components/shared/GameIcon";
 import { formatSkillLevel } from "@/lib/format";
-import { FavoriteButton } from "./FavoriteButton";
 import { RecipeItemRow } from "./RecipeItemRow";
 import { Section } from "@/components/shared/Section";
 import { WorkBadges } from "@/components/shared/WorkBadges";
@@ -19,7 +19,7 @@ export function RecipeDetail({ recipe }: { recipe: RecipeView }) {
             <GameIcon path={recipe.icon} size={48} />
             {recipe.name}
           </h1>
-          <FavoriteButton recipeId={recipe.id} />
+          <FavoriteButton kind="recipe" id={recipe.id} />
         </div>
         <div className="flex flex-wrap gap-2">
           {recipe.skills.map((skill) => (

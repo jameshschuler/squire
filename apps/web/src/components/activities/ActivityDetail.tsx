@@ -1,5 +1,6 @@
 import type { ActivityView } from "@squire/api/recipe-book";
 import { BackButton } from "@/components/layout/BackButton";
+import { FavoriteButton } from "@/components/shared/FavoriteButton";
 import { GameIcon } from "@/components/shared/GameIcon";
 import { LocationRow } from "@/components/shared/LocationRow";
 import { Section } from "@/components/shared/Section";
@@ -15,10 +16,13 @@ export function ActivityDetail({ activity }: { activity: ActivityView }) {
     <article className="space-y-6 pt-2">
       <BackButton />
       <header className="space-y-3">
-        <h1 className="flex items-center gap-3 text-2xl font-semibold">
-          <GameIcon path={activity.icon} size={48} />
-          {activity.name}
-        </h1>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="flex min-w-0 items-center gap-3 text-2xl font-semibold">
+            <GameIcon path={activity.icon} size={48} />
+            {activity.name}
+          </h1>
+          <FavoriteButton kind="activity" id={activity.id} />
+        </div>
         <div className="flex flex-wrap gap-2">
           {activity.skills.map((skill) => (
             <Badge key={skill.id} variant="secondary">

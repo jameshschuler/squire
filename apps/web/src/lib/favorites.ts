@@ -1,6 +1,9 @@
-import type { RecipeView } from "@squire/api/recipe-book";
+export type FavoriteKind = "recipe" | "activity";
 
-export const FAVORITES_STORAGE_KEY = "squire-favorites";
+export const FAVORITES_STORAGE_KEYS: Record<FavoriteKind, string> = {
+  recipe: "squire-favorites",
+  activity: "squire-activity-favorites",
+};
 
 export function parseFavorites(stored: string | null): string[] {
   try {
@@ -12,12 +15,12 @@ export function parseFavorites(stored: string | null): string[] {
   }
 }
 
-export function toggleFavorite(favoriteIds: string[], recipeId: string): string[] {
-  return favoriteIds.includes(recipeId) ? favoriteIds.filter((id) => id !== recipeId) : [recipeId, ...favoriteIds];
+export function toggleFavorite(favoriteIds: string[], id: string): string[] {
+  return favoriteIds.includes(id) ? favoriteIds.filter((favoriteId) => favoriteId !== id) : [id, ...favoriteIds];
 }
 
-export function favoriteRecipes(recipes: RecipeView[], favoriteIds: string[]): RecipeView[] {
-  const byId = new Map(recipes.map((recipe) => [recipe.id, recipe]));
+export function favoritesIn<T extends { id: string }>(entries: T[], favoriteIds: string[]): T[] {
+  const byId = new Map(entries.map((entry) => [entry.id, entry]));
 
   return favoriteIds.flatMap((id) => byId.get(id) ?? []);
 }

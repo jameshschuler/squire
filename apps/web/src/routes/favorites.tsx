@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { FAVORITES_FILTER } from "@/lib/recipe-filters";
+import { FAVORITES_FILTER } from "@/lib/list-filters";
 
 export const Route = createFileRoute("/favorites")({
   beforeLoad: () => {
