@@ -2,14 +2,16 @@ import type {
   ActivitiesRequirement,
   ActivityDetail,
   KeywordInput,
+  LootTable,
   LootTableDetail,
   SpecificInput,
 } from "@walkscape-community/data-api-client";
-import { itemsIn, lootTypeOf } from "./game-rules.js";
+import { itemsIn, itemsPerAction, lootTypeOf, wearOf } from "./game-rules.js";
 import { skillLevels, xpRewards } from "./lookup.js";
 import { byActivityLevel } from "./order.js";
 import { humanize, spaced } from "@walkscape-community/gear-optimizer";
 import type {
+  ActivityDrop,
   ActivityDrops,
   ActivityNeed,
   ActivityView,
@@ -156,21 +158,35 @@ function useOf(input: KeywordInput | SpecificInput, { summary, skillName }: Acti
 }
 
 function dropsOf(activity: ActivityDetail, { summary, tables }: ActivityIndexes): ActivityDrops[] {
-  const byType = new Map<LootType, Set<string>>();
+  const refsByType = new Map<LootType, LootTable[]>();
 
   for (const ref of activity.tables ?? []) {
     const lootType = lootTypeOf(ref);
-    const itemIds = byType.get(lootType) ?? new Set<string>();
+    const refs = refsByType.get(lootType);
 
-    for (const itemId of itemsIn(ref, tables)) {
-      itemIds.add(itemId);
+    if (refs) {
+      refs.push(ref);
+    } else {
+      refsByType.set(lootType, [ref]);
     }
-
-    byType.set(lootType, itemIds);
   }
 
-  return [...byType]
-    .filter(([, itemIds]) => itemIds.size > 0)
-    .map(([lootType, itemIds]) => ({ lootType, items: [...itemIds].map(summary) }))
+  const dropOf = (refs: LootTable[], itemId: string): ActivityDrop => {
+    const item = summary(itemId);
+    const perAction = itemsPerAction(refs, tables, itemId);
+
+    return {
+      ...item,
+      wear: item.isCollectible ? wearOf(activity.workRequired, activity.maxWorkEfficiency, perAction) : null,
+    };
+  };
+
+  return [...refsByType]
+    .map(([lootType, refs]) => {
+      const itemIds = new Set(refs.flatMap((ref) => itemsIn(ref, tables)));
+
+      return { lootType, items: [...itemIds].map((itemId) => dropOf(refs, itemId)) };
+    })
+    .filter((drops) => drops.items.length > 0)
     .sort((left, right) => (LOOT_RANK.get(left.lootType) ?? -1) - (LOOT_RANK.get(right.lootType) ?? -1));
 }

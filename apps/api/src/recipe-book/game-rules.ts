@@ -49,3 +49,37 @@ export function itemsIn(ref: LootTable, tables: Map<string, LootTableDetail>): s
 export function lootTypeOf(ref: LootTable): LootType {
   return (ref.isPrimary ? "main" : (ref.type[0] ?? "secondary")) as LootType;
 }
+
+export function itemsPerRoll(table: LootTableDetail, itemId: string): number {
+  const rows = table.tableRows ?? [];
+  const totalWeight = rows.reduce((sum, row) => sum + row.rowWeight, 0);
+  const itemWeight = rows
+    .filter((row) => row.rowItemID === itemId)
+    .reduce((sum, row) => sum + (row.rowWeight * (row.rowMinimumAmount + row.rowMaximumAmount)) / 2, 0);
+
+  return totalWeight > 0 ? ((1 - table.noDropChance) * itemWeight) / totalWeight : 0;
+}
+
+export function itemsPerAction(refs: LootTable[], tables: Map<string, LootTableDetail>, itemId: string): number {
+  return refs.reduce(
+    (sum, ref) =>
+      ref.tables.reduce((refSum, id) => {
+        const table = tables.get(id);
+
+        return refSum + (table ? ref.rollAmount * itemsPerRoll(table, itemId) : 0);
+      }, sum),
+    0,
+  );
+}
+
+export function wearOf(
+  workRequired: number | null,
+  maxWorkEfficiency: number | null,
+  perAction: number,
+): number | null {
+  if (!workRequired || !maxWorkEfficiency || perAction <= 0) {
+    return null;
+  }
+
+  return Math.round(Math.ceil(workRequired / maxWorkEfficiency) / perAction);
+}

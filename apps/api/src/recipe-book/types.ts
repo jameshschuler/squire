@@ -18,7 +18,7 @@ export {
 } from "@walkscape-community/gear-optimizer";
 
 // Bump whenever the RecipeBook shape changes, so cached copies on devices refresh.
-export const RECIPE_BOOK_SCHEMA = 29;
+export const RECIPE_BOOK_SCHEMA = 31;
 
 export interface EffectTarget {
   id: string;
@@ -94,9 +94,14 @@ export interface ActivityNeed {
   item: ItemSummary | null;
 }
 
+// `wear` is W.E.A.R.: the average steps per item at max work efficiency. Only collectibles have one.
+export interface ActivityDrop extends ItemSummary {
+  wear: number | null;
+}
+
 export interface ActivityDrops {
   lootType: LootType;
-  items: ItemSummary[];
+  items: ActivityDrop[];
 }
 
 export interface ActivityView {
@@ -122,6 +127,7 @@ export interface ActivitySource {
   skills: SkillLevel[];
   lootType: LootType;
   locations: LocationSummary[];
+  wear: number | null;
 }
 
 export interface ChestSource {
