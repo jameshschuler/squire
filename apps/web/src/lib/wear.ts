@@ -1,9 +1,19 @@
-import type { ActivitySource, ItemSource } from "@squire/api/recipe-book";
+import type { ItemSource } from "@squire/api/recipe-book";
 
-export type WearSource = ActivitySource & { wear: number };
+export interface ItemWear {
+  steps: number;
+  from: string | null;
+}
 
-export function wearSources(sources: ItemSource[]): WearSource[] {
-  return sources
-    .filter((source): source is WearSource => source.kind === "activity" && source.wear !== null)
-    .sort((faster, slower) => faster.wear - slower.wear);
+export function itemWear(sources: ItemSource[]): ItemWear | null {
+  const rated = sources.flatMap((source) =>
+    source.kind === "activity" && source.wear !== null ? [{ steps: source.wear, name: source.name }] : [],
+  );
+  const [fastest] = rated.sort((faster, slower) => faster.steps - slower.steps);
+
+  if (!fastest) {
+    return null;
+  }
+
+  return { steps: fastest.steps, from: rated.length > 1 ? fastest.name : null };
 }

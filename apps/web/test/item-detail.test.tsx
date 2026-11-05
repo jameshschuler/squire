@@ -33,7 +33,9 @@ describe("ItemDetail", () => {
 
     await renderWithRouter(<ItemDetail item={findItem(withCollectible, "rough_sun_stone")!} book={withCollectible} />);
     expect(sectionTitles().slice(-2)).toEqual(["Where to get it", "W.E.A.R."]);
-    expect(section("W.E.A.R.").getByRole("link", { name: /Mine gold ore/ }).textContent).toContain("30,667 steps");
+    expect(section("W.E.A.R.").getByText("30,667 steps").parentElement!.textContent).toBe(
+      "30,667 steps to get one at max work efficiency",
+    );
     expect(section("Where to get it").queryByText(/30,667/)).toBeNull();
   });
 
