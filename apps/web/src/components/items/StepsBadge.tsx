@@ -9,7 +9,7 @@ export function StepsBadge({ steps }: { steps: ItemSteps }) {
       title={itemStepsDescription(steps)}
       className="font-normal text-muted-foreground tabular-nums"
     >
-      {formatStepCount(steps.steps)} each
+      ~{formatStepCount(steps.steps)} on average
     </Badge>
   );
 }

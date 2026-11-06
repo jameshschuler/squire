@@ -54,9 +54,9 @@ describe("formatDropSteps", () => {
     ({ stepsEach, stepsRange }) as ActivityDrop;
 
   it.each([
-    ["one number", drop(103_333), "103,333 steps each"],
-    ["a range when it changes with level", drop(116, { min: 116, max: 805 }), "116–805 steps each"],
-    ["nothing without steps each", drop(null), null],
+    ["one number", drop(103_333), "~103,333 steps on average"],
+    ["a range when it changes with level", drop(116, { min: 116, max: 805 }), "~116–805 steps on average"],
+    ["nothing without an average", drop(null), null],
   ])("shows %s", (_, input, expected) => {
     expect(formatDropSteps(input)).toBe(expected);
   });

@@ -35,8 +35,8 @@ export function formatDropSteps({ stepsEach, stepsRange }: ActivityDrop): string
   }
 
   return stepsRange
-    ? `${formatNumber(stepsRange.min)}–${formatNumber(stepsRange.max)} steps each`
-    : `${formatStepCount(stepsEach)} each`;
+    ? `~${formatNumber(stepsRange.min)}–${formatNumber(stepsRange.max)} steps on average`
+    : `~${formatStepCount(stepsEach)} on average`;
 }
 
 export function dropStepsDescription({ stepsEach, stepsRange }: ActivityDrop): string {

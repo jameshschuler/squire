@@ -23,21 +23,21 @@ const renderActivity = (activity: ActivityView) =>
   );
 
 describe("ActivityDetail", () => {
-  it("shows each drop's steps each", async () => {
+  it("shows each drop's average steps", async () => {
     await renderActivity(goldOre);
-    expect(screen.getByText("40 steps each").getAttribute("title")).toBe(
+    expect(screen.getByText("~40 steps on average").getAttribute("title")).toBe(
       "Average steps to get one at max work efficiency",
     );
   });
 
-  it("shows nothing under a drop without steps each", async () => {
+  it("shows nothing under a drop without an average", async () => {
     const [drops] = goldOre.drops;
 
     await renderActivity({
       ...goldOre,
       drops: [{ ...drops!, items: drops!.items.map((item) => ({ ...item, stepsEach: null })) }],
     });
-    expect(screen.queryByText(/steps each/)).toBeNull();
+    expect(screen.queryByText(/steps on average/)).toBeNull();
   });
 
   it("shows a range for a drop whose rate changes with skill level", async () => {
@@ -48,7 +48,7 @@ describe("ActivityDetail", () => {
       ...goldOre,
       drops: [{ ...drops!, items: [{ ...gold!, stepsEach: 116, stepsRange: { min: 116, max: 805 } }] }],
     });
-    expect(screen.getByText("116–805 steps each").getAttribute("title")).toBe(
+    expect(screen.getByText("~116–805 steps on average").getAttribute("title")).toBe(
       "Average steps to get one at max work efficiency. Changes with skill level: 116 steps once every drop here is at its full rate.",
     );
   });
