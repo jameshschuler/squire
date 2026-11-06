@@ -106,6 +106,7 @@ I know the domain. The problem is answers buried under qualifiers, shorthand, an
 
 ### Hard rules
 
+- **Wait for my review before committing.** Finish the change, run the checks and tell me what changed. Don't commit, push or open a pull request until I've reviewed it and told you to go ahead. This applies to every change, including small follow-ups on an open pull request.
 - **Never push to the default branch (`main`).** All changes land via pull request. Branch → commit → open PR.
 - **Never create a new repository without confirming with me first.** Ask before any `gh repo create` or equivalent.
 - **Never create a repo, fork, or push outside `jameshschuler`** without explicit confirmation.
@@ -122,7 +123,7 @@ Before every commit, run `pnpm format:check`, `pnpm lint`, `pnpm test`, `pnpm ty
 
 ### Commit messages
 
-Prefix with one of: `feat:`, `fix:`, `improvement:`, `docs:`, `refactor:`, `ci:`, `chore:`, `revert:`. An optional scope is fine (`feat(web):`, `fix(api):`). Concise description after the prefix. Commit often; avoid heavy refactoring and unrelated dependency changes in the same commit.
+Prefix with one of: `feat:`, `fix:`, `improvement:`, `docs:`, `refactor:`, `ci:`, `chore:`, `revert:`. An optional scope is fine (`feat(web):`, `fix(api):`). Concise description after the prefix. Keep each commit focused; avoid heavy refactoring and unrelated dependency changes in the same commit.
 
 ### Pull requests
 
