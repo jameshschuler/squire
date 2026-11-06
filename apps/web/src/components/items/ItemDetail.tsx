@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import {
   findRecipesByOutput,
@@ -12,6 +13,7 @@ import { CollectibleBadge } from "@/components/shared/CollectibleBadge";
 import { GameIcon } from "@/components/shared/GameIcon";
 import { QualityBadge } from "@/components/shared/QualityBadge";
 import { itemSteps } from "@/lib/drop-rates";
+import { petHatchingFrom } from "@/lib/pets";
 import { ItemEffectsSection } from "./ItemEffectsSection";
 import { ItemKeywords } from "./ItemKeywords";
 import { ItemSources } from "./ItemSources";
@@ -28,6 +30,7 @@ export function ItemDetail({ item, book }: ItemDetailProps) {
   const sources = book.sources[item.id] ?? [];
   const steps = itemSteps(item, sources);
   const isCrafted = madeBy.length > 0;
+  const hatchesInto = petHatchingFrom(book.pets, item.id);
 
   return (
     <article className="space-y-6 pt-2">
@@ -51,6 +54,14 @@ export function ItemDetail({ item, book }: ItemDetailProps) {
       {item.keywords.length > 0 && (
         <Section title="Keywords">
           <ItemKeywords keywords={item.keywords} />
+        </Section>
+      )}
+      {hatchesInto && (
+        <Section title="Hatches into">
+          <Link to="/pets/$petId" params={{ petId: hatchesInto.id }} className="flex items-center gap-3 py-2">
+            <GameIcon path={hatchesInto.icon} />
+            <span className="font-medium">{hatchesInto.name}</span>
+          </Link>
         </Section>
       )}
       {item.effects && <ItemEffectsSection key={item.id} effects={item.effects} />}

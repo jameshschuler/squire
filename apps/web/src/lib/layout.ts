@@ -30,7 +30,7 @@ export function activeTab(pathname: string, previousTab: Tab): Tab | undefined {
     return previousTab;
   }
 
-  if (isAt(pathname, "/about") || isAt(pathname, "/character")) {
+  if (isAt(pathname, "/about") || isAt(pathname, "/character") || isAt(pathname, "/pets")) {
     return undefined;
   }
 

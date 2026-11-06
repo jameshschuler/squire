@@ -69,7 +69,7 @@ describe("GET /api/gear", () => {
   it("leaves gear data out of the recipe book", async () => {
     const res = await app().inject("/api/recipes");
 
-    expect(Object.keys(res.json<RecipeBook>())).not.toContain("pets");
+    expect(Object.keys(res.json<RecipeBook>())).not.toContain("bannedKeywords");
   });
 });
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
+import type { PetPage } from "@squire/api/recipe-book";
 import type { PetView } from "@walkscape-community/gear-optimizer";
-import { petCollection } from "@/lib/pets";
+import { petCollection, petHatchingFrom } from "@/lib/pets";
 
 const pet = (id: string, rareId: string): PetView => ({ id, name: id, rareId, icon: "", levels: [] });
 const pets = [pet("camel", "two_hump_camel"), pet("mummy", "silky_mummy")];
@@ -24,5 +25,17 @@ describe("petCollection", () => {
 
   it("ignores pets that aren't in the game data", () => {
     expect(petCollection(pets, [{ species: "dragon", level: 9 }]).every(({ level }) => level === null)).toBe(true);
+  });
+});
+
+describe("petHatchingFrom", () => {
+  const page = (id: string, eggId: string | null) => ({ id, egg: eggId ? { id: eggId } : null }) as PetPage;
+  const pages = [page("pixie", null), page("tiger", "tiger_egg")];
+
+  it.each([
+    ["the pet an egg hatches into", "tiger_egg", "tiger"],
+    ["nothing for an item that isn't an egg", "tiger_claw", undefined],
+  ])("finds %s", (_, itemId, expected) => {
+    expect(petHatchingFrom(pages, itemId)?.id).toBe(expected);
   });
 });

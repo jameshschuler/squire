@@ -1,3 +1,4 @@
+import type { PetPage } from "@squire/api/recipe-book";
 import { petOf, type OwnedPet, type PetView } from "@walkscape-community/gear-optimizer";
 
 export interface PetEntry {
@@ -17,4 +18,8 @@ export function petCollection(pets: PetView[], owned: OwnedPet[]): PetEntry[] {
   }
 
   return pets.map((pet) => ({ pet, level: levels.get(pet.id) ?? null }));
+}
+
+export function petHatchingFrom(pets: PetPage[], eggId: string): PetPage | undefined {
+  return pets.find((pet) => pet.egg?.id === eggId);
 }

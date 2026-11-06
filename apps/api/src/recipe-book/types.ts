@@ -18,7 +18,7 @@ export {
 } from "@walkscape-community/gear-optimizer";
 
 // Bump whenever the RecipeBook shape changes, so cached copies on devices refresh.
-export const RECIPE_BOOK_SCHEMA = 36;
+export const RECIPE_BOOK_SCHEMA = 37;
 
 export interface ValueRange {
   min: number;
@@ -169,6 +169,21 @@ export interface RewardSource {
 
 export type ItemSource = ActivitySource | ChestSource | ShopSource | AchievementSource | RewardSource;
 
+export interface PetLevelView {
+  level: number;
+  stage: "juvenile" | "adult";
+  effects: EffectLine[];
+}
+
+export interface PetPage {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  egg: ItemSummary | null;
+  levels: PetLevelView[];
+}
+
 // `updatedAt` is when the API loaded this game data from WalkScape (an ISO date).
 export interface RecipeBook {
   schema: number;
@@ -179,5 +194,6 @@ export interface RecipeBook {
   foods: ItemWithEffects[];
   loot: ItemWithEffects[];
   gear: ItemWithEffects[];
+  pets: PetPage[];
   sources: Record<string, ItemSource[]>;
 }
