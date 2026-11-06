@@ -8,13 +8,13 @@ export function petViews(pets: PetDetail[]): PetView[] {
       id: pet.id,
       name: pet.name,
       rareId: pet.rareId,
-      icon: adultSprite(pet),
+      icon: petIcon(pet),
       levels: pet.levels.map(({ level, attributes }) => ({ level, stats: gearStats(attributes) })),
     }))
     .sort((left, right) => left.name.localeCompare(right.name));
 }
 
-function adultSprite(pet: PetDetail): string {
+export function petIcon(pet: PetDetail): string {
   const sprites = pet.looks[0]?.sprites ?? [];
 
   return (sprites.find((sprite) => sprite.stage === "adult") ?? sprites[0])?.sprite ?? "";

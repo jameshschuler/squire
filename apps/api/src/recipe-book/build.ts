@@ -18,6 +18,7 @@ import type {
 } from "@walkscape-community/data-api-client";
 import { activityViews } from "./activities.js";
 import { itemEffects } from "./effects.js";
+import { petPages } from "./pets.js";
 import { getServiceKeywords, isServiceRequirement, itemsIn, meetsServiceTier } from "./game-rules.js";
 import { activityItems, lowestSkillLevels, skillLevels, sourceKey, xpRewards } from "./lookup.js";
 import { byLevel, minLevel } from "./order.js";
@@ -100,6 +101,11 @@ export function buildRecipeBook(data: GameData): RecipeBook {
     ...gear.map((gearItem) => gearItem.id),
     ...activityItems(activities).map((entry) => entry.id),
   ]);
+  const eggsByName = new Map(
+    data.items
+      .filter((detail) => detail.type === "egg" && (sourcedIds.has(detail.id) || crafted.has(detail.id)))
+      .map((egg) => [egg.name, summary(egg.id)]),
+  );
 
   return {
     schema: RECIPE_BOOK_SCHEMA,
@@ -110,6 +116,7 @@ export function buildRecipeBook(data: GameData): RecipeBook {
     foods,
     loot,
     gear,
+    pets: petPages(data.pets, effectNames, eggsByName),
     sources: itemSources(data, activities, sourcedIds, { locationsByBuilding, tables }),
   };
 }

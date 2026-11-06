@@ -277,6 +277,11 @@ describe("Character page", () => {
       "Mummy, level 2",
     ]);
     expect(screen.getByText("Pets · 2 of 3")).toBeDefined();
+    expect([...list.querySelectorAll("a")].map((link) => link.getAttribute("href"))).toEqual([
+      "/pets/camel",
+      "/pets/frog",
+      "/pets/mummy",
+    ]);
   });
 
   it("shows no pets until gear data loads", async () => {

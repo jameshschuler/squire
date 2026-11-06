@@ -20,6 +20,22 @@ function section(title: string) {
 }
 
 describe("ItemDetail", () => {
+  it("links an egg to the pet it hatches into", async () => {
+    const data = structuredClone(sample) as unknown as GameData;
+
+    data.items.push({
+      ...data.items[0]!,
+      id: "mummy_egg",
+      name: "Mummy egg",
+      type: "egg",
+    } as GameData["items"][number]);
+    data.lootTables[1]!.tableRows![1]!.rowItemID = "mummy_egg";
+    const withEgg = buildRecipeBook(data);
+
+    await renderWithRouter(<ItemDetail item={findItem(withEgg, "mummy_egg")!} book={withEgg} />);
+    expect(section("Hatches into").getByRole("link", { name: "Mummy" }).getAttribute("href")).toBe("/pets/mummy");
+  });
+
   it("tags a collectible with its steps each under the header", async () => {
     const data = structuredClone(sample) as unknown as GameData;
 

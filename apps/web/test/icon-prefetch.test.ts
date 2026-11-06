@@ -12,6 +12,7 @@ const book: RecipeBook = {
   foods: [],
   loot: [],
   gear: [],
+  pets: [],
   recipes: [
     {
       id: "r",

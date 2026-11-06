@@ -527,8 +527,59 @@ describe("findRecipesByOutput / findRecipesByMaterial", () => {
   });
 });
 
+describe("pets", () => {
+  it("gives each pet its description, adult icon and effects per level", () => {
+    expect(book.pets).toEqual([
+      {
+        id: "mummy",
+        name: "Mummy",
+        description: "An unruffled mummy, may look dressed in rags, but knows all best ways to make them last.",
+        icon: "assets/icons/pets/mummy/adult_basic_mummy_static.png",
+        egg: null,
+        levels: [
+          {
+            level: 1,
+            stage: "juvenile",
+            effects: [
+              { condition: "While doing tailoring", stat: "Chest finding", normal: "+2%", fine: null },
+              { condition: "While doing tailoring", stat: "Work efficiency", normal: "+2%", fine: null },
+            ],
+          },
+          expect.objectContaining({ level: 4, stage: "adult" }),
+        ],
+      },
+    ]);
+  });
+
+  it("links a pet to its egg when the egg has an item page", () => {
+    const data = structuredClone(sample) as unknown as GameData;
+
+    data.items.push({ ...data.items[0]!, id: "mummy_egg", name: "Mummy egg", type: "egg" } as ItemDetail);
+    data.lootTables[1]!.tableRows![1]!.rowItemID = "mummy_egg";
+
+    expect(buildRecipeBook(data).pets[0]!.egg).toMatchObject({ id: "mummy_egg", name: "Mummy egg" });
+  });
+
+  it("finds the egg by the name the pet gives it, whatever the item's id", () => {
+    const data = structuredClone(sample) as unknown as GameData;
+
+    data.items.push({ ...data.items[0]!, id: "egg_of_the_mummy", name: "Mummy egg", type: "egg" } as ItemDetail);
+    data.lootTables[1]!.tableRows![1]!.rowItemID = "egg_of_the_mummy";
+
+    expect(buildRecipeBook(data).pets[0]!.egg?.id).toBe("egg_of_the_mummy");
+  });
+
+  it("leaves out an egg nothing drops, sells or makes, since it has no page", () => {
+    const data = structuredClone(sample) as unknown as GameData;
+
+    data.items.push({ ...data.items[0]!, id: "mummy_egg", name: "Mummy egg", type: "egg" } as ItemDetail);
+
+    expect(buildRecipeBook(data).pets[0]!.egg).toBeNull();
+  });
+});
+
 describe("recipeBookIcons", () => {
-  it("lists every recipe, material, output, activity, drop and source icon once", () => {
+  it("lists every recipe, material, output, activity, drop, source and pet icon once", () => {
     const icons = recipeBookIcons(book);
     const expected = [
       ...recipes.flatMap((recipe) => [
@@ -543,6 +594,7 @@ describe("recipeBookIcons", () => {
       ...Object.values(book.sources)
         .flat()
         .map((source) => source.icon),
+      ...book.pets.map((pet) => pet.icon),
     ];
 
     expect(new Set(icons)).toEqual(new Set(expected.filter(Boolean)));
@@ -574,6 +626,7 @@ describe("recipeBookIcons", () => {
         updatedAt: "2026-11-01T12:00:00.000Z",
         recipes: [{ ...recipe!, icon: "", outputs: [], materials: [] }],
         activities: [],
+        pets: [],
         foods: [],
         loot: [],
         gear: [],

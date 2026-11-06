@@ -3,6 +3,7 @@ import { capitalize, spaced } from "@walkscape-community/gear-optimizer";
 import {
   QUALITY_RANK,
   type Effect,
+  type EffectLine,
   type EffectTarget,
   type ItemEffects,
   type ItemQuality,
@@ -35,10 +36,16 @@ export function itemEffects(item: ItemDetail, names: EffectNames): ItemEffects |
   const effects = gearEffects(base);
   const tiers = qualityTotals(base, item.itemQualityAttrs ?? []).map(({ quality, attributes }): QualityEffects => ({
     quality,
-    effects: gearEffects(attributes).map(({ condition, stat, normal, fine }) => ({ condition, stat, normal, fine })),
+    effects: attributeEffects(attributes, names),
   }));
 
   return effects.length > 0 || tiers.length > 0 ? { steps: null, effects, tiers } : null;
+}
+
+export function attributeEffects(attributes: Attribute[], names: EffectNames): EffectLine[] {
+  return attributes
+    .flatMap((attribute) => effectLine(attribute, null, names))
+    .map(({ condition, stat, normal, fine }) => ({ condition, stat, normal, fine }));
 }
 
 function qualityTotals(

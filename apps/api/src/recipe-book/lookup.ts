@@ -57,7 +57,7 @@ export function recipeBookIcons(book: RecipeBook): string[] {
 
   return [
     ...new Set(
-      [...recipeIcons, ...activityIcons, ...book.foods, ...book.loot, ...book.gear, ...sourceIcons]
+      [...recipeIcons, ...activityIcons, ...book.foods, ...book.loot, ...book.gear, ...book.pets, ...sourceIcons]
         .map((item) => item.icon)
         .filter(Boolean),
     ),
