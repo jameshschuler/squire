@@ -4,20 +4,32 @@ import { CollectibleBadge } from "@/components/shared/CollectibleBadge";
 import { GameIcon } from "@/components/shared/GameIcon";
 import { Section } from "@/components/shared/Section";
 import { lootTypeLabel } from "@/lib/format";
+import { dropStepsDescription, formatDropSteps } from "@/lib/drop-rates";
 
 export function ActivityDrops({ drops }: { drops: Drops }) {
   return (
     <Section title={lootTypeLabel(drops.lootType) ?? "Drops"}>
       <ul className="divide-y">
-        {drops.items.map((item) => (
-          <li key={item.id}>
-            <Link to="/items/$itemId" params={{ itemId: item.id }} className="flex items-center gap-3 py-2">
-              <GameIcon path={item.icon} />
-              <span className="flex-1 font-medium">{item.name}</span>
-              {item.isCollectible && <CollectibleBadge />}
-            </Link>
-          </li>
-        ))}
+        {drops.items.map((item) => {
+          const steps = formatDropSteps(item);
+
+          return (
+            <li key={item.id}>
+              <Link to="/items/$itemId" params={{ itemId: item.id }} className="flex items-center gap-3 py-2">
+                <GameIcon path={item.icon} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{item.name}</p>
+                  {steps && (
+                    <p title={dropStepsDescription(item)} className="text-sm text-muted-foreground tabular-nums">
+                      {steps}
+                    </p>
+                  )}
+                </div>
+                {item.isCollectible && <CollectibleBadge />}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </Section>
   );

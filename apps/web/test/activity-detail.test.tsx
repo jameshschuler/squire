@@ -23,6 +23,36 @@ const renderActivity = (activity: ActivityView) =>
   );
 
 describe("ActivityDetail", () => {
+  it("shows each drop's steps each", async () => {
+    await renderActivity(goldOre);
+    expect(screen.getByText("40 steps each").getAttribute("title")).toBe(
+      "Average steps to get one at max work efficiency",
+    );
+  });
+
+  it("shows nothing under a drop without steps each", async () => {
+    const [drops] = goldOre.drops;
+
+    await renderActivity({
+      ...goldOre,
+      drops: [{ ...drops!, items: drops!.items.map((item) => ({ ...item, stepsEach: null })) }],
+    });
+    expect(screen.queryByText(/steps each/)).toBeNull();
+  });
+
+  it("shows a range for a drop whose rate changes with skill level", async () => {
+    const [drops] = goldOre.drops;
+    const [gold] = drops!.items;
+
+    await renderActivity({
+      ...goldOre,
+      drops: [{ ...drops!, items: [{ ...gold!, stepsEach: 116, stepsRange: { min: 116, max: 805 } }] }],
+    });
+    expect(screen.getByText("116–805 steps each").getAttribute("title")).toBe(
+      "Average steps to get one at max work efficiency. Changes with skill level: 116 steps once every drop here is at its full rate.",
+    );
+  });
+
   it("adds the activity to favorites", async () => {
     await renderActivity(goldOre);
     fireEvent.click(screen.getByRole("button", { name: "Add to favorites" }));
@@ -84,6 +114,6 @@ describe("ActivityDetail", () => {
     const headings = screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent);
 
     expect(headings).toEqual(["Needs", "Where", "Drops", "Gem find", "Chest"]);
-    expect(screen.getByRole("link", { name: "Gold ore" }).getAttribute("href")).toBe("/items/gold_ore");
+    expect(screen.getByRole("link", { name: /Gold ore/ }).getAttribute("href")).toBe("/items/gold_ore");
   });
 });
