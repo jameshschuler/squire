@@ -32,6 +32,15 @@ async function fetchVersioned<T extends { schema: number }>(
   return data;
 }
 
+export function sendGearSearchLog(body: string): void {
+  fetch(`${API_URL}/api/gear-searches`, {
+    method: "POST",
+    keepalive: true,
+    headers: { "Content-Type": "application/json" },
+    body,
+  }).catch(() => {});
+}
+
 export function iconUrl(path: string): string {
   return `${API_URL}/api/icons/${path}`;
 }

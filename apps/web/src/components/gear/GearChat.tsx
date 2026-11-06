@@ -4,6 +4,7 @@ import type { RecipeBook } from "@squire/api/recipe-book";
 import { BEST_IN_GAME, goalOf, type GearData, type PlayerProfile } from "@walkscape-community/gear-optimizer";
 import { Button } from "@/components/ui/button";
 import { useCharacterContext } from "@/contexts/character-context";
+import { useGearSearchLog } from "@/hooks/useGearSearchLog";
 import { useGearSuggestion } from "@/hooks/useGearSuggestion";
 import {
   BEST_LOCATION,
@@ -58,7 +59,14 @@ export function GearChat({ book, gear, search, onSearchChange }: GearChatProps) 
     [target, locationAnswered, goals.length, location],
   );
   const tieBreakers = useMemo(() => (target ? tieBreakersFor(target, goals) : []), [target, goals]);
-  const { solution, failed } = useGearSuggestion(gear, profile, optimize, goals, tieBreakers);
+  const suggestion = useGearSuggestion(gear, profile, optimize, goals, tieBreakers);
+  const { solution, failed } = suggestion;
+
+  useGearSearchLog(
+    { target, location, goals, withCharacter: character !== null, bookVersion: book.version },
+    suggestion,
+  );
+
   const update = (answers: GearSearch) => onSearchChange({ ...search, ...answers });
 
   return (
