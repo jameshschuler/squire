@@ -166,7 +166,16 @@ function groupDrops(drops: Drop[]): Map<string, ItemSource[]> {
 function dropsFromActivity({ id, name, icon, skills, locations, drops }: ActivityView): Drop[] {
   return drops.flatMap(({ lootType, items }) =>
     items.map((item) => {
-      const source: ActivitySource = { kind: "activity", id, name, icon, skills, lootType, locations, wear: item.wear };
+      const source: ActivitySource = {
+        kind: "activity",
+        id,
+        name,
+        icon,
+        skills,
+        lootType,
+        locations,
+        stepsEach: item.stepsEach,
+      };
 
       return { itemId: item.id, source };
     }),

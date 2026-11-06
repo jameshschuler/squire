@@ -14,7 +14,7 @@ const source = (overrides: Partial<ActivitySource>): ActivitySource => ({
   skills: [{ id: "hunting", name: "Hunting", level: 45 }],
   lootType: "main",
   locations: [{ id: "nomad_woods", name: "Nomad Woods", region: "Jarvonia" }],
-  wear: null,
+  stepsEach: null,
   ...overrides,
 });
 

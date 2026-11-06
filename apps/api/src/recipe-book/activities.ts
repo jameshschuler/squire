@@ -6,7 +6,7 @@ import type {
   LootTableDetail,
   SpecificInput,
 } from "@walkscape-community/data-api-client";
-import { itemsIn, itemsPerAction, lootTypeOf, wearOf } from "./game-rules.js";
+import { itemsIn, itemsPerAction, lootTypeOf, rangeOf, scalingLevels, stepsEach } from "./game-rules.js";
 import { skillLevels, xpRewards } from "./lookup.js";
 import { byActivityLevel } from "./order.js";
 import { humanize, spaced } from "@walkscape-community/gear-optimizer";
@@ -171,21 +171,21 @@ function dropsOf(activity: ActivityDetail, { summary, tables }: ActivityIndexes)
     }
   }
 
-  const dropOf = (refs: LootTable[], itemId: string): ActivityDrop => {
-    const item = summary(itemId);
-    const perAction = itemsPerAction(refs, tables, itemId);
-
-    return {
-      ...item,
-      wear: item.isCollectible ? wearOf(activity.workRequired, activity.maxWorkEfficiency, perAction) : null,
-    };
-  };
+  const allRefs = activity.tables ?? [];
+  const levels = scalingLevels(activity.requirements, allRefs, tables);
+  const stepsAt = (itemId: string, level: number | null) =>
+    stepsEach(activity.workRequired, activity.maxWorkEfficiency, itemsPerAction(allRefs, tables, itemId, level));
+  const dropOf = (itemId: string): ActivityDrop => ({
+    ...summary(itemId),
+    stepsEach: stepsAt(itemId, null),
+    stepsRange: rangeOf(levels.map((level) => stepsAt(itemId, level))),
+  });
 
   return [...refsByType]
     .map(([lootType, refs]) => {
       const itemIds = new Set(refs.flatMap((ref) => itemsIn(ref, tables)));
 
-      return { lootType, items: [...itemIds].map((itemId) => dropOf(refs, itemId)) };
+      return { lootType, items: [...itemIds].map(dropOf) };
     })
     .filter((drops) => drops.items.length > 0)
     .sort((left, right) => (LOOT_RANK.get(left.lootType) ?? -1) - (LOOT_RANK.get(right.lootType) ?? -1));
