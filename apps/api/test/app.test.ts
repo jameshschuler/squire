@@ -165,6 +165,21 @@ describe("CORS", () => {
     expect(res.headers["access-control-allow-origin"]).toBe("https://squire.example");
   });
 
+  it("lets a configured origin post gear search logs", async () => {
+    const res = await app(fakeClient().client, ["https://squire.example"]).inject({
+      method: "OPTIONS",
+      url: "/api/gear-searches",
+      headers: {
+        origin: "https://squire.example",
+        "access-control-request-method": "POST",
+        "access-control-request-headers": "content-type",
+      },
+    });
+
+    expect(res.headers["access-control-allow-origin"]).toBe("https://squire.example");
+    expect(res.headers["access-control-allow-methods"]).toContain("POST");
+  });
+
   it("sends no CORS headers for other origins", async () => {
     const res = await app(undefined, ["https://squire.example"]).inject({
       url: "/api/health",

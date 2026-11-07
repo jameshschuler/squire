@@ -11,6 +11,7 @@ import type { GameDataCache } from "./game-data-cache.js";
 import { healthRoutes } from "./routes/health.js";
 import { iconRoutes } from "./routes/icons.js";
 import { bookRoutes } from "./routes/books.js";
+import { gearSearchRoutes } from "./routes/gear-searches.js";
 
 export interface AppOptions {
   client: WalkScapeClient;
@@ -55,10 +56,11 @@ export function buildApp({ client, logLevel, corsOrigins, cache, warmOnStart = f
   }
 
   app.register(compress, { encodings: ["br", "gzip"] });
-  app.register(cors, { origin: corsOrigins.length > 0 ? corsOrigins : false, methods: ["GET"] });
+  app.register(cors, { origin: corsOrigins.length > 0 ? corsOrigins : false, methods: ["GET", "POST"] });
   app.register(healthRoutes);
   app.register(bookRoutes(books));
   app.register(iconRoutes(icons));
+  app.register(gearSearchRoutes);
 
   return app;
 }

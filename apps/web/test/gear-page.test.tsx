@@ -96,6 +96,77 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+const loggedSearches = () =>
+  vi
+    .mocked(fetch)
+    .mock.calls.filter(([url]) => String(url).endsWith("/api/gear-searches"))
+    .map(([, init]) => JSON.parse(String(init?.body)) as Record<string, unknown>);
+
+describe("Gear page search log", () => {
+  it("sends one line per finished search, with what was asked and how the search went", async () => {
+    addCharacter();
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
+    await screen.findByText("journeyman handwear");
+    await waitFor(() => expect(loggedSearches()).toHaveLength(1));
+    const [line] = loggedSearches();
+
+    expect(line).toMatchObject({
+      target: "mine_gold_ore",
+      kind: "activity",
+      location: "crown_of_cinders",
+      goals: ["steps"],
+      recommended: false,
+      withCharacter: true,
+      bookVersion: book.version,
+      failed: false,
+    });
+    expect(Object.keys(line!).sort()).toEqual([
+      "bookVersion",
+      "failed",
+      "goals",
+      "kind",
+      "location",
+      "margin",
+      "proven",
+      "recommended",
+      "searchMs",
+      "target",
+      "withCharacter",
+    ]);
+  });
+
+  it("sends nothing new when the page comes back to the same search", async () => {
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps,xp" });
+    await screen.findByText("journeyman handwear");
+    await waitFor(() => expect(loggedSearches()).toHaveLength(1));
+    const [first] = loggedSearches();
+
+    cleanup();
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps,xp" });
+    await screen.findByText("journeyman handwear");
+    expect(first).toMatchObject({ goals: ["steps", "xp"] });
+    expect(loggedSearches()).toEqual([]);
+  });
+
+  it("sends nothing before the search is set up", async () => {
+    await renderPage({ target: "activity:mine_gold_ore" });
+    await screen.findByText(/What matters most/);
+    expect(loggedSearches()).toEqual([]);
+  });
+
+  it("shows the answer even when the log request fails", async () => {
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" }, async (url: string) => {
+      if (url.endsWith("/api/gear-searches")) {
+        throw new TypeError("Failed to fetch");
+      }
+
+      return serveData(url);
+    });
+    expect(await screen.findByText("journeyman handwear")).toBeDefined();
+    expect(screen.getByRole("button", { name: /Copy gear set for WalkScape/ })).toBeDefined();
+  });
+});
+
 describe("Gear page", () => {
   it("asks what to do and suggests activities and recipes as you type", async () => {
     await renderPage();

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { GEAR_DATA_SCHEMA } from "@walkscape-community/gear-optimizer";
 import { RECIPE_BOOK_SCHEMA } from "@squire/api/recipe-book";
-import { fetchGearData, fetchRecipeBook } from "@/lib/api";
+import { fetchGearData, fetchRecipeBook, sendGearSearchLog } from "@/lib/api";
 
 const respond = (body: unknown, status = 200) =>
   vi.stubGlobal(
@@ -39,5 +39,29 @@ describe("fetchRecipeBook", () => {
   it("says the game data is updating when the server has a different schema", async () => {
     respond({ schema: RECIPE_BOOK_SCHEMA + 1, version: "v1" });
     await expect(fetchRecipeBook()).rejects.toThrow("Game data is updating. Try again in a minute.");
+  });
+});
+
+describe("sendGearSearchLog", () => {
+  it("posts the line as JSON and lets it finish if the page closes", () => {
+    respond({});
+    sendGearSearchLog('{"target":"mine_gold_ore"}');
+    expect(fetch).toHaveBeenCalledWith("/api/gear-searches", {
+      method: "POST",
+      keepalive: true,
+      headers: { "Content-Type": "application/json" },
+      body: '{"target":"mine_gold_ore"}',
+    });
+  });
+
+  it("ignores a request that fails", async () => {
+    const failing = Promise.reject(new TypeError("Failed to fetch"));
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => failing),
+    );
+    expect(() => sendGearSearchLog("{}")).not.toThrow();
+    await expect(failing.catch(() => "handled")).resolves.toBe("handled");
   });
 });
