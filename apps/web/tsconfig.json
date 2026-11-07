@@ -3,7 +3,6 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "types": ["vite/client", "vite-plugin-pwa/client"],
-    "baseUrl": ".",
     "paths": { "@/*": ["./src/*"] }
   },
   "include": ["src", "test", "scripts", "vite.config.ts", "pwa-assets.config.ts"]
