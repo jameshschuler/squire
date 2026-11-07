@@ -128,8 +128,8 @@ importers:
         specifier: ^19.0.2
         version: 19.3.0(@types/react@19.3.0)
       '@vite-pwa/assets-generator':
-        specifier: ^1.0.4
-        version: 1.0.4(@types/node@24.19.2)
+        specifier: ^2.0.0
+        version: 2.0.0(@types/node@24.19.2)
       '@vitejs/plugin-react':
         specifier: ^4.3.4
         version: 4.7.0(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15))
@@ -150,7 +150,7 @@ importers:
         version: 8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)
       vite-plugin-pwa:
         specifier: ^2.0.0
-        version: 2.0.0(@vite-pwa/assets-generator@1.0.4(@types/node@24.19.2))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15))(workbox-build@7.4.1(@types/babel__core@7.20.5))(workbox-window@7.4.1)
+        version: 2.0.0(@vite-pwa/assets-generator@2.0.0(@types/node@24.19.2))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15))(workbox-build@7.4.1(@types/babel__core@7.20.5))(workbox-window@7.4.1)
       vitest:
         specifier: ^5.0.5
         version: 5.0.5(@types/node@24.19.2)(jsdom@25.0.1)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15))
@@ -2478,9 +2478,9 @@ packages:
     resolution: {integrity: sha512-SB8xqipSzZHUePCCLNeYxqnxq83X61/qzNhjQGbTfjxGZIeOEP7tBgWYX05Tcd6CgE02WdTJnh5b8kMZJ/+bnQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@vite-pwa/assets-generator@1.0.4':
-    resolution: {integrity: sha512-LlYM5CEmFmdl7le4B0Pr9+NPipQgStFOslvfxEQ/1LW3wUquZ3s3ec2z132lzfVEYAiJAmfFhQ0EVs6ntO7RKw==}
-    engines: {node: '>=16.14.0'}
+  '@vite-pwa/assets-generator@2.0.0':
+    resolution: {integrity: sha512-GBjHBLBzOP1GDJTc7MjeDdeJTi+PS9eFjw3HYjNHXnEbkS7vRS/YFwl8VW5/4vWF0Fo35Mji1yXAABvSVzu0Ew==}
+    engines: {node: '>=20.19.0'}
     hasBin: true
 
   '@vitejs/plugin-react@4.7.0':
@@ -2650,10 +2650,6 @@ packages:
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     peerDependencies:
       esbuild: '>=0.18'
-
-  cac@6.7.14:
-    resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
-    engines: {node: '>=8'}
 
   cac@7.1.0:
     resolution: {integrity: sha512-LMDU/U2yA4IPIY8KT0NsNPWEYZvAMkbgyspxJ6btJaYV+WMDOHAZCmB0lsTObiHaRS1V/ztKAl7+TSkTqXyeoA==}
@@ -7103,11 +7099,11 @@ snapshots:
       '@typescript-eslint/types': 8.72.1
       eslint-visitor-keys: 5.0.1
 
-  '@vite-pwa/assets-generator@1.0.4(@types/node@24.19.2)':
+  '@vite-pwa/assets-generator@2.0.0(@types/node@24.19.2)':
     dependencies:
-      cac: 6.7.14
-      colorette: 2.0.20
+      cac: 7.1.0
       consola: 3.4.2
+      picocolors: 1.1.1
       sharp: 0.35.5(@types/node@24.19.2)
       sharp-ico: 0.1.5(@types/node@24.19.2)
       unconfig: 7.5.0
@@ -7282,8 +7278,6 @@ snapshots:
     dependencies:
       esbuild: 0.28.2
       load-tsconfig: 0.2.5
-
-  cac@6.7.14: {}
 
   cac@7.1.0: {}
 
@@ -8834,7 +8828,7 @@ snapshots:
     dependencies:
       '@img/colour': 1.1.0
       detect-libc: 2.1.2
-      semver: 7.8.5
+      semver: 7.8.6
     optionalDependencies:
       '@img/sharp-darwin-arm64': 0.35.5
       '@img/sharp-darwin-x64': 0.35.5
@@ -9240,7 +9234,7 @@ snapshots:
     dependencies:
       react: 19.3.1
 
-  vite-plugin-pwa@2.0.0(@vite-pwa/assets-generator@1.0.4(@types/node@24.19.2))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15))(workbox-build@7.4.1(@types/babel__core@7.20.5))(workbox-window@7.4.1):
+  vite-plugin-pwa@2.0.0(@vite-pwa/assets-generator@2.0.0(@types/node@24.19.2))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15))(workbox-build@7.4.1(@types/babel__core@7.20.5))(workbox-window@7.4.1):
     dependencies:
       debug: 4.4.3(supports-color@10.2.2)
       pretty-bytes: 6.1.1
@@ -9249,7 +9243,7 @@ snapshots:
       workbox-build: 7.4.1(@types/babel__core@7.20.5)
       workbox-window: 7.4.1
     optionalDependencies:
-      '@vite-pwa/assets-generator': 1.0.4(@types/node@24.19.2)
+      '@vite-pwa/assets-generator': 2.0.0(@types/node@24.19.2)
     transitivePeerDependencies:
       - supports-color
 
