@@ -18,7 +18,7 @@ export {
 } from "@walkscape-community/gear-optimizer";
 
 // Bump whenever the RecipeBook shape changes, so cached copies on devices refresh.
-export const RECIPE_BOOK_SCHEMA = 37;
+export const RECIPE_BOOK_SCHEMA = 39;
 
 export interface ValueRange {
   min: number;
@@ -99,11 +99,21 @@ export interface ActivityNeed {
   item: ItemSummary | null;
 }
 
-// `stepsEach` is the average steps per item at max work efficiency, at full drop rates. `stepsRange` spans the
-// skill levels the activity can be done at, when drop rates change with level.
-export interface ActivityDrop extends ItemSummary {
+// A drop at full drop rates: the chance per action of getting at least one, and the average steps per item at
+// max work efficiency (`stepsEach`) and with none (`baseSteps`, the wiki's base rate).
+export interface DropRate {
+  chance: number;
   stepsEach: number | null;
-  stepsRange: ValueRange | null;
+  baseSteps: number | null;
+}
+
+// How each part of a drop's rate varies across the skill levels the activity can be done at.
+export type DropRateRange = Record<keyof DropRate, ValueRange | null>;
+
+// `rateRange` is null unless the drop's rate changes with skill level.
+export interface ActivityDrop extends ItemSummary {
+  rate: DropRate;
+  rateRange: DropRateRange | null;
 }
 
 export interface ActivityDrops {
@@ -134,7 +144,8 @@ export interface ActivitySource {
   skills: SkillLevel[];
   lootType: LootType;
   locations: LocationSummary[];
-  stepsEach: number | null;
+  rate: DropRate;
+  rateRange: DropRateRange | null;
 }
 
 export interface ChestSource {

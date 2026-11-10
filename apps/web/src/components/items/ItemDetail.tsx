@@ -12,12 +12,12 @@ import { Section } from "@/components/shared/Section";
 import { CollectibleBadge } from "@/components/shared/CollectibleBadge";
 import { GameIcon } from "@/components/shared/GameIcon";
 import { QualityBadge } from "@/components/shared/QualityBadge";
-import { itemSteps } from "@/lib/drop-rates";
+import { itemRate } from "@/lib/drop-rates";
 import { petHatchingFrom } from "@/lib/pets";
+import { DropRateTags } from "./DropRateTags";
 import { ItemEffectsSection } from "./ItemEffectsSection";
 import { ItemKeywords } from "./ItemKeywords";
 import { ItemSources } from "./ItemSources";
-import { StepsBadge } from "./StepsBadge";
 
 interface ItemDetailProps {
   item: ItemWithEffects;
@@ -28,7 +28,7 @@ export function ItemDetail({ item, book }: ItemDetailProps) {
   const madeBy = useMemo(() => findRecipesByOutput(book.recipes, item.id), [book, item.id]);
   const usedIn = useMemo(() => findRecipesByMaterial(book.recipes, item.id), [book, item.id]);
   const sources = book.sources[item.id] ?? [];
-  const steps = itemSteps(item, sources);
+  const rate = itemRate(item, sources);
   const isCrafted = madeBy.length > 0;
   const hatchesInto = petHatchingFrom(book.pets, item.id);
 
@@ -46,9 +46,9 @@ export function ItemDetail({ item, book }: ItemDetailProps) {
           item.quality && !item.effects?.tiers.length && <QualityBadge quality={item.quality} />
         )}
       </div>
-      {steps && (
+      {rate && (
         <div className="-mt-3">
-          <StepsBadge steps={steps} />
+          <DropRateTags {...rate} />
         </div>
       )}
       {item.keywords.length > 0 && (

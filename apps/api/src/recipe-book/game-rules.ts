@@ -6,7 +6,7 @@ import type {
   ServiceTier,
   SkillLevelRequirement,
 } from "@walkscape-community/data-api-client";
-import type { LootType, ValueRange } from "./types.js";
+import type { DropRate, DropRateRange, LootType, ValueRange } from "./types.js";
 
 export const SERVICE_TIERS = ["basic", "advanced", "expert"] as const satisfies readonly ServiceTier[];
 const SERVICE_TIER_RANK = new Map<string, number>(SERVICE_TIERS.map((tier, index) => [tier, index]));
@@ -80,11 +80,24 @@ function rowWeightAt(row: LootRow, level: number | null): number {
 }
 
 export function itemsPerRoll(table: LootTableDetail, itemId: string, level: number | null = null): number {
+  return rollShare(table, itemId, level, (row) => (row.rowMinimumAmount + row.rowMaximumAmount) / 2);
+}
+
+function rollChance(table: LootTableDetail, itemId: string, level: number | null): number {
+  return rollShare(table, itemId, level, () => 1);
+}
+
+function rollShare(
+  table: LootTableDetail,
+  itemId: string,
+  level: number | null,
+  amountOf: (row: LootRow) => number,
+): number {
   const rows = table.tableRows ?? [];
   const totalWeight = rows.reduce((sum, row) => sum + rowWeightAt(row, level), 0);
   const itemWeight = rows
     .filter((row) => row.rowItemID === itemId)
-    .reduce((sum, row) => sum + (rowWeightAt(row, level) * (row.rowMinimumAmount + row.rowMaximumAmount)) / 2, 0);
+    .reduce((sum, row) => sum + rowWeightAt(row, level) * amountOf(row), 0);
 
   return totalWeight > 0 ? ((1 - table.noDropChance) * itemWeight) / totalWeight : 0;
 }
@@ -107,6 +120,23 @@ export function itemsPerAction(
 ): number {
   return eachRoll(refs, tables).reduce((sum, { table, rolls }) => sum + rolls * itemsPerRoll(table, itemId, level), 0);
 }
+
+export function dropChance(
+  refs: LootTable[],
+  tables: Map<string, LootTableDetail>,
+  itemId: string,
+  level: number | null = null,
+): number {
+  const missesAll = eachRoll(refs, tables).reduce(
+    (chance, { table, rolls }) => chance * (1 - rollChance(table, itemId, level)) ** rolls,
+    1,
+  );
+
+  return 1 - missesAll;
+}
+
+// Work efficiency with no level or gear bonus, which the wiki's base rate uses.
+export const BASE_WORK_EFFICIENCY = 1;
 
 export function stepsEach(
   workRequired: number | null,
@@ -142,6 +172,16 @@ export function scalingLevels(
   const last = Math.max(first, ...bonuses.map((bonus) => Math.max(bonus.levelRequirement, bonus.levelMaxScaling)));
 
   return Array.from({ length: last - first + 1 }, (_, offset) => first + offset);
+}
+
+export function rateRangeOf(rates: DropRate[]): DropRateRange | null {
+  const range: DropRateRange = {
+    chance: rangeOf(rates.map((rate) => (rate.chance > 0 ? rate.chance : null))),
+    stepsEach: rangeOf(rates.map((rate) => rate.stepsEach)),
+    baseSteps: rangeOf(rates.map((rate) => rate.baseSteps)),
+  };
+
+  return Object.values(range).some(Boolean) ? range : null;
 }
 
 export function rangeOf(values: (number | null)[]): ValueRange | null {

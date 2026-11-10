@@ -36,7 +36,7 @@ describe("ItemDetail", () => {
     expect(section("Hatches into").getByRole("link", { name: "Mummy" }).getAttribute("href")).toBe("/pets/mummy");
   });
 
-  it("tags a collectible with its average steps under the header", async () => {
+  it("tags a collectible with its chance and average steps under the header", async () => {
     const data = structuredClone(sample) as unknown as GameData;
 
     data.items.push({
@@ -48,14 +48,15 @@ describe("ItemDetail", () => {
     const withCollectible = buildRecipeBook(data);
 
     await renderWithRouter(<ItemDetail item={findItem(withCollectible, "rough_sun_stone")!} book={withCollectible} />);
-    expect(screen.getByText("~30,667 steps on average").getAttribute("title")).toBe(
-      "Average steps to get one at max work efficiency",
+    expect(screen.getByText("0.13% · 1 in 767 actions").getAttribute("title")).toBe(
+      "Chance per action of getting at least one",
     );
+    expect(screen.getByText("~30,667 steps · 52,133 at base rate")).toBeDefined();
   });
 
-  it("has no steps tag for a material, even though its activity has an average", async () => {
+  it("has no rate tags for a material, even though its activity has an average", async () => {
     await renderItem("gold_ore");
-    expect(screen.queryByText(/steps on average/)).toBeNull();
+    expect(screen.queryByText(/at base rate/)).toBeNull();
   });
 
   it("shows a crafted item's recipe, then what uses it, and no sources section when nothing drops it", async () => {

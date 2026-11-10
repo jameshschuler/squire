@@ -181,7 +181,8 @@ function dropsFromActivity({ id, name, icon, skills, locations, drops }: Activit
         skills,
         lootType,
         locations,
-        stepsEach: item.stepsEach,
+        rate: item.rate,
+        rateRange: item.rateRange,
       };
 
       return { itemId: item.id, source };
