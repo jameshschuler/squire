@@ -6,22 +6,22 @@ The web app runs the optimizer in a Web Worker (`apps/web/src/workers/gear-solve
 
 ## The pieces
 
-| File                                          | What it does                                                                                                                                                          |
-| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `build.ts`, `items.ts`, `pets.ts`, `types.ts` | Turn raw game data into `GearData`: every gear item with its stats per quality, pets per level, and locations.                                                        |
-| `profile.ts`                                  | Who is wearing the gear. `BEST_IN_GAME` owns every item at its best quality and is max level. A `character` profile owns what their export says and has their levels. |
-| `steps.ts`                                    | The game's step formula.                                                                                                                                              |
-| `goals.ts`                                    | The priorities, how a set is scored against them, and the margin math.                                                                                                |
-| `candidates.ts`                               | One owned item, boiled down to the numbers the search needs.                                                                                                          |
-| `needs.ts`                                    | Gear the activity requires (a pickaxe, 3 diving gear items, a specific item), and whether the player owns enough of it.                                               |
-| `pruning.ts`                                  | Drops items that can never be worth wearing, and the keyword ban rules.                                                                                               |
-| `search.ts`                                   | The search for the best set for one location and one scoring pass.                                                                                                    |
-| `free-slots.ts`                               | Fills slots the search left empty with items that help other things.                                                                                                  |
-| `optimizer.ts`                                | Runs the whole thing: locations, passes, rounds, the time limit, and the final margin.                                                                                |
-| `set-stats.ts`                                | Display helpers: a set's stats added up, and bonuses tied to the location.                                                                                            |
-| `slots.ts`                                    | Slot sizes (two rings, a tool count that grows with character level).                                                                                                 |
-| `character.ts`                                | Reads a player's character export: levels, owned items and pets, and tool slots.                                                                                      |
-| `game-data.ts`, `summaries.ts`, `text.ts`     | The raw game data the API loads, and the item and location summaries shared with the recipe book.                                                                     |
+| File                                                      | What it does                                                                                                                                                          |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `build.ts`, `items.ts`, `pets.ts`, `foods.ts`, `types.ts` | Turn raw game data into `GearData`: every gear item with its stats per quality, pets per level, each food's normal and fine buff, and locations.                      |
+| `profile.ts`                                              | Who is wearing the gear. `BEST_IN_GAME` owns every item at its best quality and is max level. A `character` profile owns what their export says and has their levels. |
+| `steps.ts`                                                | The game's step formula.                                                                                                                                              |
+| `goals.ts`                                                | The priorities, how a set is scored against them, and the margin math.                                                                                                |
+| `candidates.ts`                                           | One owned item, boiled down to the numbers the search needs.                                                                                                          |
+| `needs.ts`                                                | Gear the activity requires (a pickaxe, 3 diving gear items, a specific item), and whether the player owns enough of it.                                               |
+| `pruning.ts`                                              | Drops items that can never be worth wearing, and the keyword ban rules.                                                                                               |
+| `search.ts`                                               | The search for the best set for one location and one scoring pass.                                                                                                    |
+| `free-slots.ts`                                           | Fills slots the search left empty with items that help other things.                                                                                                  |
+| `optimizer.ts`                                            | Runs the whole thing: locations, passes, rounds, the time limit, and the final margin.                                                                                |
+| `set-stats.ts`                                            | Display helpers: a set's stats added up, and bonuses tied to the location.                                                                                            |
+| `slots.ts`                                                | Slot sizes (two rings, a tool count that grows with character level).                                                                                                 |
+| `character.ts`                                            | Reads a player's character export: levels, owned items (and which they have fine), pets, and tool slots.                                                              |
+| `game-data.ts`, `summaries.ts`, `text.ts`                 | The raw game data the API loads, and the item and location summaries shared with the recipe book.                                                                     |
 
 ## Steps per action
 

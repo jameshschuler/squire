@@ -1,6 +1,9 @@
 import type { GearType } from "@walkscape-community/data-api-client";
 import { MAX_LEVEL, toolSlots } from "./character.js";
 
+// Places outside the gear grid that the search also fills: one pet and one food.
+export type ExtraSlot = "pet" | "food";
+
 export interface GearSlot {
   slot: GearType;
   capacity: number;
@@ -22,11 +25,11 @@ export const GEAR_SLOTS: GearSlot[] = [
   { slot: "tool", capacity: toolSlots(MAX_LEVEL), copies: 1 },
 ];
 
-export function copiesAllowed(slot: GearType | "pet"): number {
+export function copiesAllowed(slot: GearType | ExtraSlot): number {
   return GEAR_SLOTS.find((entry) => entry.slot === slot)?.copies ?? 1;
 }
 
-export function slotCapacity(slot: GearType | "pet", tools: number): number {
+export function slotCapacity(slot: GearType | ExtraSlot, tools: number): number {
   if (slot === "tool") {
     return tools;
   }

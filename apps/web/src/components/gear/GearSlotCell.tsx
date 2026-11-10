@@ -1,16 +1,15 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import type { ItemQuality } from "@squire/api/recipe-book";
 import { GameIcon } from "@/components/shared/GameIcon";
 import { cn } from "@/lib/utils";
-import { GEAR_TIER_STYLES } from "./gear-tier-styles";
+import { GEAR_TIER_STYLES, type GearTier } from "./gear-tier-styles";
 
 interface GearSlotCellProps {
   label: string;
   name: string | null;
   icon: string;
   itemId: string | null;
-  quality?: ItemQuality | null;
+  quality?: GearTier | null;
 }
 
 export function GearSlotCell({ label, name, icon, itemId, quality = null }: GearSlotCellProps) {

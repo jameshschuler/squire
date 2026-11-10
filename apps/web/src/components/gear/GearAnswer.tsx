@@ -7,7 +7,7 @@ import { LocationBonuses } from "./LocationBonuses";
 
 export function GearAnswer(props: GearAnswerView) {
   const { suggestion, location, notes, stats, breakdown, toolSlots } = props;
-  const { picks, pet } = suggestion;
+  const { picks, pet, food } = suggestion;
 
   return (
     <ChatMessage wide>
@@ -18,7 +18,7 @@ export function GearAnswer(props: GearAnswerView) {
           ))}
         </div>
       )}
-      {(picks.length > 0 || pet) && <GearGrid picks={picks} pet={pet} toolSlots={toolSlots} />}
+      {(picks.length > 0 || pet || food) && <GearGrid picks={picks} pet={pet} food={food} toolSlots={toolSlots} />}
       {picks.length > 0 && <CopyGearSetButton picks={picks} />}
       <GearStats groups={stats} breakdown={breakdown} />
       {location && <LocationBonuses {...location} />}

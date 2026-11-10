@@ -8,6 +8,7 @@ const gear = {
   version: "v1",
   items: [],
   pets: [],
+  foods: [],
   bannedKeywords: {},
   skills: [],
   locations: [],

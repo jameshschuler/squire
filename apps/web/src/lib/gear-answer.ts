@@ -77,7 +77,7 @@ export function answerNotes(suggestion: GearSuggestion, target: GearTarget, skil
     missing.length > 0 ? [`You don't have the gear this needs: ${missing.join(", ")}. The set leaves it out.`] : [];
   const before = [...tooLow, ...lacking];
 
-  if (suggestion.picks.length === 0 && !suggestion.pet) {
+  if (suggestion.picks.length === 0 && !suggestion.pet && !suggestion.food) {
     return suggestion.margin
       ? [...before, "No gear found that helps.", ...marginNotes(suggestion)]
       : [...before, "No gear helps with this."];

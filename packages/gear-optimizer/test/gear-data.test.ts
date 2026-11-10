@@ -4,6 +4,7 @@ import { GEAR_DATA_SCHEMA, buildGearData, gearDataIcons } from "../src/index.js"
 import type { GameData } from "../src/game-data.js";
 import gearItems from "../../../fixtures/api/gear.json";
 import lootItems from "../../../fixtures/api/loot.json";
+import foodItems from "../../../fixtures/api/foods.json";
 import sample from "../../../fixtures/api/gamedata-sample.json";
 
 const sampleGear = buildGearData(sample as unknown as GameData);
@@ -158,17 +159,75 @@ describe("skills and locations", () => {
 });
 
 describe("gearDataIcons", () => {
-  it("lists every gear and pet icon once, skipping blanks", () => {
+  it("lists every gear, pet and food icon once, skipping blanks", () => {
     const data = structuredClone(sample) as unknown as GameData;
 
-    data.items.push(...(gearItems as unknown as ItemDetail[]), ...(lootItems as unknown as ItemDetail[]));
+    data.items.push(
+      ...(gearItems as unknown as ItemDetail[]),
+      ...(lootItems as unknown as ItemDetail[]),
+      ...(foodItems as unknown as ItemDetail[]),
+    );
     data.items.find((item) => item.id === "birch_skis")!.icon = "";
     const gear = buildGearData(data);
     const icons = gearDataIcons(gear);
 
     expect(icons).toContain("assets/icons/pets/mummy/adult_basic_mummy_static.png");
     expect(icons).toContain(gear.items.find((item) => item.id === "steel_hatchet")!.icon);
+    expect(icons).toContain(gear.foods.find((food) => food.id === "salmon_pie")!.icon);
     expect(icons).not.toContain("");
     expect(icons).toHaveLength(new Set(icons).size);
+  });
+});
+
+describe("foods", () => {
+  const data = structuredClone(sample) as unknown as GameData;
+
+  data.items.push(...(foodItems as unknown as ItemDetail[]), ...(gearItems as unknown as ItemDetail[]));
+  const { foods } = buildGearData(data);
+  const salmonPie = foods.find((food) => food.id === "salmon_pie")!;
+
+  it("lists every food with a buff, and no gear", () => {
+    expect(foods.map((food) => food.id)).toEqual(
+      expect.arrayContaining(["salmon_pie", "bagel", "beer", "bread", "bug_bait", "beef_stew"]),
+    );
+    expect(foods.map((food) => food.id)).not.toContain("steel_hatchet");
+  });
+
+  it("keeps the normal and fine buffs with their conditions", () => {
+    const woodcutting = [{ type: "mainSkill", opposite: false, requirement: { skill: "woodcutting" } }];
+
+    expect(salmonPie).toMatchObject({
+      name: "Salmon pie",
+      stats: [{ stat: "workEfficiency", value: 0.07, isPercent: true, conditions: woodcutting }],
+      fineStats: [{ stat: "workEfficiency", value: 0.14, isPercent: true, conditions: woodcutting }],
+    });
+  });
+
+  it("keeps every effect of a food with more than one", () => {
+    expect(foods.find((food) => food.id === "beer")?.fineStats?.map((stat) => [stat.stat, stat.value])).toEqual([
+      ["bonusExperience", -0.04],
+      ["doubleRewards", 0.04],
+    ]);
+  });
+
+  it("uses the normal effects for a fine food that lists none of its own", () => {
+    const plain = structuredClone(data);
+
+    plain.items.find((item) => item.id === "salmon_pie")!.buffs![0]!.data[0]!.buffs[0]!.fineAttributes = [];
+    expect(buildGearData(plain).foods.find((food) => food.id === "salmon_pie")?.fineStats).toEqual(salmonPie.stats);
+  });
+
+  it("leaves out consumables that aren't food", () => {
+    const withPotion = structuredClone(data);
+
+    withPotion.items.find((item) => item.id === "salmon_pie")!.consumableType = "immediate";
+    expect(buildGearData(withPotion).foods.map((food) => food.id)).not.toContain("salmon_pie");
+  });
+
+  it("gives a food that can't be fine no fine buff", () => {
+    const plain = structuredClone(data);
+
+    plain.items.find((item) => item.id === "salmon_pie")!.canBeFine = false;
+    expect(buildGearData(plain).foods.find((food) => food.id === "salmon_pie")?.fineStats).toBeNull();
   });
 });

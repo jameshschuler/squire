@@ -49,6 +49,7 @@ export interface Character {
   collectibles: string[];
   equipped: Partial<Record<EquipmentSlot, OwnedItem>>;
   owned: OwnedStack[];
+  fineItems: string[];
   pets: OwnedPet[];
 }
 
@@ -133,12 +134,9 @@ export function parseCharacterExport(text: string): Character {
   const skillLevels = Object.fromEntries(Object.entries(data.skills).map(([skill, xp]) => [skill, skillLevel(xp)]));
   const equippedIds = EQUIPMENT_SLOTS.flatMap((slot) => (data.gear[slot] ? [[slot, data.gear[slot]] as const] : []));
   const counts = new Map<string, number>();
+  const held = [...Object.entries(data.bank), ...Object.entries(data.inventory)].filter(([, count]) => count > 0);
 
-  for (const [id, count] of [
-    ...equippedIds.map(([, id]) => [id, 1] as const),
-    ...Object.entries(data.bank),
-    ...Object.entries(data.inventory),
-  ]) {
+  for (const [id, count] of [...equippedIds.map(([, id]) => [id, 1] as const), ...held]) {
     counts.set(id, (counts.get(id) ?? 0) + count);
   }
 
@@ -156,6 +154,9 @@ export function parseCharacterExport(text: string): Character {
     owned: [...counts]
       .filter(([id, count]) => count > 0 && !id.endsWith(FINE_SUFFIX))
       .map(([id, count]) => ({ ...ownedItem(id), count })),
+    fineItems: [
+      ...new Set(held.flatMap(([id]) => (id.endsWith(FINE_SUFFIX) ? [id.slice(0, -FINE_SUFFIX.length)] : []))),
+    ],
     pets: [...(data.pets?.pet ? [data.pets.pet] : []), ...(data.available_pets ?? [])].map(ownedPet),
   };
 }
