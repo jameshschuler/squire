@@ -1,5 +1,6 @@
 import type { GearType } from "@walkscape-community/data-api-client";
 import {
+  foodCandidate,
   gearCandidate,
   petCandidate,
   situationFor,
@@ -9,10 +10,12 @@ import {
   type Situation,
 } from "./candidates.js";
 import {
+  ownedFoods,
   ownedGear,
   ownedPets,
   skillLevelOf,
   toolSlotsOf,
+  type OwnedFood,
   type OwnedGear,
   type OwnedPetView,
   type PlayerProfile,
@@ -59,6 +62,7 @@ export interface GearSuggestion {
   location: LocationView | null;
   picks: GearPick[];
   pet: OwnedPetView | null;
+  food: OwnedFood | null;
   totals: StatTotals;
   result: StepsResult;
   goals: GoalId[];
@@ -296,18 +300,19 @@ function planAt(
   }));
   const items = choices.map((choice) => choice.candidate);
   const pets = ownedPets(profile, gear.pets).map((pet) => petCandidate(situation, pet));
+  const foods = ownedFoods(profile, gear.foods).map((food) => foodCandidate(situation, food));
   const level = skillLevelOf(profile, target.skill);
   const goalScore = goalScorer(goals, baseXp);
   const score = (totals: StatTotals) => goalScore(stepsPerAction(target, level, totals), totals);
   const rules = keywordRules(
     gear.bannedKeywords,
-    [...items, ...pets],
+    [...items, ...pets, ...foods],
     needs.map((need) => need.count),
   );
   const slotGroups: SlotGroup[] = GEAR_SLOTS.map(({ slot }) => ({
     capacity: capacityOf(slot),
     choices: items.filter((item) => item.slot === slot),
-  })).concat({ capacity: 1, choices: pets });
+  })).concat({ capacity: 1, choices: pets }, { capacity: 1, choices: foods });
   const useful = usefulEfficiency(target, level, slotGroups);
   const groups = slotGroups
     .map(({ capacity, choices }) => ({
@@ -333,6 +338,7 @@ function finish({ plan, searched }: LocationProgress, goals: GoalId[]): Search {
     location: situation.location,
     picks: chosen.flatMap((candidate) => (candidate.pick ? [candidate.pick] : [])),
     pet: chosen.find((candidate) => candidate.pet)?.pet ?? null,
+    food: chosen.find((candidate) => candidate.food)?.food ?? null,
     totals,
     result: stepsPerAction(situation.target, level, totals),
     goals,
@@ -367,6 +373,7 @@ function distinctLocations(gear: GearData, locations: LocationView[]): (Location
   const conditions = [
     ...gear.items.flatMap((item) => [item.stats, ...Object.values(item.tierStats)]),
     ...gear.pets.flatMap((pet) => pet.levels.map((petLevel) => petLevel.stats)),
+    ...gear.foods.flatMap((food) => [food.stats, food.fineStats ?? []]),
   ].flatMap((stats) => stats.flatMap((stat) => stat.conditions));
   const realms = new Set(
     conditions.flatMap((condition) => (condition.type === "realm" ? [condition.requirement.realm] : [])),

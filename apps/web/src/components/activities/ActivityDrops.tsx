@@ -4,14 +4,14 @@ import { CollectibleBadge } from "@/components/shared/CollectibleBadge";
 import { GameIcon } from "@/components/shared/GameIcon";
 import { Section } from "@/components/shared/Section";
 import { lootTypeLabel } from "@/lib/format";
-import { dropStepsDescription, formatDropSteps } from "@/lib/drop-rates";
+import { chanceDescription, formatChance, formatRateSteps, stepsDescription } from "@/lib/drop-rates";
 
 export function ActivityDrops({ drops }: { drops: Drops }) {
   return (
     <Section title={lootTypeLabel(drops.lootType) ?? "Drops"}>
       <ul className="divide-y">
         {drops.items.map((item) => {
-          const steps = formatDropSteps(item);
+          const steps = formatRateSteps(item.rate, item.rateRange);
 
           return (
             <li key={item.id}>
@@ -19,8 +19,11 @@ export function ActivityDrops({ drops }: { drops: Drops }) {
                 <GameIcon path={item.icon} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">{item.name}</p>
+                  <p title={chanceDescription(item.rateRange)} className="text-sm text-muted-foreground tabular-nums">
+                    {formatChance(item.rate, item.rateRange)}
+                  </p>
                   {steps && (
-                    <p title={dropStepsDescription(item)} className="text-sm text-muted-foreground tabular-nums">
+                    <p title={stepsDescription(item.rateRange)} className="text-sm text-muted-foreground tabular-nums">
                       {steps}
                     </p>
                   )}

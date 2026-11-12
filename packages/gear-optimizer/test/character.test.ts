@@ -137,6 +137,16 @@ describe("parseCharacterExport", () => {
     expect(owned.some((item) => item.id.endsWith("_fine"))).toBe(false);
   });
 
+  it("lists the items carried or banked as fine", () => {
+    expect(parseCharacterExport(fixtureText).fineItems.sort()).toEqual(["coal", "ectoplasm_fish"]);
+  });
+
+  it("leaves out fine items the export lists with none left", () => {
+    const text = JSON.stringify({ ...exportFixture, inventory: { ectoplasm_fish_fine: 0 } });
+
+    expect(parseCharacterExport(text).fineItems).toEqual(["coal"]);
+  });
+
   it("reads the pet out with you and the rest of your pets, with their levels", () => {
     expect(parseCharacterExport(fixtureText).pets).toEqual([
       { species: "tortoise", level: 4 },

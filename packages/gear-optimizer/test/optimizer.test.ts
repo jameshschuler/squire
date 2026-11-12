@@ -7,6 +7,7 @@ import type { GearNeed } from "../src/game-data.js";
 import {
   BEST_IN_GAME,
   optimizeGear,
+  type FoodView,
   type GearCondition,
   type GearData,
   type GearItem,
@@ -34,6 +35,16 @@ const efficiency = (value: number, ...conditions: GearCondition[]) =>
   stat("workEfficiency", value, true, ...conditions);
 const flatSteps = (value: number, ...conditions: GearCondition[]) => stat("stepsRequired", value, false, ...conditions);
 const doubleAction = (value: number) => stat("doubleAction", value, true);
+const food = (id: string, stats: GearStat[], fineStats: GearStat[] | null = null): FoodView => ({
+  id,
+  name: id,
+  icon: "",
+  quality: null,
+  isCollectible: false,
+  keywords: [],
+  stats,
+  fineStats,
+});
 const mainSkill = (skill: string): GearCondition => ({ type: "mainSkill", opposite: false, requirement: { skill } });
 
 function item(id: string, slot: GearType, stats: GearStat[], extra: Partial<GearItem> = {}): GearItem {
@@ -59,6 +70,7 @@ function gearData(items: GearItem[], extra: Partial<GearData> = {}): GearData {
     version: "v1",
     items,
     pets: [],
+    foods: [],
     bannedKeywords: {},
     skills: [
       { id: "mining", name: "Mining", type: "gathering" },
@@ -89,6 +101,7 @@ function character(owned: string[], extra: Partial<Character> = {}): PlayerProfi
 
         return { id, quality: (quality as GearItem["quality"]) ?? null, count: Number(count) };
       }),
+      fineItems: [],
       pets: [],
       ...extra,
     },
@@ -459,6 +472,59 @@ describe("optimizeGear", () => {
 
     expect(optimizeGear(gear, owned, mining).pet).toMatchObject({ pet: { id: "camel" }, level: 1 });
     expect(optimizeGear(gear, BEST_IN_GAME, mining).pet).toMatchObject({ pet: { id: "mummy" }, level: 4 });
+  });
+
+  describe("food", () => {
+    const gear = gearData([item("pickaxe", "tool", [efficiency(0.2)])], {
+      foods: [
+        food("pancake", [efficiency(0.1, mainSkill("mining"))], [efficiency(0.2, mainSkill("mining"))]),
+        food("bug_bait", [flatSteps(-1, mainSkill("mining"))], [flatSteps(-2, mainSkill("mining"))]),
+        food("cooked_shrimp", [flatSteps(-30, mainSkill("cooking"))]),
+        food("beef_stew", [stat("inventorySpace", 5, false)]),
+      ],
+    });
+    const eaten = (profile: PlayerProfile) => {
+      const chosen = optimizeGear(gear, profile, mining).food;
+
+      return chosen && `${chosen.food.id}${chosen.fine ? ":fine" : ""}`;
+    };
+
+    it("eats the food that saves the most steps, alongside the gear", () => {
+      const suggestion = optimizeGear(gear, character(["pickaxe", "pancake", "bug_bait"]), mining);
+
+      expect(suggestion.food).toMatchObject({ food: { id: "pancake" }, fine: false });
+      expect(suggestion.picks.map((pick) => pick.item.id)).toEqual(["pickaxe"]);
+      expect(suggestion.result.steps).toBe(Math.ceil(100 / 1.3));
+    });
+
+    it("uses the fine buff only when the character has a fine one", () => {
+      expect(eaten(character(["bug_bait"]))).toBe("bug_bait");
+      expect(eaten(character([], { fineItems: ["bug_bait"] }))).toBe("bug_bait:fine");
+    });
+
+    it("assumes every food at its best without a character", () => {
+      expect(eaten(BEST_IN_GAME)).toBe("pancake:fine");
+    });
+
+    it("eats nothing when no food the character has helps here", () => {
+      expect(eaten(character(["cooked_shrimp", "beef_stew"]))).toBeNull();
+    });
+
+    it("lists the food among the set's stat sources", () => {
+      const owned = character(["bug_bait"]);
+      const suggestion = optimizeGear(gear, owned, mining);
+
+      expect(setStatsBySource(gear, owned, mining, suggestion)).toEqual([
+        { stat: "stepsRequired", isPercent: false, value: -1, source: "bug_bait" },
+      ]);
+    });
+
+    it("names a fine food as fine", () => {
+      const owned = character([], { fineItems: ["bug_bait"] });
+      const suggestion = optimizeGear(gear, owned, mining);
+
+      expect(setStatsBySource(gear, owned, mining, suggestion)[0]?.source).toBe("bug_bait (fine)");
+    });
   });
 
   it("weighs double action once steps can't go lower", () => {

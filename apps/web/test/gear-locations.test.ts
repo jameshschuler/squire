@@ -32,6 +32,7 @@ const gear = (items: GearItem[]): GearData => ({
   version: "test",
   items,
   pets: [],
+  foods: [],
   bannedKeywords: {},
   skills: [{ id: "tailoring", name: "Tailoring", type: "artisan" }],
   locations: [

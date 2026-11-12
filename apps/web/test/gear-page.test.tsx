@@ -392,6 +392,20 @@ describe("Gear page", () => {
     expect(screen.getByText("Tool 6")).toBeDefined();
   });
 
+  it("adds the food that helps most next to the gear, linked to its page", async () => {
+    const bugBait = miningGear("bug_bait", "tool", -1);
+
+    gear = {
+      ...withGear([pickaxe]),
+      foods: [{ ...bugBait, stats: bugBait.stats, fineStats: [{ ...bugBait.stats[0]!, value: -2 }] }],
+    };
+    await renderPage({ target: "activity:mine_gold_ore", goals: "steps" });
+    const food = await screen.findByRole("link", { name: /^Food · fine.*bug bait\W+fine$/ });
+
+    expect(food.getAttribute("href")).toBe("/items/bug_bait");
+    expect(food.className).toContain("border-blue-500");
+  });
+
   it("says when the character's level is too low, and still shows the set", async () => {
     addCharacter();
     await renderPage({ target: "recipe:smelt_a_gold_bar", goals: "steps" });

@@ -21,7 +21,8 @@ const source = (id: string, skill: string, level: number): ItemSource => ({
   skills: [{ id: skill, name: skill, level }],
   lootType: "main",
   locations: [],
-  stepsEach: null,
+  rate: { chance: 1, stepsEach: null, baseSteps: null },
+  rateRange: null,
 });
 
 const goldBar = book.recipes.find((recipe) => recipe.id === "smelt_a_gold_bar")!.outputs[0]!;

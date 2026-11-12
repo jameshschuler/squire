@@ -2,7 +2,7 @@ import { MAX_LEVEL, toolSlots, type Character, type OwnedPet } from "./character
 import { QUALITIES, QUALITY_RANK, type ItemQuality } from "./game-data.js";
 import { stackedStats } from "./items.js";
 import { copiesAllowed } from "./slots.js";
-import type { GearCondition, GearItem, GearStat, PetView } from "./types.js";
+import type { FoodView, GearCondition, GearItem, GearStat, PetView } from "./types.js";
 
 export type PlayerProfile = { kind: "best" } | { kind: "character"; character: Character };
 
@@ -15,6 +15,12 @@ export interface OwnedGear {
 export interface OwnedPetView {
   pet: PetView;
   level: number;
+  stats: GearStat[];
+}
+
+export interface OwnedFood {
+  food: FoodView;
+  fine: boolean;
   stats: GearStat[];
 }
 
@@ -76,6 +82,25 @@ export function ownedPets(profile: PlayerProfile, pets: PetView[]): OwnedPetView
   }
 
   return profile.character.pets.flatMap((owned) => petAt(pets, owned) ?? []);
+}
+
+// The foods a profile can eat, normal and fine apart, since a fine buff is stronger but can also
+// strengthen a food's penalty.
+export function ownedFoods(profile: PlayerProfile, foods: FoodView[]): OwnedFood[] {
+  const normal = (food: FoodView): OwnedFood => ({ food, fine: false, stats: food.stats });
+  const fine = (food: FoodView): OwnedFood[] => (food.fineStats ? [{ food, fine: true, stats: food.fineStats }] : []);
+
+  if (profile.kind === "best") {
+    return foods.flatMap((food) => [normal(food), ...fine(food)]);
+  }
+
+  const owned = new Set(profile.character.owned.map((item) => item.id));
+  const ownedFine = new Set(profile.character.fineItems);
+
+  return foods.flatMap((food) => [
+    ...(owned.has(food.id) ? [normal(food)] : []),
+    ...(ownedFine.has(food.id) ? fine(food) : []),
+  ]);
 }
 
 export function petAt(pets: PetView[], { species, level }: OwnedPet): OwnedPetView | undefined {

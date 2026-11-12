@@ -29,6 +29,7 @@ const suggestion = (
     location: null,
     picks: Array(picks).fill({}),
     pet: null,
+    food: null,
     totals: {},
     result: steps(averageSteps),
     goals,
@@ -49,6 +50,12 @@ describe("answerNotes", () => {
 
   it("says when no gear helps", () => {
     expect(answerNotes(suggestion(80, 0), target, null)).toEqual(["No gear helps with this."]);
+  });
+
+  it("doesn't say no gear helps when the food does", () => {
+    const withFood = { ...suggestion(80, 0), food: {} } as GearSuggestion;
+
+    expect(answerNotes(withFood, target, null)).toEqual([]);
   });
 
   it("only says no gear was found, with the margin, when an empty set isn't proven", () => {

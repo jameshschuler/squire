@@ -45,6 +45,7 @@ const gearData: GearData = {
   schema: GEAR_DATA_SCHEMA,
   version: "v1",
   items: [],
+  foods: [],
   pets: [
     pet("camel", "Camel", "two_hump_camel"),
     pet("frog", "Frog", "golden_frog"),

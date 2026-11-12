@@ -2,7 +2,7 @@ import type { GearType, Requirement, StatType } from "@walkscape-community/data-
 import type { ItemQuality, ItemSummary, LocationSummary } from "./game-data.js";
 
 // Bump whenever the GearData shape changes, so cached copies on devices refresh.
-export const GEAR_DATA_SCHEMA = 1;
+export const GEAR_DATA_SCHEMA = 2;
 
 type WithoutName<T> = T extends unknown ? Omit<T, "name"> : never;
 
@@ -36,6 +36,12 @@ export interface PetView {
   levels: PetLevel[];
 }
 
+// A food's buff. `fineStats` is null when the food has no fine version.
+export interface FoodView extends ItemSummary {
+  stats: GearStat[];
+  fineStats: GearStat[] | null;
+}
+
 export interface SkillView {
   id: string;
   name: string;
@@ -52,6 +58,7 @@ export interface GearData {
   version: string;
   items: GearItem[];
   pets: PetView[];
+  foods: FoodView[];
   bannedKeywords: Record<string, string[]>;
   skills: SkillView[];
   locations: LocationView[];

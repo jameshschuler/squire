@@ -6,7 +6,9 @@ import type {
 } from "@walkscape-community/data-api-client";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import {
+  BASE_WORK_EFFICIENCY,
   SERVICE_TIERS,
+  dropChance,
   getLootTableItemIds,
   getServiceKeywords,
   isServiceRequirement,
@@ -15,6 +17,7 @@ import {
   itemsPerRoll,
   meetsServiceTier,
   rangeOf,
+  rateRangeOf,
   scalingLevels,
   stepsEach,
 } from "../src/recipe-book/game-rules.js";
@@ -129,6 +132,25 @@ describe("itemsPerAction", () => {
   });
 });
 
+describe("dropChance", () => {
+  const tables = new Map([willowTear, tinkering].map((table) => [table.id, table]));
+  const ref = (rollAmount: number, ids: string[]) => ({
+    isPrimary: false,
+    type: ["collectible"],
+    rollAmount,
+    tables: ids,
+  });
+
+  it.each([
+    ["one roll", [ref(1, ["willow_tear"])], "weeping_willow_tear", 0.0003],
+    ["at least one of several rolls", [ref(2, ["willow_tear"])], "weeping_willow_tear", 1 - 0.9997 ** 2],
+    ["a row's chance, whatever amount it drops", [ref(1, ["tinkering"])], "metal_scrap", (0.25 * 5) / 20.08],
+    ["a missing table", [ref(1, ["gone"])], "weeping_willow_tear", 0],
+  ])("counts %s", (_, refs, itemId, expected) => {
+    expect(dropChance(refs, tables, itemId)).toBeCloseTo(expected, 10);
+  });
+});
+
 describe("stepsEach", () => {
   it("matches the wiki's Wire saw: 44,000 steps from Tinkering at max work efficiency", () => {
     expect(stepsEach(92, 2.1, itemsPerRoll(tinkering, "wire_saw"))).toBe(44_176);
@@ -138,6 +160,10 @@ describe("stepsEach", () => {
     const lake = lootTable("lake", 0, [row("raw_carp", 12), row("raw_pike", 10), row("raw_trout", 15)]);
 
     expect(stepsEach(75, 1.6, itemsPerRoll(lake, "raw_trout"))).toBe(116);
+  });
+
+  it("matches the wiki's base rate for Petrified branch: 11,905 steps with no work efficiency", () => {
+    expect(stepsEach(100, BASE_WORK_EFFICIENCY, 0.0084)).toBe(11_905);
   });
 
   it("rounds steps per action up, as the game does", () => {
@@ -242,6 +268,29 @@ describe("scalingLevels", () => {
 
   it("is empty when no drop rate changes with level", () => {
     expect(scalingLevels(needs(25), [ref("tinkering")], tables)).toEqual([]);
+  });
+});
+
+describe("rateRangeOf", () => {
+  const rate = (chance: number, stepsEach: number | null) => ({
+    chance,
+    stepsEach,
+    baseSteps: stepsEach && stepsEach * 2,
+  });
+
+  it("gives each part's range, leaving out levels where the item can't drop yet", () => {
+    expect(rateRangeOf([rate(0, null), rate(0.05, 200), rate(0.4, 25)])).toEqual({
+      chance: { min: 0.05, max: 0.4 },
+      stepsEach: { min: 25, max: 200 },
+      baseSteps: { min: 50, max: 400 },
+    });
+  });
+
+  it.each([
+    ["the rate is the same at every level", [rate(0.4, 25), rate(0.4, 25)]],
+    ["the activity has no levels where rates change", []],
+  ])("is null when %s", (_, rates) => {
+    expect(rateRangeOf(rates)).toBeNull();
   });
 });
 

@@ -6,7 +6,16 @@ import type {
   LootTableDetail,
   SpecificInput,
 } from "@walkscape-community/data-api-client";
-import { itemsIn, itemsPerAction, lootTypeOf, rangeOf, scalingLevels, stepsEach } from "./game-rules.js";
+import {
+  BASE_WORK_EFFICIENCY,
+  dropChance,
+  itemsIn,
+  itemsPerAction,
+  lootTypeOf,
+  rateRangeOf,
+  scalingLevels,
+  stepsEach,
+} from "./game-rules.js";
 import { skillLevels, xpRewards } from "./lookup.js";
 import { byActivityLevel } from "./order.js";
 import { humanize, spaced } from "@walkscape-community/gear-optimizer";
@@ -15,6 +24,7 @@ import type {
   ActivityDrops,
   ActivityNeed,
   ActivityView,
+  DropRate,
   GearNeed,
   ItemSummary,
   LocationSummary,
@@ -173,12 +183,20 @@ function dropsOf(activity: ActivityDetail, { summary, tables }: ActivityIndexes)
 
   const allRefs = activity.tables ?? [];
   const levels = scalingLevels(activity.requirements, allRefs, tables);
-  const stepsAt = (itemId: string, level: number | null) =>
-    stepsEach(activity.workRequired, activity.maxWorkEfficiency, itemsPerAction(allRefs, tables, itemId, level));
+  const rateAt = (itemId: string, level: number | null): DropRate => {
+    const perAction = itemsPerAction(allRefs, tables, itemId, level);
+
+    return {
+      chance: dropChance(allRefs, tables, itemId, level),
+      stepsEach: stepsEach(activity.workRequired, activity.maxWorkEfficiency, perAction),
+      baseSteps: stepsEach(activity.workRequired, BASE_WORK_EFFICIENCY, perAction),
+    };
+  };
+
   const dropOf = (itemId: string): ActivityDrop => ({
     ...summary(itemId),
-    stepsEach: stepsAt(itemId, null),
-    stepsRange: rangeOf(levels.map((level) => stepsAt(itemId, level))),
+    rate: rateAt(itemId, null),
+    rateRange: rateRangeOf(levels.map((level) => rateAt(itemId, level))),
   });
 
   return [...refsByType]

@@ -2,9 +2,9 @@ import type { GearType, StatType } from "@walkscape-community/data-api-client";
 import { conditionHolds, situationFor, type Situation } from "./candidates.js";
 import { stackedStats } from "./items.js";
 import type { GearSuggestion } from "./optimizer.js";
-import { ownedGear, ownedPets, toolSlotsOf, type PlayerProfile } from "./profile.js";
+import { ownedGear, ownedPets, toolSlotsOf, type OwnedFood, type PlayerProfile } from "./profile.js";
 import { conflicts } from "./pruning.js";
-import { copiesAllowed, slotCapacity } from "./slots.js";
+import { copiesAllowed, slotCapacity, type ExtraSlot } from "./slots.js";
 import { STEP_STAT_SET, type WorkTarget } from "./steps.js";
 import type { GearCondition, GearData, GearStat, LocationView } from "./types.js";
 
@@ -21,7 +21,7 @@ export interface SourcedStat extends StatLine {
 interface WornPiece {
   id: string;
   name: string;
-  slot: GearType | "pet";
+  slot: GearType | ExtraSlot;
   keywords: string[];
   stats: GearStat[];
 }
@@ -182,6 +182,17 @@ function worn(gear: GearData, profile: PlayerProfile, target: WorkTarget, sugges
           },
         ]
       : []),
+    ...(suggestion.food
+      ? [
+          {
+            id: `food:${suggestion.food.food.id}`,
+            name: foodName(suggestion.food),
+            slot: "food" as const,
+            keywords: [],
+            stats: suggestion.food.stats,
+          },
+        ]
+      : []),
   ];
   const count = (keywords: string[]) => {
     const counted = new Set(keywords);
@@ -197,6 +208,10 @@ function worn(gear: GearData, profile: PlayerProfile, target: WorkTarget, sugges
       : conditionHolds(situation, condition);
 
   return { pieces, holds };
+}
+
+function foodName({ food, fine }: OwnedFood): string {
+  return fine ? `${food.name} (fine)` : food.name;
 }
 
 // How much a stat helps; fewer steps required is a gain, so its sign flips.

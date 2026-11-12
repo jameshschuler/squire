@@ -2,7 +2,14 @@ import type { GearType } from "@walkscape-community/data-api-client";
 import { sameStat, type GoalStat } from "./goals.js";
 import type { ItemQuality } from "./game-data.js";
 import { ownedKey } from "./items.js";
-import { playerConditionHolds, type OwnedGear, type OwnedPetView, type PlayerProfile } from "./profile.js";
+import {
+  playerConditionHolds,
+  type OwnedFood,
+  type OwnedGear,
+  type OwnedPetView,
+  type PlayerProfile,
+} from "./profile.js";
+import type { ExtraSlot } from "./slots.js";
 import { NO_STATS, addStats, type StatTotals, type WorkTarget } from "./steps.js";
 import type { GearCondition, GearData, GearItem, GearStat, LocationView } from "./types.js";
 
@@ -19,16 +26,17 @@ export interface SetBonus {
   totals: StatTotals;
 }
 
-// One owned item (or pet) reduced to what the search needs for the current situation. `totals` are the
+// One owned item (or pet, or food) reduced to what the search needs for the current situation. `totals` are the
 // stats that always apply here; `setBonuses` depend on how many set pieces end up worn; `best` is
 // `totals` plus every helpful set bonus, the most this item could ever add, and `worst` is `totals`
 // plus every harmful one, the least it could add. Pruning and dominance compare `worst` with `best`.
 export interface Candidate {
   id: string;
-  slot: GearType | "pet";
+  slot: GearType | ExtraSlot;
   keywords: string[];
   pick: GearPick | null;
   pet: OwnedPetView | null;
+  food: OwnedFood | null;
   totals: StatTotals;
   setBonuses: SetBonus[];
   best: StatTotals;
@@ -66,13 +74,26 @@ export function gearCandidate(situation: Situation, owned: OwnedGear): Candidate
       keywords: owned.item.keywords,
       pick: { slot: owned.item.slot, item: owned.item, quality: owned.quality },
       pet: null,
+      food: null,
     },
     owned.stats,
   );
 }
 
 export function petCandidate(situation: Situation, pet: OwnedPetView): Candidate {
-  return toCandidate(situation, { id: `pet:${pet.pet.id}`, slot: "pet", keywords: [], pick: null, pet }, pet.stats);
+  return toCandidate(
+    situation,
+    { id: `pet:${pet.pet.id}`, slot: "pet", keywords: [], pick: null, pet, food: null },
+    pet.stats,
+  );
+}
+
+export function foodCandidate(situation: Situation, food: OwnedFood): Candidate {
+  return toCandidate(
+    situation,
+    { id: `food:${food.food.id}${food.fine ? ":fine" : ""}`, slot: "food", keywords: [], pick: null, pet: null, food },
+    food.stats,
+  );
 }
 
 // Splits an item's stats: ones whose conditions fail here are dropped, set bonuses are kept aside, and

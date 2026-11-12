@@ -280,11 +280,20 @@ describe("activities", () => {
   });
 
   it("gives every drop its steps each", () => {
-    expect(goldOre.drops.map((drop) => [drop.lootType, drop.items.map((item) => item.stepsEach)])).toEqual([
+    expect(goldOre.drops.map((drop) => [drop.lootType, drop.items.map((item) => item.rate.stepsEach)])).toEqual([
       ["main", [40]],
       ["gem", [4_600, 30_667]],
       ["chestTable", [10_000]],
     ]);
+  });
+
+  it("gives every drop its chance per action and its steps at base rate, with no work efficiency", () => {
+    const rates = goldOre.drops.flatMap((drop) => drop.items.map((item) => item.rate));
+
+    expect(rates.map((rate) => rate.chance)).toEqual(
+      [1, 40 / 4_600, 40 / 30_667, 40 / 10_000].map((chance) => expect.closeTo(chance, 4)),
+    );
+    expect(rates.map((rate) => rate.baseSteps)).toEqual([68, 7_820, 52_133, 17_000]);
   });
 
   it("counts every table in an activity's steps each for an item more than one drops", () => {
@@ -292,7 +301,7 @@ describe("activities", () => {
       data.activities[0]!.tables!.push({ isPrimary: false, type: [], rollAmount: 1, tables: ["mine_gold_ore"] });
     });
 
-    expect(activity!.drops.map((drop) => [drop.lootType, drop.items[0]!.stepsEach]).slice(0, 2)).toEqual([
+    expect(activity!.drops.map((drop) => [drop.lootType, drop.items[0]!.rate.stepsEach]).slice(0, 2)).toEqual([
       ["main", 20],
       ["secondary", 20],
     ]);
@@ -318,13 +327,13 @@ describe("activities", () => {
 
     const [wrentmarine, sunStone] = gems.items;
 
-    expect([wrentmarine!.stepsRange, sunStone!.stepsRange]).toEqual([
+    expect([wrentmarine!.rateRange?.stepsEach, sunStone!.rateRange?.stepsEach]).toEqual([
       { min: Math.round(40 / ((0.01 * 20) / (20 + 3 / 11))), max: 4_600 },
       { min: 30_667, max: Math.round(40 / ((0.01 * 3) / 11 / (20 + 3 / 11))) },
     ]);
     const [gold] = activity!.drops.find((drop) => drop.lootType === "main")!.items;
 
-    expect(gold!.stepsRange).toBeNull();
+    expect(gold!.rateRange).toBeNull();
   });
 
   it("lists an item once per loot type, even when several tables drop it", () => {
@@ -655,7 +664,8 @@ describe("sources", () => {
         skills: [{ id: "mining", name: "Mining", level: 40 }],
         lootType: "main",
         locations: [{ id: "crown_of_cinders", name: "Crown of Cinders", region: "Wrentmark" }],
-        stepsEach: 40,
+        rate: { chance: 1, stepsEach: 40, baseSteps: 68 },
+        rateRange: null,
       },
     ]);
   });
@@ -666,7 +676,7 @@ describe("sources", () => {
     });
 
     expect(sources.rough_sun_stone).toMatchObject([
-      { id: "mine_gold_ore", stepsEach: Math.round(40 / (0.01 * (3 / 23))) },
+      { id: "mine_gold_ore", rate: { stepsEach: Math.round(40 / (0.01 * (3 / 23))) } },
     ]);
   });
 
@@ -676,7 +686,7 @@ describe("sources", () => {
       data.activities[0]!.maxWorkEfficiency = 1.6;
     });
 
-    expect(sources.rough_sun_stone).toMatchObject([{ stepsEach: Math.round(43 / (0.01 * (3 / 23))) }]);
+    expect(sources.rough_sun_stone).toMatchObject([{ rate: { stepsEach: Math.round(43 / (0.01 * (3 / 23))) } }]);
   });
 
   it("has no steps each for an activity without max work efficiency", () => {
@@ -685,7 +695,7 @@ describe("sources", () => {
       data.activities[0]!.maxWorkEfficiency = null;
     });
 
-    expect(sources.rough_sun_stone).toMatchObject([{ stepsEach: null }]);
+    expect(sources.rough_sun_stone).toMatchObject([{ rate: { stepsEach: null, baseSteps: expect.any(Number) } }]);
   });
 
   it("has no entry for a material nothing drops", () => {
