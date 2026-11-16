@@ -67,6 +67,14 @@ describe("gear items", () => {
     expect(gear.find((gearItem) => gearItem.id === "birch_skis")?.gameId).toBeNull();
   });
 
+  it("skips a quality tier with no quality", () => {
+    const withBlankTier = structuredClone(data);
+    const item = withBlankTier.items.find((entry) => entry.id === "steel_hatchet")!;
+
+    item.itemQualityAttrs = [{ quality: null, attributes: item.itemAttrs ?? [] }];
+    expect(buildGearData(withBlankTier).items.find((entry) => entry.id === "steel_hatchet")?.tierStats).toEqual({});
+  });
+
   it("gives untiered gear no tier stats", () => {
     expect(gear.items.find((item) => item.id === "adjustable_wrench")?.tierStats).toEqual({});
   });

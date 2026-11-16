@@ -4826,6 +4826,346 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/titles/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List all titles
+         * @description Returns a minimal list of all items (id, name, and icon if available).
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Array of items with minimal fields */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TitleListItem"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/titles/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search titles
+         * @description Search items by queryable fields. Use query parameters to filter. Add `detailed=true` for full item data. Available fields: color, type, hidden, isDefault.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description If true, returns full item data instead of minimal fields */
+                    detailed?: "true" | "false";
+                    /** @description Filter by color */
+                    color?: "amber" | "grey" | "pink" | "skill_agility" | "skill_carpentry" | "skill_cooking" | "skill_crafting" | "skill_fishing" | "skill_foraging" | "skill_hunting" | "skill_mining" | "skill_smithing" | "skill_tailoring" | "skill_trinketry" | "skill_woodcutting" | "teal" | "yellow" | "green" | "cyan" | "lime" | "the_grey" | "red" | "brown" | "sky";
+                    /** @description Filter by type */
+                    type?: "exclusive" | "unlocked";
+                    /** @description Filter by hidden */
+                    hidden?: "true" | "false";
+                    /** @description Filter by isDefault */
+                    isDefault?: "true" | "false";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Array of matching items */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TitleDetail"][];
+                    };
+                };
+                /** @description No search parameters provided */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/titles/id/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get titles by ID
+         * @description Returns the full data for a single item by its name-based ID.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The name-based ID of the item */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Full item data */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TitleDetail"];
+                    };
+                };
+                /** @description Item not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/titles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get titles by ID (alias)
+         * @description Alias for /id/{id}. Returns the full data for a single item by its name-based ID.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The name-based ID of the item */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Full item data */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TitleDetail"];
+                    };
+                };
+                /** @description Item not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/jobs/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List this week's jobs
+         * @description Returns every job board's jobs for the running week (weeks start Monday 00:00 UTC). Filters can be combined. Refreshed from the official API at most every 15 minutes.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Job board id, name-based (e.g. azurazera_job_board) or internal */
+                    board?: string;
+                    /** @description Job difficulty, e.g. easy */
+                    difficulty?: string;
+                    /** @description Only bonus (or non-bonus) jobs */
+                    bonus?: "true" | "false";
+                    /** @description Name-based item id required by a goal or one of its alternatives */
+                    item?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The current week with its (filtered) jobs */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["JobsWeek"];
+                    };
+                };
+                /** @description Unknown job board or invalid query parameter */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                        };
+                    };
+                };
+                /** @description Jobs are unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/jobs/board/{boardId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List this week's jobs for a job board
+         * @description Shortcut for /jobs?board={boardId}.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Job board id, name-based (e.g. azurazera_job_board) or internal */
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The current week with its (filtered) jobs */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["JobsWeek"];
+                    };
+                };
+                /** @description Unknown job board */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                        };
+                    };
+                };
+                /** @description Jobs are unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/maps": {
         parameters: {
             query?: never;
@@ -5206,9 +5546,9 @@ export interface components {
             /** @description List of loot table ids */
             tables: string[];
         };
-        Requirement: components["schemas"]["MainSkillRequirement"] | components["schemas"]["MainSkillTypeRequirement"] | components["schemas"]["LocationHasKeywordsRequirement"] | components["schemas"]["AchievementPointRequirement"] | components["schemas"]["DistinctKeywordItemsEquippedRequirement"] | components["schemas"]["DistinctKeywordItemInInventoryRequirement"] | components["schemas"]["HistoryDataRequirement"] | components["schemas"]["RealmRequirement"] | components["schemas"]["TravelingRequirement"] | components["schemas"]["ServiceRequirement"] | components["schemas"]["GameDataRequirement"] | components["schemas"]["CharacterLevelRequirement"] | components["schemas"]["SkillLevelRequirement"] | components["schemas"]["SkillTypeLevelRequirement"] | components["schemas"]["ActivityTypeRequirement"] | components["schemas"]["TotalSkillLevelRequirement"] | components["schemas"]["TotalSkillLevelUpsRequirement"] | components["schemas"]["InputKeywordWithLevelRequirement"] | components["schemas"]["ItemAnywhereRequirement"] | components["schemas"]["ItemAnywhereWithYouRequirement"] | components["schemas"]["KeywordEquippedRequirement"] | components["schemas"]["KeywordWithLevelEquippedRequirement"] | components["schemas"]["ItemEquippedRequirement"] | components["schemas"]["AbilityAvailableRequirement"] | components["schemas"]["HaveCoinsRequirement"] | components["schemas"]["CollectiblesOwnedRequirement"] | components["schemas"]["ExploreRealmRequirement"] | components["schemas"]["TotalWealthRequirement"];
+        Requirement: components["schemas"]["MainSkillRequirement"] | components["schemas"]["MainSkillTypeRequirement"] | components["schemas"]["LocationHasKeywordsRequirement"] | components["schemas"]["AchievementPointRequirement"] | components["schemas"]["DistinctKeywordItemsEquippedRequirement"] | components["schemas"]["DistinctKeywordItemInInventoryRequirement"] | components["schemas"]["HistoryDataRequirement"] | components["schemas"]["RealmRequirement"] | components["schemas"]["TravelingRequirement"] | components["schemas"]["ServiceRequirement"] | components["schemas"]["GameDataRequirement"] | components["schemas"]["CharacterLevelRequirement"] | components["schemas"]["SkillLevelRequirement"] | components["schemas"]["SkillTypeLevelRequirement"] | components["schemas"]["ActivityTypeRequirement"] | components["schemas"]["TotalSkillLevelRequirement"] | components["schemas"]["TotalSkillLevelUpsRequirement"] | components["schemas"]["InputKeywordWithLevelRequirement"] | components["schemas"]["ItemAnywhereRequirement"] | components["schemas"]["ItemAnywhereWithYouRequirement"] | components["schemas"]["KeywordEquippedRequirement"] | components["schemas"]["KeywordWithLevelEquippedRequirement"] | components["schemas"]["ItemEquippedRequirement"] | components["schemas"]["AbilityAvailableRequirement"] | components["schemas"]["HaveCoinsRequirement"] | components["schemas"]["CollectiblesOwnedRequirement"] | components["schemas"]["ExploreRealmRequirement"] | components["schemas"]["TotalWealthRequirement"] | components["schemas"]["ClosedBetaTesterRequirement"] | components["schemas"]["HighestSupporterTierRequirement"] | components["schemas"]["IronfootRequirement"] | components["schemas"]["ItemsGainedRequirement"] | components["schemas"]["SupporterLifetimeMonthsRequirement"] | components["schemas"]["SupporterLifetimeValueRequirement"] | components["schemas"]["SupporterTierRequirement"] | components["schemas"]["TotalStepsRequirement"];
         MainSkillRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5220,7 +5560,7 @@ export interface components {
             };
         };
         MainSkillTypeRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5232,7 +5572,7 @@ export interface components {
             };
         };
         LocationHasKeywordsRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5244,7 +5584,7 @@ export interface components {
             };
         };
         AchievementPointRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5257,7 +5597,7 @@ export interface components {
             };
         };
         DistinctKeywordItemsEquippedRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5270,7 +5610,7 @@ export interface components {
             };
         };
         DistinctKeywordItemInInventoryRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5283,7 +5623,7 @@ export interface components {
             };
         };
         HistoryDataRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5298,7 +5638,7 @@ export interface components {
             };
         };
         RealmRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5310,7 +5650,7 @@ export interface components {
             };
         };
         TravelingRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5320,7 +5660,7 @@ export interface components {
             requirement: Record<string, unknown>;
         };
         ServiceRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5334,7 +5674,7 @@ export interface components {
             };
         };
         GameDataRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5347,7 +5687,7 @@ export interface components {
             };
         };
         CharacterLevelRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5359,7 +5699,7 @@ export interface components {
             };
         };
         SkillLevelRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5372,7 +5712,7 @@ export interface components {
             };
         };
         SkillTypeLevelRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5385,7 +5725,7 @@ export interface components {
             };
         };
         ActivityTypeRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5399,7 +5739,7 @@ export interface components {
             };
         };
         TotalSkillLevelRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5411,7 +5751,7 @@ export interface components {
             };
         };
         TotalSkillLevelUpsRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5423,7 +5763,7 @@ export interface components {
             };
         };
         InputKeywordWithLevelRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5436,7 +5776,7 @@ export interface components {
             };
         };
         ItemAnywhereRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5448,7 +5788,7 @@ export interface components {
             };
         };
         ItemAnywhereWithYouRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5460,7 +5800,7 @@ export interface components {
             };
         };
         KeywordEquippedRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5472,7 +5812,7 @@ export interface components {
             };
         };
         KeywordWithLevelEquippedRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5486,7 +5826,7 @@ export interface components {
             };
         };
         ItemEquippedRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5498,7 +5838,7 @@ export interface components {
             };
         };
         AbilityAvailableRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5511,7 +5851,7 @@ export interface components {
             };
         };
         HaveCoinsRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5523,7 +5863,7 @@ export interface components {
             };
         };
         CollectiblesOwnedRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5535,7 +5875,7 @@ export interface components {
             };
         };
         ExploreRealmRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5547,7 +5887,7 @@ export interface components {
             };
         };
         TotalWealthRequirement: {
-            name: string | null;
+            name?: string | null;
             opposite: boolean;
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -5556,6 +5896,99 @@ export interface components {
             type: "totalWealth";
             requirement: {
                 amount: number;
+            };
+        };
+        ClosedBetaTesterRequirement: {
+            name?: string | null;
+            opposite: boolean;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "closedBetaTester";
+            requirement: Record<string, unknown>;
+        };
+        HighestSupporterTierRequirement: {
+            name?: string | null;
+            opposite: boolean;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "highestSupporterTier";
+            requirement: {
+                tier: string;
+            };
+        };
+        IronfootRequirement: {
+            name?: string | null;
+            opposite: boolean;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "ironfoot";
+            requirement: Record<string, unknown>;
+        };
+        ItemsGainedRequirement: {
+            name?: string | null;
+            opposite: boolean;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "itemsGained";
+            requirement: {
+                keywords: string[];
+                amount: number;
+            };
+        };
+        SupporterLifetimeMonthsRequirement: {
+            name?: string | null;
+            opposite: boolean;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "supporterLifetimeMonths";
+            requirement: {
+                months: number;
+            };
+        };
+        SupporterLifetimeValueRequirement: {
+            name?: string | null;
+            opposite: boolean;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "supporterLifetimeValue";
+            requirement: {
+                amount: number;
+            };
+        };
+        SupporterTierRequirement: {
+            name?: string | null;
+            opposite: boolean;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "supporterTier";
+            requirement: {
+                tier: string;
+            };
+        };
+        TotalStepsRequirement: {
+            name?: string | null;
+            opposite: boolean;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "totalSteps";
+            requirement: {
+                steps: number;
             };
         };
         /** @description Represents a stat associated with an attribute */
@@ -5718,6 +6151,67 @@ export interface components {
              * @example 0.02
              */
             amount: number;
+        };
+        JobsWeek: {
+            /** @description Week number; week 0 began on 2024-01-01 (UTC) */
+            weekIndex: number;
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: string;
+            jobs: components["schemas"]["Job"][];
+        };
+        Job: {
+            /** @description Job ID from the official API */
+            id: number;
+            /**
+             * @description Name-based job board ID
+             * @example azurazera_job_board
+             */
+            board: string | null;
+            slot: number;
+            /** @example easy */
+            difficulty: string | null;
+            special: string | null;
+            bonus: boolean;
+            requiredLevel: number;
+            /** Format: date-time */
+            expiresAt: string;
+            goals: components["schemas"]["JobGoal"][];
+            rewards: components["schemas"]["JobReward"][];
+        };
+        JobGoal: components["schemas"]["JobGoalOption"] & {
+            /** @description Alternative ways to complete the goal, usually the same item in a different quality and quantity */
+            alternatives: components["schemas"]["JobGoalOption"][];
+        };
+        JobItem: {
+            /** @description Name-based item ID, or null if the item is unknown */
+            id: string | null;
+            quality: components["schemas"]["ItemQuality"];
+            /** @description Item tag, e.g. "none" */
+            tag: string | null;
+        };
+        /**
+         * @description Quality tier of the item
+         * @enum {string|null}
+         */
+        ItemQuality: "common" | "uncommon" | "rare" | "epic" | "legendary" | "ethereal" | null;
+        JobGoalOption: {
+            item: components["schemas"]["JobItem"];
+            /** @description Amount of the item to bring */
+            quantity: number;
+        };
+        JobReward: {
+            /** @description Reward kind, e.g. "faction_reputation" or "item" */
+            kind: string;
+            /** @description Name-based faction ID (faction_reputation rewards) */
+            faction?: string | null;
+            item?: components["schemas"]["JobItem"] & unknown;
+            /** @description Target of other reward kinds */
+            target?: string | null;
+            amount?: number;
+            /** @description Item quantity (item rewards) */
+            quantity?: number;
         };
         AbilityListItem: {
             /** @example clever_climber */
@@ -6001,11 +6495,6 @@ export interface components {
                 value: unknown;
             };
         };
-        /**
-         * @description Quality tier of the item
-         * @enum {string}
-         */
-        ItemQuality: "common" | "uncommon" | "rare" | "epic" | "legendary" | "ethereal";
         /** @description Bonus attributes applied per quality tier */
         ItemQualityAttributes: {
             quality: components["schemas"]["ItemQuality"];
@@ -6509,16 +6998,7 @@ export interface components {
             /** @description The name of the job board */
             name: string;
         };
-        JobBoardsDetail: components["schemas"]["JobBoardsListItem"] & {
-            jobs: {
-                rewards: {
-                    [key: string]: unknown;
-                }[] | null;
-                objectives: {
-                    [key: string]: unknown;
-                }[] | null;
-            }[];
-        };
+        JobBoardsDetail: components["schemas"]["JobBoardsListItem"] & Record<string, unknown>;
         KeywordListItem: {
             id: string;
             name: string;
@@ -7078,6 +7558,97 @@ export interface components {
             keyword: string[];
             requirements: components["schemas"]["TerrainModifierRequirement"][];
         };
+        TitleListItem: {
+            /**
+             * @description The unique identifier for the title
+             * @example closed_beta_tester
+             */
+            id: string;
+            /**
+             * @description The display name of the title
+             * @example Closed Beta Tester
+             */
+            name: string;
+            /**
+             * @description Description for how to acquire
+             * @example Participated in the closed beta test
+             */
+            desc: string;
+            /**
+             * @description The filename of the icon for the title
+             * @example closed_beta_tester.png
+             */
+            icon: string;
+            /**
+             * @description A string name for the color of the title
+             * @example amber
+             */
+            color: string;
+            /**
+             * @description The type of the title. Unlocked via in-game progression or exclusive to certain users
+             * @example exclusive
+             * @enum {string}
+             */
+            type: "exclusive" | "unlocked";
+            /** @description The requirements to unlock the title */
+            requirements: components["schemas"]["TitlesRequirement"][];
+            /**
+             * @description Whether the acquisition method for the title is hidden from the user
+             * @example false
+             */
+            hidden: boolean;
+            /**
+             * @description Whether the title is a default title for all users
+             * @example false
+             */
+            isDefault: boolean;
+        };
+        TitlesRequirement: components["schemas"]["ClosedBetaTesterRequirement"] | components["schemas"]["HighestSupporterTierRequirement"] | components["schemas"]["HistoryDataRequirement"] | components["schemas"]["IronfootRequirement"] | components["schemas"]["ItemsGainedRequirement"] | components["schemas"]["SkillLevelRequirement"] | components["schemas"]["SupporterLifetimeMonthsRequirement"] | components["schemas"]["SupporterLifetimeValueRequirement"] | components["schemas"]["SupporterTierRequirement"] | components["schemas"]["TotalSkillLevelRequirement"] | components["schemas"]["TotalStepsRequirement"];
+        TitleDetail: {
+            /**
+             * @description The unique identifier for the title
+             * @example closed_beta_tester
+             */
+            id: string;
+            /**
+             * @description The display name of the title
+             * @example Closed Beta Tester
+             */
+            name: string;
+            /**
+             * @description Description for how to acquire
+             * @example Participated in the closed beta test
+             */
+            desc: string;
+            /**
+             * @description The filename of the icon for the title
+             * @example closed_beta_tester.png
+             */
+            icon: string;
+            /**
+             * @description A string name for the color of the title
+             * @example amber
+             */
+            color: string;
+            /**
+             * @description The type of the title. Unlocked via in-game progression or exclusive to certain users
+             * @example exclusive
+             * @enum {string}
+             */
+            type: "exclusive" | "unlocked";
+            /** @description The requirements to unlock the title */
+            requirements: components["schemas"]["TitlesRequirement"][];
+            /**
+             * @description Whether the acquisition method for the title is hidden from the user
+             * @example false
+             */
+            hidden: boolean;
+            /**
+             * @description Whether the title is a default title for all users
+             * @example false
+             */
+            isDefault: boolean;
+        };
     };
     responses: never;
     parameters: never;
@@ -7119,6 +7690,14 @@ export type HaveCoinsRequirement = components['schemas']['HaveCoinsRequirement']
 export type CollectiblesOwnedRequirement = components['schemas']['CollectiblesOwnedRequirement'];
 export type ExploreRealmRequirement = components['schemas']['ExploreRealmRequirement'];
 export type TotalWealthRequirement = components['schemas']['TotalWealthRequirement'];
+export type ClosedBetaTesterRequirement = components['schemas']['ClosedBetaTesterRequirement'];
+export type HighestSupporterTierRequirement = components['schemas']['HighestSupporterTierRequirement'];
+export type IronfootRequirement = components['schemas']['IronfootRequirement'];
+export type ItemsGainedRequirement = components['schemas']['ItemsGainedRequirement'];
+export type SupporterLifetimeMonthsRequirement = components['schemas']['SupporterLifetimeMonthsRequirement'];
+export type SupporterLifetimeValueRequirement = components['schemas']['SupporterLifetimeValueRequirement'];
+export type SupporterTierRequirement = components['schemas']['SupporterTierRequirement'];
+export type TotalStepsRequirement = components['schemas']['TotalStepsRequirement'];
 export type AttrStat = components['schemas']['AttrStat'];
 export type ExperienceAction = components['schemas']['ExperienceAction'];
 export type RollLootTableAction = components['schemas']['RollLootTableAction'];
@@ -7133,6 +7712,13 @@ export type NormalData = components['schemas']['NormalData'];
 export type NullData = components['schemas']['NullData'];
 export type ItemReward = components['schemas']['ItemReward'];
 export type FactionReputationReward = components['schemas']['FactionReputationReward'];
+export type JobsWeek = components['schemas']['JobsWeek'];
+export type Job = components['schemas']['Job'];
+export type JobGoal = components['schemas']['JobGoal'];
+export type JobItem = components['schemas']['JobItem'];
+export type ItemQuality = components['schemas']['ItemQuality'];
+export type JobGoalOption = components['schemas']['JobGoalOption'];
+export type JobReward = components['schemas']['JobReward'];
 export type AbilityListItem = components['schemas']['AbilityListItem'];
 export type AbilityType = components['schemas']['AbilityType'];
 export type AbilityDetail = components['schemas']['AbilityDetail'];
@@ -7160,7 +7746,6 @@ export type GlobalVariableDetail = components['schemas']['GlobalVariableDetail']
 export type ItemListItem = components['schemas']['ItemListItem'];
 export type ItemDetail = components['schemas']['ItemDetail'];
 export type CollectibleItem = components['schemas']['CollectibleItem'];
-export type ItemQuality = components['schemas']['ItemQuality'];
 export type ItemQualityAttributes = components['schemas']['ItemQualityAttributes'];
 export type Buff = components['schemas']['Buff'];
 export type ConsumableItem = components['schemas']['ConsumableItem'];
@@ -7221,5 +7806,8 @@ export type StatDetail = components['schemas']['StatDetail'];
 export type TerrainModifierListItem = components['schemas']['TerrainModifierListItem'];
 export type TerrainModifierRequirement = components['schemas']['TerrainModifierRequirement'];
 export type TerrainModifierDetail = components['schemas']['TerrainModifierDetail'];
+export type TitleListItem = components['schemas']['TitleListItem'];
+export type TitlesRequirement = components['schemas']['TitlesRequirement'];
+export type TitleDetail = components['schemas']['TitleDetail'];
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;

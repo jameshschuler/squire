@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { ApiResource } from "../src/api-resources.js";
 import { loadAllEntries, type Endpoints } from "../src/loaders.js";
 
-type Entry = { id: string; full: boolean; canBeSold?: boolean; relatedSkills?: string[] };
+type Entry = { id: string; full: boolean; canBeSold?: boolean; relatedSkills?: string[]; type?: string };
 
 function fakeClient(entries: Partial<Record<ApiResource, Entry[]>>) {
   const list = vi.fn(async (resource: ApiResource) => (entries[resource] ?? []).map(({ id }) => ({ id })));
@@ -37,6 +37,22 @@ describe("loadAllEntries", () => {
     expect(search.mock.calls).toEqual([
       ["items", { canBeSold: true }, true],
       ["items", { canBeSold: false }, true],
+    ]);
+    expect(get).not.toHaveBeenCalled();
+  });
+
+  it("loads titles with one search per title type", async () => {
+    const { client, search, get } = fakeClient({
+      titles: [
+        { id: "the_walker", full: true, type: "unlocked" },
+        { id: "beta_tester", full: true, type: "exclusive" },
+      ],
+    });
+
+    await expect(loadAllEntries(client, "titles")).resolves.toHaveLength(2);
+    expect(search.mock.calls).toEqual([
+      ["titles", { type: "exclusive" }, true],
+      ["titles", { type: "unlocked" }, true],
     ]);
     expect(get).not.toHaveBeenCalled();
   });

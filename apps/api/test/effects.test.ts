@@ -376,6 +376,19 @@ describe("itemEffects for crafted gear", () => {
     expect(uncommon!.effects.map((effect) => effect.normal)).toEqual(["+1.3"]);
   });
 
+  it("skips a quality tier the API sends without a quality", () => {
+    const gear = structuredClone(hatchet);
+
+    gear.itemQualityAttrs = [...(gear.itemQualityAttrs ?? []), { quality: null, attributes: gear.itemAttrs ?? [] }];
+    expect(itemEffects(gear, NAMES)!.tiers.map((entry) => entry.quality)).toEqual([
+      "uncommon",
+      "rare",
+      "epic",
+      "legendary",
+      "ethereal",
+    ]);
+  });
+
   it("gives gear without tiers an empty tier list", () => {
     const ankh = (gearItems as unknown as ItemDetail[]).find((item) => item.id === "ancient_ankh")!;
 

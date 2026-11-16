@@ -83,10 +83,14 @@ describe.skipIf(!apiKey)("live dev API matches its OpenAPI spec", () => {
     };
 
     for (const resource of resources as ApiResource[]) {
-      const endpoints = client[resourceKey(resource)] as unknown as {
-        list(): Promise<{ id: string }[]>;
-        get(id: string): Promise<unknown>;
-      };
+      const endpoints = client[resourceKey(resource)] as unknown as
+        { list(): Promise<{ id: string }[]>; get(id: string): Promise<unknown> } | undefined;
+
+      if (!endpoints) {
+        mismatches.push(`${resource} is in the spec but the client has no endpoints for it; run the generate script`);
+        continue;
+      }
+
       const list = await endpoints.list();
 
       check(`${resource} list`, responseSchema(`/${resource}/`), list);
