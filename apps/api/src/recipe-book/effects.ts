@@ -1,5 +1,5 @@
 import type { Attribute, ItemDetail, Requirement, SkillDetail } from "@walkscape-community/data-api-client";
-import { capitalize, spaced } from "@walkscape-community/gear-optimizer";
+import { capitalize, qualityTiers, spaced } from "@walkscape-community/gear-optimizer";
 import {
   QUALITY_RANK,
   type Effect,
@@ -34,7 +34,7 @@ export function itemEffects(item: ItemDetail, names: EffectNames): ItemEffects |
     attributes.flatMap((attribute) => effectLine(attribute, null, names));
   const base = item.itemAttrs ?? [];
   const effects = gearEffects(base);
-  const tiers = qualityTotals(base, item.itemQualityAttrs ?? []).map(({ quality, attributes }): QualityEffects => ({
+  const tiers = qualityTotals(base, qualityTiers(item)).map(({ quality, attributes }): QualityEffects => ({
     quality,
     effects: attributeEffects(attributes, names),
   }));

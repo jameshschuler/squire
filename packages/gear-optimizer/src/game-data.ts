@@ -34,7 +34,7 @@ export interface GameData {
   gameIds: Record<string, string>;
 }
 
-export type ItemQuality = ItemDetail["quality"];
+export type ItemQuality = NonNullable<ItemDetail["quality"]>;
 
 export const QUALITIES: ItemQuality[] = ["common", "uncommon", "rare", "epic", "legendary", "ethereal"];
 export const QUALITY_RANK = new Map(QUALITIES.map((quality, index) => [quality, index]));

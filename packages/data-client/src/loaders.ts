@@ -17,6 +17,7 @@ const BULK_FILTERS: { [R in keyof typeof SEARCH_VALUES]?: keyof (typeof SEARCH_V
   recipes: "relatedSkills",
   services: "serviceType",
   shops: "onlyPurchaseSellingListItems",
+  titles: "type",
 };
 
 type Entry = { id: string };

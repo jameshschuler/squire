@@ -206,7 +206,7 @@ describe("createClient", () => {
     const namespaces = [
       ...["abilities", "achievements", "activities", "buildings", "cooldowns", "factions", "items", "keywords"],
       ...["locations", "lootTables", "pfpOptions", "recipes", "rewards", "routes", "services", "shops", "skills"],
-      ...["stats", ...unsearchable],
+      ...["stats", "titles", ...unsearchable],
     ];
 
     expect(namespaces).toHaveLength(RESOURCES.length);

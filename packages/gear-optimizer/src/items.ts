@@ -25,6 +25,15 @@ export function stackedStats(item: GearItem, quality: ItemQuality | null): GearS
   return [...item.stats, ...tiers.flatMap((tier) => item.tierStats[tier] ?? [])];
 }
 
+type QualityTier = NonNullable<ItemDetail["itemQualityAttrs"]>[number];
+
+// The item's quality tiers, leaving out any the API sends without a quality.
+export function qualityTiers(item: ItemDetail): (QualityTier & { quality: ItemQuality })[] {
+  return (item.itemQualityAttrs ?? []).filter((tier): tier is QualityTier & { quality: ItemQuality } =>
+    Boolean(tier.quality),
+  );
+}
+
 export function isGear(item: ItemDetail): item is GearDetail {
   return "gearType" in item && typeof item.gearType === "string";
 }
@@ -33,8 +42,8 @@ function gearItem(item: GearDetail, gameIds: Record<string, string>, summary: (i
   const gameId = gameIds[item.id];
   const tierStats: GearItem["tierStats"] = {};
 
-  for (const { quality, attributes } of item.itemQualityAttrs ?? []) {
-    tierStats[quality as ItemQuality] = gearStats(attributes ?? []);
+  for (const { quality, attributes } of qualityTiers(item)) {
+    tierStats[quality] = gearStats(attributes ?? []);
   }
 
   return {
@@ -66,6 +75,6 @@ export function gearStats(attributes: Attribute[]): GearStat[] {
   });
 }
 
-function withoutName({ name: _name, ...condition }: { name: string | null; type: string }): GearCondition {
+function withoutName({ name: _name, ...condition }: { name?: string | null; type: string }): GearCondition {
   return condition as GearCondition;
 }

@@ -24,7 +24,8 @@ export const RESOURCES = [
   "shops",
   "skills",
   "stats",
-  "terrain_modifiers"
+  "terrain_modifiers",
+  "titles"
 ] as const;
 
 export const SEARCHABLE_RESOURCES = [
@@ -45,7 +46,8 @@ export const SEARCHABLE_RESOURCES = [
   "services",
   "shops",
   "skills",
-  "stats"
+  "stats",
+  "titles"
 ] as const;
 
 export const SEARCH_VALUES = {
@@ -713,6 +715,46 @@ export const SEARCH_VALUES = {
       "doubleItem",
       "dropAsFine",
       "swapItem"
+    ]
+  },
+  "titles": {
+    "color": [
+      "amber",
+      "grey",
+      "pink",
+      "skill_agility",
+      "skill_carpentry",
+      "skill_cooking",
+      "skill_crafting",
+      "skill_fishing",
+      "skill_foraging",
+      "skill_hunting",
+      "skill_mining",
+      "skill_smithing",
+      "skill_tailoring",
+      "skill_trinketry",
+      "skill_woodcutting",
+      "teal",
+      "yellow",
+      "green",
+      "cyan",
+      "lime",
+      "the_grey",
+      "red",
+      "brown",
+      "sky"
+    ],
+    "type": [
+      "exclusive",
+      "unlocked"
+    ],
+    "hidden": [
+      true,
+      false
+    ],
+    "isDefault": [
+      true,
+      false
     ]
   }
 } as const;
