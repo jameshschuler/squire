@@ -39,7 +39,7 @@ type Outcome = "same" | "missed" | "wrong margin" | "exact worse" | "timed out" 
 
 const FAILING = new Set<Outcome>(["wrong margin", "exact worse", "failed"]);
 
-// The app claims a margin for the first priority only, so that's the claim checked here.
+// The app works out a margin for the first priority only (the search logs record it), so that's the claim checked here.
 const CHECKED_GOALS = 1;
 
 interface Result {

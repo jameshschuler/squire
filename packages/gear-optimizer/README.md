@@ -100,7 +100,7 @@ When the search finishes, the best set found scores `found`, and every set it ne
 - If nothing was cut, or `ceiling ≤ found`, the set is the **proven best**.
 - Otherwise the true best is at most `ceiling`, and the gap is `(ceiling − found) / |ceiling|` on the first priority where they differ. That's the margin. Earlier priorities that tie are proven.
 
-The web app checks only the first priority (`checkedGoals: 1`), so the answer says "Proven best for Fastest" or "Within 0.8% of the best possible for Fastest". Later priorities only break ties, and their bounds can be very loose: "no materials consumed" has no cap in the game, so the best case for Save materials assumes refunds near 100%. The search still optimizes every priority; it just doesn't claim a margin for the later ones.
+The web app checks only the first priority (`checkedGoals: 1`). It doesn't show the margin to players; the search logs record it. Later priorities only break ties, and their bounds can be very loose: "no materials consumed" has no cap in the game, so the best case for Save materials assumes refunds near 100%. The search still optimizes every priority; it just doesn't claim a margin for the later ones.
 
 `marginOf` computes this. `marginHolds` is the check used by the tests and the check script: it confirms a claimed margin is never smaller than the real gap to the true best.
 
@@ -110,7 +110,7 @@ The web app checks only the first priority (`checkedGoals: 1`), so the answer sa
 2. **Passes.** Priorities are searched one at a time: pass 1 scores only the first priority, pass 2 the first two, and so on. Each pass starts from the previous pass's set. The first pass also proves an upper limit for the first priority, and later passes clip their bounds to it (`firstGoalLimit`), so that proof carries over.
 3. **Dropping locations.** Each pass runs across every remaining location before the next pass starts. After each pass, a location is dropped if even its ceiling can't match the leading location. It can't hold the answer.
 4. **Rounds.** If the margin is above 1% (`CLOSE_ENOUGH`), the whole thing runs again with four times as many partial sets kept, until the count reaches 16,000. Each round's best set and tightest ceiling are kept (`tightest`).
-5. **Time limit.** Everything shares one deadline (10 seconds by default). The search checks it at every item; when time is up, it stops, adds the bounds of every unfinished partial set to the ceiling, and returns what it has. The margin stays honest: it just ends up wider.
+5. **Time limit.** Everything shares one deadline (2 seconds by default). The search checks it at every item; when time is up, it stops, adds the bounds of every unfinished partial set to the ceiling, and returns what it has. The margin stays honest: it just ends up wider. Why 2 seconds: in a November 2026 timing run (Treasure hunt, Glacier foraging and Vegetable chopping, with and without a character, first priorities Fastest, Most items, Most chests and Most collectibles), the first priority's score at 1 second was the same as at 30 seconds in most runs and never more than 0.9% lower. Extra time only narrowed the margin. The second second is headroom for slower devices.
 6. **Free slots.** `fillFreeSlots` puts owned items into empty slots when they add other bonuses (say, inventory space) without costing a step or lowering the score.
 
 The result has the set, its stats and steps, the margin (`null` means proven best) and `searchMs`.
