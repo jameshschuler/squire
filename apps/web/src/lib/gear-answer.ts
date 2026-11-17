@@ -1,6 +1,5 @@
 import {
   efficiencyCap,
-  goalOf,
   goalStats,
   levelBonus,
   locationBonuses,
@@ -13,7 +12,7 @@ import {
   type OptimizeTarget,
   type PlayerProfile,
 } from "@walkscape-community/gear-optimizer";
-import { formatNumber, formatPercent } from "./format";
+import { formatNumber } from "./format";
 import { locationTiles, statGroups, type StatGroups, type StatTile } from "./gear-stats";
 import type { GearTarget } from "./gear-targets";
 import { stepsBreakdown, type BreakdownStep } from "./steps-breakdown";
@@ -78,22 +77,10 @@ export function answerNotes(suggestion: GearSuggestion, target: GearTarget, skil
   const before = [...tooLow, ...lacking];
 
   if (suggestion.picks.length === 0 && !suggestion.pet && !suggestion.food) {
-    return suggestion.margin
-      ? [...before, "No gear found that helps.", ...marginNotes(suggestion)]
-      : [...before, "No gear helps with this."];
+    return [...before, suggestion.margin ? "No gear found that helps." : "No gear helps with this."];
   }
 
-  return [...before, ...marginNotes(suggestion)];
-}
-
-function marginNotes({ margin, goals }: GearSuggestion): string[] {
-  if (!margin) {
-    return [];
-  }
-
-  const first = goalOf(goals[0] ?? "steps").label;
-
-  return [`Within ${formatPercent(Math.ceil(margin.gap * 1000) / 1000, 1)} of the best possible for ${first}.`];
+  return before;
 }
 
 export function stepsTile({ result, goals }: GearSuggestion): StatTile {

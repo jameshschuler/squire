@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { GearSuggestion, GoalId, Margin, StepsResult } from "@walkscape-community/gear-optimizer";
+import type { GearSuggestion, Margin, StepsResult } from "@walkscape-community/gear-optimizer";
 import { answerNotes, stepsTile } from "@/lib/gear-answer";
 import type { GearTarget } from "@/lib/gear-targets";
 
@@ -19,12 +19,7 @@ const target: GearTarget = {
   baseXp: 20,
 };
 const steps = (averageSteps: number): StepsResult => ({ efficiency: 1, steps: Math.ceil(averageSteps), averageSteps });
-const suggestion = (
-  averageSteps: number,
-  picks = 1,
-  margin: Margin | null = null,
-  goals: GoalId[] = ["steps"],
-): GearSuggestion =>
+const suggestion = (averageSteps: number, picks = 1, margin: Margin | null = null): GearSuggestion =>
   ({
     location: null,
     picks: Array(picks).fill({}),
@@ -32,7 +27,7 @@ const suggestion = (
     food: null,
     totals: {},
     result: steps(averageSteps),
-    goals,
+    goals: ["steps"],
     margin,
     missingNeeds: [],
   }) as unknown as GearSuggestion;
@@ -58,10 +53,9 @@ describe("answerNotes", () => {
     expect(answerNotes(withFood, target, null)).toEqual([]);
   });
 
-  it("only says no gear was found, with the margin, when an empty set isn't proven", () => {
+  it("only says no gear was found when an empty set isn't proven, without saying how close it got", () => {
     expect(answerNotes(suggestion(80, 0, { goal: "steps", gap: 0.02 }), target, null)).toEqual([
       "No gear found that helps.",
-      "Within 2% of the best possible for Fastest.",
     ]);
   });
 
@@ -83,15 +77,8 @@ describe("answerNotes", () => {
     ]);
   });
 
-  it.each([
-    [{ goal: "steps", gap: 0.008 }, "Within 0.8% of the best possible for Fastest."],
-    [{ goal: "steps", gap: 0.00041 }, "Within 0.1% of the best possible for Fastest."],
-  ] as const)("says how close the set is on the first priority (%j)", (margin, note) => {
-    expect(answerNotes(suggestion(30, 1, margin), target, null)).toEqual([note]);
-  });
-
-  it("adds no note for a proven set when the player picked several priorities", () => {
-    expect(answerNotes(suggestion(30, 1, null, ["steps", "chests", "materials"]), target, null)).toEqual([]);
+  it("adds no note about how close the set is to the best possible", () => {
+    expect(answerNotes(suggestion(30, 1, { goal: "steps", gap: 0.12 }), target, null)).toEqual([]);
   });
 });
 

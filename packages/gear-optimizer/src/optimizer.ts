@@ -84,7 +84,7 @@ type Search = Omit<GearSuggestion, "margin" | "missingNeeds" | "searchMs"> & {
 // Each retry keeps STATES_GROWTH times more partial sets, until the count reaches MAX_SEARCH_STATES.
 // The search stops early once the set is proven within CLOSE_ENOUGH of the best possible, or at the deadline.
 const SEARCH_STATES = 1000;
-const SEARCH_BUDGET_MS = 10_000;
+const SEARCH_BUDGET_MS = 2_000;
 const STATES_GROWTH = 4;
 const MAX_SEARCH_STATES = 16_000;
 const CLOSE_ENOUGH = 0.01;
