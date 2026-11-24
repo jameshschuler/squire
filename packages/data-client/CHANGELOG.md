@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.4
+
+Types regenerated from the API's latest spec.
+
+- Service ids lost their `_basic` and `_advanced` suffixes, so the `serviceList` filter on location search takes the new ids (`alight_kitchen`, `cursed_forge`, …). The tier is still on each service's `tier`.
+- Title search's `color` filter takes 15 new colors, such as `walker_yellow`, `supporter_yellow` and `orange`.
+- A title's requirements can now be collectibles owned or an item anywhere.
+
 ## 0.0.3
 
 Types regenerated from the API's latest spec.
